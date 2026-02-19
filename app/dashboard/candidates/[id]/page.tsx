@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
@@ -38,17 +38,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [activity, setActivity] = useState<any[]>([]);
     const [results, setResults] = useState<any>(null);
 
-    useEffect(() => {
-        if (ready) {
-            if (!authenticated) {
-                router.push('/auth/login');
-            } else if (user) {
-                loadCandidateData();
-            }
-        }
-    }, [ready, authenticated, user, router, params.id]);
-
-    const loadCandidateData = async () => {
+    const loadCandidateData = useCallback(async () => {
         try {
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user?.id, is_local: false });
 
@@ -87,7 +77,17 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         } finally {
             setLoading(false);
         }
-    };
+    }, [user, params.id]);
+
+    useEffect(() => {
+        if (ready) {
+            if (!authenticated) {
+                router.push('/auth/login');
+            } else if (user) {
+                loadCandidateData();
+            }
+        }
+    }, [ready, authenticated, user, router, loadCandidateData]);
 
     const generateDemoResults = async () => {
         setLoading(true);

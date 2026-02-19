@@ -24,27 +24,28 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     };
 
     useEffect(() => {
+        const loadCandidate = async () => {
+            if (!candidateId) return;
+            const { data, error } = await supabase
+                .from('candidates')
+                .select('*')
+                .eq('id', candidateId)
+                .single();
+
+            if (error || !data) {
+                router.push(`/apply/${params.positionId}`);
+                return;
+            }
+            setCandidate(data);
+            setLoading(false);
+        };
+
         if (!candidateId) {
             router.push(`/apply/${params.positionId}`);
             return;
         }
         loadCandidate();
-    }, [candidateId, params.positionId, router, loadCandidate]);
-
-    const loadCandidate = async () => {
-        const { data, error } = await supabase
-            .from('candidates')
-            .select('*')
-            .eq('id', candidateId)
-            .single();
-
-        if (error || !data) {
-            router.push(`/apply/${params.positionId}`);
-            return;
-        }
-        setCandidate(data);
-        setLoading(false);
-    };
+    }, [candidateId, params.positionId, router]);
 
     const handleComplete = async () => {
         setSubmitting(true);
