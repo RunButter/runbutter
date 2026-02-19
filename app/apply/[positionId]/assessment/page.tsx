@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
@@ -23,29 +23,29 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         setAnswers(prev => ({ ...prev, [questionId]: option }));
     };
 
+    const loadCandidate = useCallback(async () => {
+        if (!candidateId) return;
+        const { data, error } = await supabase
+            .from('candidates')
+            .select('*')
+            .eq('id', candidateId)
+            .single();
+
+        if (error || !data) {
+            router.push(`/apply/${params.positionId}`);
+            return;
+        }
+        setCandidate(data);
+        setLoading(false);
+    }, [candidateId, params.positionId, router]);
+
     useEffect(() => {
-        const loadCandidate = async () => {
-            if (!candidateId) return;
-            const { data, error } = await supabase
-                .from('candidates')
-                .select('*')
-                .eq('id', candidateId)
-                .single();
-
-            if (error || !data) {
-                router.push(`/apply/${params.positionId}`);
-                return;
-            }
-            setCandidate(data);
-            setLoading(false);
-        };
-
         if (!candidateId) {
             router.push(`/apply/${params.positionId}`);
             return;
         }
         loadCandidate();
-    }, [candidateId, params.positionId, router]);
+    }, [candidateId, params.positionId, router, loadCandidate]);
 
     const handleComplete = async () => {
         setSubmitting(true);

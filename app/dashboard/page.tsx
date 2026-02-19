@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
@@ -44,94 +44,94 @@ export default function DashboardPage() {
   const [company, setCompany] = useState<any>(null);
 
 
-  useEffect(() => {
-    const loadDashboardData = async (privyUserId: string) => {
-      try {
-        // Set the session variable for RLS
-        await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const loadDashboardData = useCallback(async (privyUserId: string) => {
+    try {
+      // Set the session variable for RLS
+      await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
-        // Get company user info
-        const { data: companyUser, error: companyError } = await supabase
-          .from('company_users')
-          .select('*, company:companies(*)')
-          .eq('privy_user_id', privyUserId)
-          .maybeSingle();
+      // Get company user info
+      const { data: companyUser, error: companyError } = await supabase
+        .from('company_users')
+        .select('*, company:companies(*)')
+        .eq('privy_user_id', privyUserId)
+        .maybeSingle();
 
-        if (companyError) throw companyError;
+      if (companyError) throw companyError;
 
-        if (!companyUser) {
-          router.push('/auth/register');
-          return;
-        }
-
-        setCompany(companyUser.company);
-
-        // Get stats
-        const { count: totalCandidates } = await supabase
-          .from('candidates')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', companyUser.company_id);
-
-        const { count: activePositions } = await supabase
-          .from('positions')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', companyUser.company_id)
-          .eq('is_active', true);
-
-        const { count: assessmentsCompleted } = await supabase
-          .from('assessment_responses')
-          .select('candidate:candidates!inner(*)', { count: 'exact', head: true })
-          .eq('is_completed', true)
-          .eq('candidate.company_id', companyUser.company_id);
-
-        const { count: upcomingInterviews } = await supabase
-          .from('interviews')
-          .select('candidate:candidates!inner(*)', { count: 'exact', head: true })
-          .eq('status', 'scheduled')
-          .eq('candidate.company_id', companyUser.company_id)
-          .gte('scheduled_at', new Date().toISOString());
-
-        const { count: newApplications } = await supabase
-          .from('candidates')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', companyUser.company_id)
-          .eq('status', 'applied')
-          .gte('applied_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-        const { count: pendingReview } = await supabase
-          .from('candidates')
-          .select('*', { count: 'exact', head: true })
-          .eq('company_id', companyUser.company_id)
-          .in('status', ['applied', 'screening']);
-
-        setStats({
-          totalCandidates: totalCandidates || 0,
-          activePositions: activePositions || 0,
-          assessmentsCompleted: assessmentsCompleted || 0,
-          upcomingInterviews: upcomingInterviews || 0,
-          newApplications: newApplications || 0,
-          pendingReview: pendingReview || 0,
-        });
-
-        // Get recent candidates
-        const { data: candidates } = await supabase
-          .from('candidates')
-          .select('id, full_name, email, status, applied_at, position:positions(title)')
-          .eq('company_id', companyUser.company_id)
-          .order('applied_at', { ascending: false })
-          .limit(5);
-
-        setRecentCandidates((candidates || []).map((c: any) => ({
-          ...c,
-          position: Array.isArray(c.position) ? c.position[0] : c.position
-        })));
-      } catch (error) {
-        console.error('Error loading dashboard:', error);
-      } finally {
-        setLoading(false);
+      if (!companyUser) {
+        router.push('/auth/register');
+        return;
       }
-    };
 
+      setCompany(companyUser.company);
+
+      // Get stats
+      const { count: totalCandidates } = await supabase
+        .from('candidates')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyUser.company_id);
+
+      const { count: activePositions } = await supabase
+        .from('positions')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyUser.company_id)
+        .eq('is_active', true);
+
+      const { count: assessmentsCompleted } = await supabase
+        .from('assessment_responses')
+        .select('candidate:candidates!inner(*)', { count: 'exact', head: true })
+        .eq('is_completed', true)
+        .eq('candidate.company_id', companyUser.company_id);
+
+      const { count: upcomingInterviews } = await supabase
+        .from('interviews')
+        .select('candidate:candidates!inner(*)', { count: 'exact', head: true })
+        .eq('status', 'scheduled')
+        .eq('candidate.company_id', companyUser.company_id)
+        .gte('scheduled_at', new Date().toISOString());
+
+      const { count: newApplications } = await supabase
+        .from('candidates')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyUser.company_id)
+        .eq('status', 'applied')
+        .gte('applied_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+      const { count: pendingReview } = await supabase
+        .from('candidates')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyUser.company_id)
+        .in('status', ['applied', 'screening']);
+
+      setStats({
+        totalCandidates: totalCandidates || 0,
+        activePositions: activePositions || 0,
+        assessmentsCompleted: assessmentsCompleted || 0,
+        upcomingInterviews: upcomingInterviews || 0,
+        newApplications: newApplications || 0,
+        pendingReview: pendingReview || 0,
+      });
+
+      // Get recent candidates
+      const { data: candidates } = await supabase
+        .from('candidates')
+        .select('id, full_name, email, status, applied_at, position:positions(title)')
+        .eq('company_id', companyUser.company_id)
+        .order('applied_at', { ascending: false })
+        .limit(5);
+
+      setRecentCandidates((candidates || []).map((c: any) => ({
+        ...c,
+        position: Array.isArray(c.position) ? c.position[0] : c.position
+      })));
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
     if (ready) {
       if (!authenticated) {
         router.push('/auth/login');
@@ -139,7 +139,7 @@ export default function DashboardPage() {
         loadDashboardData(user.id);
       }
     }
-  }, [ready, authenticated, user, router]);
+  }, [ready, authenticated, user, router, loadDashboardData]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { bg: string; text: string; label: string }> = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
@@ -42,24 +42,24 @@ export default function AnalyticsPage() {
     const [company, setCompany] = useState<any>(null);
 
 
+    const loadAnalytics = useCallback(async () => {
+        try {
+            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user?.id, is_local: false });
+            const { data: companyUser } = await supabase
+                .from('company_users')
+                .select('company:companies(*)')
+                .eq('privy_user_id', user?.id)
+                .single();
+
+            if (companyUser) setCompany(companyUser.company);
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
     useEffect(() => {
-        const loadAnalytics = async () => {
-            try {
-                await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user?.id, is_local: false });
-                const { data: companyUser } = await supabase
-                    .from('company_users')
-                    .select('company:companies(*)')
-                    .eq('privy_user_id', user?.id)
-                    .single();
-
-                if (companyUser) setCompany(companyUser.company);
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         if (ready) {
             if (!authenticated) {
                 router.push('/auth/login');
@@ -67,7 +67,7 @@ export default function AnalyticsPage() {
                 loadAnalytics();
             }
         }
-    }, [ready, authenticated, user, router]);
+    }, [ready, authenticated, user, router, loadAnalytics]);
 
     const barData = {
         labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],

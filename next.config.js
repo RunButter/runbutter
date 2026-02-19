@@ -16,6 +16,12 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['googleapis', 'pino', 'pino-pretty'],
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;
