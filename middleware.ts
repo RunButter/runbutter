@@ -31,9 +31,11 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // For Privy, we check for the 'privy-token' cookie which is set after login
+  const privyToken = req.cookies.get('privy-token')?.value;
+  const privySession = req.cookies.get('privy-session')?.value;
+
+  const isAuthenticated = !!(privyToken || privySession);
 
   const { pathname } = req.nextUrl;
 
@@ -55,7 +57,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  if (pathname.startsWith('/dashboard') && !session) {
+  if (pathname.startsWith('/dashboard') && !isAuthenticated) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/auth/login';
     redirectUrl.searchParams.set('redirectTo', pathname);

@@ -12,8 +12,10 @@ const nextConfig = {
       },
     ],
   },
-  // googleapis uses Node.js built-ins — keep it server-side only
-  serverExternalPackages: ['googleapis'],
+  transpilePackages: ['@privy-io/react-auth'],
+  experimental: {
+    serverComponentsExternalPackages: ['googleapis', 'pino', 'pino-pretty'],
+  },
 };
 
 module.exports = nextConfig;
