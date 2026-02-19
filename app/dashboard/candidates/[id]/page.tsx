@@ -46,7 +46,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 loadCandidateData();
             }
         }
-    }, [ready, authenticated, user, router]);
+    }, [ready, authenticated, user, router, params.id]);
 
     const loadCandidateData = async () => {
         try {
@@ -366,7 +366,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                         <div className="p-6 bg-primary-50/50 rounded-2xl border border-primary-100">
                                             <h4 className="text-xs font-black text-primary-700 uppercase tracking-widest mb-3">AI Candidate Summary</h4>
                                             <p className="text-sm text-gray-700 leading-relaxed italic">
-                                                "{results.summary}"
+                                                &quot;{results.summary}&quot;
                                             </p>
                                         </div>
                                     )}
@@ -381,7 +381,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-gray-800">No Assessment Results</h3>
-                            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">This candidate hasn't completed their personality and work style test yet.</p>
+                            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
                         </div>
                         <div className="flex gap-3">
                             <button onClick={generateDemoResults} className="btn-secondary py-2 px-6 flex items-center gap-2">

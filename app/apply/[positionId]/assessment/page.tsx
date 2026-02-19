@@ -29,7 +29,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             return;
         }
         loadCandidate();
-    }, [candidateId, params.positionId, router]);
+    }, [candidateId, params.positionId, router, loadCandidate]);
 
     const loadCandidate = async () => {
         const { data, error } = await supabase

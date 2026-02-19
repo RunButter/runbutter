@@ -134,7 +134,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h1>
             <p className="text-gray-600 mb-6">
-              Thank you for applying. We've received your application and CV.
+              Thank you for applying. We&apos;ve received your application and CV.
             </p>
 
             <div className="p-6 bg-primary-50 rounded-xl border border-primary-100 mb-6">

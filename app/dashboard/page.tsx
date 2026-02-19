@@ -43,15 +43,6 @@ export default function DashboardPage() {
   const [recentCandidates, setRecentCandidates] = useState<RecentCandidate[]>([]);
   const [company, setCompany] = useState<any>(null);
 
-  useEffect(() => {
-    if (ready) {
-      if (!authenticated) {
-        router.push('/auth/login');
-      } else if (user) {
-        loadDashboardData(user.id);
-      }
-    }
-  }, [ready, authenticated, user, router]);
 
   const loadDashboardData = async (privyUserId: string) => {
     try {
@@ -139,6 +130,16 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (ready) {
+      if (!authenticated) {
+        router.push('/auth/login');
+      } else if (user) {
+        loadDashboardData(user.id);
+      }
+    }
+  }, [ready, authenticated, user, router]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { bg: string; text: string; label: string }> = {

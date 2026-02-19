@@ -41,15 +41,6 @@ export default function AnalyticsPage() {
     const [loading, setLoading] = useState(true);
     const [company, setCompany] = useState<any>(null);
 
-    useEffect(() => {
-        if (ready) {
-            if (!authenticated) {
-                router.push('/auth/login');
-            } else if (user) {
-                loadAnalytics();
-            }
-        }
-    }, [ready, authenticated, user, router]);
 
     const loadAnalytics = async () => {
         try {
@@ -67,6 +58,16 @@ export default function AnalyticsPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (ready) {
+            if (!authenticated) {
+                router.push('/auth/login');
+            } else if (user) {
+                loadAnalytics();
+            }
+        }
+    }, [ready, authenticated, user, router]);
 
     const barData = {
         labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],

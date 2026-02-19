@@ -58,7 +58,7 @@ export default function RegisterPage() {
     };
 
     checkUser();
-  }, [ready, authenticated, user?.id, router]);
+  }, [ready, authenticated, user, router]);
 
   const handleSignIn = async () => {
     setError('');
