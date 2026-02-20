@@ -89,14 +89,35 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     " makes them a good fit for " + (candidate.position?.title || "this role") + "."
             };
 
+            // 1. Create a response record first to get an ID
+            const { data: resp, error: respError } = await supabase
+                .from('assessment_responses')
+                .insert({
+                    candidate_id: candidateId,
+                    answers: answers,
+                    is_completed: true,
+                    completed_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (respError) throw respError;
+
+            // 2. Insert results linked to the response
+            const finalResults = {
+                ...mockResults,
+                assessment_response_id: resp.id,
+                completed_at: new Date().toISOString()
+            };
+
             await supabase
                 .from('assessment_results')
-                .insert(mockResults);
+                .insert(finalResults);
 
-            // Update candidate status
+            // 3. Update candidate status to 'assessment_completed'
             await supabase
                 .from('candidates')
-                .update({ status: 'assessment_sent' }) // Keeping consistent with recruiter view
+                .update({ status: 'assessment_completed' })
                 .eq('id', candidateId);
 
             // Log activity
