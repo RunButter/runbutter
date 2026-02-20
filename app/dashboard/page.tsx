@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
-import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2 } from 'lucide-react';
+import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard } from 'lucide-react';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
