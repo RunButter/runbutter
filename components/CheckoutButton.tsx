@@ -7,12 +7,25 @@ interface CheckoutButtonProps {
     companyId: string;
     priceId: string;
     companyName: string;
+    text?: string;
+    variant?: 'primary' | 'white' | 'dark';
 }
 
-export default function CheckoutButton({ companyId, priceId, companyName }: CheckoutButtonProps) {
+export default function CheckoutButton({
+    companyId,
+    priceId,
+    companyName,
+    text,
+    variant = 'primary'
+}: CheckoutButtonProps) {
     const [loading, setLoading] = useState(false);
 
     const handleCheckout = async () => {
+        if (!priceId || priceId.includes('PLACEHOLDER')) {
+            alert('Stripe Price ID is missing or invalid. Please configure your Price IDs in the billing page or environment variables.');
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await fetch('/api/checkout', {
@@ -34,11 +47,22 @@ export default function CheckoutButton({ companyId, priceId, companyName }: Chec
             } else {
                 throw new Error(data.error || 'Failed to create checkout session');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Checkout error:', error);
-            alert('Could not initiate checkout. Please try again.');
+            alert(`Could not initiate checkout: ${error.message}`);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getVariantStyles = () => {
+        switch (variant) {
+            case 'white':
+                return 'bg-white text-primary-700 hover:bg-indigo-50 shadow-xl';
+            case 'dark':
+                return 'bg-gray-900 text-white hover:bg-gray-800';
+            default:
+                return 'btn-primary shadow-xl hover:translate-y-[-2px] transition-all';
         }
     };
 
@@ -46,17 +70,17 @@ export default function CheckoutButton({ companyId, priceId, companyName }: Chec
         <button
             onClick={handleCheckout}
             disabled={loading}
-            className="btn-primary flex items-center justify-center gap-2 py-3 px-8 text-lg font-bold shadow-xl hover:translate-y-[-2px] transition-all"
+            className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all disabled:opacity-50 ${getVariantStyles()}`}
         >
             {loading ? (
                 <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Processing...
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Connecting...
                 </>
             ) : (
                 <>
-                    <CreditCard className="w-6 h-6" />
-                    Upgrade to Professional
+                    <CreditCard className="w-5 h-5" />
+                    {text || 'Upgrade Now'}
                 </>
             )}
         </button>

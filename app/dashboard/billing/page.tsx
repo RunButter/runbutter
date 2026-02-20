@@ -6,13 +6,18 @@ import { supabase } from '@/lib/supabase';
 import {
     Check,
     CreditCard,
-    ShieldCheck,
     Zap,
     CheckCircle2,
     AlertCircle,
-    Loader2
+    Loader2,
+    Building2,
+    Star,
+    Globe,
+    ArrowRight,
+    ShieldCheck
 } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
+import Link from 'next/link';
 
 export default function BillingPage() {
     const { ready, authenticated, user } = usePrivy();
@@ -45,119 +50,202 @@ export default function BillingPage() {
         );
     }
 
-    // Stripe Test Price ID - This would usually be in environment variables
-    const PRO_PRICE_ID = 'price_1T30hHLJFoF9r61Qplaceholder'; // User should replace this
+    // Stripe Price IDs - REPLACE THESE WITH YOUR ACTUAL STRIPE PRICE IDs
+    const STARTER_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_STARTER_PLACEHOLDER';
+    const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_PRO_PLACEHOLDER';
+
+    const pricingTiers = [
+        {
+            name: 'Starter',
+            price: '$99',
+            interval: '/mo',
+            description: 'Perfect for small teams and growing startups.',
+            features: [
+                'Up to 50 candidates/month',
+                '5 active positions',
+                'Google Calendar integration',
+                'Custom branding'
+            ],
+            priceId: STARTER_PRICE_ID,
+            buttonText: 'Get Started',
+            highlight: false,
+            tier: 'starter'
+        },
+        {
+            name: 'Professional',
+            price: '$299',
+            interval: '/mo',
+            description: 'Ideal for scaling companies with high hiring volume.',
+            features: [
+                'Up to 200 candidates/month',
+                'Unlimited positions',
+                'Advanced analytics',
+                'ATS integrations',
+                'Priority support'
+            ],
+            priceId: PRO_PRICE_ID,
+            buttonText: 'Upgrade Now',
+            highlight: true,
+            tier: 'professional'
+        },
+        {
+            name: 'Enterprise',
+            price: 'Custom',
+            interval: '',
+            description: 'Enterprise-grade features and security for large scale.',
+            features: [
+                'Unlimited everything',
+                'Custom assessments',
+                'API access',
+                'Dedicated support',
+                'SLA guarantee'
+            ],
+            priceId: null,
+            buttonText: 'Contact Sales',
+            highlight: false,
+            tier: 'enterprise',
+            link: 'mailto:sales@hirebtr.com' // User can change this to a contact form
+        }
+    ];
 
     return (
-        <div className="max-w-5xl mx-auto px-6 py-12">
-            <div className="mb-12">
-                <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                    <CreditCard className="w-8 h-8 text-primary-600" />
-                    Billing & Subscription
+        <div className="max-w-7xl mx-auto px-6 py-12">
+            <div className="text-center mb-16">
+                <h1 className="text-4xl font-black text-gray-900 flex items-center justify-center gap-3 mb-4">
+                    <CreditCard className="w-10 h-10 text-primary-600" />
+                    Transparent Pricing
                 </h1>
-                <p className="text-gray-500 mt-2 font-medium">Manage your plan and seats for helpbtr.com</p>
+                <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
+                    Choose the plan that fits your helpbtr.com hiring needs. No hidden fees, just high-performance hiring.
+                </p>
+            </div>
+
+            {/* Current Subscription Status */}
+            <div className="mb-12 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600">
+                        <Building2 className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-black text-gray-900">Current Subscription</h3>
+                        <p className="text-gray-500 font-medium capitalize">{company?.plan || 'Free'} Plan • {company?.subscription_status || 'Inactive'}</p>
+                    </div>
+                </div>
+                {company?.plan === 'professional' && (
+                    <div className="flex items-center gap-3 text-green-600 font-bold bg-green-50 px-6 py-3 rounded-2xl border border-green-100">
+                        <ShieldCheck className="w-5 h-5" />
+                        Professional Features Active
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Current Plan Card */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white rounded-3xl p-8 border-2 border-primary-100 shadow-sm h-full">
-                        <h3 className="text-xs font-black text-primary-600 uppercase tracking-widest mb-6">Current Plan</h3>
-                        <div className="text-4xl font-black text-gray-900 mb-2 capitalize">
-                            {company?.plan || 'Free'}
-                        </div>
-                        <p className="text-sm text-gray-500 mb-8 font-medium">
-                            {company?.plan === 'professional'
-                                ? 'High-performance recruitment features enabled.'
-                                : 'Limited to basic recruitment tools.'}
-                        </p>
+                {pricingTiers.map((tier) => (
+                    <div
+                        key={tier.name}
+                        className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 ${tier.highlight
+                            ? 'bg-gradient-to-b from-primary-600 to-indigo-700 text-white shadow-2xl scale-105 z-10'
+                            : 'bg-white border-2 border-gray-100 text-gray-900 hover:border-primary-200 shadow-sm'
+                            }`}
+                    >
+                        {tier.highlight && (
+                            <div className="absolute top-0 right-8 transform -translate-y-1/2">
+                                <span className="bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                                    <Star className="w-3 h-3 fill-current" />
+                                    Most Popular
+                                </span>
+                            </div>
+                        )}
 
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 text-sm font-bold text-gray-700">
-                                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                                {company?.plan === 'professional' ? 'Unlimited Candidates' : 'Up to 10 Candidates'}
-                            </div>
-                            <div className="flex items-center gap-3 text-sm font-bold text-gray-700">
-                                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                                {company?.plan === 'professional' ? 'AI Assessment Reports' : 'Basic Metrics'}
-                            </div>
-                            <div className="flex items-center gap-3 text-sm font-bold text-gray-700 text-gray-400">
-                                {company?.plan === 'professional' ? (
-                                    <>
-                                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                                        Priority Support
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
-                                        No Priority Support
-                                    </>
-                                )}
+                        <div className="mb-8">
+                            <h3 className={`text-xl font-black mb-2 ${tier.highlight ? 'text-white' : 'text-gray-900'}`}>{tier.name}</h3>
+                            <p className={`text-sm font-medium ${tier.highlight ? 'text-indigo-100' : 'text-gray-500'}`}>{tier.description}</p>
+                        </div>
+
+                        <div className="mb-8">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-5xl font-black">{tier.price}</span>
+                                <span className={`text-sm font-bold uppercase tracking-widest ${tier.highlight ? 'text-indigo-200' : 'text-gray-400'}`}>
+                                    {tier.interval}
+                                </span>
                             </div>
                         </div>
+
+                        <div className="space-y-4 mb-10 flex-grow">
+                            {tier.features.map((feature) => (
+                                <div key={feature} className="flex items-start gap-3 text-sm font-bold">
+                                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${tier.highlight ? 'text-indigo-300' : 'text-primary-500'}`} />
+                                    <span className={tier.highlight ? 'text-indigo-50' : 'text-gray-700'}>{feature}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {!tier.priceId ? (
+                            <a
+                                href={tier.link}
+                                className={`w-full py-4 rounded-2xl font-black text-center transition flex items-center justify-center gap-2 ${tier.highlight
+                                    ? 'bg-white text-primary-700 hover:bg-indigo-50 shadow-xl'
+                                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                                    }`}
+                            >
+                                {tier.buttonText}
+                                <ArrowRight className="w-4 h-4" />
+                            </a>
+                        ) : (
+                            <CheckoutButton
+                                companyId={company?.id}
+                                priceId={tier.priceId}
+                                companyName={company?.name}
+                                text={tier.buttonText}
+                                variant={tier.highlight ? 'white' : 'dark'}
+                            />
+                        )}
                     </div>
-                </div>
-
-                {/* Upgrade Card */}
-                <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-indigo-600 to-primary-700 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden h-full flex flex-col justify-between">
-                        {/* Background pattern decor */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none" />
-
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-black uppercase tracking-widest mb-6">
-                                <Zap className="w-3 h-3 fill-current" />
-                                Highly Recommended
-                            </div>
-                            <h2 className="text-4xl font-black mb-4">Upgrade to Professional</h2>
-                            <p className="text-indigo-100 mb-8 max-w-lg font-medium leading-relaxed">
-                                Unlock advanced AI scoring, unlimited candidate screening, and deep personality insights to find your next high-performance hire.
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-sm font-bold">
-                                <div className="flex items-center gap-2">
-                                    <Check className="w-5 h-5 text-indigo-200" /> Real-time Radar Charts
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Check className="w-5 h-5 text-indigo-200" /> Multi-seat Recruiters
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Check className="w-5 h-5 text-indigo-200" /> AI Personality Synthesis
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Check className="w-5 h-5 text-indigo-200" /> White-labeled Assessments
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6">
-                            {company && company.plan !== 'professional' ? (
-                                <CheckoutButton
-                                    companyId={company.id}
-                                    priceId={PRO_PRICE_ID}
-                                    companyName={company.name}
-                                />
-                            ) : (
-                                <div className="bg-white/20 px-8 py-3 rounded-xl font-black flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5" />
-                                    Your plan is active
-                                </div>
-                            )}
-                            <div className="text-center sm:text-left">
-                                <span className="text-2xl font-black">$49</span>
-                                <span className="text-xs font-bold text-indigo-200 uppercase tracking-widest block">per month</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            <div className="mt-12 p-6 bg-gray-50 rounded-2xl border border-gray-200 flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-gray-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-gray-500 font-medium leading-relaxed">
-                    <p className="font-bold text-gray-700 mb-1 leading-none">Safe & Secure Payments</p>
-                    Transactions are processed via Stripe for 100% security. We do not store your credit card information.
-                    Subscriptions can be canceled at any time through the Stripe customer portal.
+            <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-gray-50 p-10 rounded-[40px] border border-gray-100">
+                <div className="space-y-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <Zap className="w-3 h-3 fill-current" />
+                        Product Focus
+                    </div>
+                    <h2 className="text-3xl font-black text-gray-900 leading-tight">Scale your team with confidence</h2>
+                    <p className="text-gray-600 font-medium leading-relaxed">
+                        Our platform is built for high-performance teams who value speed and precision. Whether you are a small startup or a large enterprise, we have the tools to help you find the right talent.
+                    </p>
+                    <div className="flex items-center gap-8">
+                        <div className="flex flex-col">
+                            <span className="text-3xl font-black text-primary-600">98%</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Client Satisfaction</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-3xl font-black text-primary-600">5k+</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Candidates Assessed</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl relative overflow-hidden group">
+                    <Globe className="absolute -right-20 -bottom-20 w-64 h-64 text-primary-50 opacity-50 group-hover:scale-110 transition-transform duration-700" />
+                    <div className="relative z-10">
+                        <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-primary-500" />
+                            Infrastructure Ready
+                        </h4>
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                                We use enterprise-grade security and Stripe for all payment processing. Your data is encrypted and secure.
+                            </p>
+                            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Payment Security</span>
+                                <div className="flex gap-2">
+                                    <div className="w-8 h-5 bg-gray-100 rounded" />
+                                    <div className="w-8 h-5 bg-gray-100 rounded" />
+                                    <div className="w-8 h-5 bg-gray-100 rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
