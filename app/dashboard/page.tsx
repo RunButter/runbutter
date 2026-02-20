@@ -195,6 +195,10 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <Link href="/dashboard/billing" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Billing
+              </Link>
               <Link href="/dashboard/positions/new" className="btn-primary">
                 Create Position
               </Link>

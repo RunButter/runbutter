@@ -13,8 +13,9 @@ ALTER TABLE assessment_results ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP W
 
 -- 2. Ensure RLS is enabled
 ALTER TABLE assessment_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assessment_responses ENABLE ROW LEVEL SECURITY;
 
--- 3. Update/Recreate policies to be safe
+-- 3. Update/Recreate policies for results
 DROP POLICY IF EXISTS "Users can view own company assessment results" ON assessment_results;
 CREATE POLICY "Users can view own company assessment results" ON assessment_results
     FOR SELECT USING (
@@ -28,4 +29,9 @@ CREATE POLICY "Users can view own company assessment results" ON assessment_resu
 
 DROP POLICY IF EXISTS "Public can insert assessment results" ON assessment_results;
 CREATE POLICY "Public can insert assessment results" ON assessment_results
+    FOR INSERT WITH CHECK (true);
+
+-- 4. Add policy for responses (The missing link!)
+DROP POLICY IF EXISTS "Public can insert assessment responses" ON assessment_responses;
+CREATE POLICY "Public can insert assessment responses" ON assessment_responses
     FOR INSERT WITH CHECK (true);
