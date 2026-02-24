@@ -7,6 +7,7 @@ import {
     CheckCircle, AlertCircle, Loader2, ArrowRight,
     Brain, Target, BarChart, ChevronRight, Clock
 } from 'lucide-react';
+import LogoContainer from '@/components/LogoContainer';
 
 export default function AssessmentPage({ params }: { params: { positionId: string } }) {
     const router = useRouter();
@@ -15,6 +16,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
+    const [companyInfo, setCompanyInfo] = useState<{ name: string, logoUrl: string | null } | null>(null);
     const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: personality, 2: workstyle, 3: completed
     const [submitting, setSubmitting] = useState(false);
     const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -27,7 +29,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         if (!candidateId) return;
         const { data, error } = await supabase
             .from('candidates')
-            .select('*')
+            .select('*, companies(name, logo_url)')
             .eq('id', candidateId)
             .single();
 
@@ -36,6 +38,10 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             return;
         }
         setCandidate(data);
+        setCompanyInfo({
+            name: (data.companies as any).name,
+            logoUrl: (data.companies as any).logo_url
+        });
         setLoading(false);
     }, [candidateId, params.positionId, router]);
 
@@ -149,6 +155,11 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         return (
             <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
                 <div className="max-w-md">
+                    {companyInfo?.logoUrl && (
+                        <div className="flex justify-center mb-8">
+                            <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} />
+                        </div>
+                    )}
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle className="w-12 h-12 text-green-600" />
                     </div>
@@ -173,8 +184,12 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white border-b py-4 px-6 sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span></span>
+                    <div className="flex items-center gap-4">
+                        {companyInfo?.logoUrl ? (
+                            <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} className="h-8 w-auto" />
+                        ) : (
+                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span></span>
+                        )}
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="hidden sm:block text-sm text-gray-500">

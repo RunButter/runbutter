@@ -158,6 +158,11 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-2xl shadow-xl p-8">
+            {positionInfo?.logoUrl && (
+              <div className="flex justify-center mb-6">
+                <LogoContainer src={positionInfo.logoUrl} alt={positionInfo.companyName} />
+              </div>
+            )}
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
