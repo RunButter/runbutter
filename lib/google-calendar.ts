@@ -132,7 +132,7 @@ export async function createCalendarEvent(
 
     return {
       eventId: response.data.id!,
-      meetLink: response.data.conferenceData?.entryPoints?.[0]?.uri,
+      meetLink: response.data.conferenceData?.entryPoints?.[0]?.uri ?? undefined,
     };
   } catch (error) {
     console.error('Error creating calendar event:', error);

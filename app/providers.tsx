@@ -15,7 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           showWalletLoginFirst: false,
         },
         embeddedWallets: {
-          createOnLogin: 'off',
+          // createOnLogin removed to fix type error
         },
       }}
     >

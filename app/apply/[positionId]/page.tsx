@@ -6,6 +6,8 @@ import { supabase, uploadCV } from '@/lib/supabase';
 import Link from 'next/link';
 import { Upload, FileText, Loader2, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import LogoContainer from '@/components/LogoContainer';
+import { useEffect } from 'react';
 
 export default function ApplyPage({ params }: { params: { positionId: string } }) {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [candidateId, setCandidateId] = useState<string | null>(null);
+  const [positionInfo, setPositionInfo] = useState<{ title: string; companyName: string; logoUrl: string | null } | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -21,6 +24,32 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     phone: '',
     linkedinUrl: '',
   });
+
+  useEffect(() => {
+    const fetchPositionDetails = async () => {
+      const { data, error } = await supabase
+        .from('positions')
+        .select(`
+          title,
+          companies (
+            name,
+            logo_url
+          )
+        `)
+        .eq('id', params.positionId)
+        .single();
+
+      if (data && !error) {
+        setPositionInfo({
+          title: data.title,
+          companyName: (data.companies as any).name,
+          logoUrl: (data.companies as any).logo_url,
+        });
+      }
+    };
+
+    fetchPositionDetails();
+  }, [params.positionId]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -163,7 +192,15 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Apply for Position</h1>
+          {positionInfo?.logoUrl && (
+            <div className="flex justify-center mb-6">
+              <LogoContainer src={positionInfo.logoUrl} alt={positionInfo.companyName} />
+            </div>
+          )}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Apply for {positionInfo?.title || 'Position'}
+            {positionInfo?.companyName ? ` at ${positionInfo.companyName}` : ''}
+          </h1>
           <p className="text-gray-600">Fill out the form below to submit your application</p>
         </div>
 
