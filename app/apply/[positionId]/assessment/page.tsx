@@ -64,6 +64,16 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             if (!tmplError && tmpl) {
                 setTemplate(tmpl);
+            } else {
+                // Fallback for positions without custom templates (old positions)
+                setTemplate({
+                    questions: [
+                        { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: '3', category: 'personality', trait: 'Openness', text: 'I enjoy thinking about new ways of doing things', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: '4', category: 'work_style', text: 'I like to understand the big picture before diving into specific tasks', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] }
+                    ]
+                });
             }
         } catch (err) {
             console.error('Error loading candidate security context:', err);

@@ -54,6 +54,23 @@ export default function PositionsPage() {
         }
     };
 
+    const handleDeletePosition = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this position? All associated candidates and assessments will be removed.')) return;
+
+        try {
+            const { error } = await supabase
+                .from('positions')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setPositions(positions.filter(p => p.id !== id));
+        } catch (error) {
+            console.error('Error deleting position:', error);
+            alert('Failed to delete position');
+        }
+    };
+
     const filteredPositions = positions.filter(p =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.department?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -133,10 +150,16 @@ export default function PositionsPage() {
                                             <Link href={`/apply/${pos.id}`} target="_blank" className="p-2 text-gray-400 hover:text-primary-600 title='View Portal'">
                                                 <Eye className="w-5 h-5" />
                                             </Link>
-                                            <button className="p-2 text-gray-400 hover:text-primary-600">
+                                            <button
+                                                onClick={() => router.push(`/dashboard/positions/${pos.id}/edit`)}
+                                                className="p-2 text-gray-400 hover:text-primary-600"
+                                            >
                                                 <Edit2 className="w-5 h-5" />
                                             </button>
-                                            <button className="p-2 text-gray-400 hover:text-red-600">
+                                            <button
+                                                onClick={() => handleDeletePosition(pos.id)}
+                                                className="p-2 text-gray-400 hover:text-red-600"
+                                            >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>

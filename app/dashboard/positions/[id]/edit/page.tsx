@@ -1,0 +1,371 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
+import { supabase } from '@/lib/supabase';
+import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
+
+export default function EditPositionPage({ params }: { params: { id: string } }) {
+    const router = useRouter();
+    const { ready, authenticated, user } = usePrivy();
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        department: '',
+        location: '',
+        employment_type: 'full-time',
+    });
+
+    const [screeningQuestions, setScreeningQuestions] = useState<any[]>([]);
+    const [openEndedQuestion, setOpenEndedQuestion] = useState({ id: 's_open', category: 'screening', type: 'text', text: '' });
+
+    useEffect(() => {
+        if (ready) {
+            if (!authenticated) {
+                router.push('/auth/login');
+            } else {
+                loadPositionData();
+            }
+        }
+    }, [ready, authenticated, user, router]);
+
+    const loadPositionData = async () => {
+        try {
+            const { data: position, error: posError } = await supabase
+                .from('positions')
+                .select('*')
+                .eq('id', params.id)
+                .single();
+
+            if (posError) throw posError;
+
+            setFormData({
+                title: position.title,
+                description: position.description || '',
+                department: position.department || '',
+                location: position.location || '',
+                employment_type: position.employment_type || 'full-time',
+            });
+
+            // Fetch template
+            const { data: template, error: tmplError } = await supabase
+                .from('assessment_templates')
+                .select('*')
+                .eq('position_id', params.id)
+                .is('is_default', true)
+                .single();
+
+            if (!tmplError && template) {
+                const mcqs = template.questions.filter((q: any) => q.category === 'screening' && q.type === 'choice');
+                const open = template.questions.find((q: any) => q.category === 'screening' && q.type === 'text');
+
+                setScreeningQuestions(mcqs.length > 0 ? mcqs : [{ id: 's1', category: 'screening', type: 'choice', text: '', options: ['', '', ''], correctIndex: 0 }]);
+                if (open) setOpenEndedQuestion(open);
+            } else {
+                setScreeningQuestions([{ id: 's1', category: 'screening', type: 'choice', text: '', options: ['', '', ''], correctIndex: 0 }]);
+            }
+
+        } catch (err: any) {
+            setError('Failed to load position data');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addMCQ = () => {
+        if (screeningQuestions.length >= 3) return;
+        setScreeningQuestions([...screeningQuestions, {
+            id: `s${Date.now()}`,
+            category: 'screening',
+            type: 'choice',
+            text: '',
+            options: ['', '', ''],
+            correctIndex: 0
+        }]);
+    };
+
+    const removeMCQ = (index: number) => {
+        setScreeningQuestions(screeningQuestions.filter((_, i) => i !== index));
+    };
+
+    const updateMCQ = (index: number, field: string, value: any) => {
+        const updated = [...screeningQuestions];
+        updated[index] = { ...updated[index], [field]: value };
+        setScreeningQuestions(updated);
+    };
+
+    const updateMCQOption = (qIndex: number, oIndex: number, value: string) => {
+        const updated = [...screeningQuestions];
+        const updatedOptions = [...updated[qIndex].options];
+        updatedOptions[oIndex] = value;
+        updated[qIndex].options = updatedOptions;
+        setScreeningQuestions(updated);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        setError('');
+
+        try {
+            const { error: updateError } = await supabase
+                .from('positions')
+                .update({
+                    title: formData.title,
+                    description: formData.description,
+                    department: formData.department,
+                    location: formData.location,
+                    employment_type: formData.employment_type,
+                })
+                .eq('id', params.id);
+
+            if (updateError) throw updateError;
+
+            // Update template
+            const defaultQuestions = [
+                { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] }
+            ];
+
+            const customQuestions = [
+                ...screeningQuestions.filter(q => q.text.trim() !== ''),
+                ...(openEndedQuestion.text.trim() !== '' ? [openEndedQuestion] : [])
+            ];
+
+            // Upsert template (ensure one exists)
+            const { data: existingTmpl } = await supabase
+                .from('assessment_templates')
+                .select('id')
+                .eq('position_id', params.id)
+                .is('is_default', true)
+                .single();
+
+            if (existingTmpl) {
+                await supabase
+                    .from('assessment_templates')
+                    .update({ questions: [...defaultQuestions, ...customQuestions] })
+                    .eq('id', existingTmpl.id);
+            } else {
+                const { data: companyUser } = await supabase
+                    .from('company_users')
+                    .select('company_id')
+                    .eq('privy_user_id', user?.id)
+                    .single();
+
+                await supabase.from('assessment_templates').insert({
+                    company_id: companyUser?.company_id,
+                    position_id: params.id,
+                    name: `${formData.title} Assessment`,
+                    description: `Standard assessment for ${formData.title}`,
+                    questions: [...defaultQuestions, ...customQuestions],
+                    is_default: true
+                });
+            }
+
+            router.push('/dashboard/positions');
+        } catch (err: any) {
+            setError(err.message || 'Failed to update position');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <header className="bg-white border-b">
+                <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+                    <Link href="/dashboard/positions" className="p-2 hover:bg-gray-100 rounded-lg">
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </Link>
+                    <h1 className="text-xl font-bold text-gray-800">Edit Position</h1>
+                </div>
+            </header>
+
+            <main className="max-w-3xl mx-auto px-6 py-8">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+                                <input
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="e.g. Senior Software Engineer"
+                                    value={formData.title}
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                <div className="relative">
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        className="input-field pl-10"
+                                        placeholder="Engineering"
+                                        value={formData.department}
+                                        onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        className="input-field pl-10"
+                                        placeholder="Remote / New York"
+                                        value={formData.location}
+                                        onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Employment Type</label>
+                                <select
+                                    className="input-field"
+                                    value={formData.employment_type}
+                                    onChange={e => setFormData({ ...formData, employment_type: e.target.value })}
+                                >
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="internship">Internship</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea
+                                className="input-field min-h-[120px]"
+                                placeholder="Describe the role, responsibilities, and requirements..."
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="pt-6 border-t">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-indigo-600" />
+                                Custom Screening Questions
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Update the questions to filter candidates for this role.
+                            </p>
+
+                            <div className="space-y-6">
+                                {screeningQuestions.map((q, qIndex) => (
+                                    <div key={q.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200 relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMCQ(qIndex)}
+                                            className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Question {qIndex + 1} (Multiple Choice)</label>
+                                                <input
+                                                    type="text"
+                                                    className="input-field"
+                                                    placeholder="e.g. Years of experience in React?"
+                                                    value={q.text}
+                                                    onChange={e => updateMCQ(qIndex, 'text', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                {q.options.map((opt: string, oIndex: number) => (
+                                                    <div key={oIndex} className="relative">
+                                                        <input
+                                                            type="text"
+                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-green-500 bg-green-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                                            placeholder={`Option ${oIndex + 1}`}
+                                                            value={opt}
+                                                            onChange={e => updateMCQOption(qIndex, oIndex, e.target.value)}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateMCQ(qIndex, 'correctIndex', oIndex)}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-green-600 bg-white shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                                                            title="Mark as expected answer"
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {screeningQuestions.length < 3 && (
+                                    <button
+                                        type="button"
+                                        onClick={addMCQ}
+                                        className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition flex items-center justify-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add Multi-Choice Question
+                                    </button>
+                                )}
+
+                                <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                                    <label className="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Final Open-Ended Question</label>
+                                    <input
+                                        type="text"
+                                        className="input-field bg-white"
+                                        placeholder="e.g. Why are you interested in this role?"
+                                        value={openEndedQuestion.text}
+                                        onChange={e => setOpenEndedQuestion({ ...openEndedQuestion, text: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t flex justify-end gap-3">
+                            <Link href="/dashboard/positions" className="btn-secondary">
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="btn-primary flex items-center gap-2"
+                            >
+                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    );
+}
