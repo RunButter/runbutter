@@ -116,7 +116,13 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     patterns: 88,
                     problem_solving: 94
                 },
-                summary: "This candidate shows strong leadership potential with a highly collaborative work style. They are strategic thinkers who prefer structured environments but remain open to innovative solutions. Their high conscientiousness makes them reliable for complex, long-term projects."
+                screening_score: 100,
+                screening_answers: [
+                    { question: "How many years of React experience do you have?", answer: "3+ years", is_correct: true },
+                    { question: "Have you worked with Supabase or PostgreSQL?", answer: "Yes, expert level", is_correct: true },
+                    { question: "Tell us about your most complex project.", answer: "Built a multi-tenant SaaS for recruitment with AI integration and RLS security.", is_correct: null }
+                ],
+                summary: "This candidate shows strong leadership potential with a highly collaborative work style. They matched 100% on core technical screening questions. Their detailed open-ended response about multi-tenant SaaS architecture is particularly impressive."
             };
 
             const { error } = await supabase.from('assessment_results').insert(demoResults);
@@ -370,6 +376,36 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             </p>
                                         </div>
                                     )}
+
+                                    {results.screening_answers && results.screening_answers.length > 0 && (
+                                        <div className="pt-8 border-t border-gray-100">
+                                            <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-indigo-500" />
+                                                Screening & Qualification
+                                            </h3>
+                                            <div className="space-y-4">
+                                                {results.screening_answers.map((sa: any, idx: number) => (
+                                                    <div key={idx} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Question {idx + 1}</div>
+                                                        <p className="text-sm font-bold text-gray-800 mb-3">{sa.question}</p>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className={`text-sm px-3 py-1 rounded-lg font-medium ${sa.is_correct === true ? 'bg-green-100 text-green-700 border border-green-200' :
+                                                                sa.is_correct === false ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                                                                    'bg-white text-gray-700 border border-gray-200'
+                                                                }`}>
+                                                                {sa.answer}
+                                                            </div>
+                                                            {sa.is_correct !== null && (
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                                    {sa.is_correct ? 'Correct Match' : 'Mismatch'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -551,6 +587,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     </div>
                 </div>
             </main>
-        </div>
+        </div >
     );
 }

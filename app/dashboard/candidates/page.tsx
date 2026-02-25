@@ -26,6 +26,9 @@ export default function CandidatesPage() {
 
     const loadCandidates = async (privyUserId: string) => {
         try {
+            // Ensure we have a valid Supabase session for Native RLS
+            await supabase.auth.getUser();
+
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
             const { data: companyUser } = await supabase
@@ -41,7 +44,7 @@ export default function CandidatesPage() {
                 .select(`
           *,
           position:positions(title),
-          assessment_results(overall_score)
+          assessment_results(overall_score, screening_score)
         `)
                 .eq('company_id', companyUser.company_id)
                 .order('applied_at', { ascending: false });
@@ -109,7 +112,8 @@ export default function CandidatesPage() {
                             <tr>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">Candidate</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">Position</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Lead Score</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-center">Score</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Screening</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">Applied Date</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Actions</th>
@@ -125,16 +129,34 @@ export default function CandidatesPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{can.position?.title || '—'}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 text-center">
                                         {can.assessment_results?.[0]?.overall_score ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-10 h-10 rounded-full border-4 border-primary-100 flex items-center justify-center text-xs font-black text-primary-700">
-                                                    {can.assessment_results[0].overall_score}
-                                                </div>
-                                                <div className="text-[10px] uppercase font-bold text-gray-400">Match</div>
+                                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 border-2 border-indigo-100 text-xs font-black text-indigo-700">
+                                                {can.assessment_results[0].overall_score}
                                             </div>
                                         ) : (
                                             <span className="text-gray-300 text-xs italic">Pending</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {can.assessment_results?.[0]?.screening_score !== null && can.assessment_results?.[0]?.screening_score !== undefined ? (
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-gray-400">
+                                                    <span>MATCH</span>
+                                                    <span>{can.assessment_results[0].screening_score}%</span>
+                                                </div>
+                                                <div className="w-24 h-2 bg-gray-50 rounded-full overflow-hidden border border-gray-100 flex shadow-inner">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-1000 ${can.assessment_results[0].screening_score >= 66 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' :
+                                                                can.assessment_results[0].screening_score >= 33 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]' :
+                                                                    'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+                                                            }`}
+                                                        style={{ width: `${can.assessment_results[0].screening_score}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-300 text-xs italic">N/A</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">

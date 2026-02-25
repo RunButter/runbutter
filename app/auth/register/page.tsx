@@ -114,6 +114,8 @@ export default function RegisterPage() {
         }
       }
 
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+
       const { error: userError } = await supabase
         .from('company_users')
         .insert({
@@ -122,6 +124,7 @@ export default function RegisterPage() {
           full_name: fullName,
           role: 'owner',
           privy_user_id: user.id,
+          auth_user_id: supabaseUser?.id,
         });
       if (userError) throw new Error(userError.message);
 

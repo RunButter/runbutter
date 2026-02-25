@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
-import { Briefcase, ArrowLeft, Loader2, Globe, Building2 } from 'lucide-react';
+import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewPositionPage() {
@@ -20,6 +20,42 @@ export default function NewPositionPage() {
         location: '',
         employment_type: 'full-time',
     });
+
+    const [screeningQuestions, setScreeningQuestions] = useState<any[]>([
+        { id: 's1', category: 'screening', type: 'choice', text: '', options: ['', '', ''], correctIndex: 0 },
+    ]);
+
+    const [openEndedQuestion, setOpenEndedQuestion] = useState({ id: 's_open', category: 'screening', type: 'text', text: '' });
+
+    const addMCQ = () => {
+        if (screeningQuestions.length >= 3) return;
+        setScreeningQuestions([...screeningQuestions, {
+            id: `s${screeningQuestions.length + 1}`,
+            category: 'screening',
+            type: 'choice',
+            text: '',
+            options: ['', '', ''],
+            correctIndex: 0
+        }]);
+    };
+
+    const removeMCQ = (index: number) => {
+        setScreeningQuestions(screeningQuestions.filter((_, i) => i !== index));
+    };
+
+    const updateMCQ = (index: number, field: string, value: any) => {
+        const updated = [...screeningQuestions];
+        updated[index] = { ...updated[index], [field]: value };
+        setScreeningQuestions(updated);
+    };
+
+    const updateMCQOption = (qIndex: number, oIndex: number, value: string) => {
+        const updated = [...screeningQuestions];
+        const updatedOptions = [...updated[qIndex].options];
+        updatedOptions[oIndex] = value;
+        updated[qIndex].options = updatedOptions;
+        setScreeningQuestions(updated);
+    };
 
     useEffect(() => {
         if (ready && !authenticated) {
@@ -62,16 +98,24 @@ export default function NewPositionPage() {
 
             if (postError) throw postError;
 
+            // Combine default questions with custom screening questions
+            const defaultQuestions = [
+                { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] }
+            ];
+
+            const customQuestions = [
+                ...screeningQuestions.filter(q => q.text.trim() !== ''),
+                ...(openEndedQuestion.text.trim() !== '' ? [openEndedQuestion] : [])
+            ];
+
             // Create default assessment for this position
             await supabase.from('assessment_templates').insert({
                 company_id: companyUser.company_id,
                 position_id: position.id,
                 name: `${formData.title} Assessment`,
                 description: `Standard assessment for ${formData.title}`,
-                questions: [
-                    { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['1', '2', '3', '4', '5'] },
-                    { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['1', '2', '3', '4', '5'] }
-                ],
+                questions: [...defaultQuestions, ...customQuestions],
                 is_default: true
             });
 
@@ -170,11 +214,90 @@ export default function NewPositionPage() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                             <textarea
-                                className="input-field min-h-[150px]"
+                                className="input-field min-h-[120px]"
                                 placeholder="Describe the role, responsibilities, and requirements..."
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                             />
+                        </div>
+
+                        <div className="pt-6 border-t">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-indigo-600" />
+                                Custom Screening Questions
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Add specific questions to filter candidates automatically based on your requirements.
+                            </p>
+
+                            <div className="space-y-6">
+                                {screeningQuestions.map((q, qIndex) => (
+                                    <div key={q.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200 relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMCQ(qIndex)}
+                                            className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Question {qIndex + 1} (Multiple Choice)</label>
+                                                <input
+                                                    type="text"
+                                                    className="input-field"
+                                                    placeholder="e.g. Years of experience in React?"
+                                                    value={q.text}
+                                                    onChange={e => updateMCQ(qIndex, 'text', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                {q.options.map((opt: string, oIndex: number) => (
+                                                    <div key={oIndex} className="relative">
+                                                        <input
+                                                            type="text"
+                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-green-500 bg-green-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                                            placeholder={`Option ${oIndex + 1}`}
+                                                            value={opt}
+                                                            onChange={e => updateMCQOption(qIndex, oIndex, e.target.value)}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateMCQ(qIndex, 'correctIndex', oIndex)}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-green-600 bg-white shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                                                            title="Mark as expected answer"
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {screeningQuestions.length < 3 && (
+                                    <button
+                                        type="button"
+                                        onClick={addMCQ}
+                                        className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition flex items-center justify-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add Multi-Choice Question
+                                    </button>
+                                )}
+
+                                <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                                    <label className="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Final Open-Ended Question</label>
+                                    <input
+                                        type="text"
+                                        className="input-field bg-white"
+                                        placeholder="e.g. Why are you interested in this role?"
+                                        value={openEndedQuestion.text}
+                                        onChange={e => setOpenEndedQuestion({ ...openEndedQuestion, text: e.target.value })}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <div className="pt-4 border-t flex justify-end gap-3">

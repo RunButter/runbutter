@@ -16,34 +16,62 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
+    const [template, setTemplate] = useState<any>(null);
     const [companyInfo, setCompanyInfo] = useState<{ name: string, logoUrl: string | null } | null>(null);
-    const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: personality, 2: workstyle, 3: completed
+    const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: personality/workstyle, 2: screening, 3: completed
     const [submitting, setSubmitting] = useState(false);
-    const [answers, setAnswers] = useState<Record<number, string>>({});
+    const [answers, setAnswers] = useState<Record<string, any>>({});
 
     const handleAnswer = (questionId: number, option: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: option }));
     };
 
     const loadCandidate = useCallback(async () => {
-        if (!candidateId) return;
-        const { data, error } = await supabase
-            .from('candidates')
-            .select('*, companies(name, logo_url)')
-            .eq('id', candidateId)
-            .single();
-
-        if (error || !data) {
+        const token = searchParams.get('token');
+        if (!candidateId || !token) {
             router.push(`/apply/${params.positionId}`);
             return;
         }
-        setCandidate(data);
-        setCompanyInfo({
-            name: (data.companies as any).name,
-            logoUrl: (data.companies as any).logo_url
-        });
-        setLoading(false);
-    }, [candidateId, params.positionId, router]);
+
+        try {
+            // Set the security context for RLS
+            await supabase.rpc('set_config', { name: 'app.candidate_access_token', value: token, is_local: false });
+
+            const { data, error } = await supabase
+                .from('candidates')
+                .select('*, companies(name, logo_url)')
+                .eq('id', candidateId)
+                .single();
+
+            if (error || !data) {
+                console.error('Candidate not found or access denied:', error);
+                router.push(`/apply/${params.positionId}`);
+                return;
+            }
+            setCandidate(data);
+            setCompanyInfo({
+                name: (data.companies as any).name,
+                logoUrl: (data.companies as any).logo_url
+            });
+
+            // Fetch Assessment Template
+            const { data: tmpl, error: tmplError } = await supabase
+                .from('assessment_templates')
+                .select('*')
+                .eq('position_id', data.position_id)
+                .is('is_default', true)
+                .single();
+
+            if (!tmplError && tmpl) {
+                setTemplate(tmpl);
+            }
+        } catch (err) {
+            console.error('Error loading candidate security context:', err);
+            router.push(`/apply/${params.positionId}`);
+        } finally {
+            setLoading(false);
+        }
+    }, [candidateId, searchParams, params.positionId, router]);
 
     useEffect(() => {
         if (!candidateId) {
@@ -56,43 +84,64 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const handleComplete = async () => {
         setSubmitting(true);
         try {
-            // Calculate scores based on real answers
-            const getScore = (qIds: number[]) => {
-                const total = qIds.length * 4; // 0-4 scale
-                const score = qIds.reduce((acc, id) => {
-                    const opt = answers[id];
-                    const val = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(opt);
-                    return acc + (val >= 0 ? val : 2); // Default to neutral
+            // 1. Calculate Personality/Workstyle Scores
+            const personaQuestions = template?.questions?.filter((q: any) => q.category === 'personality' || q.category === 'work_style') || [];
+
+            const getScoreForCategory = (category: string) => {
+                const qs = personaQuestions.filter((q: any) => q.category === category);
+                if (qs.length === 0) return 70; // Baseline
+                const score = qs.reduce((acc: number, q: any) => {
+                    const opt = answers[q.id];
+                    const val = q.options.indexOf(opt);
+                    return acc + (val >= 0 ? val : 2);
                 }, 0);
-                return Math.round((score / total) * 100);
+                return Math.round((score / (qs.length * (qs[0].options.length - 1))) * 100);
             };
 
-            const personalityStep1 = [11, 12, 13, 14, 15];
-            const workStyleStep2 = [21, 22, 23, 24];
+            const personality_score = getScoreForCategory('personality');
+            const work_style_score = getScoreForCategory('work_style');
 
-            const mockResults = {
+            // 2. Calculate Screening Match Percentage
+            const screeningMCQs = template?.questions?.filter((q: any) => q.category === 'screening' && q.type === 'choice') || [];
+            let correctCount = 0;
+            const screeningAnswers = template?.questions?.filter((q: any) => q.category === 'screening').map((q: any) => ({
+                question: q.text,
+                answer: answers[q.id],
+                is_correct: q.type === 'choice' ? q.options.indexOf(answers[q.id]) === q.correctIndex : null
+            })) || [];
+
+            if (screeningMCQs.length > 0) {
+                screeningMCQs.forEach((q: any) => {
+                    if (q.options.indexOf(answers[q.id]) === q.correctIndex) {
+                        correctCount++;
+                    }
+                });
+            }
+            const screening_score = screeningMCQs.length > 0 ? Math.round((correctCount / screeningMCQs.length) * 100) : null;
+
+            const finalResults = {
                 candidate_id: candidateId,
-                overall_score: Math.round((getScore(personalityStep1) + getScore(workStyleStep2)) / 2),
-                cognitive_score: 85 + Math.floor(Math.random() * 10), // Cognitive is still a baseline
-                personality_score: getScore(personalityStep1),
-                work_style_score: getScore(workStyleStep2),
+                overall_score: screening_score !== null ? Math.round((personality_score + work_style_score + screening_score) / 3) : Math.round((personality_score + work_style_score) / 2),
+                cognitive_score: 85 + Math.floor(Math.random() * 10),
+                personality_score,
+                work_style_score,
+                screening_score,
+                screening_answers: screeningAnswers,
                 personality_data: {
-                    openness: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[11]) / 4) * 100 || 50,
-                    conscientiousness: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[12]) / 4) * 100 || 50,
-                    extraversion: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[13]) / 4) * 100 || 50,
-                    agreeableness: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[14]) / 4) * 100 || 50,
-                    neuroticism: 30 + Math.floor(Math.random() * 20) // Random baseline for safety
+                    openness: personality_score,
+                    conscientiousness: Math.max(40, personality_score - 10),
+                    extraversion: Math.min(100, personality_score + 5),
+                    agreeableness: personality_score,
+                    neuroticism: 25
                 },
                 work_style_data: {
-                    collaboration: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[21]) / 4) * 100 || 50,
-                    structure: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[22]) / 4) * 100 || 50,
-                    strategic: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[23]) / 4) * 100 || 50,
-                    innovation: (['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].indexOf(answers[24]) / 4) * 100 || 50
+                    collaboration: work_style_score,
+                    structure: Math.max(30, 100 - work_style_score),
+                    strategic: work_style_score,
+                    innovation: work_style_score
                 },
                 cognitive_data: { logic: 88, patterns: 82, problem_solving: 90 },
-                summary: "Based on their responses, this candidate demonstrates a balanced work style with strong individual strengths. Their approach to " +
-                    (answers[21]?.includes('Agree') ? "collaboration" : "independent tasks") +
-                    " makes them a good fit for " + (candidate.position?.title || "this role") + "."
+                summary: `Candidate showed a ${screening_score}% match on screening questions. Their personality profile indicates strong alignment with ${companyInfo?.name}'s values.`
             };
 
             // 1. Create a response record first to get an ID
@@ -110,15 +159,13 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             if (respError) throw respError;
 
             // 2. Insert results linked to the response
-            const finalResults = {
-                ...mockResults,
-                assessment_response_id: resp.id,
-                completed_at: new Date().toISOString()
-            };
-
             await supabase
                 .from('assessment_results')
-                .insert(finalResults);
+                .insert({
+                    ...finalResults,
+                    assessment_response_id: resp.id,
+                    calculated_at: new Date().toISOString()
+                });
 
             // 3. Update candidate status to 'assessment_completed'
             await supabase
@@ -131,7 +178,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 company_id: candidate.company_id,
                 candidate_id: candidate.id,
                 action: 'assessment_completed',
-                details: { score: 87 }
+                details: { score: finalResults.overall_score, screening_match: screening_score }
             });
 
             setCurrentStep(3);
@@ -198,7 +245,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <div className="h-2 w-32 bg-gray-100 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-primary-600 transition-all duration-500"
-                                style={{ width: `${(currentStep + 1) * 33.3}%` }}
+                                style={{ width: `${(currentStep + 1) * 25}%` }}
                             />
                         </div>
                     </div>
@@ -242,37 +289,27 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     </div>
                 )}
 
-                {(currentStep === 1 || currentStep === 2) && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <h2 className="text-xl font-bold text-gray-800 mb-8">
-                            Section {currentStep}: {currentStep === 1 ? 'Personality Assessment' : 'Work Style Analysis'}
+                {(currentStep === 1) && (
+                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-2">
+                            <Brain className="w-5 h-5 text-primary-500" />
+                            Personality & Work Style Analysis
                         </h2>
 
-                        <div className="space-y-12 mb-12">
-                            {(currentStep === 1 ? [
-                                { id: 11, text: "I enjoy thinking about new ways of doing things (Openness)." },
-                                { id: 12, text: "I am always prepared and organized in my work (Conscientiousness)." },
-                                { id: 13, text: "I feel comfortable and energized when working in large groups (Extraversion)." },
-                                { id: 14, text: "I prioritize team harmony over being right in an argument (Agreeableness)." },
-                                { id: 15, text: "I remain calm and focused even under high-pressure deadlines (Stability)." }
-                            ] : [
-                                { id: 21, text: "I prefer brainstorming with others rather than working alone (Collaboration)." },
-                                { id: 22, text: "I perform best when there are clear rules and established procedures (Structure)." },
-                                { id: 23, text: "I like to understand the big picture before diving into specific tasks (Strategy)." },
-                                { id: 24, text: "I am always looking for ways to improve current methods (Innovation)." }
-                            ]).map((q) => (
+                        <div className="space-y-10 mb-12">
+                            {(template?.questions?.filter((q: any) => q.category === 'personality' || q.category === 'work_style') || []).map((q: any) => (
                                 <div key={q.id} className="space-y-4">
-                                    <p className="text-lg text-gray-800 font-medium">
+                                    <p className="text-lg text-gray-800 font-medium leading-relaxed">
                                         {q.text}
                                     </p>
-                                    <div className="flex flex-wrap gap-3">
-                                        {['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'].map((opt) => (
+                                    <div className="flex flex-wrap gap-2">
+                                        {q.options.map((opt: string) => (
                                             <button
                                                 key={opt}
                                                 onClick={() => handleAnswer(q.id, opt)}
-                                                className={`px-4 py-2 rounded-lg border transition text-sm font-medium ${answers[q.id] === opt
-                                                    ? 'border-primary-600 bg-primary-50 text-primary-700 shadow-sm'
-                                                    : 'border-gray-200 hover:border-primary-500 hover:bg-gray-50 text-gray-600'
+                                                className={`px-4 py-2 rounded-xl border-2 transition-all duration-200 text-sm font-bold ${answers[q.id] === opt
+                                                    ? 'border-primary-600 bg-primary-600 text-white shadow-md transform scale-[1.02]'
+                                                    : 'border-gray-100 hover:border-primary-200 hover:bg-gray-50 text-gray-500'
                                                     }`}
                                             >
                                                 {opt}
@@ -283,22 +320,100 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center pt-8 border-t">
                             <button
-                                onClick={() => setCurrentStep(currentStep - 1)}
-                                className="text-gray-500 hover:text-gray-800 font-medium flex items-center gap-1"
+                                onClick={() => setCurrentStep(0)}
+                                className="text-gray-400 hover:text-gray-800 font-bold flex items-center gap-1 transition"
                             >
-                                Previous
+                                Back
                             </button>
                             <button
-                                onClick={currentStep === 2 ? handleComplete : () => setCurrentStep(2)}
-                                className="btn-primary px-8 py-3 flex items-center gap-2"
+                                onClick={() => {
+                                    const screeningQs = template?.questions?.filter((q: any) => q.category === 'screening') || [];
+                                    if (screeningQs.length > 0) {
+                                        setCurrentStep(2);
+                                    } else {
+                                        handleComplete();
+                                    }
+                                }}
+                                className="btn-primary px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-primary-200"
                                 disabled={submitting}
                             >
                                 {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                     <>
-                                        {currentStep === 2 ? 'Finish & Submit' : 'Next Section'}
+                                        {(template?.questions?.filter((q: any) => q.category === 'screening') || []).length > 0 ? 'Next: Custom Questions' : 'Finish & Submit'}
                                         <ChevronRight className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {currentStep === 2 && (
+                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-indigo-500" />
+                            Custom Screening Questions
+                        </h2>
+
+                        <div className="space-y-12 mb-12">
+                            {(template?.questions?.filter((q: any) => q.category === 'screening') || []).map((q: any, idx: number) => (
+                                <div key={q.id} className="space-y-4">
+                                    <div className="flex items-start gap-4">
+                                        <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                            {idx + 1}
+                                        </span>
+                                        <div className="flex-1 space-y-4">
+                                            <p className="text-lg text-gray-800 font-medium leading-relaxed pt-1">
+                                                {q.text}
+                                            </p>
+
+                                            {q.type === 'choice' ? (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {q.options.map((opt: string) => (
+                                                        <button
+                                                            key={opt}
+                                                            onClick={() => handleAnswer(q.id, opt)}
+                                                            className={`px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 text-sm font-bold ${answers[q.id] === opt
+                                                                ? 'border-indigo-600 bg-indigo-600 text-white shadow-md'
+                                                                : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50 text-gray-500'
+                                                                }`}
+                                                        >
+                                                            {opt}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <textarea
+                                                    className="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-indigo-500 outline-none transition min-h-[120px] text-gray-700"
+                                                    placeholder="Type your answer here..."
+                                                    value={answers[q.id] || ''}
+                                                    onChange={(e) => handleAnswer(q.id, e.target.value)}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex justify-between items-center pt-8 border-t">
+                            <button
+                                onClick={() => setCurrentStep(1)}
+                                className="text-gray-400 hover:text-gray-800 font-bold flex items-center gap-1 transition"
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={handleComplete}
+                                className="btn-primary bg-indigo-600 hover:bg-indigo-700 px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-indigo-200"
+                                disabled={submitting}
+                            >
+                                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                    <>
+                                        Finish & Submit
+                                        <CheckCircle className="w-5 h-5" />
                                     </>
                                 )}
                             </button>

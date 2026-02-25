@@ -78,6 +78,7 @@ CREATE TABLE candidates (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     notes TEXT,
     source TEXT, -- where they came from (linkedin, direct, referral, etc)
+    access_token UUID DEFAULT uuid_generate_v4(), -- Secret token for candidate access
     UNIQUE(company_id, position_id, email)
 );
 
@@ -211,8 +212,11 @@ CREATE POLICY "Users can view own company candidates" ON candidates
 CREATE POLICY "Public can insert candidates" ON candidates
     FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Public can update own candidate record" ON candidates
-    FOR UPDATE USING (true);
+-- HARDENED: Only the candidate with the correct token can select/update their own record
+CREATE POLICY "Candidates can access own record" ON candidates
+    FOR ALL USING (
+        access_token::text = current_setting('app.candidate_access_token', true)
+    );
 
 CREATE POLICY "Public can insert activity log" ON activity_log
     FOR INSERT WITH CHECK (true);
@@ -258,14 +262,23 @@ ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public CV upload" ON storage.objects
     FOR INSERT WITH CHECK (bucket_id = 'candidate-cvs');
 
--- Allow recruiters to view CVs
-CREATE POLICY "Allow recruiters to view CVs" ON storage.objects
+-- Allow recruiters or the candidate with the matching token to view CVs
+CREATE POLICY "Allow authorized view of CVs" ON storage.objects
     FOR SELECT USING (
         bucket_id = 'candidate-cvs' AND
         (
-            SELECT company_id FROM company_users 
-            WHERE privy_user_id = current_setting('app.current_privy_user_id', true)
-        ) IS NOT NULL
+            -- Option 1: Recruiter from the same company
+            (SELECT company_id FROM company_users 
+             WHERE privy_user_id = current_setting('app.current_privy_user_id', true)
+             OR auth_user_id = auth.uid()) IS NOT NULL
+            OR
+            -- Option 2: The candidate themselves using their access token
+            -- We assume the filename contains the candidate_id (as per uploadCV logic)
+            (storage.foldername(name))[1] IN (
+                SELECT id::text FROM candidates 
+                WHERE access_token::text = current_setting('app.candidate_access_token', true)
+            )
+        )
     );
 
 -- Assessment Results Table (if not exists)
@@ -291,9 +304,16 @@ CREATE POLICY "Users can view own company assessment results" ON assessment_resu
             SELECT id FROM candidates WHERE company_id IN (
                 SELECT company_id FROM company_users 
                 WHERE privy_user_id = current_setting('app.current_privy_user_id', true)
+                OR auth_user_id = auth.uid()
             )
+            OR access_token::text = current_setting('app.candidate_access_token', true)
         )
     );
 
 CREATE POLICY "Public can insert assessment results" ON assessment_results
-    FOR INSERT WITH CHECK (true);
+    FOR INSERT WITH CHECK (
+        candidate_id IN (
+            SELECT id FROM candidates 
+            WHERE access_token::text = current_setting('app.candidate_access_token', true)
+        )
+    );

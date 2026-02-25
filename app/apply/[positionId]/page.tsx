@@ -16,6 +16,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [candidateId, setCandidateId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [positionInfo, setPositionInfo] = useState<{ title: string; companyName: string; logoUrl: string | null } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -138,6 +139,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
       setSuccess(true);
       setCandidateId(candidate.id);
+      setAccessToken(candidate.access_token);
     } catch (err: unknown) {
       console.error('Application error:', err);
       // Try to extract message from Supabase error object
@@ -177,7 +179,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
                 To complete your application, please take our 15-minute personality and skills assessment.
               </p>
               <Link
-                href={`/apply/${params.positionId}/assessment?candidateId=${candidateId}`}
+                href={`/apply/${params.positionId}/assessment?candidateId=${candidateId}&token=${accessToken}`}
                 className="btn-primary w-full py-3 block text-center"
               >
                 Start Assessment Now
