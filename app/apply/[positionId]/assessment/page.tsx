@@ -65,13 +65,34 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             if (!tmplError && tmpl) {
                 setTemplate(tmpl);
             } else {
-                // Fallback for positions without custom templates (old positions)
+                // Fallback / Default Big 5 Assessment (20 items)
                 setTemplate({
                     questions: [
-                        { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: '3', category: 'personality', trait: 'Openness', text: 'I enjoy thinking about new ways of doing things', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: '4', category: 'work_style', text: 'I like to understand the big picture before diving into specific tasks', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] }
+                        // Openness
+                        { id: 'b5_o1', category: 'personality', trait: 'Openness', text: 'I have a vivid imagination.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_o2', category: 'personality', trait: 'Openness', text: 'I am interested in abstract ideas.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_o3', category: 'personality', trait: 'Openness', text: 'I enjoy thinking about new ways of doing things.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_o4', category: 'personality', trait: 'Openness', text: 'I am full of ideas.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        // Conscientiousness
+                        { id: 'b5_c1', category: 'personality', trait: 'Conscientiousness', text: 'I am always prepared.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_c2', category: 'personality', trait: 'Conscientiousness', text: 'I pay attention to details.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_c3', category: 'personality', trait: 'Conscientiousness', text: 'I like order.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_c4', category: 'personality', trait: 'Conscientiousness', text: 'I follow a schedule.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        // Extraversion
+                        { id: 'b5_e1', category: 'personality', trait: 'Extraversion', text: 'I am the life of the party.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_e2', category: 'personality', trait: 'Extraversion', text: 'I feel comfortable around people.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_e3', category: 'personality', trait: 'Extraversion', text: 'I start conversations.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_e4', category: 'personality', trait: 'Extraversion', text: 'I talk to a lot of different people at parties.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        // Agreeableness
+                        { id: 'b5_a1', category: 'personality', trait: 'Agreeableness', text: 'I am interested in people.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_a2', category: 'personality', trait: 'Agreeableness', text: 'I sympathize with others\' feelings.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_a3', category: 'personality', trait: 'Agreeableness', text: 'I have a soft heart.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_a4', category: 'personality', trait: 'Agreeableness', text: 'I take time out for others.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        // Neuroticism
+                        { id: 'b5_n1', category: 'personality', trait: 'Neuroticism', text: 'I get stressed out easily.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_n2', category: 'personality', trait: 'Neuroticism', text: 'I worry about things.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_n3', category: 'personality', trait: 'Neuroticism', text: 'I am easily disturbed.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
+                        { id: 'b5_n4', category: 'personality', trait: 'Neuroticism', text: 'I change my mood a lot.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
                     ]
                 });
             }
@@ -94,24 +115,55 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const handleComplete = async () => {
         setSubmitting(true);
         try {
-            // 1. Calculate Personality/Workstyle Scores
-            const personaQuestions = template?.questions?.filter((q: any) => q.category === 'personality' || q.category === 'work_style') || [];
+            // 0. Fetch Position Neuro-Profile for benchmark
+            const { data: posData } = await supabase
+                .from('positions')
+                .select('neuro_profile')
+                .eq('id', params.positionId)
+                .single();
 
-            const getScoreForCategory = (category: string) => {
-                const qs = personaQuestions.filter((q: any) => q.category === category);
-                if (qs.length === 0) return 70; // Baseline
-                const score = qs.reduce((acc: number, q: any) => {
+            const neuroProfile = posData?.neuro_profile || 'hard-tech';
+
+            // 1. Calculate Personality Scores (Big 5)
+            const getScoreForTrait = (trait: string) => {
+                const qs = template?.questions?.filter((q: any) => q.trait === trait) || [];
+                if (qs.length === 0) return 50;
+                const total = qs.reduce((acc: number, q: any) => {
                     const opt = answers[q.id];
-                    const val = q.options.indexOf(opt);
+                    const val = q.options.indexOf(opt); // 0-4
                     return acc + (val >= 0 ? val : 2);
                 }, 0);
-                return Math.round((score / (qs.length * (qs[0].options.length - 1))) * 100);
+                return Math.round((total / (qs.length * 4)) * 100);
             };
 
-            const personality_score = getScoreForCategory('personality');
-            const work_style_score = getScoreForCategory('work_style');
+            const openness = getScoreForTrait('Openness');
+            const conscientiousness = getScoreForTrait('Conscientiousness');
+            const extraversion = getScoreForTrait('Extraversion');
+            const agreeableness = getScoreForTrait('Agreeableness');
+            const neuroticism = getScoreForTrait('Neuroticism');
 
-            // 2. Calculate Screening Match Percentage
+            // 2. Calculate Neuro-Profile Match
+            const calculateMatch = (scores: any, profile: string) => {
+                let match = 0;
+                if (profile === 'hard-tech') {
+                    // Focus: C / O
+                    match = (scores.conscientiousness * 0.5) + (scores.openness * 0.5);
+                } else if (profile === 'aggressive-sales') {
+                    // Focus: E / A- (Inverted A)
+                    match = (scores.extraversion * 0.6) + ((100 - scores.agreeableness) * 0.4);
+                } else if (profile === 'creative-chaos') {
+                    // Focus: O / N
+                    match = (scores.openness * 0.6) + (scores.neuroticism * 0.4);
+                } else if (profile === 'operations-monk') {
+                    // Focus: C / N- (Inverted N)
+                    match = (scores.conscientiousness * 0.6) + ((100 - scores.neuroticism) * 0.4);
+                }
+                return Math.round(match);
+            };
+
+            const overall_score = calculateMatch({ openness, conscientiousness, extraversion, agreeableness, neuroticism }, neuroProfile);
+
+            // 3. Calculate Screening Match Percentage (MCQs)
             const screeningMCQs = template?.questions?.filter((q: any) => q.category === 'screening' && q.type === 'choice') || [];
             let correctCount = 0;
             const screeningAnswers = template?.questions?.filter((q: any) => q.category === 'screening').map((q: any) => ({
@@ -131,27 +183,21 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             const finalResults = {
                 candidate_id: candidateId,
-                overall_score: screening_score !== null ? Math.round((personality_score + work_style_score + screening_score) / 3) : Math.round((personality_score + work_style_score) / 2),
+                overall_score,
                 cognitive_score: 85 + Math.floor(Math.random() * 10),
-                personality_score,
-                work_style_score,
+                personality_score: Math.round((openness + conscientiousness + extraversion + agreeableness + (100 - neuroticism)) / 5),
+                work_style_score: Math.round((conscientiousness + extraversion) / 2),
                 screening_score,
                 screening_answers: screeningAnswers,
-                personality_data: {
-                    openness: personality_score,
-                    conscientiousness: Math.max(40, personality_score - 10),
-                    extraversion: Math.min(100, personality_score + 5),
-                    agreeableness: personality_score,
-                    neuroticism: 25
-                },
+                personality_data: { openness, conscientiousness, extraversion, agreeableness, neuroticism },
                 work_style_data: {
-                    collaboration: work_style_score,
-                    structure: Math.max(30, 100 - work_style_score),
-                    strategic: work_style_score,
-                    innovation: work_style_score
+                    collaboration: agreeableness,
+                    structure: conscientiousness,
+                    strategic: openness,
+                    innovation: openness
                 },
                 cognitive_data: { logic: 88, patterns: 82, problem_solving: 90 },
-                summary: `Candidate showed a ${screening_score}% match on screening questions. Their personality profile indicates strong alignment with ${companyInfo?.name}'s values.`
+                summary: `Candidate profile matches the ${neuroProfile.toUpperCase()} Neuro-Profile with a ${overall_score}% alignment rating.`
             };
 
             // 1. Create a response record first to get an ID

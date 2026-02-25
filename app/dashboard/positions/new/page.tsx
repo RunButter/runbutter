@@ -19,6 +19,7 @@ export default function NewPositionPage() {
         department: '',
         location: '',
         employment_type: 'full-time',
+        neuro_profile: 'hard-tech' as any,
     });
 
     const [screeningQuestions, setScreeningQuestions] = useState<any[]>([
@@ -90,6 +91,7 @@ export default function NewPositionPage() {
                     department: formData.department,
                     location: formData.location,
                     employment_type: formData.employment_type,
+                    neuro_profile: formData.neuro_profile,
                     created_by: companyUser.id,
                     is_active: true
                 })
@@ -219,6 +221,42 @@ export default function NewPositionPage() {
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                             />
+                        </div>
+
+                        <div className="pt-6 border-t font-sans">
+                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">
+                                [ SELECT NEURO-PROFILE ]
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[
+                                    { id: 'hard-tech', label: 'HARD-TECH', focus: 'Focus: C / O', color: 'border-blue-200 bg-blue-50 text-blue-700' },
+                                    { id: 'aggressive-sales', label: 'AGGRESSIVE-SALES', focus: 'Focus: E / A-', color: 'border-orange-200 bg-orange-50 text-orange-700' },
+                                    { id: 'creative-chaos', label: 'CREATIVE-CHAOS', focus: 'Focus: O / N', color: 'border-purple-200 bg-purple-50 text-purple-700' },
+                                    { id: 'operations-monk', label: 'OPERATIONS-MONK', focus: 'Focus: C / N-', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' }
+                                ].map((profile) => (
+                                    <button
+                                        key={profile.id}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, neuro_profile: profile.id })}
+                                        className={`p-4 rounded-xl border-2 text-left transition-all duration-200 relative group ${formData.neuro_profile === profile.id
+                                            ? `${profile.color} shadow-md scale-[1.02]`
+                                            : 'border-gray-100 hover:border-gray-200 bg-white'
+                                            }`}
+                                    >
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-sm font-black tracking-wider">{profile.label}</span>
+                                            {formData.neuro_profile === profile.id && (
+                                                <div className="w-4 h-4 rounded-full bg-current flex items-center justify-center p-0.5">
+                                                    <div className="w-full h-full rounded-full bg-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className={`text-[10px] font-bold uppercase tracking-widest ${formData.neuro_profile === profile.id ? 'opacity-80' : 'text-gray-400 opacity-60'}`}>
+                                            {profile.focus}
+                                        </p>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="pt-6 border-t">

@@ -43,6 +43,7 @@ CREATE TABLE positions (
     department TEXT,
     location TEXT,
     employment_type TEXT CHECK (employment_type IN ('full-time', 'part-time', 'contract', 'internship')),
+    neuro_profile TEXT CHECK (neuro_profile IN ('hard-tech', 'aggressive-sales', 'creative-chaos', 'operations-monk')),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

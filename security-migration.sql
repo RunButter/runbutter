@@ -16,6 +16,17 @@ CREATE POLICY "Candidates can access own record" ON candidates
         access_token::text = current_setting('app.candidate_access_token', true)
     );
 
+-- 2b. Recruiters can view candidates in their company
+DROP POLICY IF EXISTS "Users can view own company candidates" ON candidates;
+CREATE POLICY "Users can view own company candidates" ON candidates
+    FOR SELECT USING (
+        company_id IN (
+            SELECT company_id FROM company_users 
+            WHERE privy_user_id = current_setting('app.current_privy_user_id', true)
+            OR auth_user_id = auth.uid()
+        )
+    );
+
 -- 3. REFINED: Clearer assessment_results policy using EXISTS
 -- This avoids deep IN subqueries and relies on the related table's RLS
 DROP POLICY IF EXISTS "Users can view own company assessment results" ON assessment_results;

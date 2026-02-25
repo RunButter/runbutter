@@ -46,7 +46,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 .from('candidates')
                 .select(`
                     *,
-                    position:positions(title, department)
+                    position:positions(title, department, neuro_profile, created_by)
                 `)
                 .eq('id', params.id)
                 .single();
@@ -164,6 +164,15 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         }
     };
 
+    const neuroProfile = candidate?.position?.neuro_profile || 'hard-tech';
+    const benchmarks: Record<string, number[]> = {
+        'hard-tech': [85, 85, 40, 50, 30], // O, C, E, A, N
+        'aggressive-sales': [50, 60, 90, 30, 40],
+        'creative-chaos': [95, 40, 70, 60, 60],
+        'operations-monk': [40, 95, 40, 60, 20]
+    };
+    const targetData = benchmarks[neuroProfile];
+
     const radarData = results ? {
         labels: ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Neuroticism'],
         datasets: [
@@ -179,6 +188,18 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 backgroundColor: 'rgba(79, 70, 229, 0.2)',
                 borderColor: 'rgba(79, 70, 229, 1)',
                 borderWidth: 2,
+                pointRadius: 3,
+                order: 1
+            },
+            {
+                label: `${neuroProfile.toUpperCase()} Target`,
+                data: targetData,
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                borderColor: 'rgba(16, 185, 129, 0.4)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                order: 2
             },
         ],
     } : null;
@@ -368,14 +389,24 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             </div>
                                         ))}
                                     </div>
-                                    {results.summary && (
-                                        <div className="p-6 bg-primary-50/50 rounded-2xl border border-primary-100">
-                                            <h4 className="text-xs font-black text-primary-700 uppercase tracking-widest mb-3">AI Candidate Summary</h4>
-                                            <p className="text-sm text-gray-700 leading-relaxed italic">
-                                                &quot;{results.summary}&quot;
-                                            </p>
+                                    <div className="p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-xs font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">
+                                                <Target className="w-4 h-4" />
+                                                Neuro-Profile Analysis
+                                            </h4>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-blue-100 text-blue-700' :
+                                                candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-orange-100 text-orange-700' :
+                                                    candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-purple-100 text-purple-700' :
+                                                        'bg-emerald-100 text-emerald-700'
+                                                }`}>
+                                                {candidate?.position?.neuro_profile?.replace('-', ' ') || 'HARD TECH'}
+                                            </span>
                                         </div>
-                                    )}
+                                        <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                                            &quot;{results.summary || 'Analysis pending based on trait alignment.'}&quot;
+                                        </p>
+                                    </div>
 
                                     {results.screening_answers && results.screening_answers.length > 0 && (
                                         <div className="pt-8 border-t border-gray-100">
