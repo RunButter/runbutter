@@ -73,7 +73,7 @@ BEGIN
                 can.*,
                 pos.title as position_title,
                 (
-                    SELECT jsonb_agg(res) 
+                    SELECT jsonb_agg(res ORDER BY completed_at DESC) 
                     FROM assessment_results res 
                     WHERE res.candidate_id = can.id
                 ) as assessment_results
@@ -200,10 +200,9 @@ BEGIN
         pos.neuro_profile as position_neuro_profile,
         pos.created_by as position_created_by,
         (
-            SELECT jsonb_agg(res) 
+            SELECT jsonb_agg(res ORDER BY completed_at DESC) 
             FROM assessment_results res 
             WHERE res.candidate_id = can.id 
-            ORDER BY res.completed_at DESC
         ) as assessment_results
     INTO v_candidate_rec
     FROM candidates can
