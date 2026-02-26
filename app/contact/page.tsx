@@ -9,13 +9,39 @@ export default function ContactPage() {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(false);
-        setSubmitted(true);
+        setError(null);
+
+        const formData = new FormData(e.currentTarget);
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+        };
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.error || 'Failed to send message');
+            }
+
+            setSubmitted(true);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (submitted) {
@@ -122,6 +148,7 @@ export default function ContactPage() {
                                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
                                         <input
                                             required
+                                            name="name"
                                             type="text"
                                             placeholder="John Doe"
                                             className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
@@ -131,6 +158,7 @@ export default function ContactPage() {
                                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Work Email</label>
                                         <input
                                             required
+                                            name="email"
                                             type="email"
                                             placeholder="john@company.com"
                                             className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
@@ -140,7 +168,10 @@ export default function ContactPage() {
 
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Subject</label>
-                                    <select className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium appearance-none cursor-pointer">
+                                    <select
+                                        name="subject"
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium appearance-none cursor-pointer"
+                                    >
                                         <option>Enterprise Query</option>
                                         <option>Technical Support</option>
                                         <option>General Question</option>
@@ -152,11 +183,18 @@ export default function ContactPage() {
                                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Message</label>
                                     <textarea
                                         required
+                                        name="message"
                                         rows={5}
                                         placeholder="How can we help you scale your hiring?"
                                         className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium resize-none"
                                     />
                                 </div>
+
+                                {error && (
+                                    <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold animate-in slide-in-from-top-2 duration-300">
+                                        {error}
+                                    </div>
+                                )}
 
                                 <button
                                     disabled={loading}
