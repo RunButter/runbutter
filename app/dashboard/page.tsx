@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
-import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard } from 'lucide-react';
+import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard, Lock } from 'lucide-react';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
@@ -282,16 +282,32 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-600">Create and manage roles</p>
           </Link>
 
-          <Link href="/dashboard/interviews" className="card hover:shadow-lg transition cursor-pointer">
+          <Link href="/dashboard/interviews" className="card hover:shadow-lg transition cursor-pointer relative overflow-hidden group">
             <Calendar className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="font-semibold text-gray-800 mb-1">Interviews</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-800 mb-1">Interviews</h3>
+              {company?.plan === 'free' && <Lock className="w-3 h-3 text-primary-400" />}
+            </div>
             <p className="text-sm text-gray-600">Schedule and track</p>
+            {company?.plan === 'free' && (
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-primary-50 rounded text-[8px] font-bold text-primary-600 uppercase border border-primary-100">
+                Pro
+              </div>
+            )}
           </Link>
 
-          <Link href="/dashboard/analytics" className="card hover:shadow-lg transition cursor-pointer">
+          <Link href="/dashboard/analytics" className="card hover:shadow-lg transition cursor-pointer relative overflow-hidden group">
             <TrendingUp className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="font-semibold text-gray-800 mb-1">Analytics</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-800 mb-1">Analytics</h3>
+              {company?.plan === 'free' && <Lock className="w-3 h-3 text-primary-400" />}
+            </div>
             <p className="text-sm text-gray-600">View insights</p>
+            {company?.plan === 'free' && (
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-primary-50 rounded text-[8px] font-bold text-primary-600 uppercase border border-primary-100">
+                Pro
+              </div>
+            )}
           </Link>
         </div>
 

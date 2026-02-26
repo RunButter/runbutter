@@ -9,6 +9,7 @@ import {
     PieChart, Loader2, Download, Clock, CheckCircle, Briefcase
 } from 'lucide-react';
 import Link from 'next/link';
+import Paywall from '@/components/Paywall';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -121,66 +122,68 @@ export default function AnalyticsPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-6 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    {[
-                        { label: 'Time to Hire', value: '18 Days', pct: '+12%', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Offer Accept Rate', value: '82%', pct: '-3%', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-                        { label: 'Interview Ratio', value: '1:5', pct: '+5%', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-                        { label: 'Total Positions', value: '12', pct: '0%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                                </div>
-                                <span className={`text-xs font-bold ${stat.pct.startsWith('+') ? 'text-green-600' : 'text-red-500'}`}>
-                                    {stat.pct} vs last mo
-                                </span>
-                            </div>
-                            <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
-                            <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-primary-600" />
-                                Application Volume
-                            </h3>
-                            <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                <option>Last 6 Months</option>
-                                <option>Last Year</option>
-                            </select>
-                        </div>
-                        <div className="h-[300px]">
-                            <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2">
-                            <PieChart className="w-5 h-5 text-primary-600" />
-                            Candidate Sources
-                        </h3>
-                        <div className="h-[250px] relative">
-                            <Pie options={{ responsive: true, maintainAspectRatio: false }} data={pieData} />
-                        </div>
-                        <div className="mt-8 space-y-3">
-                            {pieData.labels.map((label, i) => (
-                                <div key={label} className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i] }} />
-                                        {label}
+                <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                        {[
+                            { label: 'Time to Hire', value: '18 Days', pct: '+12%', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+                            { label: 'Offer Accept Rate', value: '82%', pct: '-3%', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+                            { label: 'Interview Ratio', value: '1:5', pct: '+5%', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+                            { label: 'Total Positions', value: '12', pct: '0%', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
+                        ].map((stat) => (
+                            <div key={stat.label} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className={`p-3 rounded-xl ${stat.bg}`}>
+                                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
                                     </div>
-                                    <span className="font-bold text-gray-800">{pieData.datasets[0].data[i]}%</span>
+                                    <span className={`text-xs font-bold ${stat.pct.startsWith('+') ? 'text-green-600' : 'text-red-500'}`}>
+                                        {stat.pct} vs last mo
+                                    </span>
                                 </div>
-                            ))}
+                                <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
+                                <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-primary-600" />
+                                    Application Volume
+                                </h3>
+                                <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                    <option>Last 6 Months</option>
+                                    <option>Last Year</option>
+                                </select>
+                            </div>
+                            <div className="h-[300px]">
+                                <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 className="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2">
+                                <PieChart className="w-5 h-5 text-primary-600" />
+                                Candidate Sources
+                            </h3>
+                            <div className="h-[250px] relative">
+                                <Pie options={{ responsive: true, maintainAspectRatio: false }} data={pieData} />
+                            </div>
+                            <div className="mt-8 space-y-3">
+                                {pieData.labels.map((label, i) => (
+                                    <div key={label} className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-2 text-gray-600">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i] }} />
+                                            {label}
+                                        </div>
+                                        <span className="font-bold text-gray-800">{pieData.datasets[0].data[i]}%</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </Paywall>
             </main>
         </div>
     );
