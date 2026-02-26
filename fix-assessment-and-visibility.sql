@@ -170,6 +170,7 @@ RETURNS jsonb AS $$
 DECLARE
     v_company_id UUID;
     v_candidate_rec RECORD;
+    v_actual_company_id UUID;
 BEGIN
     -- 1. Verify the recruiter exists and get their company_id
     SELECT cu.company_id INTO v_company_id 
@@ -177,11 +178,21 @@ BEGIN
     WHERE cu.privy_user_id = p_privy_user_id LIMIT 1;
 
     IF v_company_id IS NULL THEN
-        RAISE WARNING 'No company found for privy_user_id: %', p_privy_user_id;
-        RETURN NULL;
+        RAISE EXCEPTION 'RECRUITER_NOT_FOUND: No company linked to privy user ID %', p_privy_user_id;
     END IF;
 
-    -- 2. Fetch candidate only if they belong to this recruiter's company
+    -- 2. Check if candidate exists at all and which company they belong to
+    SELECT company_id INTO v_actual_company_id FROM candidates WHERE id = p_candidate_id;
+    
+    IF v_actual_company_id IS NULL THEN
+        RAISE EXCEPTION 'CANDIDATE_NOT_FOUND: No candidate found with ID %', p_candidate_id;
+    END IF;
+
+    IF v_actual_company_id != v_company_id THEN
+        RAISE EXCEPTION 'ACCESS_DENIED: Candidate belongs to company % but recruiter belongs to company %', v_actual_company_id, v_company_id;
+    END IF;
+
+    -- 3. Fetch candidate details
     SELECT 
         can.*,
         pos.title as position_title,
@@ -198,11 +209,6 @@ BEGIN
     FROM candidates can
     LEFT JOIN positions pos ON can.position_id = pos.id
     WHERE can.id = p_candidate_id AND can.company_id = v_company_id;
-
-    -- 3. Return NULL if not found
-    IF v_candidate_rec.id IS NULL THEN
-        RETURN NULL;
-    END IF;
 
     RETURN row_to_json(v_candidate_rec);
 END;

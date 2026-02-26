@@ -36,29 +36,48 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
     const [activity, setActivity] = useState<any[]>([]);
-    const [results, setResults] = useState<any>(null);
+    const [debugInfo, setDebugInfo] = useState<any>(null);
 
     const loadCandidateData = useCallback(async () => {
         try {
-            console.log('Loading candidate details for ID:', params.id);
-            console.log('Current Privy User ID:', user?.id);
+            console.log('--- CandidateDetails v4.4 Debug ---');
+            console.log('Candidate ID Parameter:', params.id);
+            console.log('Privy User state:', { ready, authenticated, userId: user?.id });
+
+            setDebugInfo({
+                paramId: params.id,
+                userId: user?.id,
+                ready,
+                authenticated
+            });
+
+            if (!params.id) {
+                console.error('Missing candidate ID in URL params');
+                return;
+            }
+
+            if (!user?.id) {
+                console.warn('loadCandidateData called without valid privyUser.id');
+                return;
+            }
 
             // Ensure session is initialized for any RLS secondary queries
             await supabase.auth.getUser();
 
             const { data, error } = await supabase.rpc('get_candidate_details', {
                 p_candidate_id: params.id,
-                p_privy_user_id: user?.id
+                p_privy_user_id: user.id
             });
 
-            console.log('RPC get_candidate_details Response:', { data, error });
+            console.log('RPC result:', { data, error });
 
             if (error) {
-                console.error('RPC Error:', error);
+                setDebugInfo((prev: any) => ({ ...prev, rpcError: error }));
                 throw error;
             }
+
             if (!data) {
-                console.warn('Candidate not found in database for this recruiter');
+                setDebugInfo((prev: any) => ({ ...prev, rpcData: 'NULL' }));
                 throw new Error('Candidate not found');
             }
 
@@ -275,10 +294,34 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     if (!candidate) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center flex-col gap-4">
-                <AlertCircle className="w-16 h-16 text-red-500" />
-                <h2 className="text-xl font-bold">Candidate not found</h2>
-                <Link href="/dashboard/candidates" className="btn-primary">Back to List</Link>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center flex-col gap-6 p-6 text-center">
+                <div className="flex flex-col items-center">
+                    <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-800">Candidate not found</h2>
+                    <p className="text-gray-500 mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them. <span className="text-[10px] text-gray-300">v4.4</span></p>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl border border-red-100 shadow-sm max-w-lg w-full text-left font-mono text-xs">
+                    <h3 className="font-bold text-gray-700 mb-3 border-b pb-2">Diagnostic Info (v4.4)</h3>
+                    <div className="space-y-2 text-gray-600">
+                        <p><span className="font-bold">Candidate ID:</span> {debugInfo?.paramId || 'N/A'}</p>
+                        <p><span className="font-bold">Recruiter ID:</span> {debugInfo?.userId || 'N/A'}</p>
+                        <p><span className="font-bold">Privy Ready:</span> {debugInfo?.ready ? 'YES' : 'NO'}</p>
+                        <p><span className="font-bold">Authenticated:</span> {debugInfo?.authenticated ? 'YES' : 'NO'}</p>
+                        <p><span className="font-bold">RPC Result:</span> {debugInfo?.rpcData || 'Pending'}</p>
+                        {debugInfo?.rpcError && (
+                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded border border-red-200 overflow-auto">
+                                <p className="font-bold mb-1">RPC Error Details:</p>
+                                <pre className="whitespace-pre-wrap">{JSON.stringify(debugInfo.rpcError, null, 2)}</pre>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex gap-4">
+                    <Link href="/dashboard/candidates" className="btn-secondary px-6">Back to List</Link>
+                    <button onClick={() => window.location.reload()} className="btn-primary px-6">Retry</button>
+                </div>
             </div>
         );
     }
