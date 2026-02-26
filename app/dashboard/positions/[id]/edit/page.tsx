@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
+import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,17 +27,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
     const [screeningQuestions, setScreeningQuestions] = useState<any[]>([]);
     const [openEndedQuestion, setOpenEndedQuestion] = useState({ id: 's_open', category: 'screening', type: 'text', text: '' });
 
-    useEffect(() => {
-        if (ready) {
-            if (!authenticated) {
-                router.push('/auth/login');
-            } else {
-                loadPositionData();
-            }
-        }
-    }, [ready, authenticated, user, router]);
-
-    const loadPositionData = async () => {
+    const loadPositionData = useCallback(async () => {
         try {
             const { data: position, error: posError } = await supabase
                 .from('positions')
@@ -79,7 +70,17 @@ export default function EditPositionPage({ params }: { params: { id: string } })
         } finally {
             setLoading(false);
         }
-    };
+    }, [params.id]);
+
+    useEffect(() => {
+        if (ready) {
+            if (!authenticated) {
+                router.push('/auth/login');
+            } else {
+                loadPositionData();
+            }
+        }
+    }, [ready, authenticated, router, loadPositionData]);
 
     const addMCQ = () => {
         if (screeningQuestions.length >= 3) return;
@@ -132,10 +133,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
             if (updateError) throw updateError;
 
             // Update template
-            const defaultQuestions = [
-                { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy interacting with people', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                { id: '2', category: 'work_style', text: 'I prefer working in a structured environment', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] }
-            ];
+            const defaultQuestions = DEFAULT_PERSONALITY_QUESTIONS;
 
             const customQuestions = [
                 ...screeningQuestions.filter(q => q.text.trim() !== ''),

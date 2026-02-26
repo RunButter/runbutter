@@ -30,19 +30,19 @@ export default function PrivacyPage() {
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">1. Introduction</h2>
                             <p className="text-gray-600 leading-relaxed">
-                                HireBTR ("we," "us," or "our") is committed to protecting your privacy. This policy complies with the EU General Data Protection Regulation (GDPR), the California Consumer Privacy Act (CCPA), and the EU AI Act.
+                                HireBTR (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy. This policy complies with the EU General Data Protection Regulation (GDPR), the California Consumer Privacy Act (CCPA), and the EU AI Act.
                             </p>
                         </section>
 
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">2. AI Transparency Disclosure (Automated Decision-Making)</h2>
                             <p className="text-gray-600 leading-relaxed mb-4">
-                                HireBTR uses Artificial Intelligence to analyze candidate responses and generate psychometric profiles (the "Services").
+                                HireBTR uses Artificial Intelligence to analyze candidate responses and generate psychometric profiles (the &quot;Services&quot;).
                             </p>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                                <li><strong>Logic Involved:</strong> We utilize Large Language Models (LLMs) to process text and video inputs to identify personality traits based on the "Big Five" psychological model.</li>
-                                <li><strong>Significance:</strong> These profiles assist recruiters in evaluating candidate "fit."</li>
-                                <li><strong>Human-in-the-Loop:</strong> HireBTR is a support tool. All final hiring decisions are made by human recruiters. We prohibit "solely automated" hiring decisions.</li>
+                                <li><strong>Logic Involved:</strong> We utilize Large Language Models (LLMs) to process text and video inputs to identify personality traits based on the &quot;Big Five&quot; psychological model.</li>
+                                <li><strong>Significance:</strong> These profiles assist recruiters in evaluating candidate &quot;fit.&quot;</li>
+                                <li><strong>Human-in-the-Loop:</strong> HireBTR is a support tool. All final hiring decisions are made by human recruiters. We prohibit &quot;solely automated&quot; hiring decisions.</li>
                             </ul>
                         </section>
 

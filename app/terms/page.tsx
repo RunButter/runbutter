@@ -40,7 +40,7 @@ export default function TermsPage() {
                                 You acknowledge that HireBTR uses Artificial Intelligence to provide psychometric insights.
                             </p>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                                <li><strong>Accuracy:</strong> AI is probabilistic. We do not guarantee 100% accuracy of personality profiles or candidate "fit" scores.</li>
+                                <li><strong>Accuracy:</strong> AI is probabilistic. We do not guarantee 100% accuracy of personality profiles or candidate &quot;fit&quot; scores.</li>
                                 <li><strong>No Professional Advice:</strong> AI scores are for informational recruitment purposes and do not constitute professional psychological diagnoses.</li>
                             </ul>
                         </section>

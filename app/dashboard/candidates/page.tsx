@@ -39,18 +39,18 @@ export default function CandidatesPage() {
 
             if (!companyUser) return;
 
-            const { data, error } = await supabase
-                .from('candidates')
-                .select(`
-          *,
-          position:positions(title),
-          assessment_results(overall_score, screening_score)
-        `)
-                .eq('company_id', companyUser.company_id)
-                .order('applied_at', { ascending: false });
+            const { data, error } = await supabase.rpc('get_candidates_for_recruiter', { p_privy_user_id: privyUserId });
 
             if (error) throw error;
-            setCandidates(data || []);
+
+            // Map the data if necessary (the RPC returns normalized fields)
+            const mappedData = (data || []).map((c: any) => ({
+                ...c,
+                position: { title: c.position_title },
+                assessment_results: c.assessment_results || []
+            }));
+
+            setCandidates(mappedData);
         } catch (error) {
             console.error('Error loading candidates:', error);
         } finally {
@@ -130,16 +130,16 @@ export default function CandidatesPage() {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">{can.position?.title || '—'}</td>
                                     <td className="px-6 py-4 text-center">
-                                        {can.assessment_results?.[0]?.overall_score ? (
+                                        {can.assessment_results && can.assessment_results.length > 0 ? (
                                             <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 border-2 border-indigo-100 text-xs font-black text-indigo-700">
-                                                {can.assessment_results[0].overall_score}
+                                                {can.assessment_results[0].overall_score || 0}
                                             </div>
                                         ) : (
                                             <span className="text-gray-300 text-xs italic">Pending</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        {can.assessment_results?.[0]?.screening_score !== null && can.assessment_results?.[0]?.screening_score !== undefined ? (
+                                        {can.assessment_results && can.assessment_results.length > 0 && can.assessment_results[0].screening_score !== null && can.assessment_results[0].screening_score !== undefined ? (
                                             <div className="flex flex-col gap-1.5">
                                                 <div className="flex justify-between items-center text-[10px] font-black tracking-widest text-gray-400">
                                                     <span>MATCH</span>
@@ -148,8 +148,8 @@ export default function CandidatesPage() {
                                                 <div className="w-24 h-2 bg-gray-50 rounded-full overflow-hidden border border-gray-100 flex shadow-inner">
                                                     <div
                                                         className={`h-full rounded-full transition-all duration-1000 ${can.assessment_results[0].screening_score >= 66 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' :
-                                                                can.assessment_results[0].screening_score >= 33 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]' :
-                                                                    'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
+                                                            can.assessment_results[0].screening_score >= 33 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]' :
+                                                                'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
                                                             }`}
                                                         style={{ width: `${can.assessment_results[0].screening_score}%` }}
                                                     />

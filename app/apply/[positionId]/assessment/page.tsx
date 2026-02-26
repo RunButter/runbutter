@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import {
     CheckCircle, AlertCircle, Loader2, ArrowRight,
     Brain, Target, BarChart, ChevronRight, Clock
@@ -34,70 +35,48 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         }
 
         try {
-            // Set the security context for RLS
-            await supabase.rpc('set_config', { name: 'app.candidate_access_token', value: token, is_local: false });
-
-            const { data, error } = await supabase
-                .from('candidates')
-                .select('*, companies(name, logo_url)')
-                .eq('id', candidateId)
-                .single();
+            const { data, error } = await supabase.rpc('get_assessment_init_data', {
+                p_candidate_id: candidateId,
+                p_token: token
+            });
 
             if (error || !data) {
                 console.error('Candidate not found or access denied:', error);
                 router.push(`/apply/${params.positionId}`);
                 return;
             }
-            setCandidate(data);
+
+            const { candidate: can, company, template: tmpl } = data;
+
+            setCandidate(can);
             setCompanyInfo({
-                name: (data.companies as any).name,
-                logoUrl: (data.companies as any).logo_url
+                name: company.name,
+                logoUrl: company.logo_url
             });
 
-            // Fetch Assessment Template
-            const { data: tmpl, error: tmplError } = await supabase
-                .from('assessment_templates')
-                .select('*')
-                .eq('position_id', data.position_id)
-                .is('is_default', true)
-                .single();
+            if (tmpl) {
+                // Ensure template has personality questions
+                const personalityQuestions = tmpl.questions.filter((q: any) => q.category === 'personality' || q.category === 'work_style');
 
-            if (!tmplError && tmpl) {
-                setTemplate(tmpl);
+                if (personalityQuestions.length < 10) {
+                    // Replace legacy personality questions with the full 20-question set
+                    const screeningQuestions = tmpl.questions.filter((q: any) => q.category === 'screening');
+                    const modernizedQuestions = [...DEFAULT_PERSONALITY_QUESTIONS, ...screeningQuestions];
+
+                    setTemplate({
+                        ...tmpl,
+                        questions: modernizedQuestions
+                    });
+                } else {
+                    setTemplate(tmpl);
+                }
             } else {
-                // Fallback / Default Big 5 Assessment (20 items)
                 setTemplate({
-                    questions: [
-                        // Openness
-                        { id: 'b5_o1', category: 'personality', trait: 'Openness', text: 'I have a vivid imagination.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_o2', category: 'personality', trait: 'Openness', text: 'I am interested in abstract ideas.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_o3', category: 'personality', trait: 'Openness', text: 'I enjoy thinking about new ways of doing things.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_o4', category: 'personality', trait: 'Openness', text: 'I am full of ideas.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        // Conscientiousness
-                        { id: 'b5_c1', category: 'personality', trait: 'Conscientiousness', text: 'I am always prepared.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_c2', category: 'personality', trait: 'Conscientiousness', text: 'I pay attention to details.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_c3', category: 'personality', trait: 'Conscientiousness', text: 'I like order.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_c4', category: 'personality', trait: 'Conscientiousness', text: 'I follow a schedule.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        // Extraversion
-                        { id: 'b5_e1', category: 'personality', trait: 'Extraversion', text: 'I am the life of the party.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_e2', category: 'personality', trait: 'Extraversion', text: 'I feel comfortable around people.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_e3', category: 'personality', trait: 'Extraversion', text: 'I start conversations.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_e4', category: 'personality', trait: 'Extraversion', text: 'I talk to a lot of different people at parties.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        // Agreeableness
-                        { id: 'b5_a1', category: 'personality', trait: 'Agreeableness', text: 'I am interested in people.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_a2', category: 'personality', trait: 'Agreeableness', text: 'I sympathize with others\' feelings.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_a3', category: 'personality', trait: 'Agreeableness', text: 'I have a soft heart.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_a4', category: 'personality', trait: 'Agreeableness', text: 'I take time out for others.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        // Neuroticism
-                        { id: 'b5_n1', category: 'personality', trait: 'Neuroticism', text: 'I get stressed out easily.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_n2', category: 'personality', trait: 'Neuroticism', text: 'I worry about things.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_n3', category: 'personality', trait: 'Neuroticism', text: 'I am easily disturbed.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                        { id: 'b5_n4', category: 'personality', trait: 'Neuroticism', text: 'I change my mood a lot.', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-                    ]
+                    questions: DEFAULT_PERSONALITY_QUESTIONS
                 });
             }
         } catch (err) {
-            console.error('Error loading candidate security context:', err);
+            console.error('Error loading assessment data:', err);
             router.push(`/apply/${params.positionId}`);
         } finally {
             setLoading(false);
@@ -200,47 +179,23 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 summary: `Candidate profile matches the ${neuroProfile.toUpperCase()} Neuro-Profile with a ${overall_score}% alignment rating.`
             };
 
-            // 1. Create a response record first to get an ID
-            const { data: resp, error: respError } = await supabase
-                .from('assessment_responses')
-                .insert({
-                    candidate_id: candidateId,
-                    answers: answers,
-                    is_completed: true,
-                    completed_at: new Date().toISOString()
-                })
-                .select()
-                .single();
-
-            if (respError) throw respError;
-
-            // 2. Insert results linked to the response
-            await supabase
-                .from('assessment_results')
-                .insert({
-                    ...finalResults,
-                    assessment_response_id: resp.id,
-                    calculated_at: new Date().toISOString()
-                });
-
-            // 3. Update candidate status to 'assessment_completed'
-            await supabase
-                .from('candidates')
-                .update({ status: 'assessment_completed' })
-                .eq('id', candidateId);
-
-            // Log activity
-            await supabase.from('activity_log').insert({
-                company_id: candidate.company_id,
-                candidate_id: candidate.id,
-                action: 'assessment_completed',
-                details: { score: finalResults.overall_score, screening_match: screening_score }
+            // NEW: Use RPC for atomic and secure submission
+            const { error: submitError } = await supabase.rpc('submit_assessment', {
+                p_candidate_id: candidateId,
+                p_token: searchParams.get('token'),
+                p_results: finalResults,
+                p_answers: answers
             });
 
+            if (submitError) {
+                console.error('RPC Submit Error:', submitError);
+                throw new Error(`Submission failed: ${submitError.message || 'Unknown database error'}`);
+            }
+
             setCurrentStep(3);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error submitting assessment:', error);
-            alert('Failed to submit assessment results');
+            alert(`Failed to submit assessment: ${error.message || 'Please check your connection or contact support.'}`);
         } finally {
             setSubmitting(false);
         }
@@ -277,6 +232,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     >
                         Close Window
                     </button>
+                    <div className="mt-4 text-[10px] text-gray-300">v4.2</div>
                 </div>
             </div>
         );
@@ -291,7 +247,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         {companyInfo?.logoUrl ? (
                             <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} className="h-8 w-auto" />
                         ) : (
-                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span></span>
+                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span> <span className="text-[10px] text-gray-200">v4.2</span></span>
                         )}
                     </div>
                     <div className="flex items-center gap-4">

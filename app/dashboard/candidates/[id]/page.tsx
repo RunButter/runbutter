@@ -40,37 +40,35 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     const loadCandidateData = useCallback(async () => {
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user?.id, is_local: false });
+            const { data, error } = await supabase.rpc('get_candidate_details', {
+                p_candidate_id: params.id,
+                p_privy_user_id: user?.id
+            });
 
-            const { data: can, error: canError } = await supabase
-                .from('candidates')
-                .select(`
-                    *,
-                    position:positions(title, department, neuro_profile, created_by)
-                `)
-                .eq('id', params.id)
-                .single();
+            if (error || !data) throw error || new Error('Candidate not found');
 
-            if (canError) throw canError;
-            setCandidate(can);
+            const can = data;
+            setCandidate({
+                ...can,
+                position: {
+                    title: can.position_title,
+                    department: can.position_department,
+                    neuro_profile: can.position_neuro_profile,
+                    created_by: can.position_created_by
+                }
+            });
 
-            const { data: acts, error: actsError } = await supabase
+            // Fetch activity log (still using standard fetch as it is secondary)
+            const { data: acts } = await supabase
                 .from('activity_log')
                 .select('*')
                 .eq('candidate_id', params.id)
                 .order('created_at', { ascending: false });
 
-            if (actsError) throw actsError;
             setActivity(acts || []);
 
-            const { data: res, error: resError } = await supabase
-                .from('assessment_results')
-                .select('*')
-                .eq('candidate_id', params.id)
-                .single();
-
-            if (!resError && res) {
-                setResults(res);
+            if (can.assessment_results && can.assessment_results.length > 0) {
+                setResults(can.assessment_results[0]);
             }
         } catch (error) {
             console.error('Error loading candidate data:', error);
@@ -179,11 +177,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             {
                 label: 'Candidate Profile',
                 data: [
-                    results.personality_data.openness,
-                    results.personality_data.conscientiousness,
-                    results.personality_data.extraversion,
-                    results.personality_data.agreeableness,
-                    results.personality_data.neuroticism,
+                    results.personality_data?.openness || 0,
+                    results.personality_data?.conscientiousness || 0,
+                    results.personality_data?.extraversion || 0,
+                    results.personality_data?.agreeableness || 0,
+                    results.personality_data?.neuroticism || 0,
                 ],
                 backgroundColor: 'rgba(79, 70, 229, 0.2)',
                 borderColor: 'rgba(79, 70, 229, 1)',
