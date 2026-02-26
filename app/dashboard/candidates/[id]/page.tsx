@@ -36,6 +36,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
     const [activity, setActivity] = useState<any[]>([]);
+    const [results, setResults] = useState<any>(null);
     const [debugInfo, setDebugInfo] = useState<any>(null);
 
     const loadCandidateData = useCallback(async () => {
