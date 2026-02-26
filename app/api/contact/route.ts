@@ -23,12 +23,13 @@ export async function POST(req: Request) {
         // 2. Send email via Resend
         if (process.env.RESEND_API_KEY) {
             const { data, error: emailError } = await resend.emails.send({
-                from: 'hirebtr.com <onboarding@resend.dev>', // Resend default for unverified domains
+                // Since user verified hirebtr.com, we should use it!
+                from: 'hirebtr.com <form@hirebtr.com>',
                 to: ['hello@hirebtr.com'],
                 subject: `[Contact Form] ${subject || 'New Inquiry from ' + name}`,
                 replyTo: email,
                 html: `
-                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; rounded: 12px;">
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
                         <h2 style="color: #4F46E5;">New Contact Form Submission</h2>
                         <p><strong>Name:</strong> ${name}</p>
                         <p><strong>Email:</strong> ${email}</p>
@@ -40,8 +41,12 @@ export async function POST(req: Request) {
             });
 
             if (emailError) {
-                console.error('Email Error:', emailError);
-                return NextResponse.json({ error: 'Message logged but email failed to send' }, { status: 500 });
+                console.error('Email Error Details:', emailError);
+                return NextResponse.json({
+                    error: 'Database logged, but Resend failed.',
+                    message: emailError.message,
+                    name: emailError.name
+                }, { status: 500 });
             }
 
             return NextResponse.json({ success: true, data });
