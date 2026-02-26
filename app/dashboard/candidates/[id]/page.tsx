@@ -197,6 +197,31 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         }
     };
 
+    const renderActivityDetails = (act: any) => {
+        if (!act.details) return null;
+        const d = act.details;
+
+        try {
+            switch (act.action) {
+                case 'application_submitted':
+                    return `Applied for ${d.position_title || 'this position'}${d.cv_uploaded ? ' (CV uploaded)' : ''}`;
+                case 'assessment_completed':
+                    return (
+                        <div className="space-y-1">
+                            <p className="font-semibold text-primary-700">Scored {d.overall_score}% Compatibility</p>
+                            <p className="italic">&quot;{d.summary}&quot;</p>
+                        </div>
+                    );
+                case 'status_updated':
+                    return `Moved from ${d.old_status || 'applied'} to ${d.new_status}`;
+                default:
+                    return typeof d === 'object' ? JSON.stringify(d) : d;
+            }
+        } catch (e) {
+            return typeof d === 'object' ? JSON.stringify(d) : d;
+        }
+    };
+
     const neuroProfile = candidate?.position?.neuro_profile || 'hard-tech';
     const benchmarks: Record<string, number[]> = {
         'hard-tech': [85, 85, 40, 50, 30], // O, C, E, A, N
@@ -660,8 +685,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             <div className="text-sm font-bold text-gray-800 leading-tight capitalize">{act.action.replace(/_/g, ' ')}</div>
                                             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">{new Date(act.created_at).toLocaleString()}</div>
                                             {act.details && (
-                                                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100 mt-2">
-                                                    {typeof act.details === 'object' ? JSON.stringify(act.details) : act.details}
+                                                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100 mt-2 shadow-sm">
+                                                    {renderActivityDetails(act)}
                                                 </div>
                                             )}
                                         </div>
