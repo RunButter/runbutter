@@ -23,8 +23,8 @@ export async function POST(req: Request) {
         // 2. Send email via Resend
         if (process.env.RESEND_API_KEY) {
             const { data, error: emailError } = await resend.emails.send({
-                // Since user verified hirebtr.com, we should use it!
-                from: 'hirebtr.com <form@hirebtr.com>',
+                // User only has hello@hirebtr.com
+                from: 'hirebtr.com <hello@hirebtr.com>',
                 to: ['hello@hirebtr.com'],
                 subject: `[Contact Form] ${subject || 'New Inquiry from ' + name}`,
                 replyTo: email,
