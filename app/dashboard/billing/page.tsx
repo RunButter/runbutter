@@ -104,7 +104,7 @@ export default function BillingPage() {
             buttonText: 'Contact Sales',
             highlight: false,
             tier: 'enterprise',
-            link: 'mailto:sales@hirebtr.com' // User can change this to a contact form
+            link: '/contact' // Professional contact form at hello@hirebtr.com
         }
     ];
 
