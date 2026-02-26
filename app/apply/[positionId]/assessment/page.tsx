@@ -48,29 +48,31 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             const { candidate: can, company, template: tmpl } = data;
 
+            console.log('Assessment Init Data Loaded:', { hasCandidate: !!can, hasCompany: !!company, hasTemplate: !!tmpl });
+
             setCandidate(can);
             setCompanyInfo({
                 name: company.name,
                 logoUrl: company.logo_url
             });
 
-            if (tmpl) {
-                // Ensure template has personality questions
-                const personalityQuestions = tmpl.questions.filter((q: any) => q.category === 'personality' || q.category === 'work_style');
+            if (tmpl && tmpl.questions) {
+                const personalityQuestions = tmpl.questions.filter((q: any) => q.category === 'personality' || q.trait);
+                console.log('Template Questions Count:', tmpl.questions.length);
+                console.log('Personality Questions Count:', personalityQuestions.length);
 
-                if (personalityQuestions.length < 10) {
-                    // Replace legacy personality questions with the full 20-question set
+                if (personalityQuestions.length < 20) {
+                    console.log('Applying v4.3 Safeguard: Replacing with 20 default personality questions');
                     const screeningQuestions = tmpl.questions.filter((q: any) => q.category === 'screening');
-                    const modernizedQuestions = [...DEFAULT_PERSONALITY_QUESTIONS, ...screeningQuestions];
-
                     setTemplate({
                         ...tmpl,
-                        questions: modernizedQuestions
+                        questions: [...DEFAULT_PERSONALITY_QUESTIONS, ...screeningQuestions]
                     });
                 } else {
                     setTemplate(tmpl);
                 }
             } else {
+                console.log('No template found in RPC, using default personality questions only');
                 setTemplate({
                     questions: DEFAULT_PERSONALITY_QUESTIONS
                 });
@@ -232,7 +234,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     >
                         Close Window
                     </button>
-                    <div className="mt-4 text-[10px] text-gray-300">v4.2</div>
+                    <div className="mt-4 text-[10px] text-gray-300">v4.3</div>
                 </div>
             </div>
         );
@@ -247,7 +249,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         {companyInfo?.logoUrl ? (
                             <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} className="h-8 w-auto" />
                         ) : (
-                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span> <span className="text-[10px] text-gray-200">v4.2</span></span>
+                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span> <span className="text-[10px] text-gray-200">v4.3</span></span>
                         )}
                     </div>
                     <div className="flex items-center gap-4">
