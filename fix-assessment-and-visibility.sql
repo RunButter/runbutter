@@ -171,11 +171,17 @@ DECLARE
     v_company_id UUID;
     v_candidate_rec RECORD;
 BEGIN
-    -- Verify the recruiter belongs to the same company as the candidate
+    -- 1. Verify the recruiter exists and get their company_id
     SELECT cu.company_id INTO v_company_id 
     FROM company_users cu 
     WHERE cu.privy_user_id = p_privy_user_id LIMIT 1;
 
+    IF v_company_id IS NULL THEN
+        RAISE WARNING 'No company found for privy_user_id: %', p_privy_user_id;
+        RETURN NULL;
+    END IF;
+
+    -- 2. Fetch candidate only if they belong to this recruiter's company
     SELECT 
         can.*,
         pos.title as position_title,
@@ -193,6 +199,7 @@ BEGIN
     LEFT JOIN positions pos ON can.position_id = pos.id
     WHERE can.id = p_candidate_id AND can.company_id = v_company_id;
 
+    -- 3. Return NULL if not found
     IF v_candidate_rec.id IS NULL THEN
         RETURN NULL;
     END IF;
@@ -200,6 +207,12 @@ BEGIN
     RETURN row_to_json(v_candidate_rec);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 4b. Ensure proper permissions for all Secure RPCs
+GRANT EXECUTE ON FUNCTION get_candidates_for_recruiter(text) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION get_candidate_details(UUID, text) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION get_assessment_init_data(UUID, UUID) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION submit_assessment(UUID, UUID, JSONB, JSONB) TO authenticated, anon;
 
 -- 5. SECURE RPC: Initialize Assessment Page (Single Call)
 CREATE OR REPLACE FUNCTION get_assessment_init_data(p_candidate_id UUID, p_token UUID)

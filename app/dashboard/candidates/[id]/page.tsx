@@ -40,12 +40,27 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     const loadCandidateData = useCallback(async () => {
         try {
+            console.log('Loading candidate details for ID:', params.id);
+            console.log('Current Privy User ID:', user?.id);
+
+            // Ensure session is initialized for any RLS secondary queries
+            await supabase.auth.getUser();
+
             const { data, error } = await supabase.rpc('get_candidate_details', {
                 p_candidate_id: params.id,
                 p_privy_user_id: user?.id
             });
 
-            if (error || !data) throw error || new Error('Candidate not found');
+            console.log('RPC get_candidate_details Response:', { data, error });
+
+            if (error) {
+                console.error('RPC Error:', error);
+                throw error;
+            }
+            if (!data) {
+                console.warn('Candidate not found in database for this recruiter');
+                throw new Error('Candidate not found');
+            }
 
             const can = data;
             setCandidate({
@@ -231,16 +246,16 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         maintainAspectRatio: false
     };
 
-    const WorkStyleBar = ({ label, left, right, value }: any) => (
+    const WorkStyleBar = ({ label, left, right, value = 0 }: any) => (
         <div className="space-y-2">
             <div className="flex justify-between text-sm font-bold text-gray-700">
                 <span>{label}</span>
-                <span className="text-primary-600">{value}% {value > 50 ? right : left}</span>
+                <span className="text-primary-600">{(value || 0)}% {(value || 0) > 50 ? right : left}</span>
             </div>
             <div className="h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                 <div
-                    className="h-full bg-primary-500 rounded-full"
-                    style={{ width: `${value}%` }}
+                    className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                    style={{ width: `${value || 0}%` }}
                 />
             </div>
             <div className="flex justify-between text-[10px] text-gray-400 uppercase font-bold tracking-tighter">
@@ -278,7 +293,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </Link>
                         <div>
                             <h1 className="text-xl font-bold text-gray-800">{candidate.full_name}</h1>
-                            <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department}</p>
+                            <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department} <span className="text-[10px] ml-2 text-gray-300">v4.4</span></p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
