@@ -160,7 +160,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            {positionInfo?.logoUrl && (
+            {positionInfo?.logoUrl ? (
               <div className="flex justify-center mb-8">
                 <LogoContainer
                   src={positionInfo.logoUrl}
@@ -170,6 +170,14 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
                   showBorder={true}
                   className="shadow-sm"
                 />
+              </div>
+            ) : (
+              <div className="flex justify-center mb-8">
+                <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center border-2 border-primary-200">
+                  <span className="text-2xl font-bold text-primary-700">
+                    {positionInfo?.companyName?.charAt(0) || 'C'}
+                  </span>
+                </div>
               </div>
             )}
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -206,8 +214,8 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          {positionInfo?.logoUrl && (
-            <div className="flex justify-center mb-8">
+          {positionInfo?.logoUrl ? (
+            <div className="flex justify-center mb-6">
               <LogoContainer
                 src={positionInfo.logoUrl}
                 alt={positionInfo.companyName}
@@ -216,6 +224,15 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
                 showBorder={true}
                 className="shadow-md"
               />
+            </div>
+          ) : (
+            <div className="flex justify-center mb-6">
+              <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border-2 border-primary-100 inline-flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                  {positionInfo?.companyName?.charAt(0) || 'C'}
+                </div>
+                <span className="text-xl font-bold text-gray-800">{positionInfo?.companyName}</span>
+              </div>
             </div>
           )}
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

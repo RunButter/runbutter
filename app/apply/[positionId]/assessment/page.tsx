@@ -215,7 +215,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         return (
             <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
                 <div className="max-w-md">
-                    {companyInfo?.logoUrl && (
+                    {companyInfo?.logoUrl ? (
                         <div className="flex justify-center mb-8">
                             <LogoContainer
                                 src={companyInfo.logoUrl}
@@ -225,6 +225,14 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                 showBorder={true}
                                 className="shadow-sm"
                             />
+                        </div>
+                    ) : (
+                        <div className="flex justify-center mb-8">
+                            <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center border-2 border-primary-200">
+                                <span className="text-2xl font-bold text-primary-700">
+                                    {companyInfo?.name?.charAt(0) || 'C'}
+                                </span>
+                            </div>
                         </div>
                     )}
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -262,7 +270,12 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                 className="h-10 w-auto"
                             />
                         ) : (
-                            <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span> <span className="text-[10px] text-gray-200">v4.3</span></span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                    {companyInfo?.name?.charAt(0) || 'C'}
+                                </div>
+                                <span className="font-bold text-gray-800">{companyInfo?.name}</span>
+                            </div>
                         )}
                     </div>
                     <div className="flex items-center gap-4">

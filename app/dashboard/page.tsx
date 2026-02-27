@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
-import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard, Lock } from 'lucide-react';
+import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard, Lock, Building2 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 
@@ -198,6 +198,10 @@ export default function DashboardPage() {
               <Link href="/dashboard/billing" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 Billing
+              </Link>
+              <Link href="/dashboard/settings" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Settings
               </Link>
               <Link href="/dashboard/positions/new" className="btn-primary">
                 Create Position
