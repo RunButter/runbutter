@@ -217,7 +217,14 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 <div className="max-w-md">
                     {companyInfo?.logoUrl && (
                         <div className="flex justify-center mb-8">
-                            <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} />
+                            <LogoContainer
+                                src={companyInfo.logoUrl}
+                                alt={companyInfo.name}
+                                width="240px"
+                                height="100px"
+                                showBorder={true}
+                                className="shadow-sm"
+                            />
                         </div>
                     )}
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -247,7 +254,13 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         {companyInfo?.logoUrl ? (
-                            <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} className="h-8 w-auto" />
+                            <LogoContainer
+                                src={companyInfo.logoUrl}
+                                alt={companyInfo.name}
+                                width="140px"
+                                height="40px"
+                                className="h-10 w-auto"
+                            />
                         ) : (
                             <span className="font-black text-2xl tracking-tight">hirebtr<span className="text-primary-600">.com</span> <span className="text-[10px] text-gray-200">v4.3</span></span>
                         )}

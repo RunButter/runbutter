@@ -161,8 +161,15 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         <div className="max-w-md w-full text-center">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             {positionInfo?.logoUrl && (
-              <div className="flex justify-center mb-6">
-                <LogoContainer src={positionInfo.logoUrl} alt={positionInfo.companyName} />
+              <div className="flex justify-center mb-8">
+                <LogoContainer
+                  src={positionInfo.logoUrl}
+                  alt={positionInfo.companyName}
+                  width="240px"
+                  height="100px"
+                  showBorder={true}
+                  className="shadow-sm"
+                />
               </div>
             )}
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -200,8 +207,15 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           {positionInfo?.logoUrl && (
-            <div className="flex justify-center mb-6">
-              <LogoContainer src={positionInfo.logoUrl} alt={positionInfo.companyName} />
+            <div className="flex justify-center mb-8">
+              <LogoContainer
+                src={positionInfo.logoUrl}
+                alt={positionInfo.companyName}
+                width="280px"
+                height="120px"
+                showBorder={true}
+                className="shadow-md"
+              />
             </div>
           )}
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
