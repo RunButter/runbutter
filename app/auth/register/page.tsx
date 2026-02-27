@@ -102,16 +102,6 @@ export default function RegisterPage() {
         .single();
       if (companyError) throw new Error(companyError.message);
 
-      // Handle Logo Upload if present
-      let logoUrl = null;
-      if (logoFile) {
-        const { uploadLogo } = await import('@/lib/supabase');
-        logoUrl = await uploadLogo(logoFile, company.id);
-        if (logoUrl) {
-          await supabase.from('companies').update({ logo_url: logoUrl }).eq('id', company.id);
-        }
-      }
-
       const { data: { user: supabaseUser } } = await supabase.auth.getUser();
 
       const { error: userError } = await supabase
@@ -258,37 +248,6 @@ export default function RegisterPage() {
                     {subdomainAvailable ? '✓ Available' : '✗ Already taken'}
                   </p>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo (Optional)</label>
-                <div className="flex flex-col gap-2">
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.webp"
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-indigo-50 file:text-indigo-700
-                      hover:file:bg-indigo-100
-                      cursor-pointer"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 2 * 1024 * 1024) {
-                          setLogoError('Logo must be less than 2MB');
-                          setLogoFile(null);
-                        } else {
-                          setLogoError('');
-                          setLogoFile(file);
-                        }
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-400">PNG, JPG, WebP (max 2MB)</p>
-                  {logoError && <p className="text-xs text-red-500">{logoError}</p>}
-                </div>
               </div>
 
               <button

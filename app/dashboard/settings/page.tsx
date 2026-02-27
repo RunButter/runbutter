@@ -110,7 +110,10 @@ export default function SettingsPage() {
             let logoUrl = company.logo_url;
 
             // 1. Upload new logo if selected
-            if (logoFile) {
+            if (logoFile && user) {
+                // Ensure RLS session variable is set for this connection
+                await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user.id, is_local: false });
+
                 const uploadedUrl = await uploadLogo(logoFile, company.id);
                 if (uploadedUrl) {
                     logoUrl = uploadedUrl;
