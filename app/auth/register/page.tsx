@@ -18,8 +18,6 @@ export default function RegisterPage() {
   const [debug, setDebug] = useState('');
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({ companyName: '', subdomain: '' });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoError, setLogoError] = useState('');
 
   // Debug what's happening
   useEffect(() => {

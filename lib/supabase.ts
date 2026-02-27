@@ -19,10 +19,9 @@ export const STORAGE_BUCKETS = {
 } as const;
 
 export async function uploadCV(file: File, candidateId: string): Promise<string | null> {
-  const client = createSupabaseClient();
   const fileName = `${candidateId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 
-  const { error } = await client.storage
+  const { error } = await supabase.storage
     .from(STORAGE_BUCKETS.CV)
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -38,7 +37,7 @@ export async function uploadCV(file: File, candidateId: string): Promise<string 
     return null;
   }
 
-  const { data: urlData } = client.storage
+  const { data: urlData } = supabase.storage
     .from(STORAGE_BUCKETS.CV)
     .getPublicUrl(fileName);
 
@@ -46,10 +45,9 @@ export async function uploadCV(file: File, candidateId: string): Promise<string 
 }
 
 export async function uploadLogo(file: File, companyId: string): Promise<string | null> {
-  const client = createSupabaseClient();
   const fileName = `${companyId}/logo-${Date.now()}.png`;
 
-  const { error } = await client.storage
+  const { error } = await supabase.storage
     .from(STORAGE_BUCKETS.LOGO)
     .upload(fileName, file, {
       cacheControl: '3600',
@@ -61,7 +59,7 @@ export async function uploadLogo(file: File, companyId: string): Promise<string 
     return null;
   }
 
-  const { data: urlData } = client.storage
+  const { data: urlData } = supabase.storage
     .from(STORAGE_BUCKETS.LOGO)
     .getPublicUrl(fileName);
 
@@ -69,8 +67,7 @@ export async function uploadLogo(file: File, companyId: string): Promise<string 
 }
 
 export async function deleteFile(bucket: string, path: string): Promise<boolean> {
-  const client = createSupabaseClient();
-  const { error } = await client.storage.from(bucket).remove([path]);
+  const { error } = await supabase.storage.from(bucket).remove([path]);
 
   if (error) {
     console.error('Error deleting file:', error);
