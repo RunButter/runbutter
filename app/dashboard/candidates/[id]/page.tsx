@@ -38,6 +38,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [activity, setActivity] = useState<any[]>([]);
     const [results, setResults] = useState<any>(null);
     const [debugInfo, setDebugInfo] = useState<any>(null);
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [scheduleTime, setScheduleTime] = useState('');
+    const [isScheduling, setIsScheduling] = useState(false);
+    const [companyPlan, setCompanyPlan] = useState('free');
 
     const loadCandidateData = useCallback(async () => {
         try {
@@ -92,6 +96,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     created_by: can.position_created_by
                 }
             });
+
+            // Fetch company plan
+            const { data: comp } = await supabase.from('companies').select('plan').eq('id', can.company_id).single();
+            setCompanyPlan(comp?.plan || 'free');
 
             // Fetch activity log (still using standard fetch as it is secondary)
             const { data: acts } = await supabase
@@ -219,6 +227,44 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             }
         } catch (e) {
             return typeof d === 'object' ? JSON.stringify(d) : d;
+        }
+    };
+
+    const handleSchedule = async () => {
+        if (!scheduleTime) return alert('Please select a date and time');
+        
+        setIsScheduling(true);
+        try {
+            const res = await fetch('/api/interviews/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidateId: params.id,
+                    privyUserId: user?.id,
+                    startTime: new Date(scheduleTime).toISOString(),
+                    durationMinutes: 30
+                })
+            });
+            const data = await res.json();
+            
+            if (!res.ok) {
+                // Check if paywall block
+                if (data.error === 'Scheduling requires a Pro plan') {
+                    alert('Locked Feature: Please upgrade your account to Premium to schedule interviews automatically.');
+                } else {
+                    throw new Error(data.error || 'Failed to schedule interview. Ensure Google Calendar is integrated.');
+                }
+                return;
+            }
+
+            alert('Interview successfully scheduled via Google Calendar!');
+            setShowScheduleModal(false);
+            loadCandidateData();
+        } catch (error: any) {
+            console.error('Scheduling error:', error);
+            alert(error.message);
+        } finally {
+            setIsScheduling(false);
         }
     };
 
@@ -379,9 +425,18 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <option value="hired">Hired</option>
                             <option value="rejected">Rejected</option>
                         </select>
-                        <button className="btn-primary flex items-center gap-2 py-2 px-4 text-sm shadow-sm hover:translate-y-[-1px] transition-transform">
-                            <Send className="w-4 h-4" />
-                            Send Assessment
+                        <button 
+                            className={`flex items-center gap-2 py-2 px-4 shadow-sm text-sm rounded border ${companyPlan === 'free' ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'btn-primary'}`}
+                            onClick={() => {
+                                if (companyPlan === 'free') {
+                                    alert('Automatic Interview Scheduling is a Premium feature. Upgrade your plan to use it!');
+                                    return;
+                                }
+                                setShowScheduleModal(true);
+                            }}
+                        >
+                            <Calendar className="w-4 h-4" />
+                            {companyPlan === 'free' ? 'Schedule (Pro)' : 'Schedule Interview'}
                         </button>
                     </div>
                 </div>
@@ -700,6 +755,38 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     </div>
                 </div>
             </main>
+
+            {/* Schedule Modal */}
+            {showScheduleModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Schedule Interview</h3>
+                        <p className="text-gray-500 text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
+                        
+                        <div className="mb-6">
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Date & Time</label>
+                            <input 
+                                type="datetime-local" 
+                                className="input-field w-full rounded-xl"
+                                value={scheduleTime}
+                                onChange={(e) => setScheduleTime(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button className="btn-secondary" onClick={() => setShowScheduleModal(false)}>Cancel</button>
+                            <button 
+                                className="btn-primary flex items-center gap-2"
+                                onClick={handleSchedule}
+                                disabled={isScheduling || !scheduleTime}
+                            >
+                                {isScheduling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+                                Confirm Schedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

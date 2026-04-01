@@ -106,7 +106,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           phone: formData.phone || null,
           linkedin_url: formData.linkedinUrl || null,
           status: 'applied',
-          source: 'direct',
+          source: new URLSearchParams(window.location.search).get('source') || 'direct',
         })
         .select()
         .single();
