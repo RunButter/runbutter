@@ -8,9 +8,6 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'hirebtr.com - AI-Powered Recruitment Assessment',
   description: 'Hire better with pixel-perfect candidate assessments, personality tests, and cognitive evaluations',
-  icons: {
-    icon: '/icon.svg',
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
