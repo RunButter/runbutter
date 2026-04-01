@@ -169,10 +169,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Debug info */}
-          <div className="mb-4 p-2 bg-gray-50 rounded text-xs text-gray-600">
-            <strong>Debug:</strong> {debug}
-          </div>
+          {/* Debug info (Hidden in UI) */}
 
           {error && (
             <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>

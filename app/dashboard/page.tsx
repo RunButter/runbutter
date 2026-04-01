@@ -178,14 +178,14 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 mb-2 md:mb-0">
                 <Link href="/dashboard">
                   <Logo />
                 </Link>
                 <div className="h-8 w-px bg-gray-200" />
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Recruiter Dashboard</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Recruiter Dashboard</h1>
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-gray-600">{company?.name}</p>
@@ -194,16 +194,16 @@ export default function DashboardPage() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               <Link href="/dashboard/billing" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
-                Billing
+                <span className="hidden sm:inline">Billing</span>
               </Link>
               <Link href="/dashboard/settings" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Settings
+                <span className="hidden sm:inline">Settings</span>
               </Link>
-              <Link href="/dashboard/positions/new" className="btn-primary">
+              <Link href="/dashboard/positions/new" className="btn-primary whitespace-nowrap text-sm px-3 py-1.5 md:px-4 md:py-2">
                 Create Position
               </Link>
               <button

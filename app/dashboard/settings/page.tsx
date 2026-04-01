@@ -157,17 +157,17 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white border-b">
-                <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-4xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-full transition">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </Link>
-                        <h1 className="text-2xl font-bold text-gray-800">Company Settings</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Company Settings</h1>
                     </div>
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="btn-primary"
+                        className="btn-primary w-full sm:w-auto mt-1 sm:mt-0"
                     >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                     </button>

@@ -140,6 +140,21 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
       setSuccess(true);
       setCandidateId(candidate.id);
       setAccessToken(candidate.access_token);
+
+      // Trigger Welcome Email (non-blocking)
+      const assessmentLink = `${window.location.origin}/apply/${params.positionId}/assessment?candidateId=${candidate.id}&token=${candidate.access_token}`;
+      fetch('/api/email/candidate-welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          name: formData.fullName,
+          position: position.title,
+          company: positionInfo?.companyName,
+          assessmentLink
+        })
+      }).catch(console.error);
+
     } catch (err: unknown) {
       console.error('Application error:', err);
       // Try to extract message from Supabase error object
