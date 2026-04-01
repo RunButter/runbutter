@@ -49,6 +49,24 @@ export default function RegisterPage() {
         if (data) {
           router.push('/dashboard');
         } else {
+          // Securely check if user has a pending team invite waiting to be claimed
+          const email = user.email?.address ?? user.google?.email ?? '';
+          if (email) {
+              try {
+                  const res = await fetch('/api/team/claim', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email, privyUserId: user.id })
+                  });
+                  const claimData = await res.json();
+                  if (claimData.claimed) {
+                      router.push('/dashboard?welcome=true');
+                      return;
+                  }
+              } catch (claimErr) {
+                  console.error('Failed to claim invite:', claimErr);
+              }
+          }
           setStep('company');
         }
       } catch (err: any) {

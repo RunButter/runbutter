@@ -24,6 +24,7 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
     const [company, setCompany] = useState<any>(null);
     const [formData, setFormData] = useState({
@@ -59,6 +60,17 @@ export default function SettingsPage() {
                 subdomain: companyUser.company.subdomain,
             });
             setLogoPreview(companyUser.company.logo_url);
+
+            // Check Google Integration Status
+            const { data: token } = await supabase
+                .from('integration_tokens')
+                .select('id')
+                .eq('user_id', privyUserId)
+                .eq('provider', 'google')
+                .maybeSingle();
+            
+            setIsGoogleConnected(!!token);
+
         } catch (err: any) {
             console.error('Error loading settings:', err);
             setError('Failed to load company settings');
@@ -76,6 +88,19 @@ export default function SettingsPage() {
             }
         }
     }, [ready, authenticated, user, router, loadSettings]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('success') === 'google_connected') {
+                setSuccess('Google Calendar successfully connected!');
+                window.history.replaceState({}, '', '/dashboard/settings');
+            } else if (params.get('error')) {
+                setError('Failed to connect Google Calendar. Check your API Keys.');
+                window.history.replaceState({}, '', '/dashboard/settings');
+            }
+        }
+    }, []);
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -275,6 +300,44 @@ export default function SettingsPage() {
                             </div>
                         </form>
                     </section>
+
+                    {/* Integrations Section */}
+                    {company && user && (
+                        <section className="bg-white rounded-2xl shadow-sm border p-8">
+                            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                <Globe className="w-6 h-6 text-primary-600" />
+                                Connected Apps & Integrations
+                            </h2>
+
+                            <div className="space-y-6">
+                                <div className="p-6 border border-gray-100 rounded-xl flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200 shadow-sm font-bold text-xl text-gray-600">
+                                            G
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-800">Google Calendar</h3>
+                                            <p className="text-sm text-gray-500">Automatically schedule interviews and generate Google Meet links.</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {isGoogleConnected ? (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200">
+                                                <CheckCircle className="w-4 h-4" /> Connected
+                                            </div>
+                                        ) : (
+                                            <Link 
+                                                href={`/api/auth/google?userId=${user.id}&companyId=${company.id}`}
+                                                className="btn-secondary py-2 px-6 inline-block"
+                                            >
+                                                Connect Calendar
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* Tips Section */}
                     <div className="p-6 bg-primary-50 rounded-2xl border border-primary-100">
