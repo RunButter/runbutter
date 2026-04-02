@@ -4,6 +4,10 @@ import { handleOAuthCallback } from '@/lib/google-calendar';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const baseUrl = `${protocol}://${host}`;
+
     try {
         const { searchParams } = new URL(request.url);
         const code = searchParams.get('code');
@@ -11,7 +15,7 @@ export async function GET(request: Request) {
         const errorParam = searchParams.get('error');
 
         // Target redirect destination
-        const settingsUrl = new URL('/dashboard/settings', request.url);
+        const settingsUrl = new URL('/dashboard/settings', baseUrl);
 
         if (errorParam) {
             console.error('Google OAuth Error from callback:', errorParam);
@@ -25,9 +29,7 @@ export async function GET(request: Request) {
         }
 
         // Process the token exchange and save to database
-        const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
-        const protocol = request.headers.get('x-forwarded-proto') || 'https';
-        const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+        const redirectUri = `${baseUrl}/api/auth/google/callback`;
         
         await handleOAuthCallback(code, state, redirectUri);
 
@@ -36,7 +38,7 @@ export async function GET(request: Request) {
         return NextResponse.redirect(settingsUrl);
     } catch (error: any) {
         console.error('Google Callback Route Error:', error);
-        const fallbackUrl = new URL('/dashboard/settings', request.url);
+        const fallbackUrl = new URL('/dashboard/settings', baseUrl);
         fallbackUrl.searchParams.set('error', 'google_auth_exception');
         return NextResponse.redirect(fallbackUrl);
     }
