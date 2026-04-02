@@ -64,8 +64,8 @@ export default function SettingsPage() {
             // Check Google Integration Status
             const { data: token } = await supabase
                 .from('integration_tokens')
-                .select('id')
-                .eq('user_id', privyUserId)
+                .select('id, company_users!inner(privy_user_id)')
+                .eq('company_users.privy_user_id', privyUserId)
                 .eq('provider', 'google')
                 .maybeSingle();
             

@@ -44,9 +44,19 @@ export async function handleOAuthCallback(code: string, state: string, redirectU
   oauth2Client.setCredentials(tokens);
 
   const supabase = createAdminClient();
+
+  // Resolve the internal Database ID from the Privy User ID
+  const { data: userData } = await supabase
+    .from('company_users')
+    .select('id')
+    .eq('privy_user_id', userId)
+    .single();
+
+  if (!userData) throw new Error(`User not found for ID: ${userId}`);
+
   await supabase.from('integration_tokens').upsert({
     company_id: companyId,
-    user_id: userId,
+    user_id: userData.id,
     provider: 'google',
     access_token: tokens.access_token!,
     refresh_token: tokens.refresh_token,
@@ -65,10 +75,19 @@ export async function createCalendarEvent(
     const supabase = createAdminClient();
     const oauth2Client = getOAuth2Client();
 
+    // Resolve internal ID from Privy ID
+    const { data: userData } = await supabase
+        .from('company_users')
+        .select('id')
+        .eq('privy_user_id', userId)
+        .single();
+    
+    if (!userData) throw new Error('User not found');
+
     const { data: tokenData } = await supabase
       .from('integration_tokens')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userData.id)
       .eq('provider', 'google')
       .single();
 
