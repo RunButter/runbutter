@@ -274,16 +274,22 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <Link href="/dashboard/pipeline" className="card hover:shadow-lg transition cursor-pointer border-2 border-primary-100 bg-primary-50/30">
+            <TrendingUp className="w-8 h-8 text-primary-600 mb-3" />
+            <h3 className="font-semibold text-gray-800 mb-1">Visual Pipeline</h3>
+            <p className="text-sm text-gray-600">Drag & Drop recruitment</p>
+          </Link>
+
           <Link href="/dashboard/candidates" className="card hover:shadow-lg transition cursor-pointer">
             <Users className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="font-semibold text-gray-800 mb-1">View Candidates</h3>
-            <p className="text-sm text-gray-600">Manage all applications</p>
+            <h3 className="font-semibold text-gray-800 mb-1">Candidates</h3>
+            <p className="text-sm text-gray-600">Browse all applicants</p>
           </Link>
 
           <Link href="/dashboard/positions" className="card hover:shadow-lg transition cursor-pointer">
             <Briefcase className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="font-semibold text-gray-800 mb-1">Job Positions</h3>
-            <p className="text-sm text-gray-600">Create and manage roles</p>
+            <h3 className="font-semibold text-gray-800 mb-1">Positions</h3>
+            <p className="text-sm text-gray-600">Create & manage roles</p>
           </Link>
 
           <Link href="/dashboard/interviews" className="card hover:shadow-lg transition cursor-pointer relative overflow-hidden group">
