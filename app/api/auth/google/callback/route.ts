@@ -23,7 +23,10 @@ export async function GET(request: Request) {
         }
 
         // Process the token exchange and save to database
-        const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+        const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
+        const protocol = request.headers.get('x-forwarded-proto') || 'https';
+        const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+        
         await handleOAuthCallback(code, state, redirectUri);
 
         // Success redirect back to Settings page

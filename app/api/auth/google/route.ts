@@ -11,7 +11,11 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Missing userId or companyId' }, { status: 400 });
         }
 
-        const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+        // Detect the public-facing URL behind proxies like Render
+        const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
+        const protocol = request.headers.get('x-forwarded-proto') || 'https';
+        const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+        
         const authUrl = await getAuthUrl(userId, companyId, redirectUri);
         
         // Redirect the user to Google's OAuth consent screen
