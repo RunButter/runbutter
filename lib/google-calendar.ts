@@ -4,11 +4,11 @@
 import { google } from 'googleapis';
 import { createAdminClient } from './supabase';
 
-function getOAuth2Client() {
+function getOAuth2Client(redirectUri?: string) {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI ?? 'http://localhost:3000/api/auth/google/callback'
+    redirectUri || process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback'
   );
 }
 
@@ -21,8 +21,8 @@ export interface CalendarEvent {
   conferenceData?: boolean; // create Google Meet link
 }
 
-export async function getAuthUrl(userId: string, companyId: string) {
-  const oauth2Client = getOAuth2Client();
+export async function getAuthUrl(userId: string, companyId: string, redirectUri?: string) {
+  const oauth2Client = getOAuth2Client(redirectUri);
   const scopes = [
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/calendar.readonly',
@@ -32,11 +32,12 @@ export async function getAuthUrl(userId: string, companyId: string) {
     access_type: 'offline',
     scope: scopes,
     state: JSON.stringify({ userId, companyId }),
+    prompt: 'consent' // Force refresh token
   });
 }
 
-export async function handleOAuthCallback(code: string, state: string) {
-  const oauth2Client = getOAuth2Client();
+export async function handleOAuthCallback(code: string, state: string, redirectUri?: string) {
+  const oauth2Client = getOAuth2Client(redirectUri);
   const { userId, companyId } = JSON.parse(state) as { userId: string; companyId: string };
 
   const { tokens } = await oauth2Client.getToken(code);

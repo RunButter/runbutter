@@ -23,7 +23,8 @@ export async function GET(request: Request) {
         }
 
         // Process the token exchange and save to database
-        await handleOAuthCallback(code, state);
+        const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+        await handleOAuthCallback(code, state, redirectUri);
 
         // Success redirect back to Settings page
         settingsUrl.searchParams.set('success', 'google_connected');

@@ -11,7 +11,8 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Missing userId or companyId' }, { status: 400 });
         }
 
-        const authUrl = await getAuthUrl(userId, companyId);
+        const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+        const authUrl = await getAuthUrl(userId, companyId, redirectUri);
         
         // Redirect the user to Google's OAuth consent screen
         return NextResponse.redirect(authUrl);
