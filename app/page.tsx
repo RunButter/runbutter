@@ -35,8 +35,8 @@ export default function HomePage() {
             <Link href="/auth/register" className="btn-primary px-8 py-3 text-lg">
               Start Free Trial
             </Link>
-            <Link href="/auth/register" className="btn-secondary px-8 py-3 text-lg">
-              View Demo
+            <Link href="/demo" className="btn-secondary px-8 py-3 text-lg">
+              View Interactive Demo
             </Link>
           </div>
           <p className="text-sm text-gray-500 mt-4">No credit card required • 14-day free trial</p>
@@ -275,7 +275,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><Link href="#features">Features</Link></li>
                 <li><Link href="#pricing">Pricing</Link></li>
-                <li><Link href="/auth/register">Demo</Link></li>
+                <li><Link href="/demo">Live Demo</Link></li>
               </ul>
             </div>
             <div>
