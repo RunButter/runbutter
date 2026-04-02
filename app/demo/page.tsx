@@ -4,9 +4,9 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
     Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, 
-    Loader2, CreditCard, Lock, Building2, Search, Filter, 
-    Mail, ExternalLink, GripVertical, MoreHorizontal, ArrowLeft,
-    Brain, Target, BarChart, ChevronRight, User, Phone, Linkedin, FileText, AlertCircle
+    Loader2, Search, 
+    Mail, GripVertical, MoreHorizontal, ArrowLeft,
+    LayoutDashboard, User, AlertCircle
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -21,7 +21,6 @@ import {
     DragEndEvent
 } from '@dnd-kit/core';
 import { 
-    arrayMove, 
     SortableContext, 
     sortableKeyboardCoordinates, 
     verticalListSortingStrategy,
@@ -44,7 +43,7 @@ import Logo from '@/components/Logo';
 // Register ChartJS
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
-// --- Constants & Styles ---
+// --- Constants ---
 const COLUMNS = [
     { id: 'applied', title: 'New Applied' },
     { id: 'screening', title: 'Screening' },
@@ -64,7 +63,7 @@ const STATUS_MAP: Record<string, string> = {
     'hired': 'hired'
 };
 
-// --- Mock Components ---
+// --- Sub-Components ---
 
 function CandidateCard({ candidate, onClick, isOverlay = false }: { candidate: any, onClick?: (c: any) => void, isOverlay?: boolean }) {
     const {
@@ -145,12 +144,16 @@ function KanbanColumn({ id, title, candidates, onCardClick }: { id: string, titl
                         <CandidateCard key={c.id} candidate={c} onClick={onCardClick} />
                     ))}
                 </SortableContext>
+                {candidates.length === 0 && (
+                    <div className="h-24 border-2 border-dashed border-gray-100 rounded-xl flex items-center justify-center text-[10px] text-gray-300 font-bold uppercase tracking-widest">
+                        Empty
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
-// --- Detail View Component ---
 function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose: () => void }) {
     if (!candidate) return null;
     const results = candidate.assessment_results?.[0];
@@ -197,14 +200,16 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
                                     <p className="text-primary-100/80 leading-relaxed font-medium italic">&quot;{results.summary}&quot;</p>
                                 </div>
                                 <div className="h-64 flex items-center justify-center bg-white/5 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
-                                    <Radar 
-                                        data={radarData!} 
-                                        options={{ 
-                                            scales: { r: { display: false } }, 
-                                            plugins: { legend: { display: false } },
-                                            maintainAspectRatio: false 
-                                        }} 
-                                    />
+                                    {radarData && (
+                                        <Radar 
+                                            data={radarData} 
+                                            options={{ 
+                                                scales: { r: { display: false } }, 
+                                                plugins: { legend: { display: false } },
+                                                maintainAspectRatio: false 
+                                            }} 
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -231,9 +236,9 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
                     </div>
                 </div>
                 <footer className="p-8 border-t bg-gray-50 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <User className="w-10 h-10 text-gray-300 bg-white p-2 rounded-full border" />
-                        <span className="text-sm font-bold text-gray-600">{candidate.email}</span>
+                    <div className="flex items-center gap-4 text-gray-500">
+                        <User className="w-10 h-10 bg-white p-2 rounded-full border" />
+                        <span className="text-sm font-bold">{candidate.email}</span>
                     </div>
                     <button onClick={onClose} className="btn-primary px-10">Close Record</button>
                 </footer>
@@ -244,10 +249,19 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
 
 // --- Main Demo Page ---
 export default function DemoPage() {
-    const [view, setView] = useState<'dashboard' | 'pipeline'>('dashboard');
+    type DemoView = 'dashboard' | 'pipeline' | 'positions' | 'interviews' | 'analytics';
+    const [view, setView] = useState<DemoView>('dashboard');
     const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredCandidates = useMemo(() => {
+        return candidates.filter(c => 
+            c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.position_title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [candidates, searchQuery]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -257,31 +271,32 @@ export default function DemoPage() {
     const groupedCandidates = useMemo(() => {
         const groups: Record<string, any[]> = {};
         COLUMNS.forEach(col => groups[col.id] = []);
-        candidates.forEach(c => {
+        filteredCandidates.forEach(c => {
             const group = STATUS_MAP[c.status] || 'applied';
             if (groups[group]) groups[group].push(c);
         });
         return groups;
-    }, [candidates]);
+    }, [filteredCandidates]);
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
-        setActiveId(null);
         if (!over) return;
-        
-        let targetStatus = '';
-        const overData = over.data.current;
-        if (overData?.type === 'Column') targetStatus = overData.id;
-        else if (overData?.type === 'Candidate') targetStatus = STATUS_MAP[overData.candidate.status] || 'applied';
-
-        if (targetStatus) {
-            setCandidates(prev => prev.map(c => 
-                c.id === active.id ? { ...c, status: targetStatus } : c
-            ));
+        const activeC = candidates.find(c => c.id === active.id);
+        if (!activeC) return;
+        let targetS = '';
+        const overD = over.data.current;
+        if (overD?.type === 'Column') targetS = overD.id;
+        else if (overD?.type === 'Candidate') targetS = STATUS_MAP[overD.candidate.status] || 'applied';
+        if (targetS && (STATUS_MAP[activeC.status] || 'applied') !== targetS) {
+            setCandidates(prev => prev.map(c => c.id === active.id ? { ...c, status: targetS } : c));
         }
     };
 
-    const NavItem = ({ id, icon: Icon, label }: any) => (
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveId(null);
+    };
+
+    const NavItem = ({ id, icon: Icon, label }: { id: DemoView, icon: any, label: string }) => (
         <button 
             onClick={() => setView(id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-bold text-sm ${view === id ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
@@ -297,30 +312,22 @@ export default function DemoPage() {
             <aside className="w-72 bg-white border-r h-full flex flex-col p-6 sticky top-0 hidden lg:flex">
                 <div className="mb-10 px-2 flex items-center gap-3">
                     <Logo />
-                    <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200">Demo</div>
+                    <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200 shadow-sm">Demo Mode</div>
                 </div>
                 
-                <nav className="flex-1 space-y-2">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-4">Talent Management</div>
-                    <NavItem id="dashboard" icon={LayoutDashboardIcon} label="Dashboard" />
-                    <NavItem id="pipeline" icon={LayoutDashboard} label="Recruitment Pipeline" />
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition font-bold text-sm">
-                        <Users className="w-5 h-5" />
-                        Positions
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition font-bold text-sm">
-                        <Calendar className="w-5 h-5" />
-                        Interviews
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition font-bold text-sm">
-                        <TrendingUp className="w-5 h-5" />
-                        Analytics
-                    </button>
+                <nav className="flex-1 space-y-1">
+                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4">Talent Management</div>
+                    <NavItem id="dashboard" icon={LayoutDashboard} label="Overview" />
+                    <NavItem id="pipeline" icon={Users} label="Visual Pipeline" />
+                    <NavItem id="positions" icon={Briefcase} label="Positions" />
+                    <NavItem id="interviews" icon={Calendar} label="Interviews" />
+                    <NavItem id="analytics" icon={TrendingUp} label="Analytics" />
                 </nav>
 
-                <div className="mt-auto p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <p className="text-xs font-bold text-gray-800 mb-2">Upgrade for live access</p>
-                    <Link href="/auth/register" className="btn-primary w-full py-2 text-[10px] font-black tracking-widest">Get Full Version</Link>
+                <div className="mt-auto p-5 bg-primary-900 rounded-3xl text-white relative overflow-hidden group shadow-xl">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition duration-500" />
+                    <p className="text-xs font-bold text-primary-100 mb-3 relative z-10">Start hiring today.</p>
+                    <Link href="/auth/register" className="relative z-10 block w-full py-2.5 bg-white text-primary-900 rounded-xl text-center text-[10px] font-black tracking-widest uppercase hover:bg-gray-50 transition shadow-lg">Get Full Version</Link>
                 </div>
             </aside>
 
@@ -328,28 +335,34 @@ export default function DemoPage() {
             <main className="flex-1 flex flex-col overflow-hidden">
                 <header className="bg-white border-b px-8 py-5 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-black tracking-tight text-gray-900">
-                            {view === 'dashboard' ? 'Hiring Overview' : 'Visual Pipeline'}
+                        <h2 className="text-xl font-black tracking-tight text-gray-900 capitalize">
+                            {view} 
+                            <span className="text-primary-600 ml-2 animate-pulse">•</span>
                         </h2>
                     </div>
                     <div className="flex items-center gap-6">
                         <div className="relative hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input className="bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary-500 outline-none w-64" placeholder="Search talent..." />
+                            <input 
+                                className="bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary-500 outline-none w-64 transition-all focus:w-80" 
+                                placeholder="Filter demo data..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center text-white font-bold text-xs">JD</div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center text-white font-bold text-xs ring-4 ring-primary-50">JD</div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                    {view === 'dashboard' ? (
-                        <>
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gray-50/30">
+                    {view === 'dashboard' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Stats */}
                             <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
                                 {Object.entries(MOCK_STATS).map(([key, val]) => (
-                                    <div key={key} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition hover:shadow-xl hover:scale-105 duration-300">
+                                    <div key={key} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition hover:shadow-xl hover:-translate-y-1 duration-300">
                                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 whitespace-nowrap">{key.replace(/([A-Z])/g, ' $1')}</div>
-                                        <div className="text-3xl font-black text-gray-900">{val}</div>
+                                        <div className="text-3xl font-black text-gray-900 tracking-tighter">{val}</div>
                                     </div>
                                 ))}
                             </div>
@@ -362,24 +375,24 @@ export default function DemoPage() {
                                         Fastest Growing Talent
                                     </h3>
                                     <div className="grid gap-4">
-                                        {candidates.slice(0, 3).map(c => (
+                                        {filteredCandidates.slice(0, 3).map(c => (
                                             <div 
                                                 key={c.id} 
                                                 onClick={() => setSelectedCandidate(c)}
-                                                className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-xl cursor-pointer transition-all group"
+                                                className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-xl cursor-pointer transition-all group lg:pr-8"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary-600 font-black text-lg border border-gray-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition">{c.full_name[0]}</div>
+                                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary-600 font-black text-lg border border-gray-100 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">{c.full_name[0]}</div>
                                                     <div>
-                                                        <h4 className="font-black text-gray-900">{c.full_name}</h4>
-                                                        <p className="text-xs text-gray-500 font-medium">{c.position_title}</p>
+                                                        <h4 className="font-black text-gray-900 group-hover:text-primary-600 transition">{c.full_name}</h4>
+                                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{c.position_title}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="inline-block px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-100">
+                                                    <div className="inline-block px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-100 group-hover:bg-green-600 group-hover:text-white transition">
                                                         {c.assessment_results?.[0]?.overall_score}% Match
                                                     </div>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-2">Active now</p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-2 group-hover:text-primary-400">Active now</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -403,42 +416,147 @@ export default function DemoPage() {
                                     </div>
                                 </div>
                             </div>
-                        </>
-                    ) : (
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={(e) => setActiveId(e.active.id as string)}
-                            onDragOver={(e) => {
-                                const { active, over } = e;
-                                if (!over) return;
-                                const activeC = candidates.find(c => c.id === active.id);
-                                if (!activeC) return;
-                                let targetS = '';
-                                const overD = over.data.current;
-                                if (overD?.type === 'Column') targetS = overD.id;
-                                else if (overD?.type === 'Candidate') targetS = STATUS_MAP[overD.candidate.status] || 'applied';
-                                if (targetS && (STATUS_MAP[activeC.status] || 'applied') !== targetS) {
-                                    setCandidates(prev => prev.map(c => c.id === active.id ? { ...c, status: targetS } : c));
-                                }
-                            }}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div className="flex h-full gap-8 min-w-max pb-8">
-                                {COLUMNS.map(column => (
-                                    <KanbanColumn 
-                                        key={column.id} 
-                                        id={column.id} 
-                                        title={column.title} 
-                                        candidates={groupedCandidates[column.id] || []} 
-                                        onCardClick={setSelectedCandidate}
-                                    />
+                        </div>
+                    )}
+
+                    {view === 'pipeline' && (
+                        <div className="h-full animate-in fade-in zoom-in-95 duration-500">
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={(e) => setActiveId(e.active.id as string)}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className="flex h-full gap-8 min-w-max pb-8 overflow-visible">
+                                    {COLUMNS.map(column => (
+                                        <KanbanColumn 
+                                            key={column.id} 
+                                            id={column.id} 
+                                            title={column.title} 
+                                            candidates={groupedCandidates[column.id] || []} 
+                                            onCardClick={setSelectedCandidate}
+                                        />
+                                    ))}
+                                </div>
+                                <DragOverlay>
+                                    {activeId ? <CandidateCard candidate={candidates.find(c => c.id === activeId)} isOverlay /> : null}
+                                </DragOverlay>
+                            </DndContext>
+                        </div>
+                    )}
+
+                    {view === 'positions' && (
+                        <div className="grid gap-6 animate-in slide-in-from-right-4 duration-500">
+                            {[
+                                { title: 'Senior React Engineer', dept: 'Engineering', apps: 42, score: 92 },
+                                { title: 'Product Manager', dept: 'Product', apps: 18, score: 85 },
+                                { title: 'Sales Executive', dept: 'Sales', apps: 65, score: 78 }
+                            ].map((job, i) => (
+                                <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between hover:shadow-xl transition-all group gap-6">
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 font-black border border-primary-100 group-hover:bg-primary-600 group-hover:text-white transition duration-500 shadow-sm">
+                                            <Briefcase className="w-8 h-8" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-gray-900 mb-1 group-hover:text-primary-600 transition">{job.title}</h3>
+                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{job.dept} • {job.apps} Applications</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-8">
+                                        <div className="text-right">
+                                            <div className="text-2xl font-black text-gray-900 group-hover:text-primary-600 transition">{job.score}%</div>
+                                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Avg. Quality</div>
+                                        </div>
+                                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition shadow-inner">
+                                            <MoreHorizontal className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {view === 'interviews' && (
+                        <div className="space-y-4 animate-in fade-in duration-500">
+                            <div className="bg-primary-900 text-white p-8 rounded-3xl shadow-xl mb-8 flex flex-col md:flex-row md:items-center justify-between relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition duration-700" />
+                                <div className="relative z-10">
+                                    <h3 className="text-3xl font-black tracking-tighter italic mb-1">Next Interview in 45m</h3>
+                                    <p className="text-primary-100 font-bold uppercase tracking-widest text-[10px]">Sarah Jenkins • Enterprise Sales Role</p>
+                                </div>
+                                <button onClick={() => alert('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-white text-primary-900 rounded-2xl font-black tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
+                            </div>
+                            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-2 overflow-hidden">
+                                {[
+                                    { name: 'Sarah Jenkins', time: 'Today, 2:00 PM', type: 'Google Meet' },
+                                    { name: 'Marcus Thorne', time: 'Tomorrow, 10:00 AM', type: 'Design Review' },
+                                    { name: 'David Kim', time: 'Monday, 11:30 AM', type: 'Technical Interview' }
+                                ].map((int, i) => (
+                                    <div key={i} className="flex items-center justify-between p-6 hover:bg-gray-50 rounded-2xl transition group cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100 group-hover:border-primary-100 group-hover:text-primary-600 transition-all shadow-inner">
+                                                <Calendar className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition">{int.name}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{int.time}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 bg-primary-50 px-3 py-1 rounded-full border border-primary-100 shadow-sm group-hover:bg-primary-600 group-hover:text-white transition duration-300">{int.type}</span>
+                                            <button className="text-gray-300 hover:text-gray-900 transition"><MoreHorizontal className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
-                            <DragOverlay>
-                                {activeId ? <CandidateCard candidate={candidates.find(c => c.id === activeId)} isOverlay /> : null}
-                            </DragOverlay>
-                        </DndContext>
+                        </div>
+                    )}
+
+                    {view === 'analytics' && (
+                        <div className="grid lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-6 duration-700">
+                            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group">
+                                <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-primary-600 transition">
+                                    <TrendingUp className="w-4 h-4" />
+                                    Hiring Velocity (Days to Close)
+                                </h3>
+                                <div className="h-64 flex items-end gap-5 px-4 pb-4">
+                                    {[60, 80, 45, 90, 70, 85].map((h, i) => (
+                                        <div key={i} className="flex-1 bg-gray-50 rounded-t-2xl relative group/bar hover:bg-primary-100 transition-colors duration-300" style={{ height: `${h}%` }}>
+                                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-all duration-300 shadow-xl scale-95 group-hover/bar:scale-100 z-10">{h} Days</div>
+                                            <div className="h-full w-full bg-primary-600/10 rounded-t-2xl opacity-0 group-hover/bar:opacity-100 transition-opacity" />
+                                            <div className="absolute bottom-[-28px] left-1/2 -translate-x-1/2 text-[8px] font-black text-gray-400 uppercase tracking-tighter">Apr-{'0'+(i+1)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group">
+                                <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-primary-600 transition">
+                                    <Brain className="w-4 h-4" />
+                                    Candidate Quality of Hire
+                                </h3>
+                                <div className="space-y-8">
+                                    {[
+                                        { label: 'Technical Match', value: 94, color: 'bg-primary-500' },
+                                        { label: 'Culture & Soft Skills', value: 88, color: 'bg-emerald-500' },
+                                        { label: 'Longevity Prediction', value: 82, color: 'bg-purple-500' }
+                                    ].map((stat, i) => (
+                                        <div key={i} className="space-y-3">
+                                            <div className="flex justify-between text-xs font-black uppercase tracking-widest text-gray-600">
+                                                <span>{stat.label}</span>
+                                                <span className="text-gray-900">{stat.value}%</span>
+                                            </div>
+                                            <div className="h-3 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
+                                                <div className={`h-full ${stat.color} rounded-full transition-all duration-1000 shadow-sm`} style={{ width: `${stat.value}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-12 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 italic text-sm text-indigo-700 font-medium">
+                                    &quot;AI Prediction: Your hiring quality has improved by 24% since implementing Neuro-Matching.&quot;
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </main>
@@ -460,19 +578,4 @@ export default function DemoPage() {
             `}</style>
         </div>
     );
-}
-
-// Helper icons
-function LayoutDashboardIcon(props: any) {
-    return <LayoutDashboard {...props} />;
-}
-function LayoutDashboard(props: any) { // Mock as duplicate for consistency in naming convention in NavItem
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-            <rect width="7" height="9" x="3" y="3" rx="1" />
-            <rect width="7" height="5" x="14" y="3" rx="1" />
-            <rect width="7" height="9" x="14" y="12" rx="1" />
-            <rect width="7" height="5" x="3" y="16" rx="1" />
-        </svg>
-    )
 }
