@@ -1,8 +1,16 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle, Users, BarChart3, Calendar, Zap, Shield, ArrowRight } from 'lucide-react';
+import { CheckCircle, Users, BarChart3, Calendar, Zap, Shield, ArrowRight, LayoutDashboard, Rocket } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 export default function HomePage() {
+  const [isAnnual, setIsAnnual] = useState(true);
+
+  const getPrice = (monthly: number) => {
+    return isAnnual ? Math.floor(monthly * 0.8) : monthly;
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -47,14 +55,25 @@ export default function HomePage() {
       <section id="features" className="max-w-7xl mx-auto px-6 py-20">
         <h2 className="text-4xl font-bold text-center mb-12">Everything You Need to Hire Better</h2>
         <div className="grid md:grid-cols-3 gap-8">
+          <div className="card hover:shadow-lg transition group border-2 border-primary-50">
+            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4 group-hover:rotate-6 transition">
+              <LayoutDashboard className="w-6 h-6 text-primary-600" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">Visual Recruitment Pipeline</h3>
+            <p className="text-gray-600">
+              Drag-and-drop candidates between custom stages (Applied, Screening, Interview, Hired). 
+              See your entire funnel in one glance.
+            </p>
+          </div>
+
           <div className="card hover:shadow-lg transition">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
               <BarChart3 className="w-6 h-6 text-purple-600" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Comprehensive Assessments</h3>
+            <h3 className="text-xl font-bold mb-2">Neuro-Match Scoring</h3>
             <p className="text-gray-600">
               Big 5 personality traits, work style preferences, and cognitive problem-solving tests
-              in one platform.
+              mapped to 4 unique professional profiles.
             </p>
           </div>
 
@@ -113,10 +132,41 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Showcase Section */}
+      <section id="demo" className="bg-gray-900 py-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4 italic uppercase tracking-tighter">Designed for High-Performance Teams</h2>
+            <p className="text-xl text-gray-400">Transform your recruitment from a list of names into a visual, data-driven pipeline.</p>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-purple-600 rounded-[2rem] blur-xl opacity-20" />
+            <img 
+              src="/hirebtr_pipeline_showcase_1775151947434.png" 
+              alt="HireBtr Pipeline Showcase" 
+              className="relative w-full rounded-[2rem] shadow-2xl border border-white/10"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="max-w-7xl mx-auto px-6 py-20">
         <h2 className="text-4xl font-bold text-center mb-4">Simple, Transparent Pricing</h2>
-        <p className="text-center text-gray-600 mb-12">Start free, upgrade as you grow</p>
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <span className={`text-sm ${!isAnnual ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>Monthly</span>
+          <button 
+            onClick={() => setIsAnnual(!isAnnual)}
+            className="w-14 h-7 bg-gray-200 rounded-full p-1 relative transition shadow-inner"
+          >
+            <div className={`w-5 h-5 bg-primary-600 rounded-full transition-transform ${isAnnual ? 'translate-x-7' : 'translate-x-0'}`} />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm ${isAnnual ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>Annually</span>
+            <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">Save 20%</span>
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-4 gap-6">
           {/* Free */}
@@ -148,7 +198,7 @@ export default function HomePage() {
               Most Popular
             </div>
             <h3 className="text-lg font-bold mb-2">Starter</h3>
-            <div className="text-4xl font-bold mb-4">$99<span className="text-lg text-gray-600">/mo</span></div>
+            <div className="text-4xl font-bold mb-4">${getPrice(99)}<span className="text-lg text-gray-600">/mo</span></div>
             <ul className="space-y-3 mb-6">
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-green-600" />
@@ -175,7 +225,7 @@ export default function HomePage() {
           {/* Professional */}
           <div className="card">
             <h3 className="text-lg font-bold mb-2">Professional</h3>
-            <div className="text-4xl font-bold mb-4">$299<span className="text-lg text-gray-600">/mo</span></div>
+            <div className="text-4xl font-bold mb-4">${getPrice(299)}<span className="text-lg text-gray-600">/mo</span></div>
             <ul className="space-y-3 mb-6">
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-green-600" />
