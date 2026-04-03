@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { usePrivy } from '@privy-io/react-auth';
 import { Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, Loader2, CreditCard, Lock, Building2 } from 'lucide-react';
-import Logo from '@/components/Logo';
 import Link from 'next/link';
 
 interface DashboardStats {
@@ -174,53 +173,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-4 mb-2 md:mb-0">
-                <Link href="/dashboard">
-                  <Logo />
-                </Link>
-                <div className="h-8 w-px bg-gray-200" />
-                <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Recruiter Dashboard</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-gray-600">{company?.name}</p>
-                <span className="px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 text-[10px] font-bold uppercase tracking-wider border border-primary-200">
-                  {company?.plan || 'Free'} Plan
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <Link href="/dashboard/billing" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                <span className="hidden sm:inline">Billing</span>
-              </Link>
-              <Link href="/dashboard/settings" className="text-gray-600 hover:text-primary-600 font-bold text-sm transition flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </Link>
-              <Link href="/dashboard/positions/new" className="btn-primary whitespace-nowrap text-sm px-3 py-1.5 md:px-4 md:py-2">
-                Create Position
-              </Link>
-              <button
-                onClick={async () => {
-                  await logout();
-                  router.push('/auth/login');
-                }}
-                className="btn-secondary"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8">
+    <div className="p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Quick Stats */}
         <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <div className="card">
@@ -358,7 +311,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </main>
     </div>
   );
 }

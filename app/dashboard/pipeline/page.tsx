@@ -24,7 +24,7 @@ import {
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Users, Loader2, GripVertical, Mail, Calendar, CheckCircle, ArrowLeft, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Users, Loader2, GripVertical, Mail, Calendar, CheckCircle, MoreHorizontal, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 // --- Types & Constants ---
@@ -263,30 +263,7 @@ export default function PipelinePage() {
     if (!ready || loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin w-10 h-10 text-primary-600" /></div>;
 
     return (
-        <div className="h-screen bg-white flex flex-col">
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-500">
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div className="h-6 w-px bg-gray-200" />
-                    <div>
-                        <h1 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                            Recruitment Pipeline
-                            <span className="text-[8px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Live</span>
-                        </h1>
-                        <p className="text-xs text-gray-500">Drag candidates between stages to update status</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="bg-gray-50 border rounded-xl px-4 py-2 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-bold text-gray-700">{candidates.length} Total</span>
-                    </div>
-                </div>
-            </header>
-
-            <main className="flex-1 overflow-x-auto overflow-y-hidden bg-white px-6 py-8 custom-scrollbar">
+        <div className="h-full p-8 animate-in fade-in zoom-in-95 duration-500">
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCorners}
@@ -311,15 +288,6 @@ export default function PipelinePage() {
                         ) : null}
                     </DragOverlay>
                 </DndContext>
-            </main>
-
-            <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar { height: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: #f9fafb; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; border: 3px solid #f9fafb; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-            `}</style>
         </div>
     );
 }

@@ -6,7 +6,7 @@ import {
     Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, 
     Loader2, Search, 
     Mail, GripVertical, MoreHorizontal, ArrowLeft,
-    LayoutDashboard, User, AlertCircle
+    LayoutDashboard, User, AlertCircle, Brain
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -196,8 +196,8 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
                             <div className="relative z-10 grid md:grid-cols-2 gap-10">
                                 <div>
                                     <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-primary-200 mb-6 border border-white/10">Neuro-Match Result</div>
-                                    <h3 className="text-5xl font-black mb-4 tracking-tighter italic">{results.overall_score}% Match</h3>
-                                    <p className="text-primary-100/80 leading-relaxed font-medium italic">&quot;{results.summary}&quot;</p>
+                                    <h3 className="text-4xl font-bold mb-3 tracking-tight">{results.overall_score}% Match</h3>
+                                    <p className="text-primary-100/90 leading-relaxed text-sm">&quot;{results.summary}&quot;</p>
                                 </div>
                                 <div className="h-64 flex items-center justify-center bg-white/5 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
                                     {radarData && (
@@ -410,7 +410,7 @@ export default function DemoPage() {
                                                 <div className="absolute left-[-4px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary-500 border-2 border-white" />
                                                 <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{act.action.replace(/_/g, ' ')}</h5>
                                                 <p className="text-sm font-bold text-gray-800">{act.candidate_name}</p>
-                                                <p className="text-[10px] text-gray-400 font-bold italic mt-1">{new Date(act.created_at).toLocaleTimeString()}</p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-1">{new Date(act.created_at).toLocaleTimeString()}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -482,7 +482,7 @@ export default function DemoPage() {
                             <div className="bg-primary-900 text-white p-8 rounded-3xl shadow-xl mb-8 flex flex-col md:flex-row md:items-center justify-between relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition duration-700" />
                                 <div className="relative z-10">
-                                    <h3 className="text-3xl font-black tracking-tighter italic mb-1">Next Interview in 45m</h3>
+                                    <h3 className="text-2xl font-bold tracking-tight mb-1">Next Interview in 45m</h3>
                                     <p className="text-primary-100 font-bold uppercase tracking-widest text-[10px]">Sarah Jenkins • Enterprise Sales Role</p>
                                 </div>
                                 <button onClick={() => alert('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-white text-primary-900 rounded-2xl font-black tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
@@ -552,7 +552,7 @@ export default function DemoPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-12 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 italic text-sm text-indigo-700 font-medium">
+                                <div className="mt-12 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 text-sm text-indigo-700 font-medium">
                                     &quot;AI Prediction: Your hiring quality has improved by 24% since implementing Neuro-Matching.&quot;
                                 </div>
                             </div>
