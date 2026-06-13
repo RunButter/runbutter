@@ -126,6 +126,14 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         .update({ cv_url: cvUrl })
         .eq('id', candidate.id);
 
+      // Extract resume text for zero-cost FTS search (fire-and-forget —
+      // must never block or fail the candidate's application).
+      fetch('/api/candidates/parse-cv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId: candidate.id, cvUrl }),
+      }).catch(console.error);
+
       // Log activity
       await supabase.from('activity_log').insert({
         company_id: position.company_id,

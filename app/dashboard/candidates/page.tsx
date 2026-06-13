@@ -11,35 +11,42 @@ export default function CandidatesPage() {
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Auth gate only — data loading is handled by the debounced effect below.
     useEffect(() => {
-        if (ready) {
-            if (!authenticated) {
-                router.push('/auth/login');
-            } else if (user) {
-                loadCandidates(user.id);
-            }
+        if (ready && !authenticated) {
+            router.push('/auth/login');
         }
-    }, [ready, authenticated, user, router]);
+    }, [ready, authenticated, router]);
 
-    const loadCandidates = async (privyUserId: string) => {
+    // Debounced, server-side Boolean resume search (native Postgres FTS).
+    // Runs on first auth-ready (empty query => full list) and on every keystroke.
+    useEffect(() => {
+        if (!ready || !authenticated || !user) return;
+        const isSearch = searchTerm.trim().length > 0;
+        if (isSearch) setSearching(true);
+        const t = setTimeout(() => {
+            loadCandidates(user.id, searchTerm.trim());
+        }, isSearch ? 300 : 0);
+        return () => clearTimeout(t);
+    }, [searchTerm, ready, authenticated, user]);
+
+    const loadCandidates = async (privyUserId: string, query: string = '') => {
         try {
             // Ensure we have a valid Supabase session for Native RLS
             await supabase.auth.getUser();
 
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
-            const { data: companyUser } = await supabase
-                .from('company_users')
-                .select('company_id')
-                .eq('privy_user_id', privyUserId)
-                .single();
-
-            if (!companyUser) return;
-
-            const { data, error } = await supabase.rpc('get_candidates_for_recruiter', { p_privy_user_id: privyUserId });
+            // Single RPC handles both the full list (empty query) and Boolean
+            // keyword search across resume text, ranked by ts_rank.
+            const { data, error } = await supabase.rpc('search_candidates_for_recruiter', {
+                p_privy_user_id: privyUserId,
+                p_query: query || null,
+            });
 
             if (error) throw error;
 
@@ -55,6 +62,7 @@ export default function CandidatesPage() {
             console.error('Error loading candidates:', error);
         } finally {
             setLoading(false);
+            setSearching(false);
         }
     };
 
@@ -68,11 +76,6 @@ export default function CandidatesPage() {
         const config = statusMap[status] || statusMap.applied;
         return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>{config.label}</span>;
     };
-
-    const filteredCandidates = candidates.filter(c =>
-        c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     if (!ready || loading) {
         return (
@@ -94,15 +97,27 @@ export default function CandidatesPage() {
 
             <main className="max-w-7xl mx-auto px-6 py-8">
                 <div className="mb-6 flex flex-col md:flex-row gap-4 justify-between">
-                    <div className="relative w-full md:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name or email..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="w-full md:w-[32rem]">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder='Search resumes — e.g. react node -junior  or  "node.js" or vue'
+                                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searching && (
+                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-500 animate-spin" />
+                            )}
+                        </div>
+                        <p className="mt-1.5 text-[11px] text-gray-400 font-mono">
+                            space = AND · <span className="text-gray-500">or</span> = OR · <span className="text-gray-500">-term</span> = NOT · "quotes" = exact phrase
+                        </p>
+                    </div>
+                    <div className="text-sm text-gray-500 self-start md:self-center whitespace-nowrap">
+                        {candidates.length} {candidates.length === 1 ? 'candidate' : 'candidates'}
+                        {searchTerm.trim() && ' matched'}
                     </div>
                 </div>
 
@@ -120,7 +135,7 @@ export default function CandidatesPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredCandidates.map((can) => (
+                            {candidates.map((can) => (
                                 <tr key={can.id} className="hover:bg-gray-50 transition">
                                     <td className="px-6 py-4">
                                         <div className="font-semibold text-gray-800">{can.full_name}</div>
@@ -173,10 +188,12 @@ export default function CandidatesPage() {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredCandidates.length === 0 && (
+                            {candidates.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                        No candidates found.
+                                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                        {searchTerm.trim()
+                                            ? `No candidates match "${searchTerm.trim()}".`
+                                            : 'No candidates found.'}
                                     </td>
                                 </tr>
                             )}
