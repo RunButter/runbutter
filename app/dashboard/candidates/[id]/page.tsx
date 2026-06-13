@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import {
     User, Mail, Phone, Linkedin, Calendar, Briefcase,
     FileText, CheckCircle, Clock, AlertCircle, Loader2, ArrowLeft,
-    Send, ChevronRight, Brain, Target, BarChart, TrendingUp
+    Send, ChevronRight, Brain, Target, BarChart, TrendingUp, Users
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -20,6 +20,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
+import TeamFitModal from './TeamFitModal'; // ⬇️ TEAM FIT
 
 ChartJS.register(
     RadialLinearScale,
@@ -42,6 +43,27 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [scheduleTime, setScheduleTime] = useState('');
     const [isScheduling, setIsScheduling] = useState(false);
     const [companyPlan, setCompanyPlan] = useState('free');
+
+    // ⬇️ TEAM FIT — state + lazy loader for the comparison pool
+    const [showFitModal, setShowFitModal] = useState(false);
+    const [treasury, setTreasury] = useState<any[] | null>(null);
+    const [loadingFit, setLoadingFit] = useState(false);
+
+    const openFitSimulator = async () => {
+        setShowFitModal(true);
+        if (treasury || !user) return;
+        setLoadingFit(true);
+        try {
+            const { data } = await supabase.rpc('get_treasury_dataset', { p_privy_user_id: user.id });
+            setTreasury(data || []);
+        } catch (e) {
+            console.error('Error loading team profiles:', e);
+            setTreasury([]);
+        } finally {
+            setLoadingFit(false);
+        }
+    };
+    // ⬆️ TEAM FIT
 
     const loadCandidateData = useCallback(async () => {
         try {
@@ -232,7 +254,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     const handleSchedule = async () => {
         if (!scheduleTime) return alert('Please select a date and time');
-        
+
         setIsScheduling(true);
         try {
             const res = await fetch('/api/interviews/schedule', {
@@ -246,7 +268,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 })
             });
             const data = await res.json();
-            
+
             if (!res.ok) {
                 // Check if paywall block
                 if (data.error === 'Scheduling requires a Pro plan') {
@@ -425,7 +447,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <option value="hired">Hired</option>
                             <option value="rejected">Rejected</option>
                         </select>
-                        <button 
+                        <button
                             className={`flex items-center gap-2 py-2 px-4 shadow-sm text-sm rounded border ${companyPlan === 'free' ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'btn-primary'}`}
                             onClick={() => {
                                 if (companyPlan === 'free') {
@@ -457,6 +479,12 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
+                                    {/* ⬇️ TEAM FIT — trigger button */}
+                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition text-sm flex items-center gap-2 shadow-sm">
+                                        <Users className="w-4 h-4" />
+                                        Simulate Team Fit
+                                    </button>
+                                    {/* ⬆️ TEAM FIT */}
                                     <button className="px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition text-sm">
                                         Switch to Candidate View
                                     </button>
@@ -756,17 +784,29 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 </div>
             </main>
 
+            {/* ⬇️ TEAM FIT — Simulator modal */}
+            {showFitModal && (
+                <TeamFitModal
+                    candidate={candidate}
+                    results={results}
+                    treasury={treasury}
+                    loading={loadingFit}
+                    onClose={() => setShowFitModal(false)}
+                />
+            )}
+            {/* ⬆️ TEAM FIT */}
+
             {/* Schedule Modal */}
             {showScheduleModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Schedule Interview</h3>
                         <p className="text-gray-500 text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
-                        
+
                         <div className="mb-6">
                             <label className="block text-sm font-bold text-gray-700 mb-2">Date & Time</label>
-                            <input 
-                                type="datetime-local" 
+                            <input
+                                type="datetime-local"
                                 className="input-field w-full rounded-xl"
                                 value={scheduleTime}
                                 onChange={(e) => setScheduleTime(e.target.value)}
@@ -775,7 +815,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                         <div className="flex justify-end gap-3">
                             <button className="btn-secondary" onClick={() => setShowScheduleModal(false)}>Cancel</button>
-                            <button 
+                            <button
                                 className="btn-primary flex items-center gap-2"
                                 onClick={handleSchedule}
                                 disabled={isScheduling || !scheduleTime}
