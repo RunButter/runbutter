@@ -2,39 +2,39 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { 
-    Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock, 
-    Loader2, Search, 
+import {
+    Users, Briefcase, CheckCircle, Calendar, TrendingUp, Clock,
+    Loader2, Search,
     Mail, GripVertical, MoreHorizontal, ArrowLeft,
-    LayoutDashboard, User, AlertCircle, Brain
+    LayoutDashboard, User, AlertCircle, Brain, SlidersHorizontal, Sparkles
 } from 'lucide-react';
-import { 
-    DndContext, 
-    DragOverlay, 
-    closestCorners, 
-    KeyboardSensor, 
-    PointerSensor, 
-    useSensor, 
+import {
+    DndContext,
+    DragOverlay,
+    closestCorners,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
     useSensors,
     DragStartEvent,
     DragOverEvent,
     DragEndEvent
 } from '@dnd-kit/core';
-import { 
-    SortableContext, 
-    sortableKeyboardCoordinates, 
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
     verticalListSortingStrategy,
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-    Chart as ChartJS, 
-    RadialLinearScale, 
-    PointElement, 
-    LineElement, 
-    Filler, 
-    Tooltip, 
-    Legend 
+import {
+    Chart as ChartJS,
+    RadialLinearScale,
+    PointElement,
+    LineElement,
+    Filler,
+    Tooltip,
+    Legend
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import { MOCK_CANDIDATES, MOCK_STATS, MOCK_ACTIVITY } from '@/lib/mock-data';
@@ -85,7 +85,7 @@ function CandidateCard({ candidate, onClick, isOverlay = false }: { candidate: a
     };
 
     return (
-        <div 
+        <div
             ref={setNodeRef}
             style={style}
             onClick={() => onClick && onClick(candidate)}
@@ -201,13 +201,13 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
                                 </div>
                                 <div className="h-64 flex items-center justify-center bg-white/5 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
                                     {radarData && (
-                                        <Radar 
-                                            data={radarData} 
-                                            options={{ 
-                                                scales: { r: { display: false } }, 
+                                        <Radar
+                                            data={radarData}
+                                            options={{
+                                                scales: { r: { display: false } },
                                                 plugins: { legend: { display: false } },
-                                                maintainAspectRatio: false 
-                                            }} 
+                                                maintainAspectRatio: false
+                                            }}
                                         />
                                     )}
                                 </div>
@@ -249,15 +249,16 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
 
 // --- Main Demo Page ---
 export default function DemoPage() {
-    type DemoView = 'dashboard' | 'pipeline' | 'positions' | 'interviews' | 'analytics';
+    type DemoView = 'dashboard' | 'pipeline' | 'treasury' | 'positions' | 'interviews' | 'analytics';
     const [view, setView] = useState<DemoView>('dashboard');
     const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [minMatch, setMinMatch] = useState(0);
 
     const filteredCandidates = useMemo(() => {
-        return candidates.filter(c => 
+        return candidates.filter(c =>
             c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             c.position_title.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -297,7 +298,7 @@ export default function DemoPage() {
     };
 
     const NavItem = ({ id, icon: Icon, label }: { id: DemoView, icon: any, label: string }) => (
-        <button 
+        <button
             onClick={() => setView(id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-bold text-sm ${view === id ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
         >
@@ -314,11 +315,12 @@ export default function DemoPage() {
                     <Logo />
                     <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200 shadow-sm">Demo Mode</div>
                 </div>
-                
+
                 <nav className="flex-1 space-y-1">
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4">Talent Management</div>
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Overview" />
                     <NavItem id="pipeline" icon={Users} label="Visual Pipeline" />
+                    <NavItem id="treasury" icon={Sparkles} label="Talent Treasury" />
                     <NavItem id="positions" icon={Briefcase} label="Positions" />
                     <NavItem id="interviews" icon={Calendar} label="Interviews" />
                     <NavItem id="analytics" icon={TrendingUp} label="Analytics" />
@@ -336,16 +338,16 @@ export default function DemoPage() {
                 <header className="bg-white border-b px-8 py-5 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-black tracking-tight text-gray-900 capitalize">
-                            {view} 
+                            {view}
                             <span className="text-primary-600 ml-2 animate-pulse">•</span>
                         </h2>
                     </div>
                     <div className="flex items-center gap-6">
                         <div className="relative hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input 
-                                className="bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary-500 outline-none w-64 transition-all focus:w-80" 
-                                placeholder="Filter demo data..." 
+                            <input
+                                className="bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary-500 outline-none w-64 transition-all focus:w-80"
+                                placeholder="Filter demo data..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -376,8 +378,8 @@ export default function DemoPage() {
                                     </h3>
                                     <div className="grid gap-4">
                                         {filteredCandidates.slice(0, 3).map(c => (
-                                            <div 
-                                                key={c.id} 
+                                            <div
+                                                key={c.id}
                                                 onClick={() => setSelectedCandidate(c)}
                                                 className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-xl cursor-pointer transition-all group lg:pr-8"
                                             >
@@ -430,11 +432,11 @@ export default function DemoPage() {
                             >
                                 <div className="flex h-full gap-8 min-w-max pb-8 overflow-visible">
                                     {COLUMNS.map(column => (
-                                        <KanbanColumn 
-                                            key={column.id} 
-                                            id={column.id} 
-                                            title={column.title} 
-                                            candidates={groupedCandidates[column.id] || []} 
+                                        <KanbanColumn
+                                            key={column.id}
+                                            id={column.id}
+                                            title={column.title}
+                                            candidates={groupedCandidates[column.id] || []}
                                             onCardClick={setSelectedCandidate}
                                         />
                                     ))}
@@ -443,6 +445,78 @@ export default function DemoPage() {
                                     {activeId ? <CandidateCard candidate={candidates.find(c => c.id === activeId)} isOverlay /> : null}
                                 </DragOverlay>
                             </DndContext>
+                        </div>
+                    )}
+
+                    {view === 'treasury' && (
+                        <div className="flex gap-6 animate-in fade-in duration-500">
+                            {/* Faceted sidebar */}
+                            <aside className="w-60 shrink-0 hidden xl:block">
+                                <div className="bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 shadow-soft p-5 sticky top-0">
+                                    <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
+                                        <SlidersHorizontal className="w-4 h-4" /> Filters
+                                    </h3>
+                                    <div className="mb-4">
+                                        <div className="flex justify-between text-xs font-bold text-gray-600 mb-1">
+                                            <span>Min match</span><span className="font-mono text-gray-400">{minMatch}</span>
+                                        </div>
+                                        <input type="range" min={0} max={100} value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="w-full accent-primary-600 cursor-pointer" />
+                                    </div>
+                                    <div className="space-y-2 pt-3 border-t border-gray-100">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Source</div>
+                                        {['LinkedIn', 'Indeed', 'Referral', 'Direct'].map((s) => (
+                                            <label key={s} className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                                                <input type="checkbox" className="accent-primary-600" /> {s}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </aside>
+                            {/* Candidate grid */}
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Sparkles className="w-5 h-5 text-primary-600" />
+                                    <h3 className="text-lg font-black text-gray-900">Talent Treasury</h3>
+                                    <span className="text-sm text-gray-400">
+                                        · {filteredCandidates.filter(c => (c.assessment_results?.[0]?.overall_score || 0) >= minMatch).length} in view
+                                    </span>
+                                </div>
+                                <div className="grid sm:grid-cols-2 2xl:grid-cols-3 gap-4">
+                                    {filteredCandidates
+                                        .filter(c => (c.assessment_results?.[0]?.overall_score || 0) >= minMatch)
+                                        .sort((a, b) => (b.assessment_results?.[0]?.overall_score || 0) - (a.assessment_results?.[0]?.overall_score || 0))
+                                        .map(c => {
+                                            const r = c.assessment_results?.[0];
+                                            const bars: [string, number][] = r ? [
+                                                ['Openness', r.personality_data?.openness || 0],
+                                                ['Conscientious', r.personality_data?.conscientiousness || 0],
+                                                ['Extraversion', r.personality_data?.extraversion || 0],
+                                            ] : [];
+                                            return (
+                                                <button key={c.id} onClick={() => setSelectedCandidate(c)}
+                                                    className="text-left bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 shadow-soft p-5 hover:shadow-soft-lg hover:border-primary-200 transition-all duration-200">
+                                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                                        <div className="min-w-0">
+                                                            <div className="font-bold text-gray-900 truncate">{c.full_name}</div>
+                                                            <div className="text-xs text-gray-500 truncate">{c.position_title}</div>
+                                                        </div>
+                                                        <div className="text-2xl font-black text-primary-600">{r?.overall_score ?? '—'}</div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        {bars.map(([label, val]) => (
+                                                            <div key={label} className="flex items-center gap-2">
+                                                                <span className="w-24 text-[10px] font-semibold text-gray-400">{label}</span>
+                                                                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-primary-500 rounded-full transition-all duration-500" style={{ width: `${val}%` }} />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -525,7 +599,7 @@ export default function DemoPage() {
                                         <div key={i} className="flex-1 bg-gray-50 rounded-t-2xl relative group/bar hover:bg-primary-100 transition-colors duration-300" style={{ height: `${h}%` }}>
                                             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-all duration-300 shadow-xl scale-95 group-hover/bar:scale-100 z-10">{h} Days</div>
                                             <div className="h-full w-full bg-primary-600/10 rounded-t-2xl opacity-0 group-hover/bar:opacity-100 transition-opacity" />
-                                            <div className="absolute bottom-[-28px] left-1/2 -translate-x-1/2 text-[8px] font-black text-gray-400 uppercase tracking-tighter">Apr-{'0'+(i+1)}</div>
+                                            <div className="absolute bottom-[-28px] left-1/2 -translate-x-1/2 text-[8px] font-black text-gray-400 uppercase tracking-tighter">Apr-{'0' + (i + 1)}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -553,7 +627,7 @@ export default function DemoPage() {
                                     ))}
                                 </div>
                                 <div className="mt-12 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 text-sm text-indigo-700 font-medium">
-                                    &quot;AI Prediction: Your hiring quality has improved by 24% since implementing Neuro-Matching.&quot;
+                                    &quot;Insight: Your hiring quality has improved by 24% since implementing skills &amp; personality matching.&quot;
                                 </div>
                             </div>
                         </div>
@@ -563,9 +637,9 @@ export default function DemoPage() {
 
             {/* Detail Overlay */}
             {selectedCandidate && (
-                <CandidateDetailModal 
-                    candidate={selectedCandidate} 
-                    onClose={() => setSelectedCandidate(null)} 
+                <CandidateDetailModal
+                    candidate={selectedCandidate}
+                    onClose={() => setSelectedCandidate(null)}
                 />
             )}
 
