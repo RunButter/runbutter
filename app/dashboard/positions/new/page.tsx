@@ -1,5 +1,6 @@
 'use client';
 
+import { getLimit, formatLimit } from '@/lib/plans';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
@@ -82,6 +83,18 @@ export default function NewPositionPage() {
                 .single();
 
             if (!companyUser) throw new Error('Company user not found');
+
+            // Enforce plan position limit
+            const { data: companyRow } = await supabase
+                .from('companies').select('plan').eq('id', companyUser.company_id).single();
+            const { count: positionCount } = await supabase
+                .from('positions')
+                .select('id', { count: 'exact', head: true })
+                .eq('company_id', companyUser.company_id);
+            const maxPositions = getLimit(companyRow?.plan, 'maxPositions');
+            if ((positionCount ?? 0) >= maxPositions) {
+                throw new Error(`Your ${companyRow?.plan || 'free'} plan allows ${formatLimit(maxPositions)} position(s). Upgrade to add more.`);
+            }
 
             const { data: position, error: postError } = await supabase
                 .from('positions')
