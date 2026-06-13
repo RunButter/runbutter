@@ -20,7 +20,8 @@ import {
     Legend,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
-import TeamFitModal from './TeamFitModal'; // ⬇️ TEAM FIT
+import TeamFitModal from './TeamFitModal';
+import CandidateMessageModal from './CandidateMessageModal';
 
 ChartJS.register(
     RadialLinearScale,
@@ -44,10 +45,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [isScheduling, setIsScheduling] = useState(false);
     const [companyPlan, setCompanyPlan] = useState('free');
 
-    // ⬇️ TEAM FIT — state + lazy loader for the comparison pool
+    // Team Fit + Messaging
     const [showFitModal, setShowFitModal] = useState(false);
     const [treasury, setTreasury] = useState<any[] | null>(null);
     const [loadingFit, setLoadingFit] = useState(false);
+    const [showMessageModal, setShowMessageModal] = useState(false);
 
     const openFitSimulator = async () => {
         setShowFitModal(true);
@@ -63,21 +65,9 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             setLoadingFit(false);
         }
     };
-    // ⬆️ TEAM FIT
 
     const loadCandidateData = useCallback(async () => {
         try {
-            console.log('--- CandidateDetails v4.4 Debug ---');
-            console.log('Candidate ID Parameter:', params.id);
-            console.log('Privy User state:', { ready, authenticated, userId: user?.id });
-
-            setDebugInfo({
-                paramId: params.id,
-                userId: user?.id,
-                ready,
-                authenticated
-            });
-
             if (!params.id) {
                 console.error('Missing candidate ID in URL params');
                 return;
@@ -95,8 +85,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 p_candidate_id: params.id,
                 p_privy_user_id: user.id
             });
-
-            console.log('RPC result:', { data, error });
 
             if (error) {
                 setDebugInfo((prev: any) => ({ ...prev, rpcError: error }));
@@ -219,7 +207,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 body: JSON.stringify({ candidateId: params.id, status: newStatus, privyUserId: user?.id }),
             }).catch(console.error);
 
-
             // Log activity
             await supabase.from('activity_log').insert({
                 company_id: candidate.company_id,
@@ -278,7 +265,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             const data = await res.json();
 
             if (!res.ok) {
-                // Check if paywall block
                 if (data.error === 'Scheduling requires a Pro plan') {
                     alert('Locked Feature: Please upgrade your account to Premium to schedule interviews automatically.');
                 } else {
@@ -400,24 +386,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 <div className="flex flex-col items-center">
                     <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
                     <h2 className="text-2xl font-bold text-gray-800">Candidate not found</h2>
-                    <p className="text-gray-500 mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them. <span className="text-[10px] text-gray-300">v4.4</span></p>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl border border-red-100 shadow-sm max-w-lg w-full text-left font-mono text-xs">
-                    <h3 className="font-bold text-gray-700 mb-3 border-b pb-2">Diagnostic Info (v4.4)</h3>
-                    <div className="space-y-2 text-gray-600">
-                        <p><span className="font-bold">Candidate ID:</span> {debugInfo?.paramId || 'N/A'}</p>
-                        <p><span className="font-bold">Recruiter ID:</span> {debugInfo?.userId || 'N/A'}</p>
-                        <p><span className="font-bold">Privy Ready:</span> {debugInfo?.ready ? 'YES' : 'NO'}</p>
-                        <p><span className="font-bold">Authenticated:</span> {debugInfo?.authenticated ? 'YES' : 'NO'}</p>
-                        <p><span className="font-bold">RPC Result:</span> {debugInfo?.rpcData || 'Pending'}</p>
-                        {debugInfo?.rpcError && (
-                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded border border-red-200 overflow-auto">
-                                <p className="font-bold mb-1">RPC Error Details:</p>
-                                <pre className="whitespace-pre-wrap">{JSON.stringify(debugInfo.rpcError, null, 2)}</pre>
-                            </div>
-                        )}
-                    </div>
+                    <p className="text-gray-500 mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them.</p>
                 </div>
 
                 <div className="flex gap-4">
@@ -438,10 +407,13 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </Link>
                         <div>
                             <h1 className="text-xl font-bold text-gray-800">{candidate.full_name}</h1>
-                            <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department} <span className="text-[10px] ml-2 text-gray-300">v4.4</span></p>
+                            <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button onClick={() => setShowMessageModal(true)} className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm">
+                            <Mail className="w-4 h-4" /> Message
+                        </button>
                         <select
                             className="input-field py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                             value={candidate.status}
@@ -487,12 +459,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {/* ⬇️ TEAM FIT — trigger button */}
                                     <button onClick={openFitSimulator} className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition text-sm flex items-center gap-2 shadow-sm">
                                         <Users className="w-4 h-4" />
                                         Simulate Team Fit
                                     </button>
-                                    {/* ⬆️ TEAM FIT */}
                                     <button className="px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition text-sm">
                                         Switch to Candidate View
                                     </button>
@@ -792,7 +762,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 </div>
             </main>
 
-            {/* ⬇️ TEAM FIT — Simulator modal */}
+            {/* Team Fit Simulator */}
             {showFitModal && (
                 <TeamFitModal
                     candidate={candidate}
@@ -802,7 +772,15 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     onClose={() => setShowFitModal(false)}
                 />
             )}
-            {/* ⬆️ TEAM FIT */}
+
+            {/* Message composer */}
+            {showMessageModal && user && (
+                <CandidateMessageModal
+                    candidate={candidate}
+                    privyUserId={user.id}
+                    onClose={() => setShowMessageModal(false)}
+                />
+            )}
 
             {/* Schedule Modal */}
             {showScheduleModal && (
@@ -835,6 +813,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     </div>
                 </div>
             )}
-        </div >
+        </div>
     );
 }

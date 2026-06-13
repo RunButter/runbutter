@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
+import { useRouter, useSearchParams } from 'next/navigation'; import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import { Users, Search, Filter, Mail, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -13,8 +12,8 @@ export default function CandidatesPage() {
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
     const [candidates, setCandidates] = useState<any[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
-
+    const searchParams = useSearchParams();
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
     // Auth gate only — data loading is handled by the debounced effect below.
     useEffect(() => {
         if (ready && !authenticated) {
@@ -91,8 +90,7 @@ export default function CandidatesPage() {
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-2">
                     <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">Dashboard</Link>
                     <span className="text-gray-400">/</span>
-                    <h1 className="text-xl font-bold text-gray-800">Candidates <span className="text-[10px] ml-2 text-gray-300">v4.4</span></h1>
-                </div>
+                    <h1 className="text-xl font-bold text-gray-800">Candidates</h1>                </div>
             </header>
 
             <main className="max-w-7xl mx-auto px-6 py-8">
