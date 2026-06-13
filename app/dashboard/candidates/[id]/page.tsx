@@ -212,6 +212,14 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
             setCandidate({ ...candidate, status: newStatus });
 
+            // Notify the candidate of their new status (fire-and-forget)
+            fetch('/api/email/candidate-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ candidateId: params.id, status: newStatus, privyUserId: user?.id }),
+            }).catch(console.error);
+
+
             // Log activity
             await supabase.from('activity_log').insert({
                 company_id: candidate.company_id,
