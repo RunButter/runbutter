@@ -26,6 +26,47 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     linkedinUrl: '',
   });
 
+  // Source attribution captured on load (UTM params, referrer, tracking link).
+  const [attribution, setAttribution] = useState<{
+    source: string;
+    utm_source: string | null;
+    utm_medium: string | null;
+    utm_campaign: string | null;
+    referrer: string | null;
+    tracking_link_id: string | null;
+  }>({ source: 'direct', utm_source: null, utm_medium: null, utm_campaign: null, referrer: null, tracking_link_id: null });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const base = {
+      source: params.get('source') || params.get('utm_source') || null,
+      utm_source: params.get('utm_source'),
+      utm_medium: params.get('utm_medium'),
+      utm_campaign: params.get('utm_campaign'),
+      referrer: document.referrer || null,
+    };
+    const lt = params.get('lt');
+    if (lt) {
+      // Authoritative attribution from the tracking link (also counts the click).
+      supabase.rpc('register_link_click', { p_token: lt }).then(({ data }) => {
+        if (data) {
+          setAttribution({
+            source: data.source || base.source || 'direct',
+            utm_source: data.utm_source || base.utm_source,
+            utm_medium: data.utm_medium || base.utm_medium,
+            utm_campaign: data.utm_campaign || base.utm_campaign,
+            referrer: base.referrer,
+            tracking_link_id: data.id,
+          });
+        } else {
+          setAttribution({ ...base, source: base.source || 'direct', tracking_link_id: null });
+        }
+      }).catch(() => setAttribution({ ...base, source: base.source || 'direct', tracking_link_id: null }));
+    } else {
+      setAttribution({ ...base, source: base.source || 'direct', tracking_link_id: null });
+    }
+  }, []);
+
   useEffect(() => {
     const fetchPositionDetails = async () => {
       const { data, error } = await supabase
@@ -106,7 +147,12 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           phone: formData.phone || null,
           linkedin_url: formData.linkedinUrl || null,
           status: 'applied',
-          source: new URLSearchParams(window.location.search).get('source') || 'direct',
+          source: attribution.source || 'direct',
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.utm_campaign,
+          referrer: attribution.referrer,
+          tracking_link_id: attribution.tracking_link_id,
         })
         .select()
         .single();
