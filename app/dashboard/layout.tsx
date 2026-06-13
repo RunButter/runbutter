@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import { 
-    Users, Briefcase, Calendar, TrendingUp, LayoutDashboard, Search, Settings, CreditCard, Menu, X, LogOut, Grid, Sparkles
+    Users, Briefcase, Calendar, TrendingUp, LayoutDashboard, Search, Settings, CreditCard, Menu, X, LogOut, Grid, Sparkles, Radio
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
@@ -78,6 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <NavItem href="/dashboard/treasury" icon={Sparkles} label="Talent Treasury" />
                     <NavItem href="/dashboard/candidates" icon={Users} label="All Candidates" />
                     <NavItem href="/dashboard/positions" icon={Briefcase} label="Positions" />
+                    <NavItem href="/dashboard/sources" icon={Radio} label="Source Tracking" />
                     <NavItem href="/dashboard/interviews" icon={Calendar} label="Interviews" />
                     <NavItem href="/dashboard/analytics" icon={TrendingUp} label="Analytics" />
                     
