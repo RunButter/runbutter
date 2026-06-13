@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
+import { sendStatusEmail } from '@/lib/status-emails';
 
 export async function POST(req: Request) {
     try {
@@ -36,13 +37,20 @@ export async function POST(req: Request) {
         // 2. Perform the update
         const { error: updateError } = await supabaseAdmin
             .from('candidates')
-            .update({ 
+            .update({
                 status: status,
                 updated_at: new Date().toISOString()
             })
             .eq('id', candidateId);
 
         if (updateError) throw updateError;
+
+        // 3. Notify the candidate of their new status (best-effort, non-fatal)
+        try {
+            await sendStatusEmail(candidateId, status, privyUserId);
+        } catch (mailErr) {
+            console.error('Status email failed (non-fatal):', mailErr);
+        }
 
         return NextResponse.json({ success: true, status });
 
