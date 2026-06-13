@@ -1,178 +1,86 @@
-'use client';
+export type SubscriptionPlan = 'free' | 'starter' | 'professional' | 'enterprise';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
-import {
-    Users, Briefcase, Calendar, TrendingUp, LayoutDashboard, Search, Settings, CreditCard, Menu, X, LogOut, Grid, Sparkles, Radio, Heart, Mail, Lock
-} from 'lucide-react';
-import Logo from '@/components/Logo';
-import PlanGate from '@/components/PlanGate';
-import { isFeatureAllowed, type PlanFeature } from '@/lib/plans';
+export type PlanFeature =
+    | 'talentTreasury'
+    | 'resumeSearch'
+    | 'sourceTracking'
+    | 'emailTemplates'
+    | 'branding'
+    | 'interviews'
+    | 'myTeam'
+    | 'teamFit'
+    | 'advancedAnalytics'
+    | 'gdprControls'
+    | 'hrisExport'
+    | 'sso';
 
-// Routes that require a feature entitlement (gated centrally below).
-const ROUTE_FEATURE: [string, PlanFeature][] = [
-    ['/dashboard/treasury', 'talentTreasury'],
-    ['/dashboard/sources', 'sourceTracking'],
-    ['/dashboard/templates', 'emailTemplates'],
-    ['/dashboard/interviews', 'interviews'],
-    ['/dashboard/my-team', 'myTeam'],
-    ['/dashboard/analytics', 'advancedAnalytics'],
+export const ALL_FEATURES: PlanFeature[] = [
+    'talentTreasury', 'resumeSearch', 'sourceTracking', 'emailTemplates', 'branding',
+    'interviews', 'myTeam', 'teamFit', 'advancedAnalytics', 'gdprControls', 'hrisExport', 'sso',
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    const router = useRouter();
-    const { user, ready, authenticated, logout } = usePrivy();
-    const [company, setCompany] = useState<any>(null);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    useEffect(() => {
-        if (ready && authenticated && user) {
-            loadCompanyData();
-        }
-    }, [ready, authenticated, user]);
-
-    async function loadCompanyData() {
-        try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user!.id, is_local: false });
-            const { data } = await supabase.from('company_users').select('*, company:companies(*)').eq('privy_user_id', user!.id).single();
-            if (data?.company) setCompany(data.company);
-        } catch (e) {
-            console.error('Error loading company data in layout');
-        }
-    }
-
-    const NavItem = ({ href, icon: Icon, label, matchExact = false, feature }: { href: string, icon: any, label: string, matchExact?: boolean, feature?: PlanFeature }) => {
-        const isActive = matchExact ? pathname === href : pathname.startsWith(href);
-        const locked = feature ? !isFeatureAllowed(company?.plan, feature) : false;
-        return (
-            <Link
-                href= { href }
-        onClick = {() => setMobileMenuOpen(false)
-}
-className = {`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-bold text-sm ${isActive ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
-            >
-    <Icon className="w-5 h-5" />
-        <span className="flex-1" > { label } </span>
-{ locked && <Lock className={ `w-3.5 h-3.5 ${isActive ? 'text-white/70' : 'text-gray-300'}` } /> }
-</Link>
-        );
-    };
-
-if (!ready || !authenticated) {
-    return <div className="min-h-screen bg-gray-50" />;
+export interface PlanDef {
+    name: string;
+    price: string;
+    priceValue: number;
+    tagline: string;
+    limits: { maxPositions: number; maxCandidates: number; maxSeats: number };
+    features: Record<PlanFeature, boolean>;
 }
 
-const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
+const f = (enabled: PlanFeature[]): Record<PlanFeature, boolean> =>
+    ALL_FEATURES.reduce((acc, x) => { acc[x] = enabled.includes(x); return acc; }, {} as Record<PlanFeature, boolean>);
 
-return (
-    <div className= "flex h-screen bg-gray-50 overflow-hidden text-gray-900" >
-    { mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-gray-900/50 lg:hidden" onClick = {() => setMobileMenuOpen(false)} />
-            )}
+const STARTER_FEATURES: PlanFeature[] = ['talentTreasury', 'resumeSearch', 'sourceTracking', 'emailTemplates', 'branding'];
+const PRO_FEATURES: PlanFeature[] = [...STARTER_FEATURES, 'interviews', 'myTeam', 'teamFit', 'advancedAnalytics', 'gdprControls'];
 
-<aside className={ `fixed inset-y-0 left-0 z-50 w-72 bg-white border-r flex flex-col p-6 transition-transform duration-300 lg:static lg:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}` }>
-    <div className="mb-10 px-2 flex items-center justify-between" >
-        <div className="flex items-center gap-3" >
-            <Logo />
-{ company && <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200 shadow-sm" > { company.plan } </div> }
-</div>
-    < button className = "lg:hidden p-2 text-gray-500" onClick = {() => setMobileMenuOpen(false)}>
-        <X className="w-5 h-5" />
-            </button>
-            </div>
+export const PLANS: Record<SubscriptionPlan, PlanDef> = {
+    free: {
+        name: 'Free', price: '$0', priceValue: 0, tagline: 'Get started',
+        limits: { maxPositions: 1, maxCandidates: 25, maxSeats: 1 },
+        features: f([]),
+    },
+    starter: {
+        name: 'Starter', price: '$99', priceValue: 99, tagline: 'For growing teams',
+        limits: { maxPositions: 5, maxCandidates: 250, maxSeats: 3 },
+        features: f(STARTER_FEATURES),
+    },
+    professional: {
+        name: 'Professional', price: '$299', priceValue: 299, tagline: 'For scaling recruiters',
+        limits: { maxPositions: 25, maxCandidates: 2500, maxSeats: 10 },
+        features: f(PRO_FEATURES),
+    },
+    enterprise: {
+        name: 'Enterprise', price: 'Custom', priceValue: 0, tagline: 'For organizations',
+        limits: { maxPositions: Infinity, maxCandidates: Infinity, maxSeats: Infinity },
+        features: f(ALL_FEATURES),
+    },
+};
 
-            < nav className = "flex-1 space-y-1 overflow-y-auto no-scrollbar" >
-                <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-2" > Talent Management </div>
-                    < NavItem href = "/dashboard" icon = { LayoutDashboard } label = "Overview" matchExact = { true} />
-                        <NavItem href="/dashboard/pipeline" icon = { Grid } label = "Visual Pipeline" />
-                            <NavItem href="/dashboard/treasury" icon = { Sparkles } label = "Talent Treasury" feature = "talentTreasury" />
-                                <NavItem href="/dashboard/candidates" icon = { Users } label = "All Candidates" />
-                                    <NavItem href="/dashboard/positions" icon = { Briefcase } label = "Positions" />
-                                        <NavItem href="/dashboard/sources" icon = { Radio } label = "Source Tracking" feature = "sourceTracking" />
-                                            <NavItem href="/dashboard/interviews" icon = { Calendar } label = "Interviews" feature = "interviews" />
-                                                <NavItem href="/dashboard/analytics" icon = { TrendingUp } label = "Analytics" feature = "advancedAnalytics" />
+export const PLAN_ORDER: SubscriptionPlan[] = ['free', 'starter', 'professional', 'enterprise'];
 
-                                                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-8" > Post - Hire </div>
-                                                        < NavItem href = "/dashboard/my-team" icon = { Heart } label = "My Team" feature = "myTeam" />
-
-                                                            <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-8" > Organization </div>
-                                                                < NavItem href = "/dashboard/templates" icon = { Mail } label = "Email Templates" feature = "emailTemplates" />
-                                                                    <NavItem href="/dashboard/settings" icon = { Settings } label = "Settings" />
-                                                                        <NavItem href="/dashboard/billing" icon = { CreditCard } label = "Billing" />
-                                                                            </nav>
-
-                                                                            < div className = "mt-4 pt-4 border-t" >
-                                                                                <button
-                        onClick={
-    async () => {
-        await logout();
-        router.push('/auth/login');
-    }
+export function isFeatureAllowed(plan: string | null | undefined, feature: PlanFeature): boolean {
+    const p = (plan && plan in PLANS ? plan : 'free') as SubscriptionPlan;
+    return !!PLANS[p].features[feature];
 }
-className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition font-bold text-sm"
-    >
-    <LogOut className="w-5 h-5" />
-        Sign Out
-            </button>
-            </div>
-            </aside>
 
-            < main className = "flex-1 flex flex-col overflow-hidden relative" >
-                <header className="bg-white border-b px-4 lg:px-8 py-5 flex items-center justify-between sticky top-0 z-30" >
-                    <div className="flex items-center gap-4" >
-                        <button className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg" onClick = {() => setMobileMenuOpen(true)}>
-                            <Menu className="w-6 h-6" />
-                                </button>
-                                < h2 className = "text-xl font-black tracking-tight text-gray-900 capitalize flex items-center gap-2" >
-                                    { pathname.split('/').pop() === 'dashboard' ? 'Overview' : pathname.split('/').pop()?.replace(/-/g, ' ') }
-{ (pathname.match(/\//g) || []).length > 2 && <span className="text-xs ml-2 text-gray-400 font-bold tracking-widest uppercase" > Details </span> }
-<span className="text-primary-600 ml-2 animate-pulse hidden md:inline" >•</span>
-    </h2>
-    </div>
-    < div className = "flex items-center gap-4 lg:gap-6" >
-        <form
-                            onSubmit={
-    (e) => {
-        e.preventDefault();
-        const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim();
-        if (q) router.push(`/dashboard/candidates?q=${encodeURIComponent(q)}`);
-    }
+export function getLimit(plan: string | null | undefined, key: keyof PlanDef['limits']): number {
+    const p = (plan && plan in PLANS ? plan : 'free') as SubscriptionPlan;
+    return PLANS[p].limits[key];
 }
-className = "relative hidden xl:block"
-    >
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-                                name="q"
-className = "bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs w-64 text-gray-700 focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition"
-placeholder = "Search candidates & resumes..."
-    />
-    </form>
-    < div className = "w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center text-white font-bold text-xs ring-4 ring-primary-50 uppercase" >
-        { company?.name?.[0] || user?.email?.address?.[0] || 'A' }
-        </div>
-        </div>
-        </header>
 
-        < div className = "flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30" >
-            { company && requiredFeature ? (
-                <PlanGate plan= { company.plan } feature = { requiredFeature } > { children } </PlanGate>
-                    ) : (
-    children
-)}
-</div>
-    </main>
-
-    < style jsx global > {`
-                .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-            `}</style>
-    </div>
-    );
+export function minPlanFor(feature: PlanFeature): SubscriptionPlan | null {
+    for (const p of PLAN_ORDER) if (PLANS[p].features[feature]) return p;
+    return null;
 }
+
+export function formatLimit(n: number): string {
+    return isFinite(n) ? n.toLocaleString() : 'Unlimited';
+}
+
+export const PLAN_LIMITS = {
+    free: { maxPositions: 1, maxCandidates: 25, advancedAnalytics: false, aiInsights: false },
+    starter: { maxPositions: 5, maxCandidates: 250, advancedAnalytics: false, aiInsights: false },
+    professional: { maxPositions: 25, maxCandidates: 2500, advancedAnalytics: true, aiInsights: true },
+    enterprise: { maxPositions: 9999, maxCandidates: 9999, advancedAnalytics: true, aiInsights: true },
+} as const;

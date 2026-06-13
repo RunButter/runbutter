@@ -6,9 +6,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import {
-    Users, Briefcase, Calendar, TrendingUp, LayoutDashboard, Search, Settings, CreditCard, Menu, X, LogOut, Grid, Sparkles, Radio, Heart, Mail
+    Users, Briefcase, Calendar, TrendingUp, LayoutDashboard, Search, Settings, CreditCard, Menu, X, LogOut, Grid, Sparkles, Radio, Heart, Mail, Lock
 } from 'lucide-react';
 import Logo from '@/components/Logo';
+import PlanGate from '@/components/PlanGate';
+import { isFeatureAllowed, type PlanFeature } from '@/lib/plans';
+
+const ROUTE_FEATURE: [string, PlanFeature][] = [
+    ['/dashboard/treasury', 'talentTreasury'],
+    ['/dashboard/sources', 'sourceTracking'],
+    ['/dashboard/templates', 'emailTemplates'],
+    ['/dashboard/interviews', 'interviews'],
+    ['/dashboard/my-team', 'myTeam'],
+    ['/dashboard/analytics', 'advancedAnalytics'],
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -33,8 +44,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }
 
-    const NavItem = ({ href, icon: Icon, label, matchExact = false }: { href: string, icon: any, label: string, matchExact?: boolean }) => {
+    const NavItem = ({ href, icon: Icon, label, matchExact = false, feature }: { href: string, icon: any, label: string, matchExact?: boolean, feature?: PlanFeature }) => {
         const isActive = matchExact ? pathname === href : pathname.startsWith(href);
+        const locked = feature ? !isFeatureAllowed(company?.plan, feature) : false;
         return (
             <Link
                 href={href}
@@ -42,7 +54,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-bold text-sm ${isActive ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
             >
                 <Icon className="w-5 h-5" />
-                {label}
+                <span className="flex-1">{label}</span>
+                {locked && <Lock className={`w-3.5 h-3.5 ${isActive ? 'text-white/70' : 'text-gray-300'}`} />}
             </Link>
         );
     };
@@ -50,6 +63,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!ready || !authenticated) {
         return <div className="min-h-screen bg-gray-50" />;
     }
+
+    const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900">
@@ -72,18 +87,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-2">Talent Management</div>
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Overview" matchExact={true} />
                     <NavItem href="/dashboard/pipeline" icon={Grid} label="Visual Pipeline" />
-                    <NavItem href="/dashboard/treasury" icon={Sparkles} label="Talent Treasury" />
+                    <NavItem href="/dashboard/treasury" icon={Sparkles} label="Talent Treasury" feature="talentTreasury" />
                     <NavItem href="/dashboard/candidates" icon={Users} label="All Candidates" />
                     <NavItem href="/dashboard/positions" icon={Briefcase} label="Positions" />
-                    <NavItem href="/dashboard/sources" icon={Radio} label="Source Tracking" />
-                    <NavItem href="/dashboard/interviews" icon={Calendar} label="Interviews" />
-                    <NavItem href="/dashboard/analytics" icon={TrendingUp} label="Analytics" />
+                    <NavItem href="/dashboard/sources" icon={Radio} label="Source Tracking" feature="sourceTracking" />
+                    <NavItem href="/dashboard/interviews" icon={Calendar} label="Interviews" feature="interviews" />
+                    <NavItem href="/dashboard/analytics" icon={TrendingUp} label="Analytics" feature="advancedAnalytics" />
 
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-8">Post-Hire</div>
-                    <NavItem href="/dashboard/my-team" icon={Heart} label="My Team" />
+                    <NavItem href="/dashboard/my-team" icon={Heart} label="My Team" feature="myTeam" />
 
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-8">Organization</div>
-                    <NavItem href="/dashboard/templates" icon={Mail} label="Email Templates" />
+                    <NavItem href="/dashboard/templates" icon={Mail} label="Email Templates" feature="emailTemplates" />
                     <NavItem href="/dashboard/settings" icon={Settings} label="Settings" />
                     <NavItem href="/dashboard/billing" icon={CreditCard} label="Billing" />
                 </nav>
@@ -137,7 +152,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </header>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30">
-                    {children}
+                    {company && requiredFeature ? (
+                        <PlanGate plan={company.plan} feature={requiredFeature}>{children}</PlanGate>
+                    ) : (
+                        children
+                    )}
                 </div>
             </main>
 
