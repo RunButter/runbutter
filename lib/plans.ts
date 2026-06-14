@@ -77,10 +77,3 @@ export function minPlanFor(feature: PlanFeature): SubscriptionPlan | null {
 export function formatLimit(n: number): string {
     return isFinite(n) ? n.toLocaleString() : 'Unlimited';
 }
-
-export const PLAN_LIMITS = {
-    free: { maxPositions: 1, maxCandidates: 25, advancedAnalytics: false, aiInsights: false },
-    starter: { maxPositions: 5, maxCandidates: 250, advancedAnalytics: false, aiInsights: false },
-    professional: { maxPositions: 25, maxCandidates: 2500, advancedAnalytics: true, aiInsights: true },
-    enterprise: { maxPositions: 9999, maxCandidates: 9999, advancedAnalytics: true, aiInsights: true },
-} as const;

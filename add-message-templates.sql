@@ -5,7 +5,16 @@
 -- Lets recruiters create reusable, editable email templates (invite, decline,
 -- offer, reminder, custom) with {{variables}}, send them to candidates from the
 -- dashboard, and keep a message history per candidate.
+--
+-- This script is self-contained and idempotent: it enables its own extension,
+-- drops any stale versions of the RPCs (which otherwise cause PostgREST 400
+-- "could not choose the best candidate function" errors), recreates everything,
+-- and forces a PostgREST schema-cache reload at the end.
 -- ============================================================================
+
+-- uuid_generate_v4() lives in uuid-ossp. The base schema enables it, but we do
+-- it here too so this migration works even if run on its own.
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS message_templates (
     id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -75,15 +84,44 @@ CROSS JOIN (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM message_templates m WHERE m.company_id = c.id);
 
 -- RPCs --------------------------------------------------------------------
+-- Drop EVERY existing overload of these function names first. CREATE OR REPLACE
+-- only replaces a function with an identical signature; if an older version with
+-- different argument types exists, you end up with two overloads and PostgREST
+-- returns HTTP 400 ("could not choose the best candidate function"). This wipes
+-- the slate so the definitions below are the only ones that exist.
+DO $$
+DECLARE r record;
+BEGIN
+    FOR r IN
+        SELECT 'DROP FUNCTION IF EXISTS ' || oid::regprocedure || ' CASCADE;' AS stmt
+        FROM pg_proc
+        WHERE pronamespace = 'public'::regnamespace
+          AND proname IN ('get_message_templates', 'upsert_message_template',
+                          'delete_message_template', 'log_candidate_message')
+    LOOP
+        EXECUTE r.stmt;
+    END LOOP;
+END$$;
+
 CREATE OR REPLACE FUNCTION get_message_templates(p_privy_user_id text)
 RETURNS jsonb AS $$
 DECLARE v_company_id uuid;
 BEGIN
     SELECT company_id INTO v_company_id FROM company_users WHERE privy_user_id = p_privy_user_id LIMIT 1;
     IF v_company_id IS NULL THEN RETURN '[]'::jsonb; END IF;
+    -- Order by created_at directly off the table; building the JSON object
+    -- explicitly keeps the payload to the 5 fields the UI needs. (The previous
+    -- version ordered by t.created_at on a subquery that didn't select it,
+    -- which raised "column t.created_at does not exist" for any real company.)
     RETURN (
-        SELECT COALESCE(jsonb_agg(row_to_json(t) ORDER BY t.created_at), '[]'::jsonb)
-        FROM (SELECT id, name, subject, body, category FROM message_templates WHERE company_id = v_company_id) t
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'id', t.id, 'name', t.name, 'subject', t.subject,
+                'body', t.body, 'category', t.category
+            ) ORDER BY t.created_at
+        ), '[]'::jsonb)
+        FROM message_templates t
+        WHERE t.company_id = v_company_id
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -146,3 +184,7 @@ GRANT EXECUTE ON FUNCTION get_message_templates(text)                           
 GRANT EXECUTE ON FUNCTION upsert_message_template(text, uuid, text, text, text, text)   TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION delete_message_template(text, uuid)                           TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION log_candidate_message(text, uuid, text, text)                 TO authenticated, anon;
+
+-- Force PostgREST to reload its schema cache so the new RPCs are callable
+-- immediately (a freshly created function can otherwise 404/400 until reload).
+NOTIFY pgrst, 'reload schema';

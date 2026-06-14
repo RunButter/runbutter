@@ -61,9 +61,10 @@ export default function BillingPage() {
             interval: '/mo',
             description: 'Perfect for small teams and growing startups.',
             features: [
-                'Up to 50 candidates/month',
+                'Up to 250 candidates',
                 '5 active positions',
-                'Google Calendar integration',
+                'Talent Treasury & resume search',
+                'Source tracking & email templates',
                 'Custom branding'
             ],
             priceId: STARTER_PRICE_ID,
@@ -77,11 +78,11 @@ export default function BillingPage() {
             interval: '/mo',
             description: 'Ideal for scaling companies with high hiring volume.',
             features: [
-                'Up to 200 candidates/month',
-                'Unlimited positions',
-                'Advanced analytics',
-                'ATS integrations',
-                'Priority support'
+                'Up to 2,500 candidates',
+                '25 active positions',
+                'Google Calendar interviews',
+                'My Team & Team Fit simulator',
+                'Advanced analytics & GDPR controls'
             ],
             priceId: PRO_PRICE_ID,
             buttonText: 'Upgrade Now',
@@ -94,9 +95,9 @@ export default function BillingPage() {
             interval: '',
             description: 'Enterprise-grade features and security for large scale.',
             features: [
-                'Unlimited everything',
-                'Custom assessments',
-                'API access',
+                'Unlimited candidates & positions',
+                'HRIS export & SSO',
+                'Everything in Professional',
                 'Dedicated support',
                 'SLA guarantee'
             ],
@@ -116,7 +117,7 @@ export default function BillingPage() {
                     Transparent Pricing
                 </h1>
                 <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
-                    Choose the plan that fits your helpbtr.com hiring needs. No hidden fees, just high-performance hiring.
+                    Choose the plan that fits your hiring needs. No hidden fees, just high-performance hiring.
                 </p>
             </div>
 

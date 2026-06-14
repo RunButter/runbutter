@@ -134,12 +134,13 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
       if (!position) {
         throw new Error('Position not found');
+      }
 
-        // Enforce the company's candidate cap (plan limit)
-        const { data: canAccept } = await supabase.rpc('company_can_accept_candidate', { p_company_id: position.company_id });
-        if (canAccept === false) {
-          throw new Error('This position is no longer accepting applications. Please check back later.');
-        }
+      // Enforce the company's candidate cap (plan limit). Fail-open if the RPC
+      // is unavailable so infra issues never block a genuine applicant.
+      const { data: canAccept } = await supabase.rpc('company_can_accept_candidate', { p_company_id: position.company_id });
+      if (canAccept === false) {
+        throw new Error('This position is no longer accepting applications. Please check back later.');
       }
 
       // Create candidate

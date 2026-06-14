@@ -46,10 +46,12 @@ export default function TemplatesPage() {
         if (!editing || !user || !editing.name.trim() || !editing.subject.trim() || !editing.body.trim()) return;
         setSaving(true);
         try {
-            await supabase.rpc('upsert_message_template', {
+            // supabase.rpc() returns { error } — it does NOT throw — so check it explicitly.
+            const { error } = await supabase.rpc('upsert_message_template', {
                 p_privy_user_id: user.id, p_id: editing.id, p_name: editing.name,
                 p_subject: editing.subject, p_body: editing.body, p_category: editing.category,
             });
+            if (error) throw error;
             setEditing(null);
             await load(user.id);
         } catch (e: any) { alert(e?.message || 'Save failed'); }
@@ -59,9 +61,10 @@ export default function TemplatesPage() {
     const remove = async (id: string) => {
         if (!user || !confirm('Delete this template?')) return;
         try {
-            await supabase.rpc('delete_message_template', { p_privy_user_id: user.id, p_id: id });
+            const { error } = await supabase.rpc('delete_message_template', { p_privy_user_id: user.id, p_id: id });
+            if (error) throw error;
             await load(user.id);
-        } catch (e) { console.error('delete failed', e); }
+        } catch (e: any) { alert(e?.message || 'Delete failed'); }
     };
 
     if (!ready || loading) {

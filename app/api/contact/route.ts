@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: Request) {
     try {
         const supabase = createAdminClient();
@@ -22,6 +20,7 @@ export async function POST(req: Request) {
 
         // 2. Send email via Resend
         if (process.env.RESEND_API_KEY) {
+            const resend = new Resend(process.env.RESEND_API_KEY);
             const { data, error: emailError } = await resend.emails.send({
                 // User only has hello@hirebtr.com
                 from: 'hirebtr.com <hello@hirebtr.com>',
