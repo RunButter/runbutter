@@ -141,22 +141,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trust strip */}
-      <section className="border-y border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <p className="text-center text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
-            Trusted by modern hiring teams
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 opacity-60">
-            {['Northwind', 'Acme Co', 'Lumen', 'Pulse', 'Vertex', 'Cobalt'].map((name) => (
-              <span key={name} className="text-lg font-black tracking-tight text-gray-400">{name}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Stats band */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className="max-w-7xl mx-auto px-6 py-16 border-t border-gray-100">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: Zap, value: 'Milliseconds', label: 'Resume search across 10k+ CVs' },
