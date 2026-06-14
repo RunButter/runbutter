@@ -198,6 +198,14 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         },
       });
 
+      // Notify the company's webhook integrations (Slack/Discord/Zapier/…),
+      // fire-and-forget so it never blocks or fails the application.
+      fetch('/api/webhooks/applicant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId: candidate.id }),
+      }).catch(console.error);
+
       setSuccess(true);
       setCandidateId(candidate.id);
       setAccessToken(candidate.access_token);

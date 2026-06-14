@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { sendStatusEmail } from '@/lib/status-emails';
+import { notifyStageChange } from '@/lib/webhooks';
 
 export async function POST(req: Request) {
     try {
@@ -51,6 +52,9 @@ export async function POST(req: Request) {
         } catch (mailErr) {
             console.error('Status email failed (non-fatal):', mailErr);
         }
+
+        // 4. Fan out to the company's webhook integrations (best-effort, never throws)
+        await notifyStageChange(candidateId, status);
 
         return NextResponse.json({ success: true, status });
 

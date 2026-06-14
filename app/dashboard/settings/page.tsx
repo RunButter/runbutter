@@ -12,7 +12,10 @@ import {
     AlertCircle,
     Globe,
     ArrowLeft,
-    Trash2
+    Trash2,
+    Plus,
+    Send,
+    Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import LogoContainer from '@/components/LogoContainer';
@@ -33,6 +36,13 @@ export default function SettingsPage() {
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+    // Webhook integrations (Slack / Discord / Zapier / Make / generic)
+    const [webhooks, setWebhooks] = useState<any[]>([]);
+    const [newHook, setNewHook] = useState({ label: '', type: 'slack', url: '' });
+    const [hookSaving, setHookSaving] = useState(false);
+    const [hookTesting, setHookTesting] = useState<string | null>(null);
+    const [hookMsg, setHookMsg] = useState('');
 
     const loadSettings = useCallback(async (privyUserId: string) => {
         try {
@@ -70,6 +80,10 @@ export default function SettingsPage() {
                 .maybeSingle();
             
             setIsGoogleConnected(!!token);
+
+            // Load the company's webhook integrations
+            const { data: hooks } = await supabase.rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });
+            setWebhooks(Array.isArray(hooks) ? hooks : []);
 
         } catch (err: any) {
             console.error('Error loading settings:', err);
@@ -168,6 +182,61 @@ export default function SettingsPage() {
             setError(err.message || 'Failed to save settings');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const refreshWebhooks = async () => {
+        if (!user) return;
+        const { data } = await supabase.rpc('get_webhook_endpoints', { p_privy_user_id: user.id });
+        setWebhooks(Array.isArray(data) ? data : []);
+    };
+
+    const addWebhook = async () => {
+        if (!user || !newHook.url.trim()) { setHookMsg('Paste a webhook URL first.'); return; }
+        setHookSaving(true); setHookMsg('');
+        try {
+            const { error } = await supabase.rpc('upsert_webhook_endpoint', {
+                p_privy_user_id: user.id, p_id: null,
+                p_label: newHook.label.trim() || newHook.type,
+                p_type: newHook.type, p_url: newHook.url.trim(),
+                p_events: null, p_is_active: true,
+            });
+            if (error) throw error;
+            setNewHook({ label: '', type: 'slack', url: '' });
+            await refreshWebhooks();
+        } catch (e: any) {
+            setHookMsg(e?.message || 'Failed to add integration');
+        } finally {
+            setHookSaving(false);
+        }
+    };
+
+    const removeWebhook = async (id: string) => {
+        if (!user || !confirm('Remove this integration?')) return;
+        try {
+            const { error } = await supabase.rpc('delete_webhook_endpoint', { p_privy_user_id: user.id, p_id: id });
+            if (error) throw error;
+            setWebhooks((prev) => prev.filter((w) => w.id !== id));
+        } catch (e: any) {
+            setHookMsg(e?.message || 'Failed to remove integration');
+        }
+    };
+
+    const testWebhook = async (hook: { id?: string; url: string; type: string }) => {
+        if (!user || !hook.url.trim()) { setHookMsg('Paste a webhook URL first.'); return; }
+        setHookTesting(hook.id || 'new'); setHookMsg('');
+        try {
+            const res = await fetch('/api/webhooks/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ privyUserId: user.id, url: hook.url.trim(), type: hook.type }),
+            });
+            const data = await res.json();
+            setHookMsg(res.ok && data.ok ? '✅ Test sent — check your channel/tool.' : (data.error || 'Test failed.'));
+        } catch (e: any) {
+            setHookMsg(e?.message || 'Test failed');
+        } finally {
+            setHookTesting(null);
         }
     };
 
@@ -334,6 +403,76 @@ export default function SettingsPage() {
                                             </Link>
                                         )}
                                     </div>
+                                </div>
+
+                                {/* Webhooks & notifications */}
+                                <div className="p-6 border border-gray-100 rounded-xl">
+                                    <div className="flex items-start gap-4 mb-5">
+                                        <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center border border-primary-100 text-primary-600 shrink-0">
+                                            <Zap className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-800">Webhooks &amp; notifications</h3>
+                                            <p className="text-sm text-gray-500">
+                                                Get pinged on new applications, stage changes, and hires. Paste an incoming
+                                                webhook URL from <strong>Slack</strong> or <strong>Discord</strong>, or a
+                                                catch-hook from <strong>Zapier / Make / n8n</strong> to reach thousands of other apps.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {webhooks.length > 0 && (
+                                        <div className="space-y-2 mb-5">
+                                            {webhooks.map((w) => (
+                                                <div key={w.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-600 shrink-0">{w.type}</span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-sm font-semibold text-gray-800 truncate">{w.label || w.type}</div>
+                                                        <div className="text-xs text-gray-400 truncate">{w.url}</div>
+                                                    </div>
+                                                    <button onClick={() => testWebhook(w)} disabled={hookTesting === w.id}
+                                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:border-primary-200 hover:text-primary-600 flex items-center gap-1.5 shrink-0">
+                                                        {hookTesting === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Test
+                                                    </button>
+                                                    <button onClick={() => removeWebhook(w.id)} className="p-2 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 shrink-0">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <select value={newHook.type} onChange={(e) => setNewHook({ ...newHook, type: e.target.value })}
+                                                className="input-field sm:w-44">
+                                                <option value="slack">Slack</option>
+                                                <option value="discord">Discord</option>
+                                                <option value="generic">Zapier / Make / other</option>
+                                            </select>
+                                            <input value={newHook.url} onChange={(e) => setNewHook({ ...newHook, url: e.target.value })}
+                                                placeholder="https://hooks.slack.com/services/…" className="input-field flex-1" />
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <input value={newHook.label} onChange={(e) => setNewHook({ ...newHook, label: e.target.value })}
+                                                placeholder="Label (optional, e.g. #hiring channel)" className="input-field flex-1" />
+                                            <button onClick={() => testWebhook({ url: newHook.url, type: newHook.type })} disabled={hookTesting === 'new' || !newHook.url}
+                                                className="btn-secondary">
+                                                {hookTesting === 'new' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Test
+                                            </button>
+                                            <button onClick={addWebhook} disabled={hookSaving} className="btn-primary">
+                                                {hookSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Add
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {hookMsg && <p className="text-sm mt-3 text-gray-600">{hookMsg}</p>}
+
+                                    <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+                                        <strong>Slack:</strong> create an Incoming Webhook at api.slack.com/messaging/webhooks. ·{' '}
+                                        <strong>Discord:</strong> Channel → Edit → Integrations → Webhooks. ·{' '}
+                                        <strong>Zapier/Make:</strong> start a flow with a “Webhooks → Catch Hook” trigger and paste its URL.
+                                    </p>
                                 </div>
                             </div>
                         </section>
