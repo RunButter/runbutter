@@ -78,8 +78,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Logo />
                         {company && <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200 shadow-sm">{company.plan}</div>}
                     </div>
-                    <button className="lg:hidden p-2 text-gray-500" onClick={() => setMobileMenuOpen(false)}>
-                        <X className="w-5 h-5" />
+                    <button aria-label="Close menu" className="lg:hidden p-2 -mr-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                        <X className="w-6 h-6" />
                     </button>
                 </div>
 
@@ -120,7 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <main className="flex-1 flex flex-col overflow-hidden relative">
                 <header className="bg-white border-b px-4 lg:px-8 py-5 flex items-center justify-between sticky top-0 z-30">
                     <div className="flex items-center gap-4">
-                        <button className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg" onClick={() => setMobileMenuOpen(true)}>
+                        <button aria-label="Open menu" className={`p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg lg:hidden ${mobileMenuOpen ? 'hidden' : ''}`} onClick={() => setMobileMenuOpen(true)}>
                             <Menu className="w-6 h-6" />
                         </button>
                         <h2 className="text-xl font-black tracking-tight text-gray-900 capitalize flex items-center gap-2">
