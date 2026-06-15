@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="fixed inset-0 z-40 bg-gray-900/50 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r flex flex-col p-6 transition-transform duration-300 lg:static lg:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r flex-col p-6 lg:static lg:flex ${mobileMenuOpen ? 'flex' : 'hidden'}`}>
                 <div className="mb-10 px-2 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Logo />
