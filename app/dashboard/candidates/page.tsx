@@ -119,7 +119,41 @@ export default function CandidatesPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                {/* Mobile: card list (the table overflows on small screens) */}
+                <div className="md:hidden space-y-3">
+                    {candidates.map((can) => (
+                        <Link key={can.id} href={`/dashboard/candidates/${can.id}`}
+                            className="block bg-white rounded-xl shadow-sm border border-gray-200 p-4 active:bg-gray-50 transition">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="font-semibold text-gray-800 truncate">{can.full_name}</div>
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 truncate">
+                                        <Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{can.email}</span>
+                                    </div>
+                                </div>
+                                <div className="shrink-0">{getStatusBadge(can.status)}</div>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between gap-3">
+                                <span className="text-sm text-gray-600 truncate">{can.position?.title || '—'}</span>
+                                {can.assessment_results && can.assessment_results.length > 0 ? (
+                                    <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 border-2 border-indigo-100 text-xs font-black text-indigo-700 shrink-0">
+                                        {can.assessment_results[0].overall_score || 0}
+                                    </span>
+                                ) : (
+                                    <span className="text-gray-300 text-xs italic shrink-0">Pending</span>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                    {candidates.length === 0 && (
+                        <div className="bg-white rounded-xl border border-gray-200 px-6 py-12 text-center text-gray-500">
+                            {searchTerm.trim() ? `No candidates match "${searchTerm.trim()}".` : 'No candidates found.'}
+                        </div>
+                    )}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>

@@ -400,9 +400,9 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
             <header className="bg-white border-b sticky top-0 z-10 transition-shadow hover:shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/dashboard/candidates" className="p-2 hover:bg-gray-100 rounded-full transition">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <Link href="/dashboard/candidates" className="p-2 hover:bg-gray-100 rounded-full transition shrink-0">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </Link>
                         <div>
@@ -410,12 +410,9 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setShowMessageModal(true)} className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm">
-                            <Mail className="w-4 h-4" /> Message
-                        </button>
+                    <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
                         <select
-                            className="input-field py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                            className="input-field py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 col-span-2 sm:col-span-1 sm:w-auto"
                             value={candidate.status}
                             onChange={(e) => updateStatus(e.target.value)}
                         >
@@ -427,8 +424,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <option value="hired">Hired</option>
                             <option value="rejected">Rejected</option>
                         </select>
+                        <button onClick={() => setShowMessageModal(true)} className="btn-secondary flex items-center justify-center gap-2 py-2 px-4 text-sm w-full sm:w-auto">
+                            <Mail className="w-4 h-4" /> Message
+                        </button>
                         <button
-                            className={`flex items-center gap-2 py-2 px-4 shadow-sm text-sm rounded border ${companyPlan === 'free' ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'btn-primary'}`}
+                            className={`flex items-center justify-center gap-2 py-2 px-4 shadow-sm text-sm rounded border w-full sm:w-auto ${companyPlan === 'free' ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'btn-primary'}`}
                             onClick={() => {
                                 if (companyPlan === 'free') {
                                     alert('Automatic Interview Scheduling is a Premium feature. Upgrade your plan to use it!');
