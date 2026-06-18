@@ -121,15 +121,14 @@ grant execute on function list_records(text, uuid, text) to authenticated, anon;
 -- 7. Light demo seed so Sales/Finance aren't empty on first view (only if none).
 --    Clearly disposable sample rows — delete anytime.
 do $$
-declare w record; v_org uuid;
+declare w record;
 begin
   for w in select id from workspaces loop
     if not exists (select 1 from organizations where workspace_id = w.id) then
       insert into organizations (workspace_id, name, domain, industry, employee_count) values
         (w.id, 'Northwind Labs', 'northwind.io', 'SaaS', 120),
         (w.id, 'Lumen Devtools', 'lumen.dev', 'Developer Tools', 45),
-        (w.id, 'Vertex Finance', 'vertex.co', 'Fintech', 80)
-      returning id into v_org;
+        (w.id, 'Vertex Finance', 'vertex.co', 'Fintech', 80);
     end if;
     if not exists (select 1 from invoices where workspace_id = w.id) then
       insert into invoices (workspace_id, number, organization_id, amount, status, issued_at, due_at)
