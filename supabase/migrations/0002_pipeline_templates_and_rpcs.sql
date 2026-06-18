@@ -69,12 +69,10 @@ begin
         'person', case when pe.id is null then null else jsonb_build_object(
           'id', pe.id, 'name', trim(coalesce(pe.first_name,'')||' '||coalesce(pe.last_name,'')),
           'title', pe.title, 'avatar_url', pe.avatar_url) end,
-        'company', case when co.id is null then null else jsonb_build_object(
-          'id', co.id, 'name', co.name, 'domain', co.domain) end
+        'company', null   -- CRM organizations join added with the Sales module
       ) order by r.position)
       from pipeline_records r
       left join people pe on pe.id = r.person_id
-      left join companies co on co.id = r.company_id
       where r.pipeline_id = p_pipeline), '[]'::jsonb)
   );
 end $$;

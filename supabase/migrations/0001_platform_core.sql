@@ -44,28 +44,17 @@ returns boolean language sql stable as $$
                  where a.workspace_id = p_workspace and a.privy_user_id = p_privy);
 $$;
 
--- 3. COMPANIES — universal CRM organization entity -----------------------------
-create table if not exists companies (
-  id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references workspaces(id) on delete cascade,
-  name text not null, domain text, industry text, employee_count int,
-  address jsonb not null default '{}',
-  custom_fields jsonb not null default '{}',
-  search_tsv tsvector generated always as (
-    to_tsvector('english', coalesce(name,'')||' '||coalesce(domain,'')||' '||coalesce(industry,''))
-  ) stored,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create index if not exists idx_companies_ws  on companies(workspace_id);
-create index if not exists idx_companies_tsv on companies using gin(search_tsv);
-create trigger trg_companies_upd before update on companies for each row execute function set_updated_at();
+-- 3. CRM ORGANIZATIONS — deferred to the Sales module (0004).
+-- The existing prod DB already has a `companies` table (the TENANT), so we must
+-- NOT create a colliding CRM `companies` table here. The universal CRM org
+-- entity ships with Sales as `organizations`; recruitment needs only
+-- people + pipelines + psychometrics, keeping these migrations purely additive.
 
 -- 4. PEOPLE — universal person entity (contacts, candidates, employees) --------
 create table if not exists people (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references workspaces(id) on delete cascade,
-  primary_company_id uuid references companies(id) on delete set null,
+  primary_company_id uuid,                 -- FK added with CRM organizations (Sales module)
   first_name text, last_name text, email text, phone text, title text,
   source text, linkedin_url text, avatar_url text,
   resume_raw_text text,                 -- zero-cost FTS source (pdf-parse/mammoth)
@@ -115,7 +104,7 @@ create table if not exists pipeline_records (
   pipeline_id uuid not null references pipelines(id) on delete cascade,
   stage_id uuid not null references pipeline_stages(id) on delete restrict,
   person_id uuid references people(id) on delete cascade,
-  company_id uuid references companies(id) on delete cascade,
+  company_id uuid,                               -- CRM org link (Sales module)
   owner_account_id uuid references accounts(id) on delete set null,
   title text, amount numeric(14,2), currency text default 'USD',
   status text not null default 'active',         -- active | won | lost
@@ -182,7 +171,7 @@ create table if not exists object_fields (
 -- 10. RLS — enable (NOT force) so SECURITY DEFINER RPCs work; no permissive
 -- policies ⇒ anon/authenticated get zero direct table access. All I/O via RPCs.
 do $$ declare t text; begin
-  foreach t in array array['workspaces','accounts','companies','people','pipelines',
+  foreach t in array array['workspaces','accounts','people','pipelines',
     'pipeline_stages','pipeline_records','psychometrics','assets','object_fields'] loop
     execute format('alter table %I enable row level security;', t);
   end loop; end $$;
