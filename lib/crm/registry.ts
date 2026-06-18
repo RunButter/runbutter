@@ -57,16 +57,23 @@ export const OBJECTS: Record<string, ObjectDef> = {
 
 // One nav over the whole company OS. Sales/CRM leads; the shipped ATS is the HR
 // module; Finance + HRIS round it out. Nothing from the ATS is removed.
+// Four collapsible pillars over the company OS (+ a pinned Home). Order and
+// names match the product structure: Sales → Finance → HR → Team.
 export const NAV = [
-  { group: 'Workspace', items: [
+  { group: 'Workspace', pinned: true, items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
   ]},
-  { group: 'Sales · CRM', items: [
+  { group: 'Sales', items: [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
     { slug: 'companies', label: 'Companies', icon: 'Building2', href: '/objects/companies' },
     { slug: 'people', label: 'People', icon: 'Users', href: '/objects/people' },
   ]},
-  { group: 'HR · Recruitment', items: [
+  { group: 'Finance', items: [
+    { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
+    { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
+    { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
+  ]},
+  { group: 'HR', items: [
     { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
     { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
     { slug: 'positions', label: 'Positions', icon: 'Briefcase', href: '/dashboard/positions' },
@@ -75,12 +82,7 @@ export const NAV = [
     { slug: 'templates', label: 'Email templates', icon: 'Mail', href: '/dashboard/templates' },
     { slug: 'analytics', label: 'Analytics', icon: 'BarChart3', href: '/dashboard/analytics' },
   ]},
-  { group: 'Finance', items: [
-    { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
-    { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
-    { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
-  ]},
-  { group: 'Team · HRIS', items: [
+  { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
