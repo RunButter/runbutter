@@ -47,6 +47,13 @@ export async function middleware(req: NextRequest) {
     '/pricing',
     '/about',
     '/contact',
+    // crm-pivot (feature branch): mock-data CRM surface, public during dev.
+    // TODO(crm-pivot): gate behind workspace auth before merging to main.
+    '/home',
+    '/objects',
+    '/pipelines',
+    '/talent',
+    '/hris',
   ];
 
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
