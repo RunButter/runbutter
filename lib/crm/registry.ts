@@ -36,6 +36,9 @@ export const OBJECTS: Record<string, ObjectDef> = {
   },
 };
 
+// One nav over the whole platform. The CRM core (Records/Sales) is new; the
+// HR·Recruitment group reuses the EXISTING, shipped ATS pages under /dashboard —
+// nothing is thrown away, the ATS is simply Module 1 of the Business-OS.
 export const NAV = [
   { group: 'Workspace', items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
@@ -44,16 +47,22 @@ export const NAV = [
     { slug: 'people', label: 'People', icon: 'Users', href: '/objects/people' },
     { slug: 'companies', label: 'Companies', icon: 'Building2', href: '/objects/companies' },
   ]},
-  { group: 'Pipelines', items: [
-    { slug: 'sales', label: 'Sales', icon: 'TrendingUp', href: '/pipelines/sales/board' },
-    { slug: 'recruitment', label: 'Recruitment', icon: 'Briefcase', href: '/pipelines/recruitment/board' },
-    { slug: 'onboarding', label: 'Onboarding', icon: 'UserPlus', href: '/pipelines/onboarding/board' },
+  { group: 'Sales', items: [
+    { slug: 'sales', label: 'Sales pipeline', icon: 'TrendingUp', href: '/pipelines/sales/board' },
   ]},
-  { group: 'Talent', items: [
-    { slug: 'treasury', label: 'Talent Treasury', icon: 'Sparkles', href: '/talent/treasury' },
+  { group: 'HR · Recruitment', items: [
+    { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
+    { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
+    { slug: 'positions', label: 'Positions', icon: 'Briefcase', href: '/dashboard/positions' },
+    { slug: 'treasury', label: 'Talent Treasury', icon: 'Sparkles', href: '/dashboard/treasury' },
+    { slug: 'interviews', label: 'Interviews', icon: 'Calendar', href: '/dashboard/interviews' },
+    { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
+    { slug: 'templates', label: 'Email templates', icon: 'Mail', href: '/dashboard/templates' },
+    { slug: 'analytics', label: 'Analytics', icon: 'BarChart3', href: '/dashboard/analytics' },
   ]},
-  { group: 'HRIS', items: [
-    { slug: 'directory', label: 'Directory', icon: 'Heart', href: '/hris/directory' },
+  { group: 'Team · HRIS', items: [
+    { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
+    { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
   ]},
 ];

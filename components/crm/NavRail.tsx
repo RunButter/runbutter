@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, UserPlus, Sparkles, Heart, Laptop, Search, ChevronsUpDown,
+  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
+  Columns3, Calendar, Radio, Mail, BarChart3, Search, ChevronsUpDown,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 
 const ICONS: Record<string, any> = {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, UserPlus, Sparkles, Heart, Laptop,
+  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
+  Columns3, Calendar, Radio, Mail, BarChart3,
 };
 
 export default function NavRail() {
