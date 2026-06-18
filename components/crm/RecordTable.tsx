@@ -18,6 +18,18 @@ const TAG_STYLE: Record<string, string> = {
   monitor: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
   phone: 'bg-pink-50 text-pink-700 ring-pink-200/60',
   license: 'bg-indigo-50 text-indigo-700 ring-indigo-200/60',
+  // finance statuses
+  paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  sent: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  draft: 'bg-slate-100 text-slate-500 ring-slate-200/60',
+  pending: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  overdue: 'bg-rose-50 text-rose-700 ring-rose-200/60',
+  // expense categories
+  software: 'bg-indigo-50 text-indigo-700 ring-indigo-200/60',
+  office: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
+  payroll: 'bg-violet-50 text-violet-700 ring-violet-200/60',
+  travel: 'bg-amber-50 text-amber-700 ring-amber-200/60',
 };
 
 function Tag({ value }: { value: string }) {
@@ -41,6 +53,10 @@ function Cell({ field, row }: { field: FieldDef; row: any }) {
       return <Tag value={String(v)} />;
     case 'relation':
       return <span className="text-slate-600 truncate">{v}</span>;
+    case 'currency':
+      return <span className="tabular-nums font-semibold text-slate-800">${Number(v).toLocaleString()}</span>;
+    case 'date':
+      return <span className="text-slate-500 tabular-nums">{new Date(v).toLocaleDateString()}</span>;
     case 'number': {
       if (field.key === 'synergy') {
         const n = Number(v);

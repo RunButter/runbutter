@@ -24,9 +24,25 @@ export const MOCK_ASSETS: Asset[] = [
   { id: 'a4', name: 'Figma Org seat', category: 'license', serial_number: 'FIG-ORG', status: 'assigned', assigned_to: 'Sara Lindqvist' },
 ];
 
+export const MOCK_INVOICES = [
+  { id: 'i1', number: 'INV-1001', company: 'Northwind Labs', amount: 24000, status: 'paid', due_at: '2026-06-01' },
+  { id: 'i2', number: 'INV-1002', company: 'Lumen Devtools', amount: 12000, status: 'sent', due_at: '2026-06-20' },
+  { id: 'i3', number: 'INV-1003', company: 'Vertex Finance', amount: 36000, status: 'overdue', due_at: '2026-05-28' },
+];
+
+export const MOCK_EXPENSES = [
+  { id: 'e1', vendor: 'AWS', category: 'software', amount: 2400, status: 'paid', spent_at: '2026-06-10' },
+  { id: 'e2', vendor: 'WeWork', category: 'office', amount: 3200, status: 'approved', spent_at: '2026-06-03' },
+  { id: 'e3', vendor: 'Payroll', category: 'payroll', amount: 48000, status: 'paid', spent_at: '2026-06-14' },
+];
+
+export const MOCK_FINANCE = { revenue: 24000, outstanding: 48000, expenses: 53600, invoices: 3 };
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
+  invoices: MOCK_INVOICES,
+  expenses: MOCK_EXPENSES,
   assets: MOCK_ASSETS,
 };
 

@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Search, ChevronsUpDown,
+  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, Search, ChevronsUpDown,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3,
+  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet,
 };
 
 export default function NavRail() {

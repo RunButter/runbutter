@@ -84,7 +84,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
 
                 <nav className="flex-1 space-y-1 overflow-y-auto no-scrollbar">
-                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-2">Talent Management</div>
+                    <Link href="/home" onClick={() => setMobileMenuOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-purple-600 text-white font-bold text-sm shadow-lg hover:from-primary-700 hover:to-purple-700 transition mb-4">
+                        <Grid className="w-5 h-5" />
+                        <span className="flex-1">Company OS</span>
+                        <span className="text-white/80 text-xs">↗</span>
+                    </Link>
+                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4 mt-2">HR · Recruitment</div>
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Overview" matchExact={true} />
                     <NavItem href="/dashboard/pipeline" icon={Grid} label="Visual Pipeline" />
                     <NavItem href="/dashboard/treasury" icon={Sparkles} label="Talent Treasury" feature="talentTreasury" />
