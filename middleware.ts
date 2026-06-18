@@ -47,13 +47,6 @@ export async function middleware(req: NextRequest) {
     '/pricing',
     '/about',
     '/contact',
-    // crm-pivot (feature branch): mock-data CRM surface, public during dev.
-    // TODO(crm-pivot): gate behind workspace auth before merging to main.
-    '/home',
-    '/objects',
-    '/pipelines',
-    '/talent',
-    '/hris',
   ];
 
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
@@ -64,7 +57,10 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  if (pathname.startsWith('/dashboard') && !isAuthenticated) {
+  // Authed surfaces: legacy ATS dashboard + the new platform (CRM / HRIS).
+  const authedPrefixes = ['/dashboard', '/home', '/objects', '/pipelines', '/talent', '/hris'];
+  const needsAuth = authedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  if (needsAuth && !isAuthenticated) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/auth/login';
     redirectUrl.searchParams.set('redirectTo', pathname);
