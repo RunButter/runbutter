@@ -43,6 +43,25 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'spent_at', label: 'Date', type: 'date', width: 140 },
     ],
   },
+  projects: {
+    slug: 'projects', singular: 'Project', plural: 'Projects', icon: 'FolderKanban', type: 'asset',
+    fields: [
+      { key: 'name', label: 'Project', type: 'avatar', primary: true, width: 240 },
+      { key: 'identifier', label: 'Key', type: 'tags', width: 110 },
+      { key: 'status', label: 'Status', type: 'tags', width: 120 },
+      { key: 'issues', label: 'Issues', type: 'number', align: 'right', width: 90 },
+    ],
+  },
+  issues: {
+    slug: 'issues', singular: 'Issue', plural: 'Issues', icon: 'ListTodo', type: 'asset',
+    fields: [
+      { key: 'name', label: 'Issue', type: 'avatar', primary: true, width: 280 },
+      { key: 'project', label: 'Project', type: 'relation', width: 160 },
+      { key: 'status', label: 'Status', type: 'tags', width: 130 },
+      { key: 'priority', label: 'Priority', type: 'tags', width: 110 },
+      { key: 'due_date', label: 'Due', type: 'date', width: 130 },
+    ],
+  },
   assets: {
     slug: 'assets', singular: 'Asset', plural: 'Assets', icon: 'Laptop', type: 'asset',
     fields: [
@@ -81,6 +100,11 @@ export const NAV = [
     { slug: 'interviews', label: 'Interviews', icon: 'Calendar', href: '/dashboard/interviews' },
     { slug: 'templates', label: 'Email templates', icon: 'Mail', href: '/dashboard/templates' },
     { slug: 'analytics', label: 'Analytics', icon: 'BarChart3', href: '/dashboard/analytics' },
+  ]},
+  { group: 'Projects', items: [
+    { slug: 'projects', label: 'Projects', icon: 'FolderKanban', href: '/objects/projects' },
+    { slug: 'issues', label: 'Issues', icon: 'ListTodo', href: '/objects/issues' },
+    { slug: 'board', label: 'Board', icon: 'Columns3', href: '/projects/board' },
   ]},
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },

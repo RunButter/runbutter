@@ -30,11 +30,25 @@ const TAG_STYLE: Record<string, string> = {
   office: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
   payroll: 'bg-violet-50 text-violet-700 ring-violet-200/60',
   travel: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  // project / issue states + priority
+  active: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  paused: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  completed: 'bg-slate-100 text-slate-500 ring-slate-200/60',
+  backlog: 'bg-slate-100 text-slate-500 ring-slate-200/60',
+  todo: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  in_progress: 'bg-violet-50 text-violet-700 ring-violet-200/60',
+  done: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  cancelled: 'bg-rose-50 text-rose-700 ring-rose-200/60',
+  urgent: 'bg-rose-50 text-rose-700 ring-rose-200/60',
+  high: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  medium: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  low: 'bg-slate-50 text-slate-500 ring-slate-200/60',
 };
 
 function Tag({ value }: { value: string }) {
   const style = TAG_STYLE[value?.toLowerCase()] || 'bg-slate-50 text-slate-600 ring-slate-200/60';
-  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${style}`}>{value}</span>;
+  const label = String(value).replace(/_/g, ' ');
+  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 capitalize ${style}`}>{label}</span>;
 }
 
 function Cell({ field, row }: { field: FieldDef; row: any }) {

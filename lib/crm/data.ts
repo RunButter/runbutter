@@ -47,6 +47,30 @@ export async function loadFinance(privyUserId: string | null): Promise<FinanceRe
   }
 }
 
+// Plane-style issue board: fixed workflow states, issues grouped by status.
+// Reuses loadRecords('issues') + the same kanban engine as deals/hiring.
+const ISSUE_STAGES: PipelineStage[] = [
+  { id: 'backlog', name: 'Backlog', color: '#94a3b8', stage_type: 'open' },
+  { id: 'todo', name: 'Todo', color: '#60a5fa', stage_type: 'open' },
+  { id: 'in_progress', name: 'In Progress', color: '#a78bfa', stage_type: 'open' },
+  { id: 'done', name: 'Done', color: '#34d399', stage_type: 'won' },
+  { id: 'cancelled', name: 'Cancelled', color: '#f87171', stage_type: 'lost' },
+];
+
+export async function loadIssueBoard(privyUserId: string | null): Promise<BoardResult> {
+  const { rows, live } = await loadRecords(privyUserId, 'issues');
+  const records: PipelineRecord[] = rows.map((r: any) => ({
+    id: r.id,
+    stage_id: r.status,
+    title: r.name || r.title,
+    status: 'active',
+    position: 0,
+    // Card headline = issue title; sub-line = assignee (the board renders person.name + person.title).
+    person: { id: r.id, name: r.name || r.title, title: r.assignee || undefined },
+  }));
+  return { stages: ISSUE_STAGES, records, live };
+}
+
 export async function loadBoard(privyUserId: string | null, slug: string, kind: PipelineKind): Promise<BoardResult> {
   const m = mockBoard(slug);
   const fallback: BoardResult = { stages: m.stages, records: m.records, live: false };

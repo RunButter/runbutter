@@ -38,11 +38,27 @@ export const MOCK_EXPENSES = [
 
 export const MOCK_FINANCE = { revenue: 24000, outstanding: 48000, expenses: 53600, invoices: 3 };
 
+export const MOCK_PROJECTS = [
+  { id: 'pr1', name: 'Platform Launch', identifier: 'LAUNCH', status: 'active', issues: 6 },
+  { id: 'pr2', name: 'Mobile App', identifier: 'MOBILE', status: 'paused', issues: 3 },
+];
+
+export const MOCK_ISSUES = [
+  { id: 'is1', name: 'Design landing page', project: 'Platform Launch', status: 'in_progress', priority: 'high', due_date: '2026-06-20', assignee: 'Anna K.' },
+  { id: 'is2', name: 'Wire Stripe billing', project: 'Platform Launch', status: 'todo', priority: 'urgent', due_date: '2026-06-22', assignee: 'David R.' },
+  { id: 'is3', name: 'Set up CI/CD pipeline', project: 'Platform Launch', status: 'done', priority: 'medium', due_date: '2026-06-10', assignee: 'Sara L.' },
+  { id: 'is4', name: 'Write API documentation', project: 'Platform Launch', status: 'backlog', priority: 'low', due_date: null, assignee: null },
+  { id: 'is5', name: 'Run customer interviews', project: 'Platform Launch', status: 'todo', priority: 'medium', due_date: '2026-06-25', assignee: 'Lena F.' },
+  { id: 'is6', name: 'Launch on Product Hunt', project: 'Platform Launch', status: 'backlog', priority: 'high', due_date: null, assignee: null },
+];
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
   invoices: MOCK_INVOICES,
   expenses: MOCK_EXPENSES,
+  projects: MOCK_PROJECTS,
+  issues: MOCK_ISSUES,
   assets: MOCK_ASSETS,
 };
 
