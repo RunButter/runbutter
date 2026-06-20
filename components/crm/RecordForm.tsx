@@ -49,34 +49,39 @@ export default function RecordForm({ object, privyUserId, recordId, initial, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-end bg-slate-900/30" onClick={onClose}>
-      <div className="h-full w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-200" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
           <h2 className="text-sm font-bold text-slate-800">{editing ? `Edit ${object.singular}` : `New ${object.singular}`}</h2>
           <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {fields.map((f) => (
-            <label key={f.key} className="block">
-              <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>
-              {f.input === 'select' ? (
-                <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none capitalize">
-                  <option value="">—</option>
-                  {f.options?.map((o) => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
-                </select>
-              ) : f.input === 'textarea' ? (
-                <textarea value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} rows={3}
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
-              ) : (
-                <input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
-                  value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
-              )}
-            </label>
-          ))}
-          {error && <p className="text-[12px] text-rose-600">{error}</p>}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {fields.map((f) => (
+              <label key={f.key} className={`block ${f.input === 'textarea' ? 'sm:col-span-2' : ''}`}>
+                <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>
+                {f.input === 'select' ? (
+                  <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none capitalize">
+                    <option value="">—</option>
+                    {f.options?.map((o) => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
+                  </select>
+                ) : f.input === 'textarea' ? (
+                  <textarea value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} rows={3}
+                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                ) : (
+                  <input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
+                    value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                )}
+              </label>
+            ))}
+          </div>
+          {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}
         </div>
 
         <div className="shrink-0 flex items-center gap-2 p-3 border-t border-slate-200/70">
