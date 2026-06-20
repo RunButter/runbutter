@@ -18,6 +18,7 @@ create table if not exists organizations (
 );
 create index if not exists idx_orgs_ws  on organizations(workspace_id);
 create index if not exists idx_orgs_tsv on organizations using gin(search_tsv);
+drop trigger if exists trg_orgs_upd on organizations;
 create trigger trg_orgs_upd before update on organizations for each row execute function set_updated_at();
 
 -- 2. INVOICES (accounts receivable)
@@ -33,6 +34,7 @@ create table if not exists invoices (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_invoices_ws on invoices(workspace_id);
+drop trigger if exists trg_invoices_upd on invoices;
 create trigger trg_invoices_upd before update on invoices for each row execute function set_updated_at();
 
 -- 3. EXPENSES (accounts payable)
@@ -48,6 +50,7 @@ create table if not exists expenses (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_expenses_ws on expenses(workspace_id);
+drop trigger if exists trg_expenses_upd on expenses;
 create trigger trg_expenses_upd before update on expenses for each row execute function set_updated_at();
 
 -- 4. RLS (enable only; access via SECURITY DEFINER RPCs)

@@ -18,6 +18,7 @@ create table if not exists projects (
   updated_at timestamptz not null default now()
 );
 create index if not exists idx_projects_ws on projects(workspace_id);
+drop trigger if exists trg_projects_upd on projects;
 create trigger trg_projects_upd before update on projects for each row execute function set_updated_at();
 
 -- 2. ISSUES (tasks)
@@ -37,6 +38,7 @@ create table if not exists issues (
 );
 create index if not exists idx_issues_ws on issues(workspace_id);
 create index if not exists idx_issues_project on issues(project_id, status, sort_order);
+drop trigger if exists trg_issues_upd on issues;
 create trigger trg_issues_upd before update on issues for each row execute function set_updated_at();
 
 -- 3. RLS

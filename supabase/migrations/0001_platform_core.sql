@@ -24,6 +24,7 @@ create table if not exists workspaces (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+drop trigger if exists trg_workspaces_upd on workspaces;
 create trigger trg_workspaces_upd before update on workspaces for each row execute function set_updated_at();
 
 -- 2. ACCOUNTS — internal user seats (Privy logins) -----------------------------
@@ -71,6 +72,7 @@ create table if not exists people (
 create index if not exists idx_people_ws      on people(workspace_id);
 create index if not exists idx_people_company on people(primary_company_id);
 create index if not exists idx_people_tsv     on people using gin(search_tsv);   -- <5ms boolean search
+drop trigger if exists trg_people_upd on people;
 create trigger trg_people_upd before update on people for each row execute function set_updated_at();
 
 -- 5. PIPELINES + STAGES — configurable, multi-purpose workflows ----------------
@@ -118,10 +120,12 @@ create table if not exists pipeline_records (
 create index if not exists idx_records_board   on pipeline_records(pipeline_id, stage_id, position);
 create index if not exists idx_records_person  on pipeline_records(person_id);
 create index if not exists idx_records_company on pipeline_records(company_id);
+drop trigger if exists trg_records_upd on pipeline_records;
 create trigger trg_records_upd before update on pipeline_records for each row execute function set_updated_at();
 
 create or replace function stamp_stage_change() returns trigger language plpgsql as $$
 begin if new.stage_id is distinct from old.stage_id then new.entered_stage_at = now(); end if; return new; end $$;
+drop trigger if exists trg_records_stage on pipeline_records;
 create trigger trg_records_stage before update on pipeline_records for each row execute function stamp_stage_change();
 
 -- 7. PSYCHOMETRICS — per-person; discrete int columns + raw jsonb --------------
@@ -153,6 +157,7 @@ create table if not exists assets (
 );
 create index if not exists idx_assets_ws       on assets(workspace_id);
 create index if not exists idx_assets_assignee on assets(assigned_to_person_id);
+drop trigger if exists trg_assets_upd on assets;
 create trigger trg_assets_upd before update on assets for each row execute function set_updated_at();
 
 -- 9. OBJECT_FIELDS — lightweight extensibility (renders custom_fields jsonb) ---
