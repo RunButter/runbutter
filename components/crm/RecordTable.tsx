@@ -84,7 +84,7 @@ function Cell({ field, row }: { field: FieldDef; row: any }) {
   }
 }
 
-export default function RecordTable({ object, rows }: { object: ObjectDef; rows: any[] }) {
+export default function RecordTable({ object, rows, onRowClick }: { object: ObjectDef; rows: any[]; onRowClick?: (row: any) => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const allSelected = rows.length > 0 && selected.size === rows.length;
 
@@ -110,8 +110,9 @@ export default function RecordTable({ object, rows }: { object: ObjectDef; rows:
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} className={`group transition-colors ${selected.has(r.id) ? 'bg-primary-50/40' : 'hover:bg-slate-50/70'}`}>
-              <td className="px-3 h-[42px] border-b border-slate-100">
+            <tr key={r.id} onClick={() => onRowClick?.(r)}
+              className={`group transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${selected.has(r.id) ? 'bg-primary-50/40' : 'hover:bg-slate-50/70'}`}>
+              <td className="px-3 h-[42px] border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
                 <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} className="rounded border-slate-300 accent-primary-600 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity" />
               </td>
               {object.fields.map((f) => (

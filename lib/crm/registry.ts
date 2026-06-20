@@ -13,6 +13,14 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'source', label: 'Source', type: 'tags', width: 120 },
       { key: 'synergy', label: 'Synergy', type: 'number', align: 'right', width: 100 },
     ],
+    form: [
+      { key: 'first_name', label: 'First name', input: 'text', required: true },
+      { key: 'last_name', label: 'Last name', input: 'text' },
+      { key: 'email', label: 'Email', input: 'text' },
+      { key: 'phone', label: 'Phone', input: 'text' },
+      { key: 'title', label: 'Title', input: 'text' },
+      { key: 'source', label: 'Source', input: 'text' },
+    ],
   },
   companies: {
     slug: 'companies', singular: 'Company', plural: 'Companies', icon: 'Building2', type: 'company',
@@ -21,6 +29,12 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'domain', label: 'Domain', type: 'text', width: 200 },
       { key: 'industry', label: 'Industry', type: 'text', width: 180 },
       { key: 'employee_count', label: 'Employees', type: 'number', align: 'right', width: 120 },
+    ],
+    form: [
+      { key: 'name', label: 'Name', input: 'text', required: true },
+      { key: 'domain', label: 'Domain', input: 'text' },
+      { key: 'industry', label: 'Industry', input: 'text' },
+      { key: 'employee_count', label: 'Employees', input: 'number' },
     ],
   },
   invoices: {
@@ -32,6 +46,14 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'status', label: 'Status', type: 'tags', width: 120 },
       { key: 'due_at', label: 'Due', type: 'date', width: 140 },
     ],
+    form: [
+      { key: 'number', label: 'Invoice #', input: 'text', required: true },
+      { key: 'amount', label: 'Amount', input: 'number', required: true },
+      { key: 'status', label: 'Status', input: 'select', options: ['draft', 'sent', 'paid', 'overdue'] },
+      { key: 'issued_at', label: 'Issued', input: 'date' },
+      { key: 'due_at', label: 'Due', input: 'date' },
+      { key: 'notes', label: 'Notes', input: 'textarea' },
+    ],
   },
   expenses: {
     slug: 'expenses', singular: 'Expense', plural: 'Expenses', icon: 'Wallet', type: 'asset',
@@ -42,6 +64,14 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'status', label: 'Status', type: 'tags', width: 120 },
       { key: 'spent_at', label: 'Date', type: 'date', width: 140 },
     ],
+    form: [
+      { key: 'vendor', label: 'Vendor', input: 'text', required: true },
+      { key: 'category', label: 'Category', input: 'select', options: ['payroll', 'software', 'office', 'travel', 'other'] },
+      { key: 'amount', label: 'Amount', input: 'number', required: true },
+      { key: 'status', label: 'Status', input: 'select', options: ['pending', 'approved', 'paid'] },
+      { key: 'spent_at', label: 'Date', input: 'date' },
+      { key: 'notes', label: 'Notes', input: 'textarea' },
+    ],
   },
   projects: {
     slug: 'projects', singular: 'Project', plural: 'Projects', icon: 'FolderKanban', type: 'asset',
@@ -50,6 +80,12 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'identifier', label: 'Key', type: 'tags', width: 110 },
       { key: 'status', label: 'Status', type: 'tags', width: 120 },
       { key: 'issues', label: 'Issues', type: 'number', align: 'right', width: 90 },
+    ],
+    form: [
+      { key: 'name', label: 'Project name', input: 'text', required: true },
+      { key: 'identifier', label: 'Key', input: 'text' },
+      { key: 'status', label: 'Status', input: 'select', options: ['active', 'paused', 'completed', 'cancelled'] },
+      { key: 'description', label: 'Description', input: 'textarea' },
     ],
   },
   issues: {
@@ -60,6 +96,13 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'status', label: 'Status', type: 'tags', width: 130 },
       { key: 'priority', label: 'Priority', type: 'tags', width: 110 },
       { key: 'due_date', label: 'Due', type: 'date', width: 130 },
+    ],
+    form: [
+      { key: 'title', label: 'Title', input: 'text', required: true },
+      { key: 'status', label: 'Status', input: 'select', options: ['backlog', 'todo', 'in_progress', 'done', 'cancelled'] },
+      { key: 'priority', label: 'Priority', input: 'select', options: ['none', 'low', 'medium', 'high', 'urgent'] },
+      { key: 'due_date', label: 'Due date', input: 'date' },
+      { key: 'description', label: 'Description', input: 'textarea' },
     ],
   },
   assets: {

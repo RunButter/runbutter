@@ -32,6 +32,34 @@ export async function loadRecords(privyUserId: string | null, object: string): P
   }
 }
 
+// ── CRUD ────────────────────────────────────────────────────────────────────
+export async function getRecord(privyUserId: string, object: string, id: string): Promise<any | null> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('get_record', { p_privy: privyUserId, p_object: object, p_id: id });
+  if (error) return null;
+  return data;
+}
+
+export async function createRecord(privyUserId: string, object: string, values: Record<string, any>): Promise<{ id?: string; error?: string }> {
+  const ws = await resolveWorkspace(privyUserId);
+  if (!ws) return { error: 'No workspace found for your account.' };
+  const { data, error } = await supabase.rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: object, p_data: values });
+  if (error) return { error: error.message };
+  return { id: data as string };
+}
+
+export async function updateRecord(privyUserId: string, object: string, id: string, values: Record<string, any>): Promise<{ error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { error } = await supabase.rpc('update_record', { p_privy: privyUserId, p_object: object, p_id: id, p_data: values });
+  return error ? { error: error.message } : {};
+}
+
+export async function deleteRecord(privyUserId: string, object: string, id: string): Promise<{ error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { error } = await supabase.rpc('delete_record', { p_privy: privyUserId, p_object: object, p_id: id });
+  return error ? { error: error.message } : {};
+}
+
 export async function loadFinance(privyUserId: string | null): Promise<FinanceResult> {
   const fallback: FinanceResult = { ...MOCK_FINANCE, live: false };
   if (!privyUserId) return fallback;

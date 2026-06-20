@@ -14,13 +14,22 @@ export interface FieldDef {
   primary?: boolean;        // the headline column (gets the avatar + link)
 }
 
+export interface FormField {
+  key: string;              // maps to a real table column
+  label: string;
+  input: 'text' | 'number' | 'select' | 'date' | 'textarea';
+  options?: string[];       // for select
+  required?: boolean;
+}
+
 export interface ObjectDef {
   slug: string;             // url + registry key, e.g. "people"
   singular: string;
   plural: string;
   icon: string;             // lucide icon name
   type: ObjectType;
-  fields: FieldDef[];
+  fields: FieldDef[];       // display columns (table)
+  form?: FormField[];       // editable columns (create/edit) — omit = read-only
 }
 
 export interface Person {
