@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, SlidersHorizontal, LayoutGrid, Loader2 } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, Upload, Loader2 } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord } from '@/lib/crm/data';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
+import ImportModal from '@/components/crm/ImportModal';
 
 export default function ObjectPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function ObjectPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<{ id: string | null; initial: any } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const reload = useCallback(() => {
     if (!object) return;
@@ -48,7 +50,8 @@ export default function ObjectPage() {
         <div className="ml-auto flex items-center gap-1.5">
           <button className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-500 hover:bg-slate-100 transition-colors"><Search className="w-3.5 h-3.5" /> Search</button>
           <button className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-500 hover:bg-slate-100 transition-colors"><SlidersHorizontal className="w-3.5 h-3.5" /> Filter</button>
-          <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 transition-colors"><LayoutGrid className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setImporting(true)} disabled={!canEdit}
+            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Upload className="w-3.5 h-3.5" /> Import</button>
           <button onClick={() => setForm({ id: null, initial: {} })} disabled={!canEdit}
             title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"><Plus className="w-3.5 h-3.5" /> New</button>
@@ -70,6 +73,15 @@ export default function ObjectPage() {
           initial={form.initial}
           onClose={() => setForm(null)}
           onSaved={() => { setForm(null); reload(); }}
+        />
+      )}
+
+      {importing && (
+        <ImportModal
+          object={object}
+          privyUserId={privy}
+          onClose={() => setImporting(false)}
+          onImported={() => { setImporting(false); reload(); }}
         />
       )}
     </>

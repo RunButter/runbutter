@@ -60,6 +60,26 @@ export async function deleteRecord(privyUserId: string, object: string, id: stri
   return error ? { error: error.message } : {};
 }
 
+export async function importRecords(privyUserId: string, object: string, rows: Record<string, any>[]): Promise<{ count?: number; error?: string }> {
+  const ws = await resolveWorkspace(privyUserId);
+  if (!ws) return { error: 'No workspace found for your account.' };
+  const { data, error } = await supabase.rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: object, p_rows: rows });
+  if (error) return { error: error.message };
+  return { count: data as number };
+}
+
+// Fetch a public CSV URL (e.g. a published Google Sheet) via our server route.
+export async function fetchSheetCsv(url: string): Promise<{ text?: string; error?: string }> {
+  try {
+    const res = await fetch('/api/crm/fetch-csv', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await res.json();
+    if (!res.ok) return { error: data.error || 'Fetch failed' };
+    return { text: data.text };
+  } catch (e: any) {
+    return { error: e?.message || 'Fetch failed' };
+  }
+}
+
 export async function loadFinance(privyUserId: string | null): Promise<FinanceResult> {
   const fallback: FinanceResult = { ...MOCK_FINANCE, live: false };
   if (!privyUserId) return fallback;
