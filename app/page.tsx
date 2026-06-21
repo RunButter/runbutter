@@ -4,6 +4,12 @@ import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 
+const FEATURES = [
+  'Drag-and-drop boards', 'Spreadsheet-style tables', 'Create, edit & delete',
+  'CSV / Google Sheets import', 'One-click export', 'Search anything',
+  'Custom categories', 'Products & invoices', 'Multi-pipeline records', 'Zero AI token cost',
+];
+
 const PILLARS = [
   { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline.', tone: 'text-indigo-600 bg-indigo-50' },
   { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, products, and live revenue KPIs.', tone: 'text-emerald-600 bg-emerald-50' },
@@ -37,16 +43,17 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10"><AsciiField /></div>
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_30%,white_0%,rgba(255,255,255,0.5)_45%,transparent_75%)]" />
+        <div className="absolute inset-0 -z-10"><AsciiField baseAlpha={0.08} peakAlpha={0.7} /></div>
+        {/* whiten the headline area so text stays crisp; let the ASCII gradient
+            show through behind the product window below */}
+        <div className="absolute inset-x-0 top-0 h-[42%] -z-10 bg-gradient-to-b from-white via-white/80 to-transparent" />
 
         <div className="max-w-3xl mx-auto px-6 pt-20 pb-10 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white ring-1 ring-slate-200 text-[11px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm">
             <Sparkles className="w-3.5 h-3.5" /> The open company OS
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05]">
-            Run your whole company<br />
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">in one clean workspace</span>
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900">
+            Run your whole company<br />in one clean workspace
           </h1>
           <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
             Sales, finance, projects, and recruiting — relational, fast, and beautifully simple.
@@ -64,9 +71,9 @@ export default function HomePage() {
         </div>
 
         {/* interactive product window */}
-        <div id="product" className="max-w-4xl mx-auto px-6 pb-20">
+        <div id="product" className="max-w-5xl mx-auto px-6 pb-24">
           <div className="relative">
-            <div className="absolute -inset-3 -z-10 rounded-[2rem] bg-gradient-to-tr from-indigo-200/40 via-violet-200/30 to-fuchsia-200/40 blur-2xl" />
+            <div className="absolute -inset-5 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-indigo-300/50 via-violet-300/40 to-fuchsia-300/50 blur-3xl" />
             <ProductPreview />
           </div>
           <p className="text-center text-[12px] text-slate-400 mt-4">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
@@ -85,6 +92,12 @@ export default function HomePage() {
                 <h3 className="font-black text-slate-900">{p.name}</h3>
                 <p className="text-sm text-slate-500 mt-1 leading-relaxed">{p.body}</p>
               </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-2">
+            {FEATURES.map((f) => (
+              <span key={f} className="px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-[12px] font-medium text-slate-600">{f}</span>
             ))}
           </div>
         </div>

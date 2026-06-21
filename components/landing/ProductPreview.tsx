@@ -29,12 +29,12 @@ function Card({ title, sub, amount }: { title: string; sub?: string; amount?: st
 
 function Column({ name, color, children }: { name: string; color: string; children: React.ReactNode }) {
   return (
-    <div className="w-[120px] shrink-0">
-      <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
+    <div className="w-[150px] shrink-0">
+      <div className="flex items-center gap-1.5 mb-2 px-0.5">
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-        <span className="text-[10px] font-bold text-slate-600">{name}</span>
+        <span className="text-[11px] font-bold text-slate-600">{name}</span>
       </div>
-      <div className="rounded-lg bg-slate-50/70 ring-1 ring-slate-200/50 p-1.5 min-h-[150px]">{children}</div>
+      <div className="rounded-lg bg-slate-50/70 ring-1 ring-slate-200/50 p-2 min-h-[230px]">{children}</div>
     </div>
   );
 }
@@ -65,9 +65,9 @@ export default function ProductPreview() {
         </div>
       </div>
 
-      <div className="flex h-[260px]">
+      <div className="flex h-[340px]">
         {/* mini nav rail */}
-        <div className="w-10 shrink-0 border-r border-slate-200/70 bg-slate-50/40 flex flex-col items-center gap-2.5 py-3">
+        <div className="w-11 shrink-0 border-r border-slate-200/70 bg-slate-50/40 flex flex-col items-center gap-3 py-3.5">
           <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-500" />
           {RAIL.map((r, i) => <r.icon key={i} className="w-3.5 h-3.5 text-slate-300" />)}
         </div>
