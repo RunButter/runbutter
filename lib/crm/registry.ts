@@ -107,6 +107,24 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'description', label: 'Description', input: 'textarea' },
     ],
   },
+  products: {
+    slug: 'products', singular: 'Product', plural: 'Products', icon: 'Package', type: 'asset',
+    fields: [
+      { key: 'name', label: 'Product', type: 'avatar', primary: true, width: 240 },
+      { key: 'sku', label: 'SKU', type: 'tags', width: 130 },
+      { key: 'category', label: 'Category', type: 'tags', width: 140 },
+      { key: 'unit_price', label: 'Price', type: 'currency', align: 'right', width: 120 },
+      { key: 'unit', label: 'Unit', type: 'text', width: 100 },
+    ],
+    form: [
+      { key: 'name', label: 'Name', input: 'text', required: true },
+      { key: 'sku', label: 'SKU', input: 'text' },
+      { key: 'category', label: 'Category', input: 'datalist' },
+      { key: 'unit_price', label: 'Unit price', input: 'number', required: true },
+      { key: 'unit', label: 'Unit', input: 'text' },
+      { key: 'description', label: 'Description', input: 'textarea' },
+    ],
+  },
   assets: {
     slug: 'assets', singular: 'Asset', plural: 'Assets', icon: 'Laptop', type: 'asset',
     fields: [
@@ -131,6 +149,7 @@ export const NAV = [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
     { slug: 'companies', label: 'Companies', icon: 'Building2', href: '/objects/companies' },
     { slug: 'people', label: 'People', icon: 'Users', href: '/objects/people' },
+    { slug: 'products', label: 'Products', icon: 'Package', href: '/objects/products' },
   ]},
   { group: 'Finance', items: [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },

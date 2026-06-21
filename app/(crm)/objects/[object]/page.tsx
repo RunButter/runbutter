@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Loader2 } from 'lucide-react';
+import { Plus, Search, Upload, Download, Loader2 } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord } from '@/lib/crm/data';
+import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
@@ -61,6 +62,12 @@ export default function ObjectPage() {
     setDetail(null);
   };
 
+  const exportCsv = () => {
+    const cols = object.fields;
+    const csv = toCSV(cols.map((c) => c.label), filtered.map((r) => cols.map((c) => r[c.key])));
+    downloadCSV(`${object.slug}-${new Date().toISOString().slice(0, 10)}`, csv);
+  };
+
   return (
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-slate-200/70">
@@ -73,6 +80,8 @@ export default function ObjectPage() {
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
               className="h-7 w-44 pl-7 pr-2 text-[12px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
           </div>
+          <button onClick={exportCsv} disabled={filtered.length === 0}
+            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Download className="w-3.5 h-3.5" /> Export</button>
           <button onClick={() => setImporting(true)} disabled={!canEdit}
             className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Upload className="w-3.5 h-3.5" /> Import</button>
           <button onClick={() => setForm({ id: null, initial: {} })} disabled={!canEdit}

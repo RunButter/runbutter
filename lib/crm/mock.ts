@@ -52,11 +52,18 @@ export const MOCK_ISSUES = [
   { id: 'is6', name: 'Launch on Product Hunt', project: 'Platform Launch', status: 'backlog', priority: 'high', due_date: null, assignee: null },
 ];
 
+export const MOCK_PRODUCTS = [
+  { id: 'pd1', name: 'Consulting hour', sku: 'SVC-HOUR', category: 'Services', unit_price: 150, unit: 'hour' },
+  { id: 'pd2', name: 'Platform seat', sku: 'SEAT-PRO', category: 'Subscription', unit_price: 29, unit: 'seat' },
+  { id: 'pd3', name: 'Onboarding package', sku: 'PKG-ONB', category: 'Services', unit_price: 2500, unit: 'item' },
+];
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
   invoices: MOCK_INVOICES,
   expenses: MOCK_EXPENSES,
+  products: MOCK_PRODUCTS,
   projects: MOCK_PROJECTS,
   issues: MOCK_ISSUES,
   assets: MOCK_ASSETS,
