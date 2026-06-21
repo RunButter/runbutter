@@ -43,10 +43,10 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10"><AsciiField baseAlpha={0.08} peakAlpha={0.7} /></div>
-        {/* whiten the headline area so text stays crisp; let the ASCII gradient
-            show through behind the product window below */}
-        <div className="absolute inset-x-0 top-0 h-[42%] -z-10 bg-gradient-to-b from-white via-white/80 to-transparent" />
+        <div className="absolute inset-0 -z-10"><AsciiField baseAlpha={0.22} peakAlpha={1} /></div>
+        {/* whiten only the headline area so the ASCII gradient stays clearly
+            visible behind the product window below */}
+        <div className="absolute inset-x-0 top-0 h-[38%] -z-10 bg-gradient-to-b from-white via-white/85 to-transparent" />
 
         <div className="max-w-3xl mx-auto px-6 pt-20 pb-10 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white ring-1 ring-slate-200 text-[11px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm">
@@ -71,12 +71,9 @@ export default function HomePage() {
         </div>
 
         {/* interactive product window */}
-        <div id="product" className="max-w-5xl mx-auto px-6 pb-24">
-          <div className="relative">
-            <div className="absolute -inset-5 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-indigo-300/50 via-violet-300/40 to-fuchsia-300/50 blur-3xl" />
-            <ProductPreview />
-          </div>
-          <p className="text-center text-[12px] text-slate-400 mt-4">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
+        <div id="product" className="max-w-6xl mx-auto px-6 pt-2 pb-28">
+          <ProductPreview />
+          <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
         </div>
       </section>
 
