@@ -10,11 +10,12 @@ interface Props {
   privyUserId: string | null;
   recordId?: string | null;       // present = edit mode
   initial?: Record<string, any>;  // prefill for edit
+  suggestions?: Record<string, string[]>; // datalist autocomplete options per field
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function RecordForm({ object, privyUserId, recordId, initial, onClose, onSaved }: Props) {
+export default function RecordForm({ object, privyUserId, recordId, initial, suggestions, onClose, onSaved }: Props) {
   const fields = object.form || [];
   const [values, setValues] = useState<Record<string, any>>(() => {
     const v: Record<string, any> = {};
@@ -73,6 +74,12 @@ export default function RecordForm({ object, privyUserId, recordId, initial, onC
                 ) : f.input === 'textarea' ? (
                   <textarea value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} rows={3}
                     className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                ) : f.input === 'datalist' ? (
+                  <>
+                    <input list={`dl-${f.key}`} value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                      placeholder="Type or pick…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                    <datalist id={`dl-${f.key}`}>{(suggestions?.[f.key] || []).map((o) => <option key={o} value={o} />)}</datalist>
+                  </>
                 ) : (
                   <input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
                     value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}

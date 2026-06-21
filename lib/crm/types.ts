@@ -17,9 +17,9 @@ export interface FieldDef {
 export interface FormField {
   key: string;              // maps to a real table column
   label: string;
-  input: 'text' | 'number' | 'select' | 'date' | 'textarea';
+  input: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'datalist';
   options?: string[];       // for select
-  required?: boolean;
+  required?: boolean;       // datalist = free text + autocomplete suggestions
 }
 
 export interface ObjectDef {

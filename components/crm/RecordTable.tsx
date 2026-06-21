@@ -51,7 +51,7 @@ function Tag({ value }: { value: string }) {
   return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 capitalize ${style}`}>{label}</span>;
 }
 
-function Cell({ field, row }: { field: FieldDef; row: any }) {
+export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
   const v = row[field.key];
   if (v === null || v === undefined || v === '') return <span className="text-slate-300">—</span>;
 
@@ -117,7 +117,7 @@ export default function RecordTable({ object, rows, onRowClick }: { object: Obje
               </td>
               {object.fields.map((f) => (
                 <td key={f.key} className={`px-3 h-[42px] border-b border-slate-100 ${f.align === 'right' ? 'text-right' : ''}`}>
-                  <Cell field={f} row={r} />
+                  <FieldValue field={f} row={r} />
                 </td>
               ))}
             </tr>
