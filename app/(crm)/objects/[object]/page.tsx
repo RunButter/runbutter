@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, Loader2 } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
@@ -14,6 +14,7 @@ import ImportModal from '@/components/crm/ImportModal';
 
 export default function ObjectPage() {
   const params = useParams();
+  const router = useRouter();
   const slug = String(params.object);
   const object = OBJECTS[slug];
 
@@ -94,7 +95,7 @@ export default function ObjectPage() {
         {loading ? (
           <div className="h-full flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
-          <RecordTable object={object} rows={filtered} onRowClick={(r) => setDetail(r)} />
+          <RecordTable object={object} rows={filtered} onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))} />
         )}
       </div>
 

@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -117,6 +117,25 @@ export async function loadIssueBoard(privyUserId: string | null): Promise<BoardR
     person: { id: r.id, name: r.name || r.title, title: r.assignee || undefined },
   }));
   return { stages: ISSUE_STAGES, records, live };
+}
+
+// One project's dashboard: the project + its issues mapped onto the issue board.
+export async function loadProject(privyUserId: string | null, projectId: string): Promise<{ project: any; stages: PipelineStage[]; records: PipelineRecord[]; live: boolean }> {
+  const toRecords = (issues: any[]): PipelineRecord[] => issues.map((r: any) => ({
+    id: r.id, stage_id: r.status, title: r.title || r.name, status: 'active', position: 0,
+    person: { id: r.id, name: r.title || r.name, title: r.assignee || undefined },
+  }));
+  const mock = () => ({ project: MOCK_PROJECTS.find((x) => x.id === projectId) || MOCK_PROJECTS[0], stages: ISSUE_STAGES, records: toRecords(MOCK_ISSUES), live: false });
+  if (!privyUserId) return mock();
+  try {
+    await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+    const { data, error } = await supabase.rpc('get_project', { p_privy: privyUserId, p_project: projectId });
+    if (error || !data) return mock();
+    const d = data as any;
+    return { project: d.project || {}, stages: ISSUE_STAGES, records: toRecords(d.issues || []), live: true };
+  } catch {
+    return mock();
+  }
 }
 
 export async function loadBoard(privyUserId: string | null, slug: string, kind: PipelineKind): Promise<BoardResult> {
