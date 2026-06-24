@@ -18,6 +18,25 @@ async function resolveWorkspace(privyUserId: string): Promise<string | null> {
   return (data as any).id ?? null;
 }
 
+export interface WorkspaceContext { id: string; name: string; role: string }
+export async function getWorkspace(privyUserId: string): Promise<WorkspaceContext | null> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('get_my_workspace', { p_privy: privyUserId });
+  if (error || !data) return null;
+  const d = data as any;
+  return { id: d.id, name: d.name, role: d.role || 'member' };
+}
+
+export async function getMembers(privyUserId: string, workspaceId: string): Promise<any[]> {
+  const { data, error } = await supabase.rpc('get_members', { p_privy: privyUserId, p_workspace: workspaceId });
+  return error || !Array.isArray(data) ? [] : data;
+}
+
+export async function setMemberRole(privyUserId: string, workspaceId: string, accountId: string, role: string): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('set_member_role', { p_privy: privyUserId, p_workspace: workspaceId, p_account: accountId, p_role: role });
+  return error ? { error: error.message } : {};
+}
+
 export async function loadRecords(privyUserId: string | null, object: string): Promise<RecordsResult> {
   const fallback: RecordsResult = { rows: MOCK_OBJECT_ROWS[object] || [], live: false };
   if (!privyUserId) return fallback;

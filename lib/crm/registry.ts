@@ -172,6 +172,7 @@ export const NAV = [
   ]},
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
+    { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
     { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
   ]},

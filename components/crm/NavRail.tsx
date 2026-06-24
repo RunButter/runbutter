@@ -6,14 +6,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package,
+  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
   Search, ChevronsUpDown, ChevronRight, LogOut,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package,
+  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
 };
 
 function Item({ it, active, onNavigate }: { it: any; active: boolean; onNavigate?: () => void }) {
