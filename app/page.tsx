@@ -3,6 +3,7 @@ import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles } from
 import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
+import Showcase from '@/components/landing/Showcase';
 
 const FEATURES = [
   'Drag-and-drop boards', 'Spreadsheet-style tables', 'Create, edit & delete',
@@ -18,10 +19,10 @@ const PILLARS = [
 ];
 
 const PLANS = [
-  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace', 'Up to 25 records / object', 'Sales, Projects & HR core'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
-  { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', 'Up to 250 candidates', 'Talent Treasury & resume search', 'Custom branding'], cta: 'Get started', href: '/auth/register?plan=starter', highlight: true },
-  { name: 'Professional', price: '$299', sub: 'per month', features: ['Up to 2,500 candidates', 'Interviews & My Team', 'Advanced analytics & GDPR', 'Data import & export'], cta: 'Get started', href: '/auth/register?plan=professional', highlight: false },
-  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Unlimited everything', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
+  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'Sales · Finance · Projects · HR core', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
+  { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', '3 seats · 250 records / object', 'Custom branding', 'Resume search & Talent Treasury'], cta: 'Get started', href: '/auth/register?plan=starter', highlight: true },
+  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR controls'], cta: 'Get started', href: '/auth/register?plan=professional', highlight: false },
+  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Professional', 'Unlimited seats & records', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
 export default function HomePage() {
@@ -77,6 +78,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Works-with strip */}
+      <section className="border-t border-slate-100">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">Replaces a stack of tools · works with the ones you keep</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-400">
+            {['Stripe', 'Google Calendar', 'Slack', 'Resend', 'CSV / Sheets', 'Zapier'].map((n) => (
+              <span key={n} className="hover:text-slate-600 transition">{n}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pillars */}
       <section className="border-t border-slate-100 bg-slate-50/40">
         <div className="max-w-6xl mx-auto px-6 py-20">
@@ -100,6 +113,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Feature deep-dives */}
+      <Showcase />
+
       {/* Pricing */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
         <h2 className="text-3xl font-black tracking-tight text-center">Simple, transparent pricing</h2>
@@ -120,10 +136,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="max-w-3xl mx-auto px-6 py-20">
+        <h2 className="text-3xl font-black tracking-tight text-center">Questions, answered</h2>
+        <p className="text-center text-slate-500 mt-2 mb-10">Everything you need to know before you start.</p>
+        <div className="space-y-3">
+          {[
+            { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, projects, and recruiting share one relational core — a company, a person, a deal, and an invoice are all connected records, not separate apps you have to glue together.' },
+            { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres — search, matching, and reporting run in the database. There is no per-token AI bill, so your cost stays flat as you grow.' },
+            { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click — your data is always yours.' },
+            { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions, and GDPR controls (consent logging, anonymization) are built in on higher plans.' },
+            { q: 'Can I start free and upgrade later?', a: 'Yes — start on the free plan with no credit card. Upgrade the moment you need more records, seats, or modules, and downgrade anytime.' },
+          ].map((f) => (
+            <details key={f.q} className="group rounded-xl bg-white ring-1 ring-slate-200/70 px-5 py-4 [&_summary]:cursor-pointer">
+              <summary className="flex items-center justify-between gap-4 list-none font-semibold text-slate-800 text-[15px]">
+                {f.q}
+                <span className="text-slate-300 text-xl leading-none transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-[14px] text-slate-600 leading-relaxed">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-16 text-center text-white">
-          <div className="absolute inset-0 -z-0 opacity-40"><AsciiField color="129,140,248" /></div>
+          <div className="absolute inset-0 -z-0 opacity-40"><AsciiField colors={['129,140,248', '167,139,250']} baseAlpha={0.06} peakAlpha={0.5} /></div>
           <div className="relative">
             <h2 className="text-4xl font-black tracking-tight">Your company, organized.</h2>
             <p className="mt-3 text-white/70 max-w-xl mx-auto">One workspace for sales, finance, projects, and people. Set it up in minutes.</p>
