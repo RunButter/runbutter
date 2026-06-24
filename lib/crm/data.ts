@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -111,6 +111,56 @@ export async function loadFinance(privyUserId: string | null): Promise<FinanceRe
     return { revenue: +d.revenue || 0, outstanding: +d.outstanding || 0, expenses: +d.expenses || 0, invoices: +d.invoices || 0, live: true };
   } catch {
     return fallback;
+  }
+}
+
+// ── Finance analytics (dashboard) ─────────────────────────────────────────────
+export interface FinanceSeriesPoint { month: string; label: string; revenue: number; costs: number }
+export interface FinanceAnalytics {
+  revenue: number; costs: number; net: number; outstanding: number; margin: number;
+  series: FinanceSeriesPoint[]; live: boolean;
+}
+
+export async function loadFinanceAnalytics(privyUserId: string | null, months: number): Promise<FinanceAnalytics> {
+  const fallback = (): FinanceAnalytics => ({ ...mockFinanceAnalytics(months), live: false });
+  if (!privyUserId) return fallback();
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return fallback();
+    const { data, error } = await supabase.rpc('get_finance_analytics', { p_privy: privyUserId, p_workspace: ws, p_months: months });
+    if (error || !data) return fallback();
+    const d = data as any;
+    return {
+      revenue: +d.revenue || 0,
+      costs: +d.costs || 0,
+      net: +d.net || 0,
+      outstanding: +d.outstanding || 0,
+      margin: +d.margin || 0,
+      series: Array.isArray(d.series)
+        ? d.series.map((p: any) => ({ month: p.month, label: p.label, revenue: +p.revenue || 0, costs: +p.costs || 0 }))
+        : [],
+      live: true,
+    };
+  } catch {
+    return fallback();
+  }
+}
+
+// ── Roadmap (Gantt-lite timeline over projects + issue due dates) ─────────────
+export interface RoadmapIssue { id: string; title: string; status: string; priority: string; due_date: string | null }
+export interface RoadmapProject { id: string; name: string; identifier: string | null; status: string; issues: RoadmapIssue[] }
+
+export async function loadRoadmap(privyUserId: string | null): Promise<{ projects: RoadmapProject[]; live: boolean }> {
+  const fallback = () => ({ projects: mockRoadmap() as RoadmapProject[], live: false });
+  if (!privyUserId) return fallback();
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return fallback();
+    const { data, error } = await supabase.rpc('get_roadmap', { p_privy: privyUserId, p_workspace: ws });
+    if (error || !Array.isArray(data)) return fallback();
+    return { projects: data as RoadmapProject[], live: true };
+  } catch {
+    return fallback();
   }
 }
 

@@ -38,6 +38,31 @@ export const MOCK_EXPENSES = [
 
 export const MOCK_FINANCE = { revenue: 24000, outstanding: 48000, expenses: 53600, invoices: 3 };
 
+// Deterministic sample analytics (no Math.random — stable across renders) so the
+// Finance dashboard looks alive before the get_finance_analytics RPC is wired.
+export interface MockFinanceSeriesPoint { month: string; label: string; revenue: number; costs: number }
+export function mockFinanceAnalytics(months: number) {
+  const n = Math.max(1, Math.min(months, 36));
+  const now = new Date();
+  const series: MockFinanceSeriesPoint[] = [];
+  let revenue = 0, costs = 0;
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const trend = (n - i) * 1300;                          // gentle growth over time
+    const wobble = Math.round(Math.sin(i * 1.1) * 5200);   // seasonal-ish wobble
+    const r = Math.max(7000, 17000 + trend + wobble);
+    const c = Math.round(r * (0.52 + ((i % 5) * 0.05)));   // costs 52–72% of revenue
+    revenue += r; costs += c;
+    series.push({
+      month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleString('en', { month: 'short' }),
+      revenue: r, costs: c,
+    });
+  }
+  const net = revenue - costs;
+  return { revenue, costs, net, outstanding: 48000, margin: revenue > 0 ? Math.round((net / revenue) * 100) : 0, series };
+}
+
 export const MOCK_PROJECTS = [
   { id: 'pr1', name: 'Platform Launch', identifier: 'LAUNCH', status: 'active', issues: 6 },
   { id: 'pr2', name: 'Mobile App', identifier: 'MOBILE', status: 'paused', issues: 3 },
@@ -51,6 +76,30 @@ export const MOCK_ISSUES = [
   { id: 'is5', name: 'Run customer interviews', project: 'Platform Launch', status: 'todo', priority: 'medium', due_date: '2026-06-25', assignee: 'Lena F.' },
   { id: 'is6', name: 'Launch on Product Hunt', project: 'Platform Launch', status: 'backlog', priority: 'high', due_date: null, assignee: null },
 ];
+
+// Roadmap demo data: projects with dated issues so the timeline looks alive in
+// Sample mode. Spans ~3 months so the Gantt-lite has something to lay out.
+export interface MockRoadmapIssue { id: string; title: string; status: string; priority: string; due_date: string | null }
+export interface MockRoadmapProject { id: string; name: string; identifier: string; status: string; issues: MockRoadmapIssue[] }
+export const MOCK_ROADMAP: MockRoadmapProject[] = [
+  { id: 'pr1', name: 'Platform Launch', identifier: 'LAUNCH', status: 'active', issues: [
+    { id: 'is3', title: 'Set up CI/CD pipeline', status: 'done', priority: 'medium', due_date: '2026-06-18' },
+    { id: 'is1', title: 'Design landing page', status: 'in_progress', priority: 'high', due_date: '2026-06-28' },
+    { id: 'is2', title: 'Wire Stripe billing', status: 'todo', priority: 'urgent', due_date: '2026-07-10' },
+    { id: 'is6', title: 'Launch on Product Hunt', status: 'backlog', priority: 'high', due_date: '2026-07-28' },
+  ]},
+  { id: 'pr3', name: 'Q3 Marketing Site', identifier: 'MKT', status: 'active', issues: [
+    { id: 'k1', title: 'Rewrite pricing page', status: 'in_progress', priority: 'high', due_date: '2026-07-02' },
+    { id: 'k2', title: 'Customer case studies', status: 'todo', priority: 'medium', due_date: '2026-08-01' },
+    { id: 'k3', title: 'SEO content pass', status: 'backlog', priority: 'low', due_date: null },
+  ]},
+  { id: 'pr2', name: 'Mobile App', identifier: 'MOBILE', status: 'paused', issues: [
+    { id: 'm1', title: 'React Native shell', status: 'todo', priority: 'medium', due_date: '2026-07-15' },
+    { id: 'm2', title: 'Push notifications', status: 'backlog', priority: 'low', due_date: '2026-08-20' },
+    { id: 'm3', title: 'App Store submission', status: 'backlog', priority: 'high', due_date: '2026-09-05' },
+  ]},
+];
+export function mockRoadmap() { return MOCK_ROADMAP; }
 
 export const MOCK_PRODUCTS = [
   { id: 'pd1', name: 'Consulting hour', sku: 'SVC-HOUR', category: 'Services', unit_price: 150, unit: 'hour' },

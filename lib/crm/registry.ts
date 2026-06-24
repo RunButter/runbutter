@@ -168,6 +168,7 @@ export const NAV = [
   { group: 'Projects', items: [
     { slug: 'projects', label: 'Projects', icon: 'FolderKanban', href: '/objects/projects' },
     { slug: 'issues', label: 'Issues', icon: 'ListTodo', href: '/objects/issues' },
+    { slug: 'roadmap', label: 'Roadmap', icon: 'GanttChartSquare', href: '/projects/roadmap' },
     { slug: 'board', label: 'Board', icon: 'Columns3', href: '/projects/board' },
   ]},
   { group: 'Team', items: [
