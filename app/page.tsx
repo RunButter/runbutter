@@ -44,7 +44,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 z-0"><AsciiField baseAlpha={0.3} peakAlpha={1} /></div>
+        <div className="absolute inset-0 z-0"><AsciiField baseAlpha={0.28} peakAlpha={1} /></div>
         {/* whiten only the headline area so the ASCII gradient stays clearly
             visible behind the product window below */}
         <div className="absolute inset-x-0 top-0 h-[38%] z-[1] bg-gradient-to-b from-white via-white/85 to-transparent" />
@@ -162,7 +162,7 @@ export default function HomePage() {
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-16 text-center text-white">
-          <div className="absolute inset-0 -z-0 opacity-40"><AsciiField colors={['129,140,248', '167,139,250']} baseAlpha={0.06} peakAlpha={0.5} /></div>
+          <div className="absolute inset-0 -z-0 opacity-60"><AsciiField colors={['129,140,248', '167,139,250', '217,70,239', '56,189,248']} baseAlpha={0.08} peakAlpha={0.7} /></div>
           <div className="relative">
             <h2 className="text-4xl font-black tracking-tight">Your company, organized.</h2>
             <p className="mt-3 text-white/70 max-w-xl mx-auto">One workspace for sales, finance, projects, and people. Set it up in minutes.</p>
