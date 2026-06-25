@@ -18,6 +18,9 @@ const TAG_STYLE: Record<string, string> = {
   monitor: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
   phone: 'bg-pink-50 text-pink-700 ring-pink-200/60',
   license: 'bg-indigo-50 text-indigo-700 ring-indigo-200/60',
+  // invoice direction
+  income: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  cost: 'bg-rose-50 text-rose-700 ring-rose-200/60',
   // finance statuses
   paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',

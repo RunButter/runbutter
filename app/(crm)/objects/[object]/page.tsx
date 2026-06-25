@@ -11,6 +11,7 @@ import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
 import ImportModal from '@/components/crm/ImportModal';
+import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
 
 export default function ObjectPage() {
   const params = useParams();
@@ -29,6 +30,7 @@ export default function ObjectPage() {
   const [form, setForm] = useState<{ id: string | null; initial: any } | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [importing, setImporting] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
   const reload = useCallback(() => {
     if (!object) return;
@@ -37,13 +39,29 @@ export default function ObjectPage() {
   }, [object, privy, slug]);
 
   useEffect(() => { if (object && ready) reload(); }, [object, ready, reload]);
+  useEffect(() => { setFilters(EMPTY_FILTERS); setQuery(''); }, [slug]); // reset when switching objects
 
-  // Client-side search across every field value (name, status, cost, dates, …).
+  const dateKey = useMemo(() => object?.fields.find((f) => f.type === 'date')?.key, [object]);
+
+  // Client-side facets + date range + free-text search.
   const filtered = useMemo(() => {
+    let out = rows;
+    const fac = filters.facets;
+    const facKeys = Object.keys(fac).filter((k) => fac[k]);
+    if (facKeys.length) out = out.filter((r) => facKeys.every((k) => String(r[k] ?? '') === fac[k]));
+    if (dateKey && (filters.from || filters.to)) {
+      out = out.filter((r) => {
+        const d = r[dateKey]; if (!d) return false;
+        const ds = String(d).slice(0, 10);
+        if (filters.from && ds < filters.from) return false;
+        if (filters.to && ds > filters.to) return false;
+        return true;
+      });
+    }
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => Object.values(r).some((v) => String(v ?? '').toLowerCase().includes(q)));
-  }, [rows, query]);
+    if (q) out = out.filter((r) => Object.values(r).some((v) => String(v ?? '').toLowerCase().includes(q)));
+    return out;
+  }, [rows, query, filters, dateKey]);
 
   // Autocomplete suggestions for datalist fields (e.g. custom invoice categories).
   const suggestions = useMemo(() => {
@@ -90,6 +108,8 @@ export default function ObjectPage() {
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"><Plus className="w-3.5 h-3.5" /> New</button>
         </div>
       </header>
+
+      <FilterBar object={object} rows={rows} value={filters} onChange={setFilters} />
 
       <div className="flex-1 overflow-auto">
         {loading ? (

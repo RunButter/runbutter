@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Loader2, Trash2 } from 'lucide-react';
 import type { ObjectDef } from '@/lib/crm/types';
-import { createRecord, updateRecord, deleteRecord } from '@/lib/crm/data';
+import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm/data';
 
 interface Props {
   object: ObjectDef;
@@ -24,9 +24,24 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const editing = !!recordId;
 
   const set = (k: string, val: any) => setValues((s) => ({ ...s, [k]: val }));
+
+  // Load options for any relation fields (e.g. invoice → company picker).
+  useEffect(() => {
+    const relFields = fields.filter((f) => f.input === 'relation' && f.optionsObject);
+    if (relFields.length === 0) return;
+    let cancelled = false;
+    Promise.all(relFields.map(async (f) => {
+      const res = await loadRecords(privyUserId, f.optionsObject!);
+      const opts = res.rows.map((r: any) => ({ id: r.id, name: r.name || r.title || r.number || '—' }));
+      return [f.key, opts] as const;
+    })).then((pairs) => { if (!cancelled) setRelOptions(Object.fromEntries(pairs)); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const save = async () => {
     if (!privyUserId) { setError('Sign in to save records.'); return; }
@@ -65,7 +80,13 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
             {fields.map((f) => (
               <label key={f.key} className={`block ${f.input === 'textarea' ? 'sm:col-span-2' : ''}`}>
                 <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>
-                {f.input === 'select' ? (
+                {f.input === 'relation' ? (
+                  <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
+                    <option value="">{relOptions[f.key] ? '— none —' : 'Loading…'}</option>
+                    {(relOptions[f.key] || []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                  </select>
+                ) : f.input === 'select' ? (
                   <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
                     className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none capitalize">
                     <option value="">—</option>

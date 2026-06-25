@@ -25,9 +25,10 @@ export const MOCK_ASSETS: Asset[] = [
 ];
 
 export const MOCK_INVOICES = [
-  { id: 'i1', number: 'INV-1001', company: 'Northwind Labs', amount: 24000, status: 'paid', due_at: '2026-06-01' },
-  { id: 'i2', number: 'INV-1002', company: 'Lumen Devtools', amount: 12000, status: 'sent', due_at: '2026-06-20' },
-  { id: 'i3', number: 'INV-1003', company: 'Vertex Finance', amount: 36000, status: 'overdue', due_at: '2026-05-28' },
+  { id: 'i1', number: 'INV-1001', company: 'Northwind Labs', direction: 'income', category: 'Services', amount: 24000, status: 'paid', due_at: '2026-06-01' },
+  { id: 'i2', number: 'INV-1002', company: 'Lumen Devtools', direction: 'income', category: 'Subscription', amount: 12000, status: 'sent', due_at: '2026-06-20' },
+  { id: 'i3', number: 'INV-1003', company: 'Vertex Finance', direction: 'income', category: 'Services', amount: 36000, status: 'overdue', due_at: '2026-05-28' },
+  { id: 'i4', number: 'BILL-2001', company: 'AWS', direction: 'cost', category: 'Software', amount: 4200, status: 'paid', due_at: '2026-06-12' },
 ];
 
 export const MOCK_EXPENSES = [
