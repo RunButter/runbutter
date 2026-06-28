@@ -10,9 +10,10 @@ interface Props {
   canEdit?: boolean;
   onEdit: () => void;
   onClose: () => void;
+  extraActions?: React.ReactNode;   // object-specific buttons (e.g. invoice → document)
 }
 
-export default function RecordDetail({ object, row, canEdit, onEdit, onClose }: Props) {
+export default function RecordDetail({ object, row, canEdit, onEdit, onClose, extraActions }: Props) {
   const primary = object.fields.find((f) => f.primary) || object.fields[0];
   const rest = object.fields.filter((f) => f !== primary);
 
@@ -22,6 +23,7 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose }: 
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{object.singular}</h2>
           <div className="flex items-center gap-1">
+            {extraActions}
             {canEdit && (
               <button onClick={onEdit} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-slate-600 hover:bg-slate-100"><Pencil className="w-3.5 h-3.5" /> Edit</button>
             )}

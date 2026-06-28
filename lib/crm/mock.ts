@@ -31,6 +31,26 @@ export const MOCK_INVOICES = [
   { id: 'i4', number: 'BILL-2001', company: 'AWS', direction: 'cost', category: 'Software', amount: 4200, status: 'paid', due_at: '2026-06-12' },
 ];
 
+// A fully-populated invoice/offer document for the printable PDF view (sample mode).
+export function mockInvoiceDocument(id: string) {
+  const isOffer = id.includes('offer');
+  return {
+    id, number: isOffer ? 'OFF-1042' : 'INV-1001', kind: isOffer ? 'offer' : 'invoice',
+    direction: 'income', status: 'sent', currency: 'USD',
+    category: 'Services', issued_at: '2026-06-01', due_at: '2026-06-15', amount: 4150,
+    notes: isOffer
+      ? 'This proposal is valid for 30 days. We look forward to working together.'
+      : 'Thank you for your business. Payment is due within 14 days via bank transfer.',
+    seller: { name: 'HireBTR Inc.' },
+    buyer: { name: 'Northwind Labs', domain: 'northwind.io', industry: 'SaaS' },
+    items: [
+      { description: 'Consulting hour', product: 'Consulting hour', quantity: 20, unit_price: 150, line_total: 3000 },
+      { description: 'Platform seat', product: 'Platform seat', quantity: 10, unit_price: 29, line_total: 290 },
+      { description: 'Onboarding package', product: 'Onboarding package', quantity: 1, unit_price: 860, line_total: 860 },
+    ],
+  };
+}
+
 export const MOCK_EXPENSES = [
   { id: 'e1', vendor: 'AWS', category: 'software', amount: 2400, status: 'paid', spent_at: '2026-06-10' },
   { id: 'e2', vendor: 'WeWork', category: 'office', amount: 3200, status: 'approved', spent_at: '2026-06-03' },

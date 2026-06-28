@@ -21,6 +21,9 @@ const TAG_STYLE: Record<string, string> = {
   // invoice direction
   income: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   cost: 'bg-rose-50 text-rose-700 ring-rose-200/60',
+  // document kind
+  invoice: 'bg-slate-100 text-slate-600 ring-slate-200/60',
+  offer: 'bg-violet-50 text-violet-700 ring-violet-200/60',
   // finance statuses
   paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',

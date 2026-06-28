@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Download, Loader2 } from 'lucide-react';
+import { Plus, Search, Upload, Download, Loader2, FileText } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
@@ -120,7 +120,11 @@ export default function ObjectPage() {
       </div>
 
       {detail && (
-        <RecordDetail object={object} row={detail} canEdit={canEdit} onEdit={openEditFromDetail} onClose={() => setDetail(null)} />
+        <RecordDetail object={object} row={detail} canEdit={canEdit} onEdit={openEditFromDetail} onClose={() => setDetail(null)}
+          extraActions={slug === 'invoices' ? (
+            <button onClick={() => router.push(`/documents/${detail.id}`)}
+              className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50"><FileText className="w-3.5 h-3.5" /> Document</button>
+          ) : undefined} />
       )}
       {form && (
         <RecordForm object={object} privyUserId={privy} recordId={form.id} initial={form.initial} suggestions={suggestions}

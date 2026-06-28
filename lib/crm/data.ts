@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -205,6 +205,48 @@ export async function loadProject(privyUserId: string | null, projectId: string)
   } catch {
     return mock();
   }
+}
+
+// ── Invoice/offer documents (line items + printable PDF) ──────────────────────
+export interface InvoiceLineItem { description: string; product?: string | null; product_id?: string | null; quantity: number; unit_price: number; line_total: number }
+export interface InvoiceDocument {
+  id: string; number: string | null; kind: string; direction: string; status: string;
+  currency: string; amount: number; category?: string | null;
+  issued_at: string | null; due_at: string | null; notes: string | null;
+  seller: { name: string }; buyer: { name: string; domain?: string; industry?: string } | null;
+  items: InvoiceLineItem[]; live: boolean;
+}
+
+export async function loadInvoiceDocument(privyUserId: string | null, id: string): Promise<InvoiceDocument> {
+  const fallback = (): InvoiceDocument => ({ ...(mockInvoiceDocument(id) as any), live: false });
+  if (!privyUserId) return fallback();
+  try {
+    await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+    const { data, error } = await supabase.rpc('get_invoice_document', { p_privy: privyUserId, p_id: id });
+    if (error || !data) return fallback();
+    const d = data as any;
+    return {
+      id: d.id, number: d.number, kind: d.kind || 'invoice', direction: d.direction || 'income',
+      status: d.status, currency: d.currency || 'USD', amount: +d.amount || 0, category: d.category,
+      issued_at: d.issued_at, due_at: d.due_at, notes: d.notes,
+      seller: d.seller || { name: 'Your company' },
+      buyer: d.buyer || null,
+      items: Array.isArray(d.items)
+        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, line_total: +it.line_total || 0 }))
+        : [],
+      live: true,
+    };
+  } catch {
+    return fallback();
+  }
+}
+
+export interface ItemInput { product_id?: string; description?: string; quantity: number; unit_price: number }
+export async function saveInvoiceItems(privyUserId: string, invoiceId: string, items: ItemInput[]): Promise<{ total?: number; error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
+  if (error) return { error: error.message };
+  return { total: +(data as any) || 0 };
 }
 
 export async function loadBoard(privyUserId: string | null, slug: string, kind: PipelineKind): Promise<BoardResult> {

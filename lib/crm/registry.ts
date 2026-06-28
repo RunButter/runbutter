@@ -41,7 +41,8 @@ export const OBJECTS: Record<string, ObjectDef> = {
     slug: 'invoices', singular: 'Invoice', plural: 'Invoices', icon: 'Receipt', type: 'asset',
     fields: [
       { key: 'number', label: 'Invoice', type: 'avatar', primary: true, width: 150 },
-      { key: 'company', label: 'Account', type: 'relation', width: 170 },
+      { key: 'company', label: 'Account', type: 'relation', width: 160 },
+      { key: 'kind', label: 'Doc', type: 'tags', width: 90 },
       { key: 'direction', label: 'Type', type: 'tags', width: 100 },
       { key: 'category', label: 'Category', type: 'tags', width: 130 },
       { key: 'amount', label: 'Amount', type: 'currency', align: 'right', width: 120 },
@@ -51,6 +52,7 @@ export const OBJECTS: Record<string, ObjectDef> = {
     form: [
       { key: 'number', label: 'Invoice #', input: 'text', required: true },
       { key: 'organization_id', label: 'Company', input: 'relation', optionsObject: 'companies' },
+      { key: 'kind', label: 'Document', input: 'select', options: ['invoice', 'offer'] },
       { key: 'direction', label: 'Type', input: 'select', options: ['income', 'cost'] },
       { key: 'amount', label: 'Amount', input: 'number', required: true },
       { key: 'category', label: 'Category', input: 'datalist' },
@@ -177,6 +179,7 @@ export const NAV = [
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
+    { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
     { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
   ]},
