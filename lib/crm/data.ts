@@ -213,8 +213,25 @@ export interface InvoiceDocument {
   id: string; number: string | null; kind: string; direction: string; status: string;
   currency: string; amount: number; category?: string | null;
   issued_at: string | null; due_at: string | null; notes: string | null;
-  seller: { name: string }; buyer: { name: string; domain?: string; industry?: string } | null;
+  seller: { name: string; logo_url?: string | null; accent_color?: string; address?: string | null; footer?: string | null };
+  buyer: { name: string; domain?: string; industry?: string } | null;
   items: InvoiceLineItem[]; live: boolean;
+}
+
+// ── Workspace branding (logo, accent, footer for documents) ───────────────────
+export interface WorkspaceBranding {
+  name: string; logo_url: string | null; legal_name: string | null;
+  address: string | null; accent_color: string; invoice_footer: string | null;
+}
+export async function loadBranding(privyUserId: string, workspaceId: string): Promise<WorkspaceBranding | null> {
+  const { data, error } = await supabase.rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
+  if (error || !data) return null;
+  const d = data as any;
+  return { name: d.name, logo_url: d.logo_url, legal_name: d.legal_name, address: d.address, accent_color: d.accent_color || '#6366F1', invoice_footer: d.invoice_footer };
+}
+export async function saveBranding(privyUserId: string, workspaceId: string, data: Partial<WorkspaceBranding>): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('save_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId, p_data: data });
+  return error ? { error: error.message } : {};
 }
 
 export async function loadInvoiceDocument(privyUserId: string | null, id: string): Promise<InvoiceDocument> {

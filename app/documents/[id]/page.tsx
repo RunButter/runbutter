@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Pencil, Loader2 } from 'lucide-react';
+import { ArrowLeft, Printer, Pencil, Send, Loader2 } from 'lucide-react';
 import { loadInvoiceDocument, type InvoiceDocument } from '@/lib/crm/data';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
+import SendDocumentModal from '@/components/crm/SendDocumentModal';
 
 const fmt = (n: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n || 0);
@@ -29,6 +30,7 @@ export default function DocumentPage() {
 
   const [doc, setDoc] = useState<InvoiceDocument | null>(null);
   const [editing, setEditing] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   const reload = useCallback(() => { loadInvoiceDocument(privy, id).then(setDoc); }, [privy, id]);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
@@ -39,6 +41,7 @@ export default function DocumentPage() {
 
   const isOffer = doc.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';
+  const accent = doc.seller?.accent_color || '#6366F1';
   const subtotal = doc.items.reduce((s, it) => s + (it.line_total || 0), 0);
   const total = doc.items.length ? subtotal : doc.amount; // fall back to header amount if no line items
 
@@ -54,6 +57,8 @@ export default function DocumentPage() {
           <div className="ml-auto flex items-center gap-2">
             <button onClick={() => setEditing(true)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
               className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Line items</button>
+            <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
+              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
             <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-slate-900 hover:bg-slate-800"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
           </div>
         </div>
@@ -61,14 +66,18 @@ export default function DocumentPage() {
 
       {/* Document sheet */}
       <div className="max-w-3xl mx-auto p-4 sm:p-8">
-        <div className="doc-sheet bg-white rounded-xl ring-1 ring-slate-200 shadow-sm p-8 sm:p-12">
+        <div className="doc-sheet bg-white rounded-xl ring-1 ring-slate-200 shadow-sm p-8 sm:p-12" style={{ borderTop: `4px solid ${accent}` }}>
           {/* Header */}
           <div className="flex items-start justify-between gap-6 pb-8 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-indigo-600 to-fuchsia-500" />
+              {doc.seller?.logo_url ? (
+                <img src={doc.seller.logo_url} alt="" className="w-11 h-11 rounded-lg object-contain" />
+              ) : (
+                <div className="w-11 h-11 rounded-lg" style={{ background: accent }} />
+              )}
               <div>
                 <div className="text-lg font-black tracking-tight text-slate-900">{doc.seller?.name || 'Your company'}</div>
-                <div className="text-[12px] text-slate-400">hirebtr.com</div>
+                <div className="text-[12px] text-slate-400 whitespace-pre-line">{doc.seller?.address || 'hirebtr.com'}</div>
               </div>
             </div>
             <div className="text-right">
@@ -124,7 +133,7 @@ export default function DocumentPage() {
           <div className="flex justify-end pt-5">
             <div className="w-full sm:w-64 space-y-1.5">
               <div className="flex justify-between text-[13px] text-slate-500"><span>Subtotal</span><span className="tabular-nums">{fmt(total, doc.currency)}</span></div>
-              <div className="flex justify-between text-[15px] font-black text-slate-900 pt-2 border-t border-slate-200"><span>{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums">{fmt(total, doc.currency)}</span></div>
+              <div className="flex justify-between text-[15px] font-black pt-2 border-t border-slate-200"><span className="text-slate-900">{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(total, doc.currency)}</span></div>
             </div>
           </div>
 
@@ -136,7 +145,11 @@ export default function DocumentPage() {
             </div>
           )}
 
-          <div className="mt-10 pt-6 border-t border-slate-100 text-center text-[11px] text-slate-400">
+          {doc.seller?.footer && (
+            <div className="mt-8 pt-6 border-t border-slate-100 text-[12px] text-slate-500 leading-relaxed whitespace-pre-line">{doc.seller.footer}</div>
+          )}
+
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center text-[11px] text-slate-400">
             {isOffer ? 'This offer is valid until the date above.' : 'Thank you for your business.'} · Generated by hirebtr.com
           </div>
         </div>
@@ -144,6 +157,9 @@ export default function DocumentPage() {
 
       {editing && privy && (
         <InvoiceItemsModal privyUserId={privy} invoiceId={id} initialItems={doc.items} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); reload(); }} />
+      )}
+      {sendOpen && privy && (
+        <SendDocumentModal privyUserId={privy} invoiceId={id} kind={doc.kind} onClose={() => setSendOpen(false)} onSent={() => { setSendOpen(false); reload(); }} />
       )}
     </div>
   );

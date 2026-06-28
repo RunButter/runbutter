@@ -41,7 +41,12 @@ export function mockInvoiceDocument(id: string) {
     notes: isOffer
       ? 'This proposal is valid for 30 days. We look forward to working together.'
       : 'Thank you for your business. Payment is due within 14 days via bank transfer.',
-    seller: { name: 'HireBTR Inc.' },
+    seller: {
+      name: 'HireBTR Inc.', accent_color: '#6366F1',
+      address: '500 Howard St, San Francisco, CA 94105',
+      footer: 'Payment within 14 days · ACME Bank · IBAN GB00 0000 0000 0000',
+      logo_url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' rx='16' fill='%236366F1'/><text x='40' y='54' font-size='42' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='bold'>H</text></svg>",
+    },
     buyer: { name: 'Northwind Labs', domain: 'northwind.io', industry: 'SaaS' },
     items: [
       { description: 'Consulting hour', product: 'Consulting hour', quantity: 20, unit_price: 150, line_total: 3000 },
