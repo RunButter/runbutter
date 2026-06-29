@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Pencil, Send, Loader2 } from 'lucide-react';
-import { loadInvoiceDocument, type InvoiceDocument } from '@/lib/crm/data';
+import { ArrowLeft, Printer, Pencil, Send, Check, Loader2 } from 'lucide-react';
+import { loadInvoiceDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 
@@ -31,9 +31,19 @@ export default function DocumentPage() {
   const [doc, setDoc] = useState<InvoiceDocument | null>(null);
   const [editing, setEditing] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   const reload = useCallback(() => { loadInvoiceDocument(privy, id).then(setDoc); }, [privy, id]);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
+
+  const acceptOffer = async () => {
+    if (!privy) return;
+    setConverting(true);
+    const res = await convertOffer(privy, id);
+    setConverting(false);
+    if (res.error) { alert(res.error); return; }
+    if (res.id) router.push(`/documents/${res.id}`);
+  };
 
   if (!doc) {
     return <div className="min-h-screen flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>;
@@ -56,6 +66,12 @@ export default function DocumentPage() {
           <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100"><ArrowLeft className="w-4 h-4" /> Back</button>
           <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{doc.live ? 'Live' : 'Sample'}</span>
           <div className="ml-auto flex items-center gap-2">
+            {isOffer && (
+              <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in to accept' : ''}
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
+              </button>
+            )}
             <button onClick={() => setEditing(true)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
               className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Line items</button>
             <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
@@ -123,8 +139,10 @@ export default function DocumentPage() {
               ) : doc.items.map((it, i) => (
                 <tr key={i} className="border-b border-slate-100">
                   <td className="py-3 font-medium text-slate-800">
-                    {it.description || it.product || 'Item'}
-                    {!!it.discount_pct && <span className="ml-2 text-[11px] font-semibold text-emerald-600">−{it.discount_pct}%</span>}
+                    <div className="flex items-center gap-2.5">
+                      {it.image && <img src={it.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />}
+                      <span>{it.description || it.product || 'Item'}{!!it.discount_pct && <span className="ml-2 text-[11px] font-semibold text-emerald-600">−{it.discount_pct}%</span>}</span>
+                    </div>
                   </td>
                   <td className="py-3 text-right tabular-nums text-slate-600">{it.quantity}</td>
                   <td className="py-3 text-right tabular-nums text-slate-600">{fmt(it.unit_price, doc.currency)}</td>

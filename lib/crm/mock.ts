@@ -33,7 +33,7 @@ export const MOCK_INVOICES = [
 
 // A fully-populated invoice/offer document for the printable PDF view (sample mode).
 export function mockInvoiceDocument(id: string) {
-  const isOffer = id.includes('offer');
+  const isOffer = id.includes('offer') || id.startsWith('of');
   return {
     id, number: isOffer ? 'OFF-1042' : 'INV-1001', kind: isOffer ? 'offer' : 'invoice',
     direction: 'income', status: 'sent', currency: 'USD',
@@ -49,9 +49,9 @@ export function mockInvoiceDocument(id: string) {
     },
     buyer: { name: 'Northwind Labs', domain: 'northwind.io', industry: 'SaaS' },
     items: [
-      { description: 'Bus cover — PVC reinforced (m²)', product: 'Bus cover', quantity: 48, unit_price: 62, discount_pct: 0, tax_rate: 23, line_total: 2976 },
-      { description: 'Custom tarpaulin fitting', product: 'Tarpaulin', quantity: 6, unit_price: 140, discount_pct: 0, tax_rate: 23, line_total: 840 },
-      { description: 'On-site installation (hour)', product: 'Installation', quantity: 8, unit_price: 95, discount_pct: 10, tax_rate: 23, line_total: 684 },
+      { description: 'Bus cover — PVC reinforced (m²)', product: 'Bus cover', image: sq('6366F1'), quantity: 48, unit_price: 62, discount_pct: 0, tax_rate: 23, line_total: 2976 },
+      { description: 'Custom tarpaulin fitting', product: 'Tarpaulin', image: sq('10B981'), quantity: 6, unit_price: 140, discount_pct: 0, tax_rate: 23, line_total: 840 },
+      { description: 'On-site installation (hour)', product: 'Installation', image: sq('F59E0B'), quantity: 8, unit_price: 95, discount_pct: 10, tax_rate: 23, line_total: 684 },
     ],
     totals: { subtotal: 4576, discount: 76, net: 4500, tax: 1035, total: 5535 },
   };
@@ -128,16 +128,25 @@ export const MOCK_ROADMAP: MockRoadmapProject[] = [
 ];
 export function mockRoadmap() { return MOCK_ROADMAP; }
 
+const sq = (c: string) => `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' rx='12' fill='%23${c}'/></svg>`;
+
 export const MOCK_PRODUCTS = [
-  { id: 'pd1', name: 'Consulting hour', sku: 'SVC-HOUR', category: 'Services', unit_price: 150, unit: 'hour' },
-  { id: 'pd2', name: 'Platform seat', sku: 'SEAT-PRO', category: 'Subscription', unit_price: 29, unit: 'seat' },
-  { id: 'pd3', name: 'Onboarding package', sku: 'PKG-ONB', category: 'Services', unit_price: 2500, unit: 'item' },
+  { id: 'pd1', name: 'Bus cover — PVC reinforced', sku: 'COV-PVC', category: 'Covers', unit_price: 62, unit: 'm²', image: sq('6366F1') },
+  { id: 'pd2', name: 'Custom tarpaulin', sku: 'TARP-CST', category: 'Covers', unit_price: 140, unit: 'piece', image: sq('10B981') },
+  { id: 'pd3', name: 'On-site installation', sku: 'SVC-INST', category: 'Services', unit_price: 95, unit: 'hour', image: sq('F59E0B') },
+];
+
+export const MOCK_OFFERS = [
+  { id: 'of1', number: 'OFF-1042', company: 'Northwind Labs', category: 'Covers', amount: 5535, status: 'sent', due_at: '2026-07-15' },
+  { id: 'of2', number: 'OFF-1043', company: 'Vertex Finance', category: 'Services', amount: 12800, status: 'accepted', due_at: '2026-07-01' },
+  { id: 'of3', number: 'OFF-1041', company: 'Lumen Devtools', category: 'Covers', amount: 3200, status: 'declined', due_at: '2026-06-20' },
 ];
 
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
   invoices: MOCK_INVOICES,
+  offers: MOCK_OFFERS,
   expenses: MOCK_EXPENSES,
   products: MOCK_PRODUCTS,
   projects: MOCK_PROJECTS,

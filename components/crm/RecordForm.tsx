@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Loader2, Trash2 } from 'lucide-react';
-import type { ObjectDef } from '@/lib/crm/types';
+import { X, Loader2, Trash2, Upload } from 'lucide-react';
+import type { ObjectDef, FormField } from '@/lib/crm/types';
 import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm/data';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   object: ObjectDef;
@@ -25,9 +26,22 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
+  const [uploading, setUploading] = useState<string | null>(null);
   const editing = !!recordId;
 
   const set = (k: string, val: any) => setValues((s) => ({ ...s, [k]: val }));
+
+  // Upload an image to the public 'branding' bucket and store its URL on the field.
+  const uploadImage = async (f: FormField, file: File) => {
+    setUploading(f.key); setError('');
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    const path = `${object.slug}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('branding').upload(path, file, { upsert: true, cacheControl: '3600' });
+    if (upErr) { setError(`Upload failed: ${upErr.message}. Run migration 0017 to create the 'branding' bucket.`); setUploading(null); return; }
+    const { data } = supabase.storage.from('branding').getPublicUrl(path);
+    set(f.key, data.publicUrl);
+    setUploading(null);
+  };
 
   // Load options for any relation fields (e.g. invoice → company picker).
   useEffect(() => {
@@ -78,9 +92,20 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {fields.map((f) => (
-              <label key={f.key} className={`block ${f.input === 'textarea' ? 'sm:col-span-2' : ''}`}>
+              <div key={f.key} className={`block ${f.input === 'textarea' || f.input === 'image' ? 'sm:col-span-2' : ''}`}>
                 <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>
-                {f.input === 'relation' ? (
+                {f.input === 'image' ? (
+                  <div className="flex items-center gap-2.5">
+                    {values[f.key]
+                      ? <img src={values[f.key]} alt="" className="w-12 h-12 rounded-md object-cover ring-1 ring-slate-200" />
+                      : <div className="w-12 h-12 rounded-md bg-slate-100 ring-1 ring-slate-200" />}
+                    <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer">
+                      {uploading === f.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadImage(f, file); }} />
+                    </label>
+                    {values[f.key] && <button type="button" onClick={() => set(f.key, '')} className="text-[12px] text-slate-400 hover:text-rose-600">Remove</button>}
+                  </div>
+                ) : f.input === 'relation' ? (
                   <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
                     className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
                     <option value="">{relOptions[f.key] ? '— none —' : 'Loading…'}</option>
@@ -106,7 +131,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                     value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
                     className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
                 )}
-              </label>
+              </div>
             ))}
           </div>
           {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}

@@ -121,7 +121,7 @@ export default function ObjectPage() {
 
       {detail && (
         <RecordDetail object={object} row={detail} canEdit={canEdit} onEdit={openEditFromDetail} onClose={() => setDetail(null)}
-          extraActions={slug === 'invoices' ? (
+          extraActions={(slug === 'invoices' || slug === 'offers') ? (
             <button onClick={() => router.push(`/documents/${detail.id}`)}
               className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50"><FileText className="w-3.5 h-3.5" /> Document</button>
           ) : undefined} />

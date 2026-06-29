@@ -62,6 +62,26 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'notes', label: 'Notes', input: 'textarea' },
     ],
   },
+  offers: {
+    slug: 'offers', singular: 'Offer', plural: 'Offers', icon: 'FileText', type: 'asset',
+    fields: [
+      { key: 'number', label: 'Offer', type: 'avatar', primary: true, width: 150 },
+      { key: 'company', label: 'Client', type: 'relation', width: 180 },
+      { key: 'category', label: 'Category', type: 'tags', width: 140 },
+      { key: 'amount', label: 'Total', type: 'currency', align: 'right', width: 130 },
+      { key: 'status', label: 'Status', type: 'tags', width: 120 },
+      { key: 'due_at', label: 'Valid until', type: 'date', width: 130 },
+    ],
+    form: [
+      { key: 'number', label: 'Offer #', input: 'text', required: true },
+      { key: 'organization_id', label: 'Client', input: 'relation', optionsObject: 'companies' },
+      { key: 'status', label: 'Status', input: 'select', options: ['draft', 'sent', 'accepted', 'declined'] },
+      { key: 'category', label: 'Category', input: 'datalist' },
+      { key: 'issued_at', label: 'Issued', input: 'date' },
+      { key: 'due_at', label: 'Valid until', input: 'date' },
+      { key: 'notes', label: 'Notes', input: 'textarea' },
+    ],
+  },
   expenses: {
     slug: 'expenses', singular: 'Expense', plural: 'Expenses', icon: 'Wallet', type: 'asset',
     fields: [
@@ -115,13 +135,15 @@ export const OBJECTS: Record<string, ObjectDef> = {
   products: {
     slug: 'products', singular: 'Product', plural: 'Products', icon: 'Package', type: 'asset',
     fields: [
-      { key: 'name', label: 'Product', type: 'avatar', primary: true, width: 240 },
+      { key: 'image', label: '', type: 'image', width: 52 },
+      { key: 'name', label: 'Product', type: 'avatar', primary: true, width: 220 },
       { key: 'sku', label: 'SKU', type: 'tags', width: 130 },
       { key: 'category', label: 'Category', type: 'tags', width: 140 },
       { key: 'unit_price', label: 'Price', type: 'currency', align: 'right', width: 120 },
       { key: 'unit', label: 'Unit', type: 'text', width: 100 },
     ],
     form: [
+      { key: 'image_url', label: 'Image', input: 'image' },
       { key: 'name', label: 'Name', input: 'text', required: true },
       { key: 'sku', label: 'SKU', input: 'text' },
       { key: 'category', label: 'Category', input: 'datalist' },
@@ -155,6 +177,7 @@ export const NAV = [
     { slug: 'companies', label: 'Companies', icon: 'Building2', href: '/objects/companies' },
     { slug: 'people', label: 'People', icon: 'Users', href: '/objects/people' },
     { slug: 'products', label: 'Products', icon: 'Package', href: '/objects/products' },
+    { slug: 'offers', label: 'Offers', icon: 'FileText', href: '/objects/offers' },
   ]},
   { group: 'Finance', items: [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },

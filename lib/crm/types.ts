@@ -3,7 +3,7 @@
 
 export type ObjectType = 'person' | 'company' | 'asset';
 export type PipelineKind = 'sales' | 'recruitment' | 'hris' | 'custom';
-export type FieldType = 'text' | 'number' | 'select' | 'date' | 'boolean' | 'relation' | 'currency' | 'tags' | 'avatar';
+export type FieldType = 'text' | 'number' | 'select' | 'date' | 'boolean' | 'relation' | 'currency' | 'tags' | 'avatar' | 'image';
 
 export interface FieldDef {
   key: string;
@@ -17,7 +17,7 @@ export interface FieldDef {
 export interface FormField {
   key: string;              // maps to a real table column
   label: string;
-  input: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'datalist' | 'relation';
+  input: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'datalist' | 'relation' | 'image';
   options?: string[];       // for select
   optionsObject?: string;   // for relation: which object's records to pick from (e.g. 'companies')
   required?: boolean;       // datalist = free text + autocomplete suggestions

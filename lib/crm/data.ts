@@ -37,15 +37,23 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
   return error ? { error: error.message } : {};
 }
 
+// Offers are invoices with kind='offer'; map the 'offers' object onto the
+// invoices table so the whole generic CRUD stack works without bespoke SQL.
+const rpcObject = (o: string) => (o === 'offers' ? 'invoices' : o);
+
 export async function loadRecords(privyUserId: string | null, object: string): Promise<RecordsResult> {
   const fallback: RecordsResult = { rows: MOCK_OBJECT_ROWS[object] || [], live: false };
   if (!privyUserId) return fallback;
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data, error } = await supabase.rpc('list_records', { p_privy: privyUserId, p_workspace: ws, p_object: object });
+    const { data, error } = await supabase.rpc('list_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object) });
     if (error || !Array.isArray(data)) return fallback;
-    return { rows: data, live: true };   // even an empty live result is "live"
+    // split the shared invoices table into invoices vs offers by kind
+    let rows = data as any[];
+    if (object === 'offers') rows = rows.filter((r) => r.kind === 'offer');
+    else if (object === 'invoices') rows = rows.filter((r) => r.kind !== 'offer');
+    return { rows, live: true };   // even an empty live result is "live"
   } catch {
     return fallback;
   }
@@ -54,7 +62,7 @@ export async function loadRecords(privyUserId: string | null, object: string): P
 // ── CRUD ────────────────────────────────────────────────────────────────────
 export async function getRecord(privyUserId: string, object: string, id: string): Promise<any | null> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('get_record', { p_privy: privyUserId, p_object: object, p_id: id });
+  const { data, error } = await supabase.rpc('get_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   if (error) return null;
   return data;
 }
@@ -62,29 +70,39 @@ export async function getRecord(privyUserId: string, object: string, id: string)
 export async function createRecord(privyUserId: string, object: string, values: Record<string, any>): Promise<{ id?: string; error?: string }> {
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: object, p_data: values });
+  const payload = object === 'offers' ? { ...values, kind: 'offer' } : values;
+  const { data, error } = await supabase.rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_data: payload });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function updateRecord(privyUserId: string, object: string, id: string, values: Record<string, any>): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('update_record', { p_privy: privyUserId, p_object: object, p_id: id, p_data: values });
+  const { error } = await supabase.rpc('update_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id, p_data: values });
   return error ? { error: error.message } : {};
 }
 
 export async function deleteRecord(privyUserId: string, object: string, id: string): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('delete_record', { p_privy: privyUserId, p_object: object, p_id: id });
+  const { error } = await supabase.rpc('delete_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   return error ? { error: error.message } : {};
 }
 
 export async function importRecords(privyUserId: string, object: string, rows: Record<string, any>[]): Promise<{ count?: number; error?: string }> {
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: object, p_rows: rows });
+  const payload = object === 'offers' ? rows.map((r) => ({ ...r, kind: 'offer' })) : rows;
+  const { data, error } = await supabase.rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_rows: payload });
   if (error) return { error: error.message };
   return { count: data as number };
+}
+
+// Convert an accepted offer into a draft invoice (clones positions); returns the new invoice id.
+export async function convertOffer(privyUserId: string, offerId: string): Promise<{ id?: string; error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('convert_offer_to_invoice', { p_privy: privyUserId, p_offer: offerId });
+  if (error) return { error: error.message };
+  return { id: data as string };
 }
 
 // Fetch a public CSV URL (e.g. a published Google Sheet) via our server route.
@@ -208,7 +226,7 @@ export async function loadProject(privyUserId: string | null, projectId: string)
 }
 
 // ── Invoice/offer documents (line items + printable PDF) ──────────────────────
-export interface InvoiceLineItem { description: string; product?: string | null; product_id?: string | null; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number; line_total: number }
+export interface InvoiceLineItem { description: string; product?: string | null; product_id?: string | null; image?: string | null; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number; line_total: number }
 export interface DocumentTotals { subtotal: number; discount: number; net: number; tax: number; total: number }
 export interface InvoiceDocument {
   id: string; number: string | null; kind: string; direction: string; status: string;
@@ -250,7 +268,7 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
       seller: d.seller || { name: 'Your company' },
       buyer: d.buyer || null,
       items: Array.isArray(d.items)
-        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, discount_pct: +it.discount_pct || 0, tax_rate: +it.tax_rate || 0, line_total: +it.line_total || 0 }))
+        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, image: it.image, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, discount_pct: +it.discount_pct || 0, tax_rate: +it.tax_rate || 0, line_total: +it.line_total || 0 }))
         : [],
       totals: d.totals ? { subtotal: +d.totals.subtotal || 0, discount: +d.totals.discount || 0, net: +d.totals.net || 0, tax: +d.totals.tax || 0, total: +d.totals.total || 0 } : undefined,
       live: true,

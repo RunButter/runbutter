@@ -28,6 +28,8 @@ const TAG_STYLE: Record<string, string> = {
   paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   sent: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  accepted: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+  declined: 'bg-rose-50 text-rose-700 ring-rose-200/60',
   draft: 'bg-slate-100 text-slate-500 ring-slate-200/60',
   pending: 'bg-amber-50 text-amber-700 ring-amber-200/60',
   overdue: 'bg-rose-50 text-rose-700 ring-rose-200/60',
@@ -59,6 +61,11 @@ function Tag({ value }: { value: string }) {
 
 export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
   const v = row[field.key];
+  if (field.type === 'image') {
+    return v
+      ? <img src={String(v)} alt="" className="w-8 h-8 rounded-md object-cover ring-1 ring-slate-200/60" />
+      : <div className="w-8 h-8 rounded-md bg-slate-100 ring-1 ring-slate-200/60" />;
+  }
   if (v === null || v === undefined || v === '') return <span className="text-slate-300">—</span>;
 
   switch (field.type) {
