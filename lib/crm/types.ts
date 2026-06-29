@@ -17,7 +17,7 @@ export interface FieldDef {
 export interface FormField {
   key: string;              // maps to a real table column
   label: string;
-  input: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'datalist' | 'relation' | 'image';
+  input: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'datalist' | 'relation' | 'image' | 'lookup';
   options?: string[];       // for select
   optionsObject?: string;   // for relation: which object's records to pick from (e.g. 'companies')
   required?: boolean;       // datalist = free text + autocomplete suggestions
@@ -52,6 +52,9 @@ export interface Company {
   domain?: string;
   industry?: string;
   employee_count?: number;
+  tax_id?: string;
+  address?: string;
+  country?: string;
 }
 
 export interface Asset {

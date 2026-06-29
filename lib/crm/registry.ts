@@ -25,13 +25,18 @@ export const OBJECTS: Record<string, ObjectDef> = {
   companies: {
     slug: 'companies', singular: 'Company', plural: 'Companies', icon: 'Building2', type: 'company',
     fields: [
-      { key: 'name', label: 'Name', type: 'avatar', primary: true, width: 240 },
-      { key: 'domain', label: 'Domain', type: 'text', width: 200 },
-      { key: 'industry', label: 'Industry', type: 'text', width: 180 },
-      { key: 'employee_count', label: 'Employees', type: 'number', align: 'right', width: 120 },
+      { key: 'name', label: 'Name', type: 'avatar', primary: true, width: 220 },
+      { key: 'tax_id', label: 'Tax ID', type: 'text', width: 150 },
+      { key: 'domain', label: 'Domain', type: 'text', width: 180 },
+      { key: 'industry', label: 'Industry', type: 'text', width: 160 },
+      { key: 'employee_count', label: 'Employees', type: 'number', align: 'right', width: 110 },
     ],
     form: [
+      { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT'] },
+      { key: 'tax_id', label: 'Tax / VAT ID', input: 'text' },
+      { key: 'lookup', label: 'Fetch company details', input: 'lookup' },
       { key: 'name', label: 'Name', input: 'text', required: true },
+      { key: 'address', label: 'Address', input: 'textarea' },
       { key: 'domain', label: 'Domain', input: 'text' },
       { key: 'industry', label: 'Industry', input: 'text' },
       { key: 'employee_count', label: 'Employees', input: 'number' },

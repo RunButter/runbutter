@@ -11,10 +11,10 @@ export const MOCK_PEOPLE: Person[] = [
 ];
 
 export const MOCK_COMPANIES: Company[] = [
-  { id: 'c1', name: 'Northwind', domain: 'northwind.io', industry: 'SaaS', employee_count: 120 },
-  { id: 'c2', name: 'Lumen', domain: 'lumen.dev', industry: 'DevTools', employee_count: 45 },
-  { id: 'c3', name: 'Pulse', domain: 'pulse.app', industry: 'Health', employee_count: 210 },
-  { id: 'c4', name: 'Vertex', domain: 'vertex.co', industry: 'Fintech', employee_count: 80 },
+  { id: 'c1', name: 'Northwind', domain: 'northwind.io', industry: 'SaaS', employee_count: 120, tax_id: 'PL5260250274' },
+  { id: 'c2', name: 'Lumen', domain: 'lumen.dev', industry: 'DevTools', employee_count: 45, tax_id: 'DE811569869' },
+  { id: 'c3', name: 'Pulse', domain: 'pulse.app', industry: 'Health', employee_count: 210, tax_id: 'NL004495445B01' },
+  { id: 'c4', name: 'Vertex', domain: 'vertex.co', industry: 'Fintech', employee_count: 80, tax_id: 'FR40303265045' },
 ];
 
 export const MOCK_ASSETS: Asset[] = [

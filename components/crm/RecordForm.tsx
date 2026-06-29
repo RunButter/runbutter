@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Loader2, Trash2, Upload } from 'lucide-react';
+import { X, Loader2, Trash2, Upload, Search } from 'lucide-react';
 import type { ObjectDef, FormField } from '@/lib/crm/types';
 import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm/data';
 import { supabase } from '@/lib/supabase';
@@ -27,9 +27,34 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const [error, setError] = useState('');
   const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const [uploading, setUploading] = useState<string | null>(null);
+  const [lookupBusy, setLookupBusy] = useState(false);
   const editing = !!recordId;
 
   const set = (k: string, val: any) => setValues((s) => ({ ...s, [k]: val }));
+  const setMany = (patch: Record<string, any>) => setValues((s) => ({ ...s, ...patch }));
+
+  // Enrich a company from its tax/VAT id (PL NIP via MF, EU VAT via VIES).
+  const runLookup = async () => {
+    const country = values.country, taxId = values.tax_id;
+    if (!country || !String(taxId || '').trim()) { setError('Pick a country and enter a tax/VAT ID first.'); return; }
+    setLookupBusy(true); setError('');
+    try {
+      const res = await fetch('/api/company-lookup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country, taxId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Lookup failed'); setLookupBusy(false); return; }
+      const c = data.company || {};
+      setMany({
+        name: c.name || values.name, address: c.address || values.address,
+        tax_id: c.tax_id || values.tax_id, country: c.country || values.country,
+      });
+    } catch (e: any) {
+      setError(e?.message || 'Lookup failed');
+    }
+    setLookupBusy(false);
+  };
 
   // Upload an image to the public 'branding' bucket and store its URL on the field.
   const uploadImage = async (f: FormField, file: File) => {
@@ -92,9 +117,14 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {fields.map((f) => (
-              <div key={f.key} className={`block ${f.input === 'textarea' || f.input === 'image' ? 'sm:col-span-2' : ''}`}>
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>
-                {f.input === 'image' ? (
+              <div key={f.key} className={`block ${f.input === 'textarea' || f.input === 'image' || f.input === 'lookup' ? 'sm:col-span-2' : ''}`}>
+                {f.input !== 'lookup' && <span className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}{f.required && <span className="text-rose-500"> *</span>}</span>}
+                {f.input === 'lookup' ? (
+                  <button type="button" onClick={runLookup} disabled={lookupBusy}
+                    className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-[13px] font-semibold text-primary-700 ring-1 ring-primary-200 bg-primary-50 hover:bg-primary-100 disabled:opacity-50">
+                    {lookupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />} {f.label || 'Fetch company details'}
+                  </button>
+                ) : f.input === 'image' ? (
                   <div className="flex items-center gap-2.5">
                     {values[f.key]
                       ? <img src={values[f.key]} alt="" className="w-12 h-12 rounded-md object-cover ring-1 ring-slate-200" />
