@@ -37,7 +37,7 @@ export function mockInvoiceDocument(id: string) {
   return {
     id, number: isOffer ? 'OFF-1042' : 'INV-1001', kind: isOffer ? 'offer' : 'invoice',
     direction: 'income', status: 'sent', currency: 'USD',
-    category: 'Services', issued_at: '2026-06-01', due_at: '2026-06-15', amount: 4150,
+    category: 'Services', issued_at: '2026-06-01', due_at: '2026-06-15', amount: 5535,
     notes: isOffer
       ? 'This proposal is valid for 30 days. We look forward to working together.'
       : 'Thank you for your business. Payment is due within 14 days via bank transfer.',
@@ -49,10 +49,11 @@ export function mockInvoiceDocument(id: string) {
     },
     buyer: { name: 'Northwind Labs', domain: 'northwind.io', industry: 'SaaS' },
     items: [
-      { description: 'Consulting hour', product: 'Consulting hour', quantity: 20, unit_price: 150, line_total: 3000 },
-      { description: 'Platform seat', product: 'Platform seat', quantity: 10, unit_price: 29, line_total: 290 },
-      { description: 'Onboarding package', product: 'Onboarding package', quantity: 1, unit_price: 860, line_total: 860 },
+      { description: 'Bus cover — PVC reinforced (m²)', product: 'Bus cover', quantity: 48, unit_price: 62, discount_pct: 0, tax_rate: 23, line_total: 2976 },
+      { description: 'Custom tarpaulin fitting', product: 'Tarpaulin', quantity: 6, unit_price: 140, discount_pct: 0, tax_rate: 23, line_total: 840 },
+      { description: 'On-site installation (hour)', product: 'Installation', quantity: 8, unit_price: 95, discount_pct: 10, tax_rate: 23, line_total: 684 },
     ],
+    totals: { subtotal: 4576, discount: 76, net: 4500, tax: 1035, total: 5535 },
   };
 }
 

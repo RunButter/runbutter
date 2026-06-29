@@ -44,6 +44,7 @@ export default function DocumentPage() {
   const accent = doc.seller?.accent_color || '#6366F1';
   const subtotal = doc.items.reduce((s, it) => s + (it.line_total || 0), 0);
   const total = doc.items.length ? subtotal : doc.amount; // fall back to header amount if no line items
+  const tot = doc.totals;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -110,19 +111,24 @@ export default function DocumentPage() {
             <thead>
               <tr className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200">
                 <th className="text-left py-2 font-bold">Description</th>
-                <th className="text-right py-2 font-bold w-20">Qty</th>
-                <th className="text-right py-2 font-bold w-32">Unit price</th>
-                <th className="text-right py-2 font-bold w-32">Amount</th>
+                <th className="text-right py-2 font-bold w-16">Qty</th>
+                <th className="text-right py-2 font-bold w-28">Unit price</th>
+                <th className="text-right py-2 font-bold w-16">VAT</th>
+                <th className="text-right py-2 font-bold w-28">Amount</th>
               </tr>
             </thead>
             <tbody>
               {doc.items.length === 0 ? (
-                <tr><td colSpan={4} className="py-8 text-center text-slate-400 text-[13px]">No line items yet — add products or services with “Line items”.</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-slate-400 text-[13px]">No line items yet — add products or services with “Line items”.</td></tr>
               ) : doc.items.map((it, i) => (
                 <tr key={i} className="border-b border-slate-100">
-                  <td className="py-3 font-medium text-slate-800">{it.description || it.product || 'Item'}</td>
+                  <td className="py-3 font-medium text-slate-800">
+                    {it.description || it.product || 'Item'}
+                    {!!it.discount_pct && <span className="ml-2 text-[11px] font-semibold text-emerald-600">−{it.discount_pct}%</span>}
+                  </td>
                   <td className="py-3 text-right tabular-nums text-slate-600">{it.quantity}</td>
                   <td className="py-3 text-right tabular-nums text-slate-600">{fmt(it.unit_price, doc.currency)}</td>
+                  <td className="py-3 text-right tabular-nums text-slate-500">{it.tax_rate ? `${it.tax_rate}%` : '—'}</td>
                   <td className="py-3 text-right tabular-nums font-semibold text-slate-800">{fmt(it.line_total, doc.currency)}</td>
                 </tr>
               ))}
@@ -131,9 +137,15 @@ export default function DocumentPage() {
 
           {/* Totals */}
           <div className="flex justify-end pt-5">
-            <div className="w-full sm:w-64 space-y-1.5">
-              <div className="flex justify-between text-[13px] text-slate-500"><span>Subtotal</span><span className="tabular-nums">{fmt(total, doc.currency)}</span></div>
-              <div className="flex justify-between text-[15px] font-black pt-2 border-t border-slate-200"><span className="text-slate-900">{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(total, doc.currency)}</span></div>
+            <div className="w-full sm:w-72 space-y-1.5">
+              <div className="flex justify-between text-[13px] text-slate-500"><span>Subtotal</span><span className="tabular-nums">{fmt(tot ? tot.subtotal : total, doc.currency)}</span></div>
+              {!!tot && tot.discount > 0 && (
+                <div className="flex justify-between text-[13px] text-emerald-600"><span>Discount</span><span className="tabular-nums">−{fmt(tot.discount, doc.currency)}</span></div>
+              )}
+              {!!tot && tot.tax > 0 && (
+                <div className="flex justify-between text-[13px] text-slate-500"><span>VAT</span><span className="tabular-nums">{fmt(tot.tax, doc.currency)}</span></div>
+              )}
+              <div className="flex justify-between text-[15px] font-black pt-2 border-t border-slate-200"><span className="text-slate-900">{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(tot ? tot.total : total, doc.currency)}</span></div>
             </div>
           </div>
 

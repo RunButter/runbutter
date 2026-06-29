@@ -208,14 +208,15 @@ export async function loadProject(privyUserId: string | null, projectId: string)
 }
 
 // ── Invoice/offer documents (line items + printable PDF) ──────────────────────
-export interface InvoiceLineItem { description: string; product?: string | null; product_id?: string | null; quantity: number; unit_price: number; line_total: number }
+export interface InvoiceLineItem { description: string; product?: string | null; product_id?: string | null; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number; line_total: number }
+export interface DocumentTotals { subtotal: number; discount: number; net: number; tax: number; total: number }
 export interface InvoiceDocument {
   id: string; number: string | null; kind: string; direction: string; status: string;
   currency: string; amount: number; category?: string | null;
   issued_at: string | null; due_at: string | null; notes: string | null;
   seller: { name: string; logo_url?: string | null; accent_color?: string; address?: string | null; footer?: string | null };
   buyer: { name: string; domain?: string; industry?: string } | null;
-  items: InvoiceLineItem[]; live: boolean;
+  items: InvoiceLineItem[]; totals?: DocumentTotals; live: boolean;
 }
 
 // ── Workspace branding (logo, accent, footer for documents) ───────────────────
@@ -249,8 +250,9 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
       seller: d.seller || { name: 'Your company' },
       buyer: d.buyer || null,
       items: Array.isArray(d.items)
-        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, line_total: +it.line_total || 0 }))
+        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, discount_pct: +it.discount_pct || 0, tax_rate: +it.tax_rate || 0, line_total: +it.line_total || 0 }))
         : [],
+      totals: d.totals ? { subtotal: +d.totals.subtotal || 0, discount: +d.totals.discount || 0, net: +d.totals.net || 0, tax: +d.totals.tax || 0, total: +d.totals.total || 0 } : undefined,
       live: true,
     };
   } catch {
@@ -258,7 +260,7 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
   }
 }
 
-export interface ItemInput { product_id?: string; description?: string; quantity: number; unit_price: number }
+export interface ItemInput { product_id?: string; description?: string; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number }
 export async function saveInvoiceItems(privyUserId: string, invoiceId: string, items: ItemInput[]): Promise<{ total?: number; error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await supabase.rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
