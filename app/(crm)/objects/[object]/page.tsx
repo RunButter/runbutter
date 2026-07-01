@@ -5,13 +5,15 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, Loader2, FileText } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
-import { loadRecords, getRecord } from '@/lib/crm/data';
+import { loadRecords, getRecord, createRecord } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
 import ImportModal from '@/components/crm/ImportModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
+import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
+import { Package } from 'lucide-react';
 
 export default function ObjectPage() {
   const params = useParams();
@@ -31,6 +33,8 @@ export default function ObjectPage() {
   const [detail, setDetail] = useState<any | null>(null);
   const [importing, setImporting] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
+  const isDoc = slug === 'invoices' || slug === 'offers';
 
   const reload = useCallback(() => {
     if (!object) return;
@@ -81,6 +85,16 @@ export default function ObjectPage() {
     setDetail(null);
   };
 
+  // Invoices/offers create a draft and open the editable builder; everything
+  // else opens the standard form.
+  const newRecord = async () => {
+    if (isDoc && privy) {
+      const res = await createRecord(privy, slug, {});
+      if (res.id) { router.push(`/documents/${res.id}/edit`); return; }
+    }
+    setForm({ id: null, initial: {} });
+  };
+
   const exportCsv = () => {
     const cols = object.fields;
     const csv = toCSV(cols.map((c) => c.label), filtered.map((r) => cols.map((c) => r[c.key])));
@@ -103,7 +117,7 @@ export default function ObjectPage() {
             className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Download className="w-3.5 h-3.5" /> Export</button>
           <button onClick={() => setImporting(true)} disabled={!canEdit}
             className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Upload className="w-3.5 h-3.5" /> Import</button>
-          <button onClick={() => setForm({ id: null, initial: {} })} disabled={!canEdit}
+          <button onClick={newRecord} disabled={!canEdit}
             title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"><Plus className="w-3.5 h-3.5" /> New</button>
         </div>
@@ -121,17 +135,24 @@ export default function ObjectPage() {
 
       {detail && (
         <RecordDetail object={object} row={detail} canEdit={canEdit} onEdit={openEditFromDetail} onClose={() => setDetail(null)}
-          extraActions={(slug === 'invoices' || slug === 'offers') ? (
-            <button onClick={() => router.push(`/documents/${detail.id}`)}
-              className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50"><FileText className="w-3.5 h-3.5" /> Document</button>
+          extraActions={isDoc ? (
+            <>
+              <button onClick={() => setItemsFor(detail.id)} disabled={!privy} title={!privy ? 'Sign in' : ''}
+                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50 disabled:opacity-40 disabled:cursor-not-allowed"><Package className="w-3.5 h-3.5" /> Products</button>
+              <button onClick={() => router.push(`/documents/${detail.id}`)}
+                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50"><FileText className="w-3.5 h-3.5" /> Document</button>
+            </>
           ) : undefined} />
       )}
       {form && (
         <RecordForm object={object} privyUserId={privy} recordId={form.id} initial={form.initial} suggestions={suggestions}
-          onClose={() => setForm(null)} onSaved={() => { setForm(null); reload(); }} />
+          onClose={() => setForm(null)} onSaved={(newId) => { setForm(null); reload(); if (newId && isDoc) setItemsFor(newId); }} />
       )}
       {importing && (
         <ImportModal object={object} privyUserId={privy} onClose={() => setImporting(false)} onImported={() => { setImporting(false); reload(); }} />
+      )}
+      {itemsFor && privy && (
+        <InvoiceItemsModal privyUserId={privy} invoiceId={itemsFor} onClose={() => setItemsFor(null)} onSaved={() => { setItemsFor(null); reload(); }} />
       )}
     </>
   );

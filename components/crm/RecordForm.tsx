@@ -13,7 +13,7 @@ interface Props {
   initial?: Record<string, any>;  // prefill for edit
   suggestions?: Record<string, string[]>; // datalist autocomplete options per field
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (createdId?: string) => void;
 }
 
 export default function RecordForm({ object, privyUserId, recordId, initial, suggestions, onClose, onSaved }: Props) {
@@ -28,6 +28,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const [uploading, setUploading] = useState<string | null>(null);
   const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupNote, setLookupNote] = useState('');
   const editing = !!recordId;
 
   const set = (k: string, val: any) => setValues((s) => ({ ...s, [k]: val }));
@@ -37,7 +38,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const runLookup = async () => {
     const country = values.country, taxId = values.tax_id;
     if (!country || !String(taxId || '').trim()) { setError('Pick a country and enter a tax/VAT ID first.'); return; }
-    setLookupBusy(true); setError('');
+    setLookupBusy(true); setError(''); setLookupNote('');
     try {
       const res = await fetch('/api/company-lookup', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -50,6 +51,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
         name: c.name || values.name, address: c.address || values.address,
         tax_id: c.tax_id || values.tax_id, country: c.country || values.country,
       });
+      setLookupNote(c.note || '');
     } catch (e: any) {
       setError(e?.message || 'Lookup failed');
     }
@@ -91,7 +93,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
       : await createRecord(privyUserId, object.slug, values);
     setSaving(false);
     if (res.error) { setError(res.error); return; }
-    onSaved();
+    onSaved(editing ? undefined : (res as any).id);
   };
 
   const remove = async () => {
@@ -165,6 +167,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
             ))}
           </div>
           {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}
+          {lookupNote && <p className="mt-3 text-[12px] text-amber-600">{lookupNote}</p>}
         </div>
 
         <div className="shrink-0 flex items-center gap-2 p-3 border-t border-slate-200/70">

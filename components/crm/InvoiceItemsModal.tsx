@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Trash2, Loader2 } from 'lucide-react';
-import { loadRecords, saveInvoiceItems, type InvoiceLineItem } from '@/lib/crm/data';
+import { loadRecords, loadInvoiceDocument, saveInvoiceItems, type InvoiceLineItem } from '@/lib/crm/data';
 
 interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string }
 interface Product { id: string; name: string; unit_price: number }
@@ -23,6 +23,7 @@ export default function InvoiceItemsModal({
   );
   const [products, setProducts] = useState<Product[]>([]);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!initialItems);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -30,6 +31,21 @@ export default function InvoiceItemsModal({
       setProducts(res.rows.map((p: any) => ({ id: p.id, name: p.name, unit_price: +p.unit_price || 0 })))
     );
   }, [privyUserId]);
+
+  // When opened without items (e.g. from a list), load the record's current
+  // positions so saving doesn't wipe them.
+  useEffect(() => {
+    if (initialItems) return;
+    loadInvoiceDocument(privyUserId, invoiceId).then((d) => {
+      setRows((d.items || []).map((it) => ({
+        product_id: it.product_id || '', description: it.description || it.product || '',
+        quantity: String(it.quantity ?? 1), unit_price: String(it.unit_price ?? 0),
+        discount_pct: String(it.discount_pct ?? 0), tax_rate: String(it.tax_rate ?? 0),
+      })));
+      setLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const totals = useMemo(() => {
     let net = 0, tax = 0;
@@ -69,6 +85,9 @@ export default function InvoiceItemsModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
+          {loading ? (
+            <div className="py-12 flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : (<>
           {/* Add controls */}
           <div className="flex items-center gap-2 mb-3">
             <select value="" onChange={(e) => { addProduct(e.target.value); e.target.value = ''; }}
@@ -107,6 +126,7 @@ export default function InvoiceItemsModal({
           </div>
 
           {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}
+          </>)}
         </div>
 
         <div className="shrink-0 flex items-center gap-3 p-3 border-t border-slate-200/70">
