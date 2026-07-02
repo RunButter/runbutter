@@ -6,8 +6,39 @@ import { Loader2, Upload, Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 
-interface Form { logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string }
-const EMPTY: Form = { logo_url: '', legal_name: '', address: '', accent_color: '#6366F1', invoice_footer: '' };
+interface Form {
+  logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
+  tax_id: string; country: string; vat_id: string; reg_no: string; bdo: string; iban: string; bank_name: string;
+}
+const EMPTY: Form = {
+  logo_url: '', legal_name: '', address: '', accent_color: '#6366F1', invoice_footer: '',
+  tax_id: '', country: 'PL', vat_id: '', reg_no: '', bdo: '', iban: '', bank_name: '',
+};
+
+// Which legal identifiers an invoice needs differs by country — the selector
+// below drives which fields show and how they're labelled.
+type IdField = { key: 'tax_id' | 'vat_id' | 'reg_no' | 'bdo'; label: string; placeholder?: string };
+const COUNTRY_IDENTITY: Record<string, IdField[]> = {
+  PL: [
+    { key: 'tax_id', label: 'NIP', placeholder: '10-digit NIP — used for KSeF' },
+    { key: 'reg_no', label: 'KRS / REGON', placeholder: 'court or statistical registry no.' },
+    { key: 'bdo', label: 'BDO number', placeholder: 'waste database no. (if applicable)' },
+  ],
+  DE: [
+    { key: 'vat_id', label: 'USt-IdNr. (VAT ID)', placeholder: 'DE…' },
+    { key: 'reg_no', label: 'Handelsregister', placeholder: 'HRB…' },
+  ],
+  FR: [
+    { key: 'vat_id', label: 'TVA intracommunautaire', placeholder: 'FR…' },
+    { key: 'reg_no', label: 'SIREN / SIRET' },
+  ],
+  OTHER: [
+    { key: 'vat_id', label: 'VAT / Tax ID' },
+    { key: 'reg_no', label: 'Company registry no.' },
+  ],
+};
+const COUNTRIES = ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'OTHER'];
+const identityFields = (country: string) => COUNTRY_IDENTITY[country] || COUNTRY_IDENTITY.OTHER;
 
 export default function BrandingPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -28,7 +59,12 @@ export default function BrandingPage() {
       if (!ws) { setLoading(false); return; }
       setWsId(ws.id); setWsName(ws.name);
       const b = await loadBranding(privy, ws.id);
-      if (b) setForm({ logo_url: b.logo_url || '', legal_name: b.legal_name || '', address: b.address || '', accent_color: b.accent_color || '#6366F1', invoice_footer: b.invoice_footer || '' });
+      if (b) setForm({
+        logo_url: b.logo_url || '', legal_name: b.legal_name || '', address: b.address || '',
+        accent_color: b.accent_color || '#6366F1', invoice_footer: b.invoice_footer || '',
+        tax_id: b.tax_id || '', country: b.country || 'PL', vat_id: b.vat_id || '',
+        reg_no: b.reg_no || '', bdo: b.bdo || '', iban: b.iban || '', bank_name: b.bank_name || '',
+      });
       setLoading(false);
     });
   }, [ready, privy]);
@@ -96,6 +132,39 @@ export default function BrandingPage() {
                 <label className="block text-[12px] font-semibold text-slate-600 mb-1">Legal company name</label>
                 <input value={form.legal_name} onChange={(e) => set({ legal_name: e.target.value })} placeholder={wsName}
                   className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+              </div>
+
+              {/* Country-driven legal identity */}
+              <div className="rounded-xl ring-1 ring-slate-200/70 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Legal identity — shown on invoices</span>
+                  <select value={form.country} onChange={(e) => set({ country: e.target.value })}
+                    className="h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
+                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                {identityFields(form.country).map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}</label>
+                    <input value={form[f.key]} onChange={(e) => set({ [f.key]: e.target.value } as any)} placeholder={f.placeholder}
+                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Bank details (universal) */}
+              <div className="rounded-xl ring-1 ring-slate-200/70 p-3.5 space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Bank — for payment on invoices</span>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1">IBAN / account number</label>
+                  <input value={form.iban} onChange={(e) => set({ iban: e.target.value })} placeholder="PL00 0000 0000 0000 0000 0000 0000"
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1">Bank name</label>
+                  <input value={form.bank_name} onChange={(e) => set({ bank_name: e.target.value })}
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                </div>
               </div>
 
               <div>

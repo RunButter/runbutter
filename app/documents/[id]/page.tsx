@@ -93,6 +93,15 @@ export default function DocumentPage() {
               <div>
                 <div className="text-lg font-black tracking-tight text-slate-900">{doc.seller?.name || 'Your company'}</div>
                 <div className="text-[12px] text-slate-400 whitespace-pre-line">{doc.seller?.address || 'hirebtr.com'}</div>
+                {(() => {
+                  const ids = [
+                    doc.seller?.tax_id && `NIP: ${doc.seller.tax_id}`,
+                    doc.seller?.vat_id && `VAT: ${doc.seller.vat_id}`,
+                    doc.seller?.reg_no && `Reg: ${doc.seller.reg_no}`,
+                    doc.seller?.bdo && `BDO: ${doc.seller.bdo}`,
+                  ].filter(Boolean).join(' · ');
+                  return ids ? <div className="text-[11px] text-slate-400 tabular-nums mt-0.5">{ids}</div> : null;
+                })()}
               </div>
             </div>
             <div className="text-right">
@@ -107,8 +116,9 @@ export default function DocumentPage() {
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{isOffer ? 'Prepared for' : 'Bill to'}</div>
               <div className="text-[14px] font-bold text-slate-800">{doc.buyer?.name || '—'}</div>
-              {doc.buyer?.domain && <div className="text-[12px] text-slate-500">{doc.buyer.domain}</div>}
-              {doc.buyer?.industry && <div className="text-[12px] text-slate-400">{doc.buyer.industry}</div>}
+              {doc.buyer?.address && <div className="text-[12px] text-slate-500 whitespace-pre-line">{doc.buyer.address}</div>}
+              {doc.buyer?.tax_id && <div className="text-[12px] text-slate-400 tabular-nums">{String(doc.buyer.tax_id).replace(/[^0-9]/g, '').length === 10 && (doc.buyer.country || 'PL') === 'PL' ? 'NIP' : 'VAT'}: {doc.buyer.tax_id}</div>}
+              {!doc.buyer?.address && doc.buyer?.domain && <div className="text-[12px] text-slate-500">{doc.buyer.domain}</div>}
             </div>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{isOffer ? 'Issued' : 'Invoice date'}</div>
@@ -173,6 +183,12 @@ export default function DocumentPage() {
             </div>
           )}
 
+          {doc.seller?.iban && (
+            <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Payment</div>
+              <p className="text-[13px] text-slate-600 tabular-nums">{doc.seller.bank_name ? `${doc.seller.bank_name} · ` : ''}{doc.seller.iban}</p>
+            </div>
+          )}
           {doc.seller?.footer && (
             <div className="mt-8 pt-6 border-t border-slate-100 text-[12px] text-slate-500 leading-relaxed whitespace-pre-line">{doc.seller.footer}</div>
           )}

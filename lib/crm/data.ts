@@ -232,21 +232,31 @@ export interface InvoiceDocument {
   id: string; number: string | null; kind: string; direction: string; status: string;
   currency: string; amount: number; category?: string | null;
   issued_at: string | null; due_at: string | null; notes: string | null;
-  seller: { name: string; logo_url?: string | null; accent_color?: string; address?: string | null; footer?: string | null };
-  buyer: { name: string; domain?: string; industry?: string } | null;
+  seller: {
+    name: string; logo_url?: string | null; accent_color?: string; address?: string | null; footer?: string | null;
+    tax_id?: string | null; country?: string | null; vat_id?: string | null; reg_no?: string | null;
+    bdo?: string | null; iban?: string | null; bank_name?: string | null;
+  };
+  buyer: { name: string; domain?: string; industry?: string; tax_id?: string | null; address?: string | null; country?: string | null } | null;
   items: InvoiceLineItem[]; totals?: DocumentTotals; live: boolean;
 }
 
 // ── Workspace branding (logo, accent, footer for documents) ───────────────────
 export interface WorkspaceBranding {
   name: string; logo_url: string | null; legal_name: string | null;
-  address: string | null; accent_color: string; invoice_footer: string | null;
+  address: string | null; accent_color: string; invoice_footer: string | null; tax_id: string | null;
+  country: string | null; vat_id: string | null; reg_no: string | null; bdo: string | null;
+  iban: string | null; bank_name: string | null;
 }
 export async function loadBranding(privyUserId: string, workspaceId: string): Promise<WorkspaceBranding | null> {
   const { data, error } = await supabase.rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error || !data) return null;
   const d = data as any;
-  return { name: d.name, logo_url: d.logo_url, legal_name: d.legal_name, address: d.address, accent_color: d.accent_color || '#6366F1', invoice_footer: d.invoice_footer };
+  return {
+    name: d.name, logo_url: d.logo_url, legal_name: d.legal_name, address: d.address,
+    accent_color: d.accent_color || '#6366F1', invoice_footer: d.invoice_footer, tax_id: d.tax_id,
+    country: d.country, vat_id: d.vat_id, reg_no: d.reg_no, bdo: d.bdo, iban: d.iban, bank_name: d.bank_name,
+  };
 }
 export async function saveBranding(privyUserId: string, workspaceId: string, data: Partial<WorkspaceBranding>): Promise<{ error?: string }> {
   const { error } = await supabase.rpc('save_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId, p_data: data });
