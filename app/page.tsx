@@ -4,6 +4,7 @@ import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
+import Reveal from '@/components/landing/Reveal';
 
 const FEATURES = [
   'Drag-and-drop boards', 'Spreadsheet-style tables', 'Create, edit & delete',
@@ -61,10 +62,10 @@ export default function HomePage() {
             One source of truth for every team. No AI token bill.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition">
+            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/home" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition">
+            <Link href="/home" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold transition-all duration-200 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md">
               See the workspace
             </Link>
           </div>
@@ -73,8 +74,10 @@ export default function HomePage() {
 
         {/* interactive product window */}
         <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 pt-2 pb-28">
-          <ProductPreview />
-          <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
+          <Reveal>
+            <ProductPreview />
+            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
+          </Reveal>
         </div>
       </section>
 
@@ -93,23 +96,29 @@ export default function HomePage() {
       {/* Pillars */}
       <section className="border-t border-slate-100 bg-slate-50/40">
         <div className="max-w-6xl mx-auto px-6 py-20">
-          <h2 className="text-3xl font-black tracking-tight text-center">One workspace for the whole company</h2>
-          <p className="text-center text-slate-500 mt-2 mb-12">Every record relational and connected — a deal, a candidate, an invoice, all in one place.</p>
+          <Reveal>
+            <h2 className="text-3xl font-black tracking-tight text-center">One workspace for the whole company</h2>
+            <p className="text-center text-slate-500 mt-2 mb-12">Every record relational and connected — a deal, a candidate, an invoice, all in one place.</p>
+          </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {PILLARS.map((p) => (
-              <div key={p.name} className="rounded-2xl bg-white ring-1 ring-slate-200/60 p-5 hover:shadow-sm hover:ring-slate-300 transition">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${p.tone}`}><p.icon className="w-5 h-5" /></div>
-                <h3 className="font-black text-slate-900">{p.name}</h3>
-                <p className="text-sm text-slate-500 mt-1 leading-relaxed">{p.body}</p>
-              </div>
+            {PILLARS.map((p, i) => (
+              <Reveal key={p.name} delay={i * 80}>
+                <div className="h-full rounded-2xl bg-white ring-1 ring-slate-200/60 p-5 transition-all duration-200 hover:ring-slate-300 hover:shadow-soft-md hover:-translate-y-1">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${p.tone}`}><p.icon className="w-5 h-5" /></div>
+                  <h3 className="font-black text-slate-900">{p.name}</h3>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{p.body}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-2">
-            {FEATURES.map((f) => (
-              <span key={f} className="px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-[12px] font-medium text-slate-600">{f}</span>
-            ))}
-          </div>
+          <Reveal delay={120}>
+            <div className="mt-10 flex flex-wrap justify-center gap-2">
+              {FEATURES.map((f) => (
+                <span key={f} className="px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-[12px] font-medium text-slate-600 transition-colors hover:ring-slate-300 hover:text-slate-800">{f}</span>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -118,11 +127,14 @@ export default function HomePage() {
 
       {/* Pricing */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-3xl font-black tracking-tight text-center">Simple, transparent pricing</h2>
-        <p className="text-center text-slate-500 mt-2 mb-12">Start free, upgrade as you grow.</p>
+        <Reveal>
+          <h2 className="text-3xl font-black tracking-tight text-center">Simple, transparent pricing</h2>
+          <p className="text-center text-slate-500 mt-2 mb-12">Start free, upgrade as you grow.</p>
+        </Reveal>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {PLANS.map((pl) => (
-            <div key={pl.name} className={`rounded-2xl p-6 flex flex-col bg-white ${pl.highlight ? 'ring-2 ring-indigo-600 shadow-lg' : 'ring-1 ring-slate-200/70'}`}>
+          {PLANS.map((pl, i) => (
+            <Reveal key={pl.name} delay={i * 80} className="flex">
+            <div className={`rounded-2xl p-6 flex flex-col w-full bg-white transition-all duration-200 hover:-translate-y-1 ${pl.highlight ? 'ring-2 ring-indigo-600 shadow-lg hover:shadow-xl' : 'ring-1 ring-slate-200/70 hover:shadow-soft-md hover:ring-slate-300'}`}>
               {pl.highlight && <div className="self-start mb-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5">Most popular</div>}
               <h3 className="font-black text-slate-900">{pl.name}</h3>
               <div className="mt-2 mb-1"><span className="text-3xl font-black">{pl.price}</span></div>
@@ -132,12 +144,14 @@ export default function HomePage() {
               </ul>
               <Link href={pl.href} className={`h-10 rounded-xl font-bold text-center inline-flex items-center justify-center transition ${pl.highlight ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white ring-1 ring-slate-200 text-slate-700 hover:bg-slate-50'}`}>{pl.cta}</Link>
             </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* FAQ */}
       <section className="max-w-3xl mx-auto px-6 py-20">
+        <Reveal>
         <h2 className="text-3xl font-black tracking-tight text-center">Questions, answered</h2>
         <p className="text-center text-slate-500 mt-2 mb-10">Everything you need to know before you start.</p>
         <div className="space-y-3">
@@ -157,20 +171,23 @@ export default function HomePage() {
             </details>
           ))}
         </div>
+        </Reveal>
       </section>
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
+        <Reveal>
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-16 text-center text-white">
           <div className="absolute inset-0 -z-0 opacity-60"><AsciiField colors={['129,140,248', '167,139,250', '217,70,239', '56,189,248']} baseAlpha={0.08} peakAlpha={0.7} /></div>
-          <div className="relative">
+          <div className="relative pointer-events-none">
             <h2 className="text-4xl font-black tracking-tight">Your company, organized.</h2>
             <p className="mt-3 text-white/70 max-w-xl mx-auto">One workspace for sales, finance, projects, and people. Set it up in minutes.</p>
-            <Link href="/auth/register" className="mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-white text-slate-900 font-bold hover:bg-slate-100 transition">
+            <Link href="/auth/register" className="pointer-events-auto mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-white text-slate-900 font-bold transition-all duration-200 hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-lg">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
+        </Reveal>
       </section>
 
       {/* Footer */}

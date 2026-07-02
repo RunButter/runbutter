@@ -115,7 +115,7 @@ export default function RecordTable({ object, rows, onRowClick }: { object: Obje
             </th>
             {object.fields.map((f) => (
               <th key={f.key} style={{ minWidth: f.width }}
-                className={`sticky top-0 z-10 bg-white px-3 h-9 font-semibold text-slate-500 border-b border-slate-200/70 ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
+                className={`sticky top-0 z-10 bg-white px-3 h-9 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-200/70 ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
                 {f.label}
               </th>
             ))}

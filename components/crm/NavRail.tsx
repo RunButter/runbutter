@@ -28,7 +28,7 @@ function Item({ it, active, onNavigate }: { it: any; active: boolean; onNavigate
         active ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900 hover:bg-white/70'
       }`}
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary-600' : ''}`} />
       {it.label}
     </Link>
   );
