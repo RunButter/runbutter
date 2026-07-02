@@ -5,6 +5,7 @@ import { X, Loader2, Trash2, Upload, Search } from 'lucide-react';
 import type { ObjectDef, FormField } from '@/lib/crm/types';
 import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm/data';
 import { supabase } from '@/lib/supabase';
+import SearchSelect from './SearchSelect';
 
 interface Props {
   object: ObjectDef;
@@ -138,11 +139,8 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                     {values[f.key] && <button type="button" onClick={() => set(f.key, '')} className="text-[12px] text-slate-400 hover:text-rose-600">Remove</button>}
                   </div>
                 ) : f.input === 'relation' ? (
-                  <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
-                    <option value="">{relOptions[f.key] ? '— none —' : 'Loading…'}</option>
-                    {(relOptions[f.key] || []).map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-                  </select>
+                  <SearchSelect options={relOptions[f.key] || []} value={values[f.key] ?? ''} onChange={(id) => set(f.key, id)}
+                    placeholder={relOptions[f.key] ? `Search ${f.label.toLowerCase()}…` : 'Loading…'} allowClear />
                 ) : f.input === 'select' ? (
                   <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
                     className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none capitalize">

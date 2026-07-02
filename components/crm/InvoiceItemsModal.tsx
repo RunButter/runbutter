@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { loadRecords, loadInvoiceDocument, saveInvoiceItems, type InvoiceLineItem } from '@/lib/crm/data';
+import SearchSelect from './SearchSelect';
 
 interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string; image?: string | null }
 interface Product { id: string; name: string; unit_price: number; image?: string | null }
@@ -92,11 +93,11 @@ export default function InvoiceItemsModal({
           ) : (<>
           {/* Add controls */}
           <div className="flex items-center gap-2 mb-3">
-            <select value="" onChange={(e) => { addProduct(e.target.value); e.target.value = ''; }}
-              className="h-8 px-2 text-[12px] rounded-md bg-white ring-1 ring-slate-200 text-slate-600 outline-none focus:ring-2 focus:ring-primary-500">
-              <option value="">+ Add product / service…</option>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.name} — {money(p.unit_price)}</option>)}
-            </select>
+            <div className="w-72">
+              <SearchSelect value="" onChange={addProduct} clearOnPick placeholder="+ Add product / service…"
+                options={products.map((p) => ({ id: p.id, name: p.name, hint: money(p.unit_price), image: p.image }))}
+                buttonClassName="!h-8 !text-[12px]" />
+            </div>
             <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"><Plus className="w-3.5 h-3.5" /> Custom line</button>
           </div>
 

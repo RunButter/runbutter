@@ -9,6 +9,7 @@ import {
   type InvoiceDocument,
 } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
+import SearchSelect from '@/components/crm/SearchSelect';
 
 const fmt = (n: number, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n || 0);
 
@@ -175,11 +176,9 @@ export default function DocumentBuilder() {
           <div className="grid sm:grid-cols-3 gap-6 py-6">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{isOffer ? 'Prepared for' : 'Bill to'}</div>
-              <select value={header.organization_id} onChange={(e) => setH({ organization_id: e.target.value })}
-                className="w-full text-[14px] font-bold text-slate-800 bg-transparent hover:bg-slate-50 focus:bg-white rounded px-1.5 py-1 outline-none focus:ring-1 focus:ring-primary-400">
-                <option value="">{doc.buyer?.name || '— select client —'}</option>
-                {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchSelect options={companies} value={header.organization_id} onChange={(id) => setH({ organization_id: id })}
+                placeholder={doc.buyer?.name || 'Search client…'} allowClear
+                buttonClassName="!ring-0 hover:!bg-slate-50 !font-bold !text-[14px]" />
             </div>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">{isOffer ? 'Issued' : 'Invoice date'}</div>
@@ -234,11 +233,11 @@ export default function DocumentBuilder() {
 
           {/* Add row */}
           <div className="flex items-center gap-2 mt-3">
-            <select value="" onChange={(e) => { addProduct(e.target.value); e.target.value = ''; }}
-              className="h-8 px-2 text-[12px] rounded-md bg-white ring-1 ring-slate-200 text-slate-600 outline-none focus:ring-2 focus:ring-primary-500">
-              <option value="">+ Add product / service…</option>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.name} — {fmt(p.unit_price, doc.currency)}</option>)}
-            </select>
+            <div className="w-72">
+              <SearchSelect value="" onChange={addProduct} clearOnPick placeholder="+ Add product / service…"
+                options={products.map((p) => ({ id: p.id, name: p.name, hint: fmt(p.unit_price, doc.currency), image: p.image }))}
+                buttonClassName="!h-8 !text-[12px]" />
+            </div>
             <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"><Plus className="w-3.5 h-3.5" /> Custom line</button>
           </div>
 
