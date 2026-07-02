@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase';
+import { buildDocumentPdf } from '@/lib/pdf/document-pdf';
 
 export const runtime = 'nodejs';
 
@@ -88,8 +89,10 @@ export async function POST(req: Request) {
           <tbody>${rows}</tbody>
         </table>
         ${totalsHtml}
-        <div style="text-align:center;margin:28px 0;">
-          <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;">View &amp; download ${title.toLowerCase()}</a>
+        <p style="font-size:13px;color:#6B7280;text-align:center;margin:24px 0 0;">The ${title.toLowerCase()} is attached as a PDF.</p>
+        <div style="text-align:center;margin:12px 0 28px;">
+          ${d.share_token ? `<a href="${origin}/api/documents/${invoiceId}/pdf?t=${d.share_token}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;">Download PDF (A4)</a>
+          <a href="${link}" style="display:inline-block;color:#6B7280;text-decoration:underline;font-size:13px;padding:12px 10px;">or view online</a>` : ''}
         </div>
         ${d.notes ? `<p style="font-size:13px;color:#6B7280;line-height:1.6;">${esc(d.notes)}</p>` : ''}
         ${footer ? `<p style="font-size:12px;color:#6B7280;line-height:1.6;border-top:1px solid #E5E7EB;padding-top:12px;">${esc(footer)}</p>` : ''}
@@ -101,12 +104,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, skipped: true, reason: 'no_api_key' });
     }
 
+    // Attach the A4 PDF — the recipient gets the document itself, read-only,
+    // even if they never click a link. Best-effort: a PDF failure shouldn't
+    // block the send.
+    let pdf: Buffer | null = null;
+    try { pdf = await buildDocumentPdf(d); } catch (pdfErr) { console.error('send-document pdf error:', pdfErr); }
+    const pdfName = `${String(d.number || title).replace(/[^\w\-]/g, '_')}.pdf`;
+
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error: sendErr } = await resend.emails.send({
       from: 'hirebtr.com <hello@hirebtr.com>',
       to: [to],
       subject: `${title} ${d.number || ''} from ${sellerName}`.trim(),
       html,
+      ...(pdf ? { attachments: [{ filename: pdfName, content: pdf.toString('base64') }] } : {}),
     });
     if (sendErr) {
       console.error('send-document Resend error:', sendErr);

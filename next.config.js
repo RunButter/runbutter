@@ -14,7 +14,8 @@ const nextConfig = {
   },
   transpilePackages: ['@privy-io/react-auth'],
   experimental: {
-    serverComponentsExternalPackages: ['googleapis', 'pino', 'pino-pretty'],
+    // pdfkit must stay unbundled: it reads its font metrics from node_modules at runtime
+    serverComponentsExternalPackages: ['googleapis', 'pino', 'pino-pretty', 'pdfkit'],
   },
   typescript: {
     ignoreBuildErrors: true,

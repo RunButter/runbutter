@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock, FileDown } from 'lucide-react';
 import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 
@@ -126,6 +126,15 @@ function DocumentInner() {
                   className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
               </>
             )}
+            {(() => {
+              const pdfToken = token || doc.share_token;
+              const pdfHref = pdfToken || !isUuid(id) ? `/api/documents/${id}/pdf${pdfToken ? `?t=${pdfToken}` : ''}` : null;
+              return pdfHref ? (
+                <a href={pdfHref} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+                  <FileDown className="w-3.5 h-3.5" /> PDF
+                </a>
+              ) : null;
+            })()}
             <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-slate-900 hover:bg-slate-800"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
           </div>
         </div>
