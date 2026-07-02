@@ -238,7 +238,24 @@ export interface InvoiceDocument {
     bdo?: string | null; iban?: string | null; bank_name?: string | null;
   };
   buyer: { name: string; domain?: string; industry?: string; tax_id?: string | null; address?: string | null; country?: string | null } | null;
-  items: InvoiceLineItem[]; totals?: DocumentTotals; live: boolean;
+  items: InvoiceLineItem[]; totals?: DocumentTotals; share_token?: string | null; live: boolean;
+}
+
+// Normalise the RPC payload (owner or public variant) into InvoiceDocument.
+function mapDocument(d: any): InvoiceDocument {
+  return {
+    id: d.id, number: d.number, kind: d.kind || 'invoice', direction: d.direction || 'income',
+    status: d.status, currency: d.currency || 'USD', amount: +d.amount || 0, category: d.category,
+    issued_at: d.issued_at, due_at: d.due_at, notes: d.notes,
+    seller: d.seller || { name: 'Your company' },
+    buyer: d.buyer || null,
+    items: Array.isArray(d.items)
+      ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, image: it.image, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, discount_pct: +it.discount_pct || 0, tax_rate: +it.tax_rate || 0, line_total: +it.line_total || 0 }))
+      : [],
+    totals: d.totals ? { subtotal: +d.totals.subtotal || 0, discount: +d.totals.discount || 0, net: +d.totals.net || 0, tax: +d.totals.tax || 0, total: +d.totals.total || 0 } : undefined,
+    share_token: d.share_token || null,
+    live: true,
+  };
 }
 
 // ── Workspace branding (logo, accent, footer for documents) ───────────────────
@@ -270,21 +287,21 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
     await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
     const { data, error } = await supabase.rpc('get_invoice_document', { p_privy: privyUserId, p_id: id });
     if (error || !data) return fallback();
-    const d = data as any;
-    return {
-      id: d.id, number: d.number, kind: d.kind || 'invoice', direction: d.direction || 'income',
-      status: d.status, currency: d.currency || 'USD', amount: +d.amount || 0, category: d.category,
-      issued_at: d.issued_at, due_at: d.due_at, notes: d.notes,
-      seller: d.seller || { name: 'Your company' },
-      buyer: d.buyer || null,
-      items: Array.isArray(d.items)
-        ? d.items.map((it: any) => ({ description: it.description, product: it.product, product_id: it.product_id, image: it.image, quantity: +it.quantity || 0, unit_price: +it.unit_price || 0, discount_pct: +it.discount_pct || 0, tax_rate: +it.tax_rate || 0, line_total: +it.line_total || 0 }))
-        : [],
-      totals: d.totals ? { subtotal: +d.totals.subtotal || 0, discount: +d.totals.discount || 0, net: +d.totals.net || 0, tax: +d.totals.tax || 0, total: +d.totals.total || 0 } : undefined,
-      live: true,
-    };
+    return mapDocument(data);
   } catch {
     return fallback();
+  }
+}
+
+// Recipient view: load a document by its share token — no login, no mock
+// fallback (returns null so the page can show a clear "not available" state).
+export async function loadPublicDocument(id: string, token: string): Promise<InvoiceDocument | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_invoice_document_public', { p_id: id, p_token: token });
+    if (error || !data) return null;
+    return mapDocument(data);
+  } catch {
+    return null;
   }
 }
 

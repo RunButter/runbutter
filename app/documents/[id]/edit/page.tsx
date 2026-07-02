@@ -210,12 +210,10 @@ export default function DocumentBuilder() {
                 return (
                   <tr key={i} className="border-b border-slate-100 group">
                     <td className="py-1">
-                      <div className="flex items-center gap-2">
-                        {r.image
-                          ? <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />
-                          : r.product_id
-                            ? <div className="w-8 h-8 rounded bg-slate-100 ring-1 ring-slate-200/60 shrink-0" />
-                            : null}
+                      <div className="flex items-center gap-2.5">
+                        {isOffer && r.image && (
+                          <img src={r.image} alt="" className="w-10 h-10 rounded-md object-cover ring-1 ring-slate-200/60 shrink-0" />
+                        )}
                         <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Item / service" className={cellInput + ' text-left font-medium text-slate-800'} />
                       </div>
                     </td>

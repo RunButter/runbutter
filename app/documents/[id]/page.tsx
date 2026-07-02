@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Pencil, Send, Check, Loader2 } from 'lucide-react';
-import { loadInvoiceDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
+import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock } from 'lucide-react';
+import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 
 const fmt = (n: number, currency = 'USD') =>
@@ -20,18 +20,42 @@ const STATUS_TONE: Record<string, string> = {
   declined: 'bg-rose-50 text-rose-700 ring-rose-200',
 };
 
+const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 export default function DocumentPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
+      <DocumentInner />
+    </Suspense>
+  );
+}
+
+function DocumentInner() {
   const params = useParams();
   const router = useRouter();
+  const search = useSearchParams();
   const id = String(params.id);
+  const token = search.get('t');            // share-link (recipient) mode
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
 
   const [doc, setDoc] = useState<InvoiceDocument | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [converting, setConverting] = useState(false);
 
-  const reload = useCallback(() => { loadInvoiceDocument(privy, id).then(setDoc); }, [privy, id]);
+  const reload = useCallback(() => {
+    if (token) {
+      // Recipient view: token is the authorisation — never fall back to a sample.
+      loadPublicDocument(id, token).then((d) => { if (d) setDoc(d); else setBlocked(true); });
+    } else {
+      loadInvoiceDocument(privy, id).then((d) => {
+        // Real ids must never silently render the sample document.
+        if (isUuid(id) && !d.live) setBlocked(true);
+        else setDoc(d);
+      });
+    }
+  }, [privy, id, token]);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
 
   const acceptOffer = async () => {
@@ -43,9 +67,27 @@ export default function DocumentPage() {
     if (res.id) router.push(`/documents/${res.id}`);
   };
 
+  if (blocked) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-sm w-full bg-white rounded-xl ring-1 ring-slate-200 shadow-sm p-8 text-center">
+          <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-3"><Lock className="w-4 h-4 text-slate-400" /></div>
+          <h1 className="text-sm font-bold text-slate-800">This document isn’t available</h1>
+          <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+            {token
+              ? 'The share link is invalid or has been replaced. Ask the sender for a fresh link.'
+              : 'Open it from your workspace, or use the share link from the email.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!doc) {
     return <div className="min-h-screen flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
+
+  const recipient = !!token;                // clean read-only view for clients
 
   const isOffer = doc.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';
@@ -61,19 +103,29 @@ export default function DocumentPage() {
       {/* Toolbar */}
       <div className="no-print sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
-          <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100"><ArrowLeft className="w-4 h-4" /> Back</button>
-          <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{doc.live ? 'Live' : 'Sample'}</span>
+          {recipient ? (
+            <span className="text-[13px] font-semibold text-slate-600">{doc.seller?.name || 'Document'} — {isOffer ? 'offer' : 'invoice'} {doc.number || ''}</span>
+          ) : (
+            <>
+              <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100"><ArrowLeft className="w-4 h-4" /> Back</button>
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{doc.live ? 'Live' : 'Sample'}</span>
+            </>
+          )}
           <div className="ml-auto flex items-center gap-2">
-            {isOffer && (
+            {!recipient && isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in to accept' : ''}
                 className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
                 {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
               </button>
             )}
-            <button onClick={() => router.push(`/documents/${id}/edit`)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
-              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Edit</button>
-            <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
-              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
+            {!recipient && (
+              <>
+                <button onClick={() => router.push(`/documents/${id}/edit`)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
+                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
+                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
+              </>
+            )}
             <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-slate-900 hover:bg-slate-800"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
           </div>
         </div>
@@ -147,8 +199,11 @@ export default function DocumentPage() {
               ) : doc.items.map((it, i) => (
                 <tr key={i} className="border-b border-slate-100">
                   <td className="py-3 font-medium text-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      {it.image && <img src={it.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />}
+                    {/* Offers sell — big product visuals. Invoices stay formal — no images. */}
+                    <div className="flex items-center gap-3">
+                      {isOffer && it.image && (
+                        <img src={it.image} alt="" className="w-16 h-16 rounded-lg object-cover ring-1 ring-slate-200/70 shadow-sm shrink-0" />
+                      )}
                       <span>{it.description || it.product || 'Item'}{!!it.discount_pct && <span className="ml-2 text-[11px] font-semibold text-emerald-600">−{it.discount_pct}%</span>}</span>
                     </div>
                   </td>

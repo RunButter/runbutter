@@ -36,16 +36,19 @@ export async function POST(req: Request) {
     const T = d.totals || null;
     const total = T ? +T.total : (items.length ? items.reduce((s, it) => s + (+it.line_total || 0), 0) : (+d.amount || 0));
     const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
-    const link = `${origin}/documents/${invoiceId}`;
+    // Share token (0025) lets the recipient open the REAL document without an
+    // account. Without it the page is login-gated and a client would see nothing.
+    const link = `${origin}/documents/${invoiceId}${d.share_token ? `?t=${d.share_token}` : ''}`;
     const sellerName = d.seller?.name || 'Your company';
     const accent = d.seller?.accent_color || '#6366F1';
     const logo = d.seller?.logo_url;
     const footer = d.seller?.footer;
 
     const rows = items.map((it) => {
-      // only http(s) images render reliably in mail clients (data: URIs are blocked)
-      const img = it.image && /^https?:\/\//i.test(it.image)
-        ? `<img src="${esc(it.image)}" alt="" width="32" height="32" style="width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px;" />`
+      // Product images: offers only (invoices stay formal). Only http(s) images
+      // render reliably in mail clients (data: URIs are blocked).
+      const img = isOffer && it.image && /^https?:\/\//i.test(it.image)
+        ? `<img src="${esc(it.image)}" alt="" width="56" height="56" style="width:56px;height:56px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:10px;" />`
         : '';
       return `
       <tr>
