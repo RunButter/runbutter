@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Send, Check, Plus, Trash2, Loader2, Eye } from 'lucide-react';
+import { ArrowLeft, Send, Check, Plus, Trash2, Loader2, Eye, FileCode } from 'lucide-react';
 import {
   loadInvoiceDocument, getRecord, loadRecords, updateRecord, saveInvoiceItems, convertOffer,
   type InvoiceDocument,
@@ -99,6 +99,19 @@ export default function DocumentBuilder() {
     if (res.id) router.push(`/documents/${res.id}/edit`);
   };
 
+  // Download the FA(3) KSeF XML (works in Sample mode via a sample document).
+  const exportKsef = async () => {
+    const res = await fetch('/api/ksef/invoice-xml', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privyUserId: privy, invoiceId: id }),
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); alert(e.error || 'KSeF export failed'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${header.number || 'faktura'}-fa3.xml`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!doc) return <div className="min-h-screen flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>;
 
   const isOffer = doc.kind === 'offer';
@@ -116,6 +129,7 @@ export default function DocumentBuilder() {
           <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{doc.live ? 'Live' : 'Sample'}</span>
           <div className="ml-auto flex items-center gap-2">
             <button onClick={() => router.push(`/documents/${id}`)} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"><Eye className="w-3.5 h-3.5" /> Preview</button>
+            <button onClick={exportKsef} title="Download FA(3) e-invoice XML" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"><FileCode className="w-3.5 h-3.5" /> KSeF XML</button>
             {isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in' : ''}
                 className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
