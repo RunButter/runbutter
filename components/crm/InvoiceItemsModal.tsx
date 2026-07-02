@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { loadRecords, loadInvoiceDocument, saveInvoiceItems, type InvoiceLineItem } from '@/lib/crm/data';
 
-interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string }
-interface Product { id: string; name: string; unit_price: number }
+interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string; image?: string | null }
+interface Product { id: string; name: string; unit_price: number; image?: string | null }
 
 const money = (n: number) => '$' + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -19,6 +19,7 @@ export default function InvoiceItemsModal({
       product_id: it.product_id || '', description: it.description || it.product || '',
       quantity: String(it.quantity ?? 1), unit_price: String(it.unit_price ?? 0),
       discount_pct: String(it.discount_pct ?? 0), tax_rate: String(it.tax_rate ?? 0),
+      image: it.image || null,
     }))
   );
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,7 +29,7 @@ export default function InvoiceItemsModal({
 
   useEffect(() => {
     loadRecords(privyUserId, 'products').then((res) =>
-      setProducts(res.rows.map((p: any) => ({ id: p.id, name: p.name, unit_price: +p.unit_price || 0 })))
+      setProducts(res.rows.map((p: any) => ({ id: p.id, name: p.name, unit_price: +p.unit_price || 0, image: p.image || null })))
     );
   }, [privyUserId]);
 
@@ -41,6 +42,7 @@ export default function InvoiceItemsModal({
         product_id: it.product_id || '', description: it.description || it.product || '',
         quantity: String(it.quantity ?? 1), unit_price: String(it.unit_price ?? 0),
         discount_pct: String(it.discount_pct ?? 0), tax_rate: String(it.tax_rate ?? 0),
+        image: it.image || null,
       })));
       setLoading(false);
     });
@@ -62,7 +64,7 @@ export default function InvoiceItemsModal({
   const addProduct = (id: string) => {
     const p = products.find((x) => x.id === id);
     if (!p) return;
-    setRows((rs) => [...rs, { product_id: p.id, description: p.name, quantity: '1', unit_price: String(p.unit_price), discount_pct: '0', tax_rate: rs[rs.length - 1]?.tax_rate || '0' }]);
+    setRows((rs) => [...rs, { product_id: p.id, description: p.name, quantity: '1', unit_price: String(p.unit_price), discount_pct: '0', tax_rate: rs[rs.length - 1]?.tax_rate || '0', image: p.image || null }]);
   };
 
   const save = async () => {
@@ -108,8 +110,11 @@ export default function InvoiceItemsModal({
               const amount = (Number(r.quantity) || 0) * (Number(r.unit_price) || 0) * (1 - (Number(r.discount_pct) || 0) / 100);
               return (
                 <div key={i} className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 items-center">
-                  <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Description"
-                    className="h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
+                  <div className="flex items-center gap-2 min-w-0">
+                    {r.image && <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />}
+                    <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Description"
+                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
+                  </div>
                   <input type="number" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })}
                     className="h-8 px-1.5 text-[13px] text-right rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
                   <input type="number" value={r.unit_price} onChange={(e) => setRow(i, { unit_price: e.target.value })}

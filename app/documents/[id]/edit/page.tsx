@@ -12,9 +12,9 @@ import SendDocumentModal from '@/components/crm/SendDocumentModal';
 
 const fmt = (n: number, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n || 0);
 
-interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string }
+interface Row { product_id: string; description: string; quantity: string; unit_price: string; discount_pct: string; tax_rate: string; image?: string | null }
 interface Opt { id: string; name: string }
-interface Prod { id: string; name: string; unit_price: number }
+interface Prod { id: string; name: string; unit_price: number; image?: string | null }
 
 const cellInput = 'w-full bg-transparent hover:bg-slate-50 focus:bg-white rounded px-1.5 py-1 text-[13px] outline-none focus:ring-1 focus:ring-primary-400 tabular-nums';
 
@@ -42,6 +42,7 @@ export default function DocumentBuilder() {
       product_id: it.product_id || '', description: it.description || it.product || '',
       quantity: String(it.quantity ?? 1), unit_price: String(it.unit_price ?? 0),
       discount_pct: String(it.discount_pct ?? 0), tax_rate: String(it.tax_rate ?? 0),
+      image: it.image || null,
     })));
     const rec = privy ? await getRecord(privy, 'invoices', id) : null;
     setHeader({
@@ -50,7 +51,7 @@ export default function DocumentBuilder() {
       due_at: rec?.due_at || d.due_at || '', notes: rec?.notes ?? d.notes ?? '',
     });
     loadRecords(privy, 'companies').then((r) => setCompanies(r.rows.map((c: any) => ({ id: c.id, name: c.name }))));
-    loadRecords(privy, 'products').then((r) => setProducts(r.rows.map((p: any) => ({ id: p.id, name: p.name, unit_price: +p.unit_price || 0 }))));
+    loadRecords(privy, 'products').then((r) => setProducts(r.rows.map((p: any) => ({ id: p.id, name: p.name, unit_price: +p.unit_price || 0, image: p.image || null }))));
   }, [privy, id]);
 
   useEffect(() => { if (ready) load(); }, [ready, load]);
@@ -72,7 +73,7 @@ export default function DocumentBuilder() {
   const addCustom = () => { setRows((rs) => [...rs, { product_id: '', description: '', quantity: '1', unit_price: '0', discount_pct: '0', tax_rate: rs[rs.length - 1]?.tax_rate || '0' }]); setSaved(false); };
   const addProduct = (pid: string) => {
     const p = products.find((x) => x.id === pid); if (!p) return;
-    setRows((rs) => [...rs, { product_id: p.id, description: p.name, quantity: '1', unit_price: String(p.unit_price), discount_pct: '0', tax_rate: rs[rs.length - 1]?.tax_rate || '0' }]);
+    setRows((rs) => [...rs, { product_id: p.id, description: p.name, quantity: '1', unit_price: String(p.unit_price), discount_pct: '0', tax_rate: rs[rs.length - 1]?.tax_rate || '0', image: p.image || null }]);
     setSaved(false);
   };
 
@@ -209,7 +210,16 @@ export default function DocumentBuilder() {
                 const amount = (Number(r.quantity) || 0) * (Number(r.unit_price) || 0) * (1 - (Number(r.discount_pct) || 0) / 100);
                 return (
                   <tr key={i} className="border-b border-slate-100 group">
-                    <td className="py-1"><input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Item / service" className={cellInput + ' text-left font-medium text-slate-800'} /></td>
+                    <td className="py-1">
+                      <div className="flex items-center gap-2">
+                        {r.image
+                          ? <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />
+                          : r.product_id
+                            ? <div className="w-8 h-8 rounded bg-slate-100 ring-1 ring-slate-200/60 shrink-0" />
+                            : null}
+                        <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Item / service" className={cellInput + ' text-left font-medium text-slate-800'} />
+                      </div>
+                    </td>
                     <td className="py-1"><input type="number" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })} className={cellInput + ' text-right'} /></td>
                     <td className="py-1"><input type="number" value={r.unit_price} onChange={(e) => setRow(i, { unit_price: e.target.value })} className={cellInput + ' text-right'} /></td>
                     <td className="py-1"><input type="number" value={r.discount_pct} onChange={(e) => setRow(i, { discount_pct: e.target.value })} className={cellInput + ' text-right'} /></td>

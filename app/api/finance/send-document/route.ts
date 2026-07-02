@@ -42,14 +42,20 @@ export async function POST(req: Request) {
     const logo = d.seller?.logo_url;
     const footer = d.seller?.footer;
 
-    const rows = items.map((it) => `
+    const rows = items.map((it) => {
+      // only http(s) images render reliably in mail clients (data: URIs are blocked)
+      const img = it.image && /^https?:\/\//i.test(it.image)
+        ? `<img src="${esc(it.image)}" alt="" width="32" height="32" style="width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px;" />`
+        : '';
+      return `
       <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #EEE;color:#333;">${esc(it.description || it.product || 'Item')}${+it.discount_pct ? ` <span style="color:#059669;font-size:12px;">−${it.discount_pct}%</span>` : ''}</td>
+        <td style="padding:8px 0;border-bottom:1px solid #EEE;color:#333;">${img}${esc(it.description || it.product || 'Item')}${+it.discount_pct ? ` <span style="color:#059669;font-size:12px;">−${it.discount_pct}%</span>` : ''}</td>
         <td style="padding:8px 0;border-bottom:1px solid #EEE;text-align:right;color:#666;">${it.quantity}</td>
         <td style="padding:8px 0;border-bottom:1px solid #EEE;text-align:right;color:#666;">${money(+it.unit_price || 0, d.currency)}</td>
         <td style="padding:8px 0;border-bottom:1px solid #EEE;text-align:right;color:#999;">${it.tax_rate ? it.tax_rate + '%' : '—'}</td>
         <td style="padding:8px 0;border-bottom:1px solid #EEE;text-align:right;font-weight:600;color:#111;">${money(+it.line_total || 0, d.currency)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     const totalsHtml = T ? `
       <table style="margin-left:auto;font-size:14px;margin-top:12px;">
