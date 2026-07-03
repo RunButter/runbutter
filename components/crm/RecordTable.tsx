@@ -38,6 +38,13 @@ const TAG_STYLE: Record<string, string> = {
   office: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
   payroll: 'bg-violet-50 text-violet-700 ring-violet-200/60',
   travel: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  // marketing channels + states
+  email: 'bg-sky-50 text-sky-700 ring-sky-200/60',
+  social: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/60',
+  ads: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  event: 'bg-violet-50 text-violet-700 ring-violet-200/60',
+  content: 'bg-teal-50 text-teal-700 ring-teal-200/60',
+  planned: 'bg-slate-100 text-slate-500 ring-slate-200/60',
   // project / issue states + priority
   active: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   paused: 'bg-amber-50 text-amber-700 ring-amber-200/60',

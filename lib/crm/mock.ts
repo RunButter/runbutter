@@ -144,6 +144,13 @@ export const MOCK_OFFERS = [
   { id: 'of3', number: 'OFF-1041', company: 'Lumen Devtools', category: 'Covers', amount: 3200, status: 'declined', due_at: '2026-06-20' },
 ];
 
+export const MOCK_CAMPAIGNS = [
+  { id: 'cp1', name: 'Q3 LinkedIn ads', channel: 'ads', status: 'active', budget: 6000, spend: 2140, leads: 38, starts_on: '2026-07-01', ends_on: '2026-09-30' },
+  { id: 'cp2', name: 'Summer newsletter', channel: 'email', status: 'active', budget: 800, spend: 320, leads: 54, starts_on: '2026-06-15', ends_on: '2026-08-15' },
+  { id: 'cp3', name: 'Trade fair — Poznań', channel: 'event', status: 'planned', budget: 12000, spend: 0, leads: 0, starts_on: '2026-09-10', ends_on: '2026-09-12' },
+  { id: 'cp4', name: 'SEO content sprint', channel: 'content', status: 'completed', budget: 3000, spend: 2950, leads: 21, starts_on: '2026-04-01', ends_on: '2026-05-31' },
+];
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
@@ -151,6 +158,7 @@ export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   offers: MOCK_OFFERS,
   expenses: MOCK_EXPENSES,
   products: MOCK_PRODUCTS,
+  campaigns: MOCK_CAMPAIGNS,
   projects: MOCK_PROJECTS,
   issues: MOCK_ISSUES,
   assets: MOCK_ASSETS,

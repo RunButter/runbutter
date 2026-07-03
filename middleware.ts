@@ -58,7 +58,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Authed surfaces: legacy ATS dashboard + the new platform (CRM / HRIS).
-  const authedPrefixes = ['/dashboard', '/home', '/objects', '/pipelines', '/projects', '/talent', '/hris', '/finance', '/settings'];
+  const authedPrefixes = ['/dashboard', '/home', '/objects', '/pipelines', '/projects', '/talent', '/hris', '/finance', '/marketing', '/settings'];
   const needsAuth = authedPrefixes.some((p) => pathname === p || pathname.startsWith(p + '/'));
   if (needsAuth && !isAuthenticated) {
     const redirectUrl = req.nextUrl.clone();

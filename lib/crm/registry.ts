@@ -105,6 +105,29 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'notes', label: 'Notes', input: 'textarea' },
     ],
   },
+  campaigns: {
+    slug: 'campaigns', singular: 'Campaign', plural: 'Campaigns', icon: 'Megaphone', type: 'asset',
+    fields: [
+      { key: 'name', label: 'Campaign', type: 'avatar', primary: true, width: 220 },
+      { key: 'channel', label: 'Channel', type: 'tags', width: 110 },
+      { key: 'status', label: 'Status', type: 'tags', width: 110 },
+      { key: 'budget', label: 'Budget', type: 'currency', align: 'right', width: 110 },
+      { key: 'spend', label: 'Spend', type: 'currency', align: 'right', width: 110 },
+      { key: 'leads', label: 'Leads', type: 'number', align: 'right', width: 80 },
+      { key: 'ends_on', label: 'Ends', type: 'date', width: 120 },
+    ],
+    form: [
+      { key: 'name', label: 'Campaign name', input: 'text', required: true },
+      { key: 'channel', label: 'Channel', input: 'select', options: ['email', 'social', 'ads', 'event', 'content', 'other'] },
+      { key: 'status', label: 'Status', input: 'select', options: ['planned', 'active', 'paused', 'completed'] },
+      { key: 'budget', label: 'Budget', input: 'number' },
+      { key: 'spend', label: 'Spend', input: 'number' },
+      { key: 'leads', label: 'Leads generated', input: 'number' },
+      { key: 'starts_on', label: 'Starts', input: 'date' },
+      { key: 'ends_on', label: 'Ends', input: 'date' },
+      { key: 'notes', label: 'Notes', input: 'textarea' },
+    ],
+  },
   projects: {
     slug: 'projects', singular: 'Project', plural: 'Projects', icon: 'FolderKanban', type: 'asset',
     fields: [
@@ -188,6 +211,11 @@ export const NAV = [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
+  ]},
+  { group: 'Marketing', items: [
+    { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
+    { slug: 'campaigns', label: 'Campaigns', icon: 'Rocket', href: '/objects/campaigns' },
+    { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
   ]},
   { group: 'HR', items: [
     { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
