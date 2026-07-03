@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, RefreshCw, Smartphone, CheckCircle2 } from 'lucide-react';
-import { loadSites, createSite, loadSiteStats, type Site, type SiteStats } from '@/lib/crm/data';
+import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, RefreshCw, Smartphone, CheckCircle2, Settings2, Trash2, X } from 'lucide-react';
+import { loadSites, createSite, deleteSite, loadSiteStats, type Site, type SiteStats } from '@/lib/crm/data';
 
 const PERIODS = [
   { label: '7D', days: 7 },
@@ -31,6 +31,8 @@ export default function WebAnalytics() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const refreshSites = useCallback(async () => {
     const res = await loadSites(privy);
@@ -71,6 +73,16 @@ export default function WebAnalytics() {
     await refreshSites();
     if (res.id) setSiteId(res.id);
     setSnippetOpen(true);
+  };
+
+  const removeSite = async (s: Site) => {
+    if (!privy) return;
+    if (!confirm(`Remove ${s.domain}? This deletes all its collected analytics — this can't be undone.`)) return;
+    setRemovingId(s.id);
+    const res = await deleteSite(privy, s.id);
+    setRemovingId(null);
+    if (res.error) { alert(res.error.includes('FORBIDDEN') ? 'Only an owner/admin can remove a website.' : res.error); return; }
+    await refreshSites();
   };
 
   const copySnippet = async () => {
@@ -117,10 +129,16 @@ export default function WebAnalytics() {
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
           {sites.length > 0 && (
-            <button onClick={() => { setSnippetOpen((o) => !o); setJustAdded(null); }}
-              className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50">
-              <Code2 className="w-3.5 h-3.5" /> Snippet
-            </button>
+            <>
+              <button onClick={() => { setSnippetOpen((o) => !o); setJustAdded(null); }}
+                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50">
+                <Code2 className="w-3.5 h-3.5" /> Snippet
+              </button>
+              <button onClick={() => setManaging(true)}
+                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50">
+                <Settings2 className="w-3.5 h-3.5" /> Manage
+              </button>
+            </>
           )}
           <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700"><Plus className="w-3.5 h-3.5" /> Add website</button>
@@ -248,6 +266,46 @@ export default function WebAnalytics() {
           </div>
         )}
       </div>
+
+      {/* Manage websites */}
+      {managing && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={() => setManaging(false)}>
+          <div className="w-full max-w-md flex flex-col bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
+              <h2 className="text-sm font-bold text-slate-800">Websites</h2>
+              <button onClick={() => setManaging(false)} aria-label="Close" className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">
+              {sites.length === 0 && <p className="text-[13px] text-slate-400 text-center py-4">No websites yet.</p>}
+              {sites.map((s) => (
+                <div key={s.id} className="flex items-center gap-2.5 rounded-lg ring-1 ring-slate-200/70 px-3 py-2.5">
+                  <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-semibold text-slate-800 truncate">{s.domain}</div>
+                    {s.created_at && <div className="text-[11px] text-slate-400">added {new Date(s.created_at).toLocaleDateString()}</div>}
+                  </div>
+                  <button onClick={() => { setSiteId(s.id); setSnippetOpen(true); setManaging(false); }}
+                    className="h-7 px-2 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50">Snippet</button>
+                  <button onClick={() => removeSite(s)} disabled={removingId === s.id} aria-label="Remove"
+                    className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40">
+                    {removingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="shrink-0 flex items-center gap-2 p-3 border-t border-slate-200/70">
+              <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="add another domain…"
+                onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
+                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+              <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
+                className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add
+              </button>
+            </div>
+            {error && <p className="px-4 pb-3 text-[12px] text-rose-600">{error}</p>}
+          </div>
+        </div>
+      )}
     </>
   );
 }

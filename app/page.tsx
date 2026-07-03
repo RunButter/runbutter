@@ -1,5 +1,12 @@
 import Link from 'next/link';
+import Script from 'next/script';
 import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles } from 'lucide-react';
+
+// Self-tracking (dogfooding our own web analytics). Production only, so dev
+// and preview visits never pollute the stats. Site ids are public by nature —
+// they appear in any tracked page's HTML.
+const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || 'a0f643e7-6b67-4290-8a8d-72f65cf7e341';
+const TRACK = process.env.NODE_ENV === 'production';
 import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
@@ -29,6 +36,9 @@ const PLANS = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased">
+      {/* Dogfood our own web analytics (production only). */}
+      {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">

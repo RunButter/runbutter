@@ -314,7 +314,7 @@ export async function saveInvoiceItems(privyUserId: string, invoiceId: string, i
 }
 
 // ── First-party web analytics (Marketing) ─────────────────────────────────────
-export interface Site { id: string; domain: string; name?: string | null }
+export interface Site { id: string; domain: string; name?: string | null; created_at?: string | null }
 export interface SiteStatsDay { day: string; label: string; pageviews: number; visitors: number }
 export interface SiteStats {
   pageviews: number; visitors: number; live: number;
@@ -344,6 +344,11 @@ export async function createSite(privyUserId: string, domain: string, name?: str
   const { data, error } = await supabase.rpc('create_site', { p_privy: privyUserId, p_workspace: ws, p_domain: domain, p_name: name || null });
   if (error) return { error: error.message };
   return { id: data as string };
+}
+
+export async function deleteSite(privyUserId: string, siteId: string): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('delete_site', { p_privy: privyUserId, p_site: siteId });
+  return error ? { error: error.message } : {};
 }
 
 export async function loadSiteStats(privyUserId: string | null, siteId: string | null, days: number): Promise<SiteStats> {
