@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_POSTS, mockPostDetail, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -362,6 +362,80 @@ export async function loadSiteStats(privyUserId: string | null, siteId: string |
   } catch {
     return fallback();
   }
+}
+
+// ── Social post studio (Marketing / PreFeed port) ─────────────────────────────
+export type PostPlatform = 'instagram' | 'facebook' | 'x' | 'linkedin';
+export interface PostListItem {
+  id: string; platform: PostPlatform; handle?: string | null; content: string;
+  image_url?: string | null; status: string; updated_at?: string; comment_count: number;
+}
+export interface PostCommentRow { id: string; author: string; body: string; x?: number | null; y?: number | null; resolved: boolean; created_at?: string }
+export interface PostDetail {
+  id: string; platform: PostPlatform; handle?: string | null; content: string;
+  image_url?: string | null; status: string; share_token?: string | null;
+  comments: PostCommentRow[]; live: boolean;
+}
+
+export async function loadPosts(privyUserId: string | null): Promise<{ posts: PostListItem[]; live: boolean }> {
+  const fallback = { posts: MOCK_POSTS as PostListItem[], live: false };
+  if (!privyUserId) return fallback;
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return fallback;
+    const { data, error } = await supabase.rpc('get_posts', { p_privy: privyUserId, p_workspace: ws });
+    if (error || !Array.isArray(data)) return fallback;
+    return { posts: data as PostListItem[], live: true };
+  } catch {
+    return fallback;
+  }
+}
+
+// Returns null for a real (uuid) post that can't be loaded — never sample data.
+export async function loadPost(privyUserId: string | null, id: string): Promise<PostDetail | null> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!uuid) return { ...(mockPostDetail(id) as any), live: false };
+  if (!privyUserId) return null;
+  try {
+    const { data, error } = await supabase.rpc('get_post', { p_privy: privyUserId, p_id: id });
+    if (error || !data) return null;
+    return { ...(data as any), live: true };
+  } catch {
+    return null;
+  }
+}
+
+export async function savePost(privyUserId: string, id: string | null, values: Record<string, any>): Promise<{ id?: string; error?: string }> {
+  const ws = await resolveWorkspace(privyUserId);
+  if (!ws) return { error: 'No workspace found for your account.' };
+  const { data, error } = await supabase.rpc('save_post', { p_privy: privyUserId, p_workspace: ws, p_id: id, p_data: values });
+  if (error) return { error: error.message };
+  return { id: data as string };
+}
+
+export async function addPostComment(privyUserId: string, postId: string, body: string, x?: number, y?: number): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('add_post_comment', { p_privy: privyUserId, p_post: postId, p_body: body, p_x: x ?? null, p_y: y ?? null });
+  return error ? { error: error.message } : {};
+}
+
+export async function setPostCommentResolved(privyUserId: string, commentId: string, resolved: boolean): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('set_post_comment_resolved', { p_privy: privyUserId, p_comment: commentId, p_resolved: resolved });
+  return error ? { error: error.message } : {};
+}
+
+export async function loadPublicPost(id: string, token: string): Promise<PostDetail | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_post_public', { p_id: id, p_token: token });
+    if (error || !data) return null;
+    return { ...(data as any), live: true };
+  } catch {
+    return null;
+  }
+}
+
+export async function addPublicPostComment(id: string, token: string, author: string, body: string, x?: number, y?: number): Promise<{ error?: string }> {
+  const { error } = await supabase.rpc('add_post_comment_public', { p_id: id, p_token: token, p_author: author, p_body: body, p_x: x ?? null, p_y: y ?? null });
+  return error ? { error: error.message } : {};
 }
 
 export async function loadBoard(privyUserId: string | null, slug: string, kind: PipelineKind): Promise<BoardResult> {

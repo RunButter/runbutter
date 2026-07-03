@@ -180,6 +180,28 @@ export function mockSiteStats(days: number) {
   };
 }
 
+// Social post studio samples (PreFeed port).
+const POST_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%236366F1'/><rect x='60' y='180' width='480' height='240' rx='24' fill='%23818CF8'/><rect x='120' y='240' width='360' height='120' rx='16' fill='%23C7D2FE'/><text x='300' y='520' font-size='34' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='bold'>New PVC bus covers</text></svg>";
+
+export const MOCK_POSTS = [
+  { id: 'p1', platform: 'instagram', handle: '@buscovers_pl', content: 'Nowa kolekcja pokrowców PVC już dostępna! 🚌 Odporne na UV i deszcz. #buscovers #pvc', image_url: POST_IMG, status: 'in_review', comment_count: 2 },
+  { id: 'p2', platform: 'linkedin', handle: 'BusCovers PL', content: 'We just shipped custom-fit covers for a fleet of 40 city buses — cutting weather damage costs by 60%. Case study in comments.', image_url: POST_IMG, status: 'draft', comment_count: 0 },
+  { id: 'p3', platform: 'x', handle: '@buscovers_pl', content: 'Fleet managers: weather damage is eating your budget. Custom PVC covers pay for themselves in one season. 🧵', image_url: null, status: 'approved', comment_count: 1 },
+];
+
+export function mockPostDetail(id: string) {
+  const base = MOCK_POSTS.find((p) => p.id === id) || MOCK_POSTS[0];
+  return {
+    ...base,
+    share_token: 'sample',
+    comments: [
+      { id: 'pc1', author: 'Kasia (Client)', body: 'Logo powinno być większe — ledwo widać na mobile.', x: 28, y: 42, resolved: false, created_at: '2026-07-01T10:00:00Z' },
+      { id: 'pc2', author: 'Marek', body: 'Dodajmy cenę promocyjną do caption?', x: 55, y: 78, resolved: false, created_at: '2026-07-01T11:30:00Z' },
+      { id: 'pc3', author: 'Ola', body: 'Hashtagi OK, zatwierdzam.', x: null, y: null, resolved: true, created_at: '2026-06-30T09:00:00Z' },
+    ],
+  };
+}
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,
