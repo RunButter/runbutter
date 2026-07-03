@@ -164,10 +164,13 @@ export function mockSiteStats(days: number) {
       visitors: Math.max(10, Math.round(wave * 0.62)),
     };
   });
+  const pv = series.reduce((s, p) => s + p.pageviews, 0);
   return {
-    pageviews: series.reduce((s, p) => s + p.pageviews, 0),
+    pageviews: pv,
     visitors: series.reduce((s, p) => s + p.visitors, 0),
     live: 7,
+    desktop: Math.round(pv * 0.58),
+    mobile: pv - Math.round(pv * 0.58),
     series,
     top_pages: [
       { path: '/', count: 1840 }, { path: '/pricing', count: 920 }, { path: '/blog/bus-covers-guide', count: 610 },

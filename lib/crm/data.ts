@@ -318,6 +318,7 @@ export interface Site { id: string; domain: string; name?: string | null }
 export interface SiteStatsDay { day: string; label: string; pageviews: number; visitors: number }
 export interface SiteStats {
   pageviews: number; visitors: number; live: number;
+  desktop: number; mobile: number;
   series: SiteStatsDay[];
   top_pages: { path: string; count: number }[];
   top_referrers: { ref: string; count: number }[];
@@ -354,6 +355,7 @@ export async function loadSiteStats(privyUserId: string | null, siteId: string |
     const d = data as any;
     return {
       pageviews: +d.pageviews || 0, visitors: +d.visitors || 0, live: +d.live || 0,
+      desktop: +d.desktop || 0, mobile: +d.mobile || 0,   // 0/0 until 0029 is applied
       series: Array.isArray(d.series) ? d.series.map((p: any) => ({ day: p.day, label: p.label, pageviews: +p.pageviews || 0, visitors: +p.visitors || 0 })) : [],
       top_pages: Array.isArray(d.top_pages) ? d.top_pages : [],
       top_referrers: Array.isArray(d.top_referrers) ? d.top_referrers : [],
