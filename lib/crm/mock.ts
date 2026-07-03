@@ -151,6 +151,35 @@ export const MOCK_CAMPAIGNS = [
   { id: 'cp4', name: 'SEO content sprint', channel: 'content', status: 'completed', budget: 3000, spend: 2950, leads: 21, starts_on: '2026-04-01', ends_on: '2026-05-31' },
 ];
 
+// Deterministic sample traffic for the web-analytics dashboard (Sample mode).
+export function mockSiteStats(days: number) {
+  const n = Math.max(1, Math.min(days, 90));
+  const series = Array.from({ length: n }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (n - 1 - i));
+    const wave = Math.round(120 + 60 * Math.sin(i / 3) + (i % 7 < 5 ? 40 : -30)); // weekday bump
+    return {
+      day: d.toISOString().slice(0, 10),
+      label: d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+      pageviews: Math.max(20, wave),
+      visitors: Math.max(10, Math.round(wave * 0.62)),
+    };
+  });
+  return {
+    pageviews: series.reduce((s, p) => s + p.pageviews, 0),
+    visitors: series.reduce((s, p) => s + p.visitors, 0),
+    live: 7,
+    series,
+    top_pages: [
+      { path: '/', count: 1840 }, { path: '/pricing', count: 920 }, { path: '/blog/bus-covers-guide', count: 610 },
+      { path: '/contact', count: 340 }, { path: '/products', count: 280 },
+    ],
+    top_referrers: [
+      { ref: 'google.com', count: 1460 }, { ref: 'direct', count: 980 }, { ref: 'linkedin.com', count: 420 },
+      { ref: 'facebook.com', count: 210 }, { ref: 'bing.com', count: 90 },
+    ],
+  };
+}
+
 export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   people: MOCK_PEOPLE.map((p) => ({ ...p, name: `${p.first_name} ${p.last_name}` })),
   companies: MOCK_COMPANIES,

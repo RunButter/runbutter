@@ -215,6 +215,7 @@ export const NAV = [
   { group: 'Marketing', items: [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
     { slug: 'campaigns', label: 'Campaigns', icon: 'Rocket', href: '/objects/campaigns' },
+    { slug: 'webanalytics', label: 'Web analytics', icon: 'Globe', href: '/marketing/analytics' },
     { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
   ]},
   { group: 'HR', items: [

@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -311,6 +311,57 @@ export async function saveInvoiceItems(privyUserId: string, invoiceId: string, i
   const { data, error } = await supabase.rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
   if (error) return { error: error.message };
   return { total: +(data as any) || 0 };
+}
+
+// ── First-party web analytics (Marketing) ─────────────────────────────────────
+export interface Site { id: string; domain: string; name?: string | null }
+export interface SiteStatsDay { day: string; label: string; pageviews: number; visitors: number }
+export interface SiteStats {
+  pageviews: number; visitors: number; live: number;
+  series: SiteStatsDay[];
+  top_pages: { path: string; count: number }[];
+  top_referrers: { ref: string; count: number }[];
+  live_flag: boolean; // true = real data
+}
+
+export async function loadSites(privyUserId: string | null): Promise<{ sites: Site[]; live: boolean }> {
+  if (!privyUserId) return { sites: [], live: false };
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return { sites: [], live: false };
+    const { data, error } = await supabase.rpc('get_sites', { p_privy: privyUserId, p_workspace: ws });
+    if (error || !Array.isArray(data)) return { sites: [], live: false };
+    return { sites: data as Site[], live: true };
+  } catch {
+    return { sites: [], live: false };
+  }
+}
+
+export async function createSite(privyUserId: string, domain: string, name?: string): Promise<{ id?: string; error?: string }> {
+  const ws = await resolveWorkspace(privyUserId);
+  if (!ws) return { error: 'No workspace found for your account.' };
+  const { data, error } = await supabase.rpc('create_site', { p_privy: privyUserId, p_workspace: ws, p_domain: domain, p_name: name || null });
+  if (error) return { error: error.message };
+  return { id: data as string };
+}
+
+export async function loadSiteStats(privyUserId: string | null, siteId: string | null, days: number): Promise<SiteStats> {
+  const fallback = (): SiteStats => ({ ...mockSiteStats(days), live_flag: false });
+  if (!privyUserId || !siteId) return fallback();
+  try {
+    const { data, error } = await supabase.rpc('get_site_stats', { p_privy: privyUserId, p_site: siteId, p_days: days });
+    if (error || !data) return fallback();
+    const d = data as any;
+    return {
+      pageviews: +d.pageviews || 0, visitors: +d.visitors || 0, live: +d.live || 0,
+      series: Array.isArray(d.series) ? d.series.map((p: any) => ({ day: p.day, label: p.label, pageviews: +p.pageviews || 0, visitors: +p.visitors || 0 })) : [],
+      top_pages: Array.isArray(d.top_pages) ? d.top_pages : [],
+      top_referrers: Array.isArray(d.top_referrers) ? d.top_referrers : [],
+      live_flag: true,
+    };
+  } catch {
+    return fallback();
+  }
 }
 
 export async function loadBoard(privyUserId: string | null, slug: string, kind: PipelineKind): Promise<BoardResult> {
