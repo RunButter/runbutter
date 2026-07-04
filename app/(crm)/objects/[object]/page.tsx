@@ -5,7 +5,7 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, Loader2, FileText } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
-import { loadRecords, getRecord, createRecord } from '@/lib/crm/data';
+import { loadRecords, getRecord, createRecord, deleteRecord } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
@@ -95,6 +95,21 @@ export default function ObjectPage() {
     setForm({ id: null, initial: {} });
   };
 
+  // Bulk actions from the table's floating bar.
+  const deleteSelected = async (ids: string[]) => {
+    if (!privy) return;
+    const results = await Promise.all(ids.map((id) => deleteRecord(privy, slug, id)));
+    reload();
+    const failed = results.filter((r) => r.error);
+    if (failed.length) alert(failed[0].error?.includes('FORBIDDEN') ? 'Deleting requires an owner/admin role.' : `${failed.length} could not be deleted.`);
+  };
+
+  const exportSelected = (sel: any[]) => {
+    const cols = object!.fields;
+    const csv = toCSV(cols.map((c) => c.label), sel.map((r) => cols.map((c) => r[c.key])));
+    downloadCSV(`${object!.slug}-selection-${new Date().toISOString().slice(0, 10)}`, csv);
+  };
+
   const exportCsv = () => {
     const cols = object.fields;
     const csv = toCSV(cols.map((c) => c.label), filtered.map((r) => cols.map((c) => r[c.key])));
@@ -129,7 +144,9 @@ export default function ObjectPage() {
         {loading ? (
           <div className="h-full flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
-          <RecordTable object={object} rows={filtered} onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))} />
+          <RecordTable object={object} rows={filtered}
+            onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}
+            canDelete={canEdit} onDeleteSelected={deleteSelected} onExportSelected={exportSelected} />
         )}
       </div>
 

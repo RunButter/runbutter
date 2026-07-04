@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Trash2, Download, X, Loader2 } from 'lucide-react';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 
 function initials(s: string) {
@@ -104,13 +105,44 @@ export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
   }
 }
 
-export default function RecordTable({ object, rows, onRowClick }: { object: ObjectDef; rows: any[]; onRowClick?: (row: any) => void }) {
+export default function RecordTable({ object, rows, onRowClick, canDelete, onDeleteSelected, onExportSelected }: {
+  object: ObjectDef; rows: any[]; onRowClick?: (row: any) => void;
+  canDelete?: boolean;
+  onDeleteSelected?: (ids: string[]) => Promise<void>;
+  onExportSelected?: (rows: any[]) => void;
+}) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const headRef = useRef<HTMLInputElement>(null);
+
+  // Prune selection to ids still present (after filtering/reload).
+  useEffect(() => {
+    setSelected((s) => {
+      if (s.size === 0) return s;
+      const valid = new Set(rows.map((r) => r.id));
+      const next = new Set([...s].filter((id) => valid.has(id)));
+      return next.size === s.size ? s : next;
+    });
+  }, [rows]);
+
   const allSelected = rows.length > 0 && selected.size === rows.length;
+  useEffect(() => { if (headRef.current) headRef.current.indeterminate = selected.size > 0 && !allSelected; }, [selected, allSelected]);
 
   const toggle = (id: string) =>
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  const clear = () => setSelected(new Set());
+
+  const selectedRows = rows.filter((r) => selected.has(r.id));
+
+  const doDelete = async () => {
+    if (!onDeleteSelected) return;
+    if (!confirm(`Delete ${selected.size} ${selected.size === 1 ? object.singular.toLowerCase() : object.plural.toLowerCase()}? This can’t be undone.`)) return;
+    setBusy(true);
+    await onDeleteSelected([...selected]);
+    setBusy(false);
+    clear();
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -118,7 +150,7 @@ export default function RecordTable({ object, rows, onRowClick }: { object: Obje
         <thead>
           <tr>
             <th className="sticky top-0 z-10 bg-white w-9 px-3 h-9 border-b border-slate-200/70">
-              <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-slate-300 accent-primary-600" />
+              <input ref={headRef} type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-slate-300 accent-primary-600 cursor-pointer" />
             </th>
             {object.fields.map((f) => (
               <th key={f.key} style={{ minWidth: f.width }}
@@ -129,24 +161,48 @@ export default function RecordTable({ object, rows, onRowClick }: { object: Obje
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} onClick={() => onRowClick?.(r)}
-              className={`group transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${selected.has(r.id) ? 'bg-primary-50/40' : 'hover:bg-slate-50/70'}`}>
-              <td className="px-3 h-[42px] border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
-                <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)} className="rounded border-slate-300 accent-primary-600 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity" />
-              </td>
-              {object.fields.map((f) => (
-                <td key={f.key} className={`px-3 h-[42px] border-b border-slate-100 ${f.align === 'right' ? 'text-right' : ''}`}>
-                  <FieldValue field={f} row={r} />
+          {rows.map((r) => {
+            const on = selected.has(r.id);
+            return (
+              <tr key={r.id} onClick={() => onRowClick?.(r)}
+                className={`group transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${on ? 'bg-primary-50/40' : 'hover:bg-slate-50/70'}`}>
+                <td className="px-3 h-[42px] border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
+                  <input type="checkbox" checked={on} onChange={() => toggle(r.id)}
+                    className={`rounded border-slate-300 accent-primary-600 cursor-pointer transition-opacity ${on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                 </td>
-              ))}
-            </tr>
-          ))}
+                {object.fields.map((f) => (
+                  <td key={f.key} className={`px-3 h-[42px] border-b border-slate-100 ${f.align === 'right' ? 'text-right' : ''}`}>
+                    <FieldValue field={f} row={r} />
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
           {rows.length === 0 && (
             <tr><td colSpan={object.fields.length + 1} className="px-3 py-12 text-center text-slate-400">No {object.plural.toLowerCase()} yet.</td></tr>
           )}
         </tbody>
       </table>
+
+      {/* Floating bulk-action bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 bg-slate-900 text-white rounded-xl shadow-2xl shadow-slate-900/30 pl-3 pr-1.5 py-1.5 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <span className="font-semibold tabular-nums">{selected.size} selected</span>
+          <button onClick={clear} className="text-white/50 hover:text-white text-[12px] font-medium ml-1 mr-1">clear</button>
+          <span className="w-px h-5 bg-white/15" />
+          {onExportSelected && (
+            <button onClick={() => onExportSelected(selectedRows)}
+              className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold hover:bg-white/10 transition-colors"><Download className="w-3.5 h-3.5" /> Export</button>
+          )}
+          {onDeleteSelected && canDelete && (
+            <button onClick={doDelete} disabled={busy}
+              className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold text-rose-300 hover:bg-rose-500/20 transition-colors disabled:opacity-50">
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Delete
+            </button>
+          )}
+          <button onClick={clear} aria-label="Close" className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
+        </div>
+      )}
     </div>
   );
 }
