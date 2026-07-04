@@ -4,7 +4,7 @@
 // haven't been run yet — so the branch always renders, and flips to live data
 // automatically once you run the SQL and log in.
 import { supabase } from '@/lib/supabase';
-import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_POSTS, mockPostDetail, MOCK_PROJECTS, MOCK_ISSUES } from './mock';
+import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_POSTS, mockPostDetail, MOCK_PROJECTS, MOCK_ISSUES, mockBankAccounts, mockLedger } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -162,6 +162,87 @@ export async function loadFinanceAnalytics(privyUserId: string | null, months: n
   } catch {
     return fallback();
   }
+}
+
+// ── Transactions / bank ledger (Finance — Midday-style) ───────────────────────
+export interface BankAccount { id: string; name: string; currency: string; institution?: string | null; opening_balance: number; balance: number; txn_count: number }
+export interface LedgerTxn {
+  id: string; txn_date: string; description: string | null; amount: number; currency: string;
+  category: string | null; method: string; status: string; tax_rate?: number | null;
+  account: string | null; bank_account_id: string | null;
+  matched_invoice_id: string | null; matched_expense_id: string | null;
+  match: string | null; match_kind: 'invoice' | 'expense' | null;
+}
+export interface LedgerSummary { inflow: number; outflow: number; net: number; count: number; unreconciled: number }
+export interface Ledger { summary: LedgerSummary; rows: LedgerTxn[]; live: boolean }
+export interface MatchSuggestion { kind: 'invoice' | 'expense'; id: string; label: string; amount: number; date: string | null; status: string }
+
+export async function loadBankAccounts(privyUserId: string | null): Promise<{ accounts: BankAccount[]; live: boolean }> {
+  const fallback = { accounts: mockBankAccounts() as BankAccount[], live: false };
+  if (!privyUserId) return fallback;
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return fallback;
+    const { data, error } = await supabase.rpc('get_bank_accounts', { p_privy: privyUserId, p_workspace: ws });
+    if (error || !Array.isArray(data)) return fallback;
+    return { accounts: (data as any[]).map((a) => ({ ...a, opening_balance: +a.opening_balance || 0, balance: +a.balance || 0, txn_count: +a.txn_count || 0 })), live: true };
+  } catch {
+    return fallback;
+  }
+}
+
+export async function createBankAccount(privyUserId: string, name: string, currency: string, opening: number, institution?: string): Promise<{ id?: string; error?: string }> {
+  const ws = await resolveWorkspace(privyUserId);
+  if (!ws) return { error: 'No workspace found for your account.' };
+  const { data, error } = await supabase.rpc('create_bank_account', { p_privy: privyUserId, p_workspace: ws, p_name: name, p_currency: currency, p_opening: opening, p_institution: institution || null });
+  if (error) return { error: error.message };
+  return { id: data as string };
+}
+
+export async function deleteBankAccount(privyUserId: string, accountId: string): Promise<{ error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { error } = await supabase.rpc('delete_bank_account', { p_privy: privyUserId, p_account: accountId });
+  return error ? { error: error.message } : {};
+}
+
+export async function loadLedger(privyUserId: string | null, accountId: string | null, months: number): Promise<Ledger> {
+  const fallback = (): Ledger => ({ ...mockLedger(months, accountId), live: false } as Ledger);
+  if (!privyUserId) return fallback();
+  try {
+    const ws = await resolveWorkspace(privyUserId);
+    if (!ws) return fallback();
+    const { data, error } = await supabase.rpc('get_transactions_ledger', { p_privy: privyUserId, p_workspace: ws, p_account: accountId, p_months: months });
+    if (error || !data) return fallback();
+    const d = data as any;
+    const s = d.summary || {};
+    return {
+      summary: { inflow: +s.inflow || 0, outflow: +s.outflow || 0, net: +s.net || 0, count: +s.count || 0, unreconciled: +s.unreconciled || 0 },
+      rows: Array.isArray(d.rows) ? d.rows.map((r: any) => ({ ...r, amount: +r.amount || 0 })) : [],
+      live: true,
+    };
+  } catch {
+    return fallback();
+  }
+}
+
+export async function suggestMatches(privyUserId: string, txnId: string): Promise<MatchSuggestion[]> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('suggest_transaction_matches', { p_privy: privyUserId, p_txn: txnId });
+  if (error || !Array.isArray(data)) return [];
+  return (data as any[]).map((m) => ({ ...m, amount: +m.amount || 0 }));
+}
+
+export async function reconcileTransaction(privyUserId: string, txnId: string, kind: 'invoice' | 'expense' | 'none', targetId?: string): Promise<{ error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { error } = await supabase.rpc('reconcile_transaction', { p_privy: privyUserId, p_txn: txnId, p_kind: kind, p_target: targetId ?? null });
+  return error ? { error: error.message } : {};
+}
+
+export async function bulkUpdateTransactions(privyUserId: string, ids: string[], patch: Record<string, any>): Promise<{ count?: number; error?: string }> {
+  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
+  const { data, error } = await supabase.rpc('update_transactions_bulk', { p_privy: privyUserId, p_ids: ids, p_patch: patch });
+  if (error) return { error: error.message };
+  return { count: +(data as any) || 0 };
 }
 
 // ── Roadmap (Gantt-lite timeline over projects + issue due dates) ─────────────

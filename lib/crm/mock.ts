@@ -67,6 +67,39 @@ export const MOCK_EXPENSES = [
 
 export const MOCK_FINANCE = { revenue: 24000, outstanding: 48000, expenses: 53600, invoices: 3 };
 
+// Bank ledger (Finance › Transactions — Midday-style). `amount` is SIGNED:
+// positive = money in, negative = money out. One row is matched (reconciled)
+// and one is excluded, to show off those states in Sample mode.
+export const MOCK_TRANSACTIONS = [
+  { id: 't1', txn_date: '2026-07-02', description: 'Stripe payout',             amount: 4200,   currency: 'USD', category: 'Sales',    method: 'transfer',     status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't2', txn_date: '2026-07-01', description: 'AWS',                       amount: -820,   currency: 'USD', category: 'Software', method: 'card',         status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't3', txn_date: '2026-06-30', description: 'Payroll run',               amount: -48000, currency: 'USD', category: 'Payroll',  method: 'transfer',     status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't4', txn_date: '2026-06-28', description: 'Northwind Labs — INV-1001', amount: 24000,  currency: 'USD', category: 'Services', method: 'transfer',     status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: 'i1', matched_expense_id: null, match: 'Invoice INV-1001', match_kind: 'invoice' },
+  { id: 't5', txn_date: '2026-06-26', description: 'WeWork',                    amount: -3200,  currency: 'USD', category: 'Office',   method: 'direct_debit', status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't6', txn_date: '2026-06-25', description: 'Google Workspace',          amount: -180,   currency: 'USD', category: 'Software', method: 'card',         status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't7', txn_date: '2026-06-22', description: 'Vertex Finance — deposit',  amount: 12000,  currency: 'USD', category: 'Services', method: 'transfer',     status: 'pending',  account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't8', txn_date: '2026-06-20', description: 'Bank fee',                  amount: -35,    currency: 'USD', category: 'Fees',     method: 'fee',          status: 'posted',   account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+  { id: 't9', txn_date: '2026-06-18', description: 'Duplicate charge (ignored)', amount: -500,  currency: 'USD', category: null,       method: 'card',         status: 'excluded', account: 'Business checking', bank_account_id: 'ba1', matched_invoice_id: null, matched_expense_id: null, match: null,               match_kind: null },
+];
+
+export function mockBankAccounts() {
+  const sum = (acct: string) =>
+    MOCK_TRANSACTIONS.filter((t) => t.bank_account_id === acct && t.status !== 'excluded').reduce((s, t) => s + t.amount, 0);
+  return [
+    { id: 'ba1', name: 'Business checking', currency: 'USD', institution: 'Mercury', opening_balance: 12000, balance: 12000 + sum('ba1'), txn_count: MOCK_TRANSACTIONS.filter((t) => t.bank_account_id === 'ba1').length },
+    { id: 'ba2', name: 'Savings', currency: 'USD', institution: 'Mercury', opening_balance: 40000, balance: 40000, txn_count: 0 },
+  ];
+}
+
+export function mockLedger(_months: number, accountId?: string | null) {
+  const rows = accountId ? MOCK_TRANSACTIONS.filter((t) => t.bank_account_id === accountId) : MOCK_TRANSACTIONS;
+  const live = rows.filter((t) => t.status !== 'excluded');
+  const inflow = live.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const outflow = live.filter((t) => t.amount < 0).reduce((s, t) => s - t.amount, 0);
+  const unreconciled = live.filter((t) => !t.matched_invoice_id && !t.matched_expense_id).length;
+  return { summary: { inflow, outflow, net: inflow - outflow, count: live.length, unreconciled }, rows };
+}
+
 // Deterministic sample analytics (no Math.random — stable across renders) so the
 // Finance dashboard looks alive before the get_finance_analytics RPC is wired.
 export interface MockFinanceSeriesPoint { month: string; label: string; revenue: number; costs: number }
@@ -211,6 +244,7 @@ export const MOCK_OBJECT_ROWS: Record<string, any[]> = {
   invoices: MOCK_INVOICES,
   offers: MOCK_OFFERS,
   expenses: MOCK_EXPENSES,
+  transactions: MOCK_TRANSACTIONS,
   products: MOCK_PRODUCTS,
   campaigns: MOCK_CAMPAIGNS,
   projects: MOCK_PROJECTS,

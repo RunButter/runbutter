@@ -24,7 +24,8 @@ with checks(ord, step, probe, ok) as (
   (15, '0015 finance epic',      'invoices.direction',             (select exists(select 1 from information_schema.columns where table_name='invoices' and column_name='direction'))),
   (16, '0016 documents',         'invoice_items + invoices.kind',  ((to_regclass('public.invoice_items') is not null) and exists(select 1 from information_schema.columns where table_name='invoices' and column_name='kind'))),
   (17, '0017 branding',          'workspaces.logo_url + bucket',   (exists(select 1 from information_schema.columns where table_name='workspaces' and column_name='logo_url') and exists(select 1 from storage.buckets where id='branding'))),
-  (18, '0018 quoting',           'invoice_items.discount_pct+tax', (exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='discount_pct') and exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='tax_rate')))
+  (18, '0018 quoting',           'invoice_items.discount_pct+tax', (exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='discount_pct') and exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='tax_rate'))),
+  (31, '0031 transactions',      'transactions + bank_accounts',   ((to_regclass('public.transactions') is not null) and (to_regclass('public.bank_accounts') is not null) and (select exists(select 1 from pg_proc where proname='get_transactions_ledger'))))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
@@ -38,7 +39,8 @@ with fresh(ord, what, ok) as (
   (2, 'create_record sets invoice direction (0015+)',    (select exists(select 1 from pg_proc where proname='create_record'       and pg_get_functiondef(oid) ilike '%direction%'))),
   (3, 'get_invoice_document returns totals (0018)',      (select exists(select 1 from pg_proc where proname='get_invoice_document' and pg_get_functiondef(oid) ilike '%totals%'))),
   (4, 'get_invoice_document returns branding (0017)',    (select exists(select 1 from pg_proc where proname='get_invoice_document' and pg_get_functiondef(oid) ilike '%logo_url%'))),
-  (5, 'save_invoice_items applies tax_rate (0018)',      (select exists(select 1 from pg_proc where proname='save_invoice_items'   and pg_get_functiondef(oid) ilike '%tax_rate%')))
+  (5, 'save_invoice_items applies tax_rate (0018)',      (select exists(select 1 from pg_proc where proname='save_invoice_items'   and pg_get_functiondef(oid) ilike '%tax_rate%'))),
+  (6, 'create_record handles transactions (0031)',       (select exists(select 1 from pg_proc where proname='create_record'        and pg_get_functiondef(oid) ilike '%bank_account_id%')))
 )
 select what, case when ok then '✅ latest' else '❌ STALE — re-run the newer migration' end as status
 from fresh order by ord;

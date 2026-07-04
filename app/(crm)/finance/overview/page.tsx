@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2 } from 'lucide-react';
-import { loadFinanceAnalytics, type FinanceAnalytics } from '@/lib/crm/data';
+import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2, ArrowLeftRight } from 'lucide-react';
+import { loadFinanceAnalytics, loadBankAccounts, type FinanceAnalytics, type BankAccount } from '@/lib/crm/data';
 import FinanceChart from '@/components/crm/FinanceChart';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -21,6 +21,7 @@ export default function FinanceOverview() {
   const privy = authenticated && user ? user.id : null;
   const [months, setMonths] = useState(12);
   const [fin, setFin] = useState<FinanceAnalytics | null>(null);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,10 @@ export default function FinanceOverview() {
     setLoading(true);
     loadFinanceAnalytics(privy, months).then((res) => { setFin(res); setLoading(false); });
   }, [ready, privy, months]);
+
+  useEffect(() => { if (ready) loadBankAccounts(privy).then((r) => setAccounts(r.accounts)); }, [ready, privy]);
+
+  const totalCash = accounts.reduce((s, a) => s + a.balance, 0);
 
   const live = fin?.live ?? false;
   const net = fin?.net ?? 0;
@@ -95,8 +100,9 @@ export default function FinanceOverview() {
             </div>
 
             {/* Quick links into the ledgers */}
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-3 gap-3">
               {[
+                { label: 'Transactions', desc: `Bank ledger · ${money(totalCash)} across ${accounts.length || 0} account${accounts.length === 1 ? '' : 's'}`, icon: ArrowLeftRight, href: '/finance/transactions', tone: 'text-primary-600' },
                 { label: 'Invoices', desc: 'Money in — accounts receivable', icon: Receipt, href: '/objects/invoices', tone: 'text-emerald-600' },
                 { label: 'Expenses', desc: 'Money out — accounts payable', icon: Wallet, href: '/objects/expenses', tone: 'text-rose-600' },
               ].map((q) => (

@@ -87,6 +87,27 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'notes', label: 'Notes', input: 'textarea' },
     ],
   },
+  transactions: {
+    slug: 'transactions', singular: 'Transaction', plural: 'Transactions', icon: 'ArrowLeftRight', type: 'asset',
+    fields: [
+      { key: 'txn_date', label: 'Date', type: 'date', width: 120 },
+      { key: 'description', label: 'Description', type: 'avatar', primary: true, width: 240 },
+      { key: 'category', label: 'Category', type: 'tags', width: 150 },
+      { key: 'account', label: 'Account', type: 'text', width: 150 },
+      { key: 'status', label: 'Status', type: 'tags', width: 110 },
+      { key: 'amount', label: 'Amount', type: 'currency', align: 'right', width: 130 },
+    ],
+    form: [
+      { key: 'txn_date', label: 'Date', input: 'date', required: true },
+      { key: 'description', label: 'Description', input: 'text', required: true },
+      { key: 'amount', label: 'Amount (– for money out)', input: 'number', required: true },
+      { key: 'category', label: 'Category', input: 'datalist' },
+      { key: 'method', label: 'Method', input: 'select', options: ['transfer', 'card', 'cash', 'direct_debit', 'fee', 'other'] },
+      { key: 'status', label: 'Status', input: 'select', options: ['posted', 'pending', 'excluded'] },
+      { key: 'tax_rate', label: 'VAT %', input: 'number' },
+      { key: 'notes', label: 'Notes', input: 'textarea' },
+    ],
+  },
   expenses: {
     slug: 'expenses', singular: 'Expense', plural: 'Expenses', icon: 'Wallet', type: 'asset',
     fields: [
@@ -209,6 +230,7 @@ export const NAV = [
   ]},
   { group: 'Finance', items: [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
+    { slug: 'transactions', label: 'Transactions', icon: 'ArrowLeftRight', href: '/finance/transactions' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
   ]},
