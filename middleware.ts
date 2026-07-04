@@ -67,6 +67,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // The ATS dashboard index is now the HR Overview — redirect old links + the
+  // post-login landing there (done in middleware so it fires before the client
+  // dashboard layout's auth gate, which would otherwise swallow a page redirect).
+  if (pathname === '/dashboard') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/dashboard/overview';
+    return NextResponse.redirect(url);
+  }
+
   return res;
 }
 

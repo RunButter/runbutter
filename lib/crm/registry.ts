@@ -242,6 +242,7 @@ export const NAV = [
     { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
   ]},
   { group: 'HR', items: [
+    { slug: 'hr-overview', label: 'Overview', icon: 'LayoutDashboard', href: '/dashboard/overview' },
     { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
     { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
     { slug: 'positions', label: 'Positions', icon: 'Briefcase', href: '/dashboard/positions' },
