@@ -156,8 +156,8 @@ export default function Showcase() {
         reverse
         eyebrow="Finance" tone="text-emerald-600 bg-emerald-50"
         title="Know your numbers in real time"
-        body="Invoices in, expenses out, and a live dashboard that tells you revenue, costs, and net at a glance — over any period. No accountant required to read it."
-        bullets={['Revenue vs costs, month by month', 'Net profit & margin, instantly', 'Invoices and expenses in one ledger']}
+        body="Invoices in, expenses out, and a bank ledger that reconciles payments automatically — with a live dashboard of revenue, costs, and net over any period."
+        bullets={['Revenue vs costs, month by month', 'Bank transactions auto-matched to invoices', 'Branded PDF invoices, offers & e-invoice export']}
         visual={<FinanceMock />}
       />
       <Row

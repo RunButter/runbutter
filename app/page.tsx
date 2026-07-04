@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles, Megaphone, ArrowLeftRight, FileText, Globe, Building2, CheckCheck } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Production only, so dev
 // and preview visits never pollute the stats. Site ids are public by nature —
@@ -14,22 +14,37 @@ import Showcase from '@/components/landing/Showcase';
 import Reveal from '@/components/landing/Reveal';
 
 const FEATURES = [
-  'Drag-and-drop boards', 'Spreadsheet-style tables', 'Create, edit & delete',
-  'CSV / Google Sheets import', 'One-click export', 'Search anything',
-  'Custom categories', 'Products & invoices', 'Multi-pipeline records', 'Zero AI token cost',
+  'Drag-and-drop boards', 'Spreadsheet-style tables', 'CSV / Google Sheets import',
+  'One-click export', 'Bulk select & actions', 'Bank reconciliation',
+  'Branded PDF invoices', 'First-party web analytics', 'Search anything',
+  'Custom categories', 'Zero AI token cost',
 ];
 
+// Five pillars over one relational core. Each accent is categorical (a module
+// tag), not a competing brand accent — CTAs stay neutral slate throughout.
 const PILLARS = [
   { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline.', tone: 'text-indigo-600 bg-indigo-50' },
-  { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, products, and live revenue KPIs.', tone: 'text-emerald-600 bg-emerald-50' },
+  { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, a bank ledger, and live revenue KPIs.', tone: 'text-emerald-600 bg-emerald-50' },
+  { icon: Megaphone, name: 'Marketing', body: 'Campaigns, a social post studio, and web analytics.', tone: 'text-fuchsia-600 bg-fuchsia-50' },
   { icon: FolderKanban, name: 'Projects', body: 'Projects and issues on a clean Plane-style board.', tone: 'text-violet-600 bg-violet-50' },
-  { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding, and your team.', tone: 'text-fuchsia-600 bg-fuchsia-50' },
+  { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding, and your team.', tone: 'text-cyan-600 bg-cyan-50' },
+];
+
+// "Everything else in the box" — the newer modules that usually mean five more
+// subscriptions. Rendered as a bento grid to break the deep-dive zigzag rhythm.
+const CAPS = [
+  { icon: Megaphone, name: 'Marketing suite', body: 'Campaigns, a pixel-faithful social post studio with client review, and first-party web analytics.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
+  { icon: ArrowLeftRight, name: 'Bank transactions', body: 'A cash ledger that auto-matches payments to the right invoices and expenses.', tone: 'text-emerald-600', bg: 'bg-white' },
+  { icon: FileText, name: 'Invoicing & e-invoicing', body: 'Branded PDF invoices and offers, plus KSeF FA(3) export for Poland.', tone: 'text-indigo-600', bg: 'bg-white' },
+  { icon: Globe, name: 'Web analytics', body: 'Cookieless, first-party visitor stats — no third-party trackers, no cookie banner.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-violet-600', bg: 'bg-white' },
+  { icon: CheckCheck, name: 'Bulk everything', body: 'Select, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
 ];
 
 const PLANS = [
-  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'Sales · Finance · Projects · HR core', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
-  { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', '3 seats · 250 records / object', 'Custom branding', 'Resume search & Talent Treasury'], cta: 'Get started', href: '/auth/register?plan=starter', highlight: true },
-  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR controls'], cta: 'Get started', href: '/auth/register?plan=professional', highlight: false },
+  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'Sales · Finance · Marketing · Projects · HR', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
+  { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', '3 seats · 250 records / object', 'Custom branding & PDF invoices', 'Resume search & Talent Treasury'], cta: 'Start free', href: '/auth/register?plan=starter', highlight: true },
+  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR controls'], cta: 'Start free', href: '/auth/register?plan=professional', highlight: false },
   { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Professional', 'Unlimited seats & records', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
@@ -47,9 +62,9 @@ export default function HomePage() {
             <Link href="#product" className="hover:text-slate-900 transition">Product</Link>
             <Link href="#pricing" className="hover:text-slate-900 transition">Pricing</Link>
             <Link href="/auth/login" className="hover:text-slate-900 transition">Sign in</Link>
-            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition">Get started</Link>
+            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition">Start free</Link>
           </nav>
-          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-slate-900 text-white text-[13px] font-semibold inline-flex items-center">Get started</Link>
+          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-slate-900 text-white text-[13px] font-semibold inline-flex items-center">Start free</Link>
         </div>
       </header>
 
@@ -68,15 +83,15 @@ export default function HomePage() {
             Run your whole company<br />in one clean workspace
           </h1>
           <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
-            Sales, finance, projects, and recruiting — relational, fast, and beautifully simple.
-            One source of truth for every team. No AI token bill.
+            Sales, finance, marketing, projects, and people — one relational core,
+            fast and beautifully simple. No AI token bill.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/home" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold transition-all duration-200 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md">
-              See the workspace
+            <Link href="/demo" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold transition-all duration-200 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md">
+              See a live demo
             </Link>
           </div>
           <p className="mt-4 text-[13px] text-slate-400 flex items-center gap-1.5 justify-center"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card · live in minutes</p>
@@ -86,7 +101,7 @@ export default function HomePage() {
         <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 pt-2 pb-28">
           <Reveal>
             <ProductPreview />
-            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — Sales, Finance, Projects — it&apos;s the real interface.</p>
+            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — it&apos;s the real interface, on live sample data.</p>
           </Reveal>
         </div>
       </section>
@@ -96,7 +111,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 py-8">
           <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">Replaces a stack of tools · works with the ones you keep</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-400">
-            {['Stripe', 'Google Calendar', 'Slack', 'Resend', 'CSV / Sheets', 'Zapier'].map((n) => (
+            {['Stripe', 'Google Calendar', 'Resend', 'KSeF e-invoicing', 'CSV / Sheets', 'Zapier'].map((n) => (
               <span key={n} className="hover:text-slate-600 transition">{n}</span>
             ))}
           </div>
@@ -108,11 +123,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <h2 className="text-3xl font-black tracking-tight text-center">One workspace for the whole company</h2>
-            <p className="text-center text-slate-500 mt-2 mb-12">Every record relational and connected — a deal, a candidate, an invoice, all in one place.</p>
+            <p className="text-center text-slate-500 mt-2 mb-12">Every record relational and connected — a deal, a candidate, a campaign, an invoice, all in one place.</p>
           </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {PILLARS.map((p, i) => (
-              <Reveal key={p.name} delay={i * 80}>
+              <Reveal key={p.name} delay={i * 70}>
                 <div className="h-full rounded-2xl bg-white ring-1 ring-slate-200/60 p-5 transition-all duration-200 hover:ring-slate-300 hover:shadow-soft-md hover:-translate-y-1">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${p.tone}`}><p.icon className="w-5 h-5" /></div>
                   <h3 className="font-black text-slate-900">{p.name}</h3>
@@ -135,11 +150,32 @@ export default function HomePage() {
       {/* Feature deep-dives */}
       <Showcase />
 
+      {/* Everything-else bento */}
+      <section className="border-t border-slate-100 bg-slate-50/40">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <Reveal>
+            <h2 className="text-3xl font-black tracking-tight text-center">Everything else, already in the box</h2>
+            <p className="text-center text-slate-500 mt-2 mb-12">The tools that usually mean five more subscriptions — built in, at no extra token cost.</p>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {CAPS.map((c, i) => (
+              <Reveal key={c.name} delay={i * 70}>
+                <div className={`h-full rounded-2xl ring-1 ring-slate-200/60 p-5 transition-all duration-200 hover:ring-slate-300 hover:shadow-soft-md hover:-translate-y-1 ${c.bg}`}>
+                  <div className={`w-10 h-10 rounded-xl bg-white ring-1 ring-slate-200/60 flex items-center justify-center mb-4 ${c.tone}`}><c.icon className="w-5 h-5" /></div>
+                  <h3 className="font-black text-slate-900">{c.name}</h3>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{c.body}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
         <Reveal>
           <h2 className="text-3xl font-black tracking-tight text-center">Simple, transparent pricing</h2>
-          <p className="text-center text-slate-500 mt-2 mb-12">Start free, upgrade as you grow.</p>
+          <p className="text-center text-slate-500 mt-2 mb-12">Start free, upgrade as you grow. No per-token AI bill, ever.</p>
         </Reveal>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
           {PLANS.map((pl, i) => (
@@ -166,10 +202,11 @@ export default function HomePage() {
         <p className="text-center text-slate-500 mt-2 mb-10">Everything you need to know before you start.</p>
         <div className="space-y-3">
           {[
-            { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, projects, and recruiting share one relational core — a company, a person, a deal, and an invoice are all connected records, not separate apps you have to glue together.' },
-            { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres — search, matching, and reporting run in the database. There is no per-token AI bill, so your cost stays flat as you grow.' },
+            { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core — a company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you have to glue together.' },
+            { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres — search, matching, reconciliation, and reporting run in the database. There is no per-token AI bill, so your cost stays flat as you grow.' },
+            { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger then reconciles incoming payments to the right invoice automatically.' },
             { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click — your data is always yours.' },
-            { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions, and GDPR controls (consent logging, anonymization) are built in on higher plans.' },
+            { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions, and GDPR controls (consent logging, anonymization) are built in on higher plans. Our web analytics are first-party and cookieless.' },
             { q: 'Can I start free and upgrade later?', a: 'Yes — start on the free plan with no credit card. Upgrade the moment you need more records, seats, or modules, and downgrade anytime.' },
           ].map((f) => (
             <details key={f.q} className="group rounded-xl bg-white ring-1 ring-slate-200/70 px-5 py-4 [&_summary]:cursor-pointer">
@@ -191,7 +228,7 @@ export default function HomePage() {
           <div className="absolute inset-0 -z-0 opacity-60"><AsciiField colors={['129,140,248', '167,139,250', '217,70,239', '56,189,248']} baseAlpha={0.08} peakAlpha={0.7} /></div>
           <div className="relative pointer-events-none">
             <h2 className="text-4xl font-black tracking-tight">Your company, organized.</h2>
-            <p className="mt-3 text-white/70 max-w-xl mx-auto">One workspace for sales, finance, projects, and people. Set it up in minutes.</p>
+            <p className="mt-3 text-white/70 max-w-xl mx-auto">One workspace for sales, finance, marketing, projects, and people. Set it up in minutes.</p>
             <Link href="/auth/register" className="pointer-events-auto mt-7 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-white text-slate-900 font-bold transition-all duration-200 hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-lg">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
