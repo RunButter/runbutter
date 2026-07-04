@@ -4,12 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
-import {
-    BarChart, TrendingUp, Users, Calendar, ArrowLeft,
-    PieChart, Loader2, Download, Clock, CheckCircle, Briefcase
-} from 'lucide-react';
-import Link from 'next/link';
+import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2, Briefcase } from 'lucide-react';
 import Paywall from '@/components/Paywall';
+import PageHeader from '@/components/dashboard/PageHeader';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -62,7 +59,7 @@ export default function AnalyticsPage() {
             if (companyUser) {
                 const comp: any = Array.isArray(companyUser.company) ? companyUser.company[0] : companyUser.company;
                 if (!comp || !comp.id) return;
-                
+
                 setCompany(comp);
 
                 // Fetch real data
@@ -131,8 +128,8 @@ export default function AnalyticsPage() {
             {
                 label: 'Total Applications',
                 data: hasPositionData ? positionData : [0],
-                backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                borderRadius: 8,
+                backgroundColor: 'rgba(79, 70, 229, 0.85)',
+                borderRadius: 6,
             },
         ],
     };
@@ -147,11 +144,11 @@ export default function AnalyticsPage() {
             {
                 data: hasSourceData ? sourceData : [100],
                 backgroundColor: [
-                    'rgba(79, 70, 229, 0.8)',
-                    'rgba(147, 51, 234, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(79, 70, 229, 0.85)',
+                    'rgba(147, 51, 234, 0.85)',
+                    'rgba(59, 130, 246, 0.85)',
+                    'rgba(16, 185, 129, 0.85)',
+                    'rgba(245, 158, 11, 0.85)',
                 ],
                 borderWidth: 0,
             },
@@ -159,91 +156,71 @@ export default function AnalyticsPage() {
     };
 
     if (!ready || loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
-            </div>
-        );
+        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-slate-300 animate-spin" /></div>;
     }
 
+    const kpis = [
+        { label: 'Total candidates', value: metrics.totalCandidates, icon: Users, tone: 'text-violet-600' },
+        { label: 'Total hires', value: metrics.hiredCandidates, icon: CheckCircle2, tone: 'text-emerald-600' },
+        { label: 'Hire rate', value: `${metrics.offerRate}%`, icon: TrendingUp, tone: 'text-blue-600' },
+        { label: 'Active positions', value: metrics.totalPositions, icon: Briefcase, tone: 'text-orange-600' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-full transition">
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                    </Link>
-                    <h1 className="text-xl font-bold text-gray-800">Recruitment Analytics</h1>
-                </div>
-                <button className="btn-secondary flex items-center gap-2 py-2 px-4 text-sm">
-                    <Download className="w-4 h-4" />
-                    Export Report
+        <>
+            <PageHeader title="Analytics" badge={<span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600">Live</span>}>
+                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors">
+                    <Download className="w-3.5 h-3.5" /> Export
                 </button>
-            </header>
+            </PageHeader>
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
-                <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                        {[
-                            { label: 'Total Candidates', value: metrics.totalCandidates, pct: 'Live', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-                            { label: 'Total Hires', value: metrics.hiredCandidates, pct: 'Live', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-                            { label: 'Overall Hire Rate', value: `${metrics.offerRate}%`, pct: 'Live', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
-                            { label: 'Active Positions', value: metrics.totalPositions, pct: 'Live', icon: Briefcase, color: 'text-orange-600', bg: 'bg-orange-50' },
-                        ].map((stat) => (
-                            <div key={stat.label} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className={`p-3 rounded-xl ${stat.bg}`}>
-                                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            <div className="p-6">
+                <div className="max-w-6xl mx-auto">
+                    <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                            {kpis.map((k) => (
+                                <div key={k.label} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{k.label}</span>
+                                        <k.icon className="w-4 h-4 text-slate-300" />
                                     </div>
-                                    <span className="text-xs font-bold text-green-600">
-                                        {stat.pct}
-                                    </span>
+                                    <div className={`mt-2 text-2xl font-black tabular-nums ${k.tone}`}>{k.value}</div>
                                 </div>
-                                <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
-                                <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                    <BarChart className="w-5 h-5 text-primary-600" />
-                                    Application Volume by Position
-                                </h3>
-                                <div className="bg-gray-100 text-xs px-2 py-1 rounded text-gray-600 font-bold">ALL TIME</div>
-                            </div>
-                            <div className="h-[300px]">
-                                <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
-                            </div>
+                            ))}
                         </div>
 
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2">
-                                <PieChart className="w-5 h-5 text-primary-600" />
-                                Candidate Sources
-                            </h3>
-                            <div className="h-[250px] relative">
-                                <Pie options={{ responsive: true, maintainAspectRatio: false }} data={pieData} />
+                        <div className="grid lg:grid-cols-3 gap-4">
+                            <div className="lg:col-span-2 rounded-xl bg-white ring-1 ring-slate-200/60 p-5">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2"><BarChart className="w-4 h-4 text-primary-600" /> Application volume by position</h3>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">All time</span>
+                                </div>
+                                <div className="h-[300px]">
+                                    <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
+                                </div>
                             </div>
-                            <div className="mt-8 space-y-3">
-                                {pieData.labels.map((label: string, i: number) => (
-                                    <div key={label} className="flex items-center justify-between text-sm">
-                                        <div className="flex items-center gap-2 text-gray-600">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i % 5] }} />
-                                            {label}
+
+                            <div className="rounded-xl bg-white ring-1 ring-slate-200/60 p-5">
+                                <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2"><PieChart className="w-4 h-4 text-primary-600" /> Candidate sources</h3>
+                                <div className="h-[220px] relative">
+                                    <Pie options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={pieData} />
+                                </div>
+                                <div className="mt-5 space-y-2">
+                                    {pieData.labels.map((label: string, i: number) => (
+                                        <div key={label} className="flex items-center justify-between text-[13px]">
+                                            <div className="flex items-center gap-2 text-slate-600">
+                                                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i % 5] }} />
+                                                {label}
+                                            </div>
+                                            <span className="font-bold text-slate-800 tabular-nums">{hasSourceData ? (sourceData[i] as number) : 0}</span>
                                         </div>
-                                        <span className="font-bold text-gray-800">
-                                            {hasSourceData ? sourceData[i] as number : 0}
-                                        </span>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </Paywall>
-            </main>
-        </div>
+                    </Paywall>
+                </div>
+            </div>
+        </>
     );
 }

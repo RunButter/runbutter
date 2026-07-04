@@ -9,6 +9,8 @@ import {
     Search, X, SlidersHorizontal, Loader2, Mail, ExternalLink,
     Users, Gauge, Sparkles, RotateCcw, ArrowUpDown,
 } from 'lucide-react';
+import PageHeader from '@/components/dashboard/PageHeader';
+import { hrStatus } from '@/lib/hr/overview';
 
 // Psychometric dimensions the sliders filter on (discrete 0-100 score columns).
 const DIMS = [
@@ -26,23 +28,11 @@ const SORTS = [
     { key: 'recent', label: 'Most Recent' },
 ] as const;
 
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-    applied: { bg: 'bg-blue-100', text: 'text-blue-700' },
-    screening: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-    assessment_sent: { bg: 'bg-purple-100', text: 'text-purple-700' },
-    assessment_completed: { bg: 'bg-purple-100', text: 'text-purple-700' },
-    interview_scheduled: { bg: 'bg-cyan-100', text: 'text-cyan-700' },
-    interviewed: { bg: 'bg-cyan-100', text: 'text-cyan-700' },
-    offered: { bg: 'bg-orange-100', text: 'text-orange-700' },
-    hired: { bg: 'bg-green-100', text: 'text-green-700' },
-    rejected: { bg: 'bg-gray-100', text: 'text-gray-500' },
-};
-
 const titleize = (s: string) =>
     (s || 'unknown').replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 const scoreColor = (v: number | null) =>
-    v == null ? 'text-gray-300'
+    v == null ? 'text-slate-300'
         : v >= 66 ? 'text-emerald-600'
             : v >= 33 ? 'text-amber-500'
                 : 'text-rose-500';
@@ -174,187 +164,157 @@ export default function TreasuryPage() {
     };
 
     if (!ready || loading) {
-        return (
-            <div className="h-full flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
-            </div>
-        );
+        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-slate-300 animate-spin" /></div>;
     }
 
     return (
-        <div className="flex h-full">
-            {/* ===== Faceted Sidebar ===== */}
-            <aside className="w-72 shrink-0 border-r border-gray-200 bg-white overflow-y-auto custom-scrollbar hidden md:block">
-                <div className="p-5">
-                    <div className="flex items-center justify-between mb-5">
-                        <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400">
-                            <SlidersHorizontal className="w-4 h-4" /> Filters
-                        </h3>
-                        {chips.length > 0 && (
-                            <button onClick={resetAll} className="flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700">
-                                <RotateCcw className="w-3 h-3" /> Reset
-                            </button>
-                        )}
-                    </div>
+        <div className="flex flex-col h-full">
+            <PageHeader title="Talent Treasury" count={filtered.length}>
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
+                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                </div>
+                <div className="relative">
+                    <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}
+                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
+                        {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    </select>
+                </div>
+            </PageHeader>
 
-                    {/* Trait sliders */}
-                    <div className="space-y-4 mb-6">
-                        {DIMS.map((d) => (
-                            <div key={d.key}>
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-xs font-bold text-gray-600">{d.label}</span>
-                                    <span className="text-[11px] font-mono text-gray-400">min {mins[d.key]}</span>
+            <div className="flex-1 flex overflow-hidden">
+                {/* ===== Faceted Sidebar ===== */}
+                <aside className="w-64 shrink-0 border-r border-slate-200/70 bg-white overflow-y-auto hidden md:block">
+                    <div className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
+                            </h3>
+                            {chips.length > 0 && (
+                                <button onClick={resetAll} className="flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700">
+                                    <RotateCcw className="w-3 h-3" /> Reset
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Trait sliders */}
+                        <div className="space-y-3.5 mb-5">
+                            {DIMS.map((d) => (
+                                <div key={d.key}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[12px] font-semibold text-slate-600">{d.label}</span>
+                                        <span className="text-[11px] font-mono text-slate-400 tabular-nums">min {mins[d.key]}</span>
+                                    </div>
+                                    <input type="range" min={0} max={100} step={1} value={mins[d.key]}
+                                        onChange={(e) => setMins((m) => ({ ...m, [d.key]: Number(e.target.value) }))}
+                                        className="w-full accent-primary-600 cursor-pointer" />
                                 </div>
-                                <input
-                                    type="range" min={0} max={100} step={1} value={mins[d.key]}
-                                    onChange={(e) => setMins((m) => ({ ...m, [d.key]: Number(e.target.value) }))}
-                                    className="w-full accent-primary-600 cursor-pointer"
-                                />
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
 
-                    {/* Source facet */}
-                    <FacetGroup title="Source">
-                        {facets.sources.map(([s, c]) => (
-                            <FacetRow key={s} label={titleize(s)} count={c}
-                                checked={sources.has(s)} onChange={() => toggle(sources, setSources, s)} />
-                        ))}
-                    </FacetGroup>
-
-                    {/* Status facet */}
-                    <FacetGroup title="Status">
-                        {facets.statuses.map(([s, c]) => (
-                            <FacetRow key={s} label={titleize(s)} count={c}
-                                checked={statuses.has(s)} onChange={() => toggle(statuses, setStatuses, s)} />
-                        ))}
-                    </FacetGroup>
-
-                    {/* Position facet */}
-                    {facets.positions.length > 0 && (
-                        <FacetGroup title="Position">
-                            {facets.positions.map((p) => (
-                                <FacetRow key={p.id} label={p.title} count={p.count}
-                                    checked={positions.has(p.id)} onChange={() => toggle(positions, setPositions, p.id)} />
+                        <FacetGroup title="Source">
+                            {facets.sources.map(([s, c]) => (
+                                <FacetRow key={s} label={titleize(s)} count={c} checked={sources.has(s)} onChange={() => toggle(sources, setSources, s)} />
                             ))}
                         </FacetGroup>
-                    )}
-                </div>
-            </aside>
 
-            {/* ===== Main column ===== */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-5 lg:p-8 max-w-[1400px] mx-auto">
-                    {/* Title + search + sort */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
-                        <div>
-                            <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary-600" /> Talent Treasury
-                            </h1>
-                            <p className="text-sm text-gray-500">Explore your talent pool by skills &amp; psychological fit.</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    value={keyword} onChange={(e) => setKeyword(e.target.value)}
-                                    placeholder="Filter by name, email, role…"
-                                    className="pl-9 pr-3 py-2 w-56 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                                />
-                            </div>
-                            <div className="relative">
-                                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                <select
-                                    value={sortKey} onChange={(e) => setSortKey(e.target.value)}
-                                    className="pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer"
-                                >
-                                    {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Micro-insights bar */}
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-                        <Insight icon={Users} label="In view" value={`${insights.n}`} />
-                        <Insight icon={Gauge} label="Avg match" value={insights.avgOverall != null ? `${insights.avgOverall}%` : '—'} />
-                        <Insight icon={Gauge} label="Avg cognitive" value={insights.avgCognitive != null ? `${insights.avgCognitive}%` : '—'} />
-                        <Insight icon={Sparkles} label="Assessed" value={`${insights.assessedPct}%`} />
-                        <Insight icon={Users} label="Main source"
-                            value={insights.topSource ? `${titleize(insights.topSource.name)} ${insights.topSource.pct}%` : '—'} />
-                    </div>
-
-                    {/* Active chips */}
-                    {chips.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 mb-5">
-                            {chips.map((chip, i) => (
-                                <button key={i} onClick={chip.clear}
-                                    className="group flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold hover:bg-primary-100 transition">
-                                    {chip.label}
-                                    <X className="w-3 h-3 text-primary-400 group-hover:text-primary-700" />
-                                </button>
+                        <FacetGroup title="Status">
+                            {facets.statuses.map(([s, c]) => (
+                                <FacetRow key={s} label={titleize(s)} count={c} checked={statuses.has(s)} onChange={() => toggle(statuses, setStatuses, s)} />
                             ))}
-                        </div>
-                    )}
+                        </FacetGroup>
 
-                    {/* Candidate grid */}
-                    {filtered.length === 0 ? (
-                        <div className="text-center py-20 text-gray-400">
-                            <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                            No candidates match the current filters.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-                            {filtered.map((c) => (
-                                <Link key={c.id} href={`/dashboard/candidates/${c.id}`}
-                                    className="group bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 p-5 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
-                                    <div className="flex items-start justify-between gap-3 mb-4">
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-gray-900 truncate group-hover:text-primary-700 transition">{c.full_name}</div>
-                                            <div className="flex items-center gap-1 text-xs text-gray-400 truncate">
-                                                <Mail className="w-3 h-3 shrink-0" /> {c.email}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mt-1 truncate">{c.position_title || '—'}</div>
-                                        </div>
-                                        <div className="text-center shrink-0">
-                                            <div className={`text-2xl font-black ${scoreColor(c.overall_score)}`}>
-                                                {c.overall_score ?? '—'}
-                                            </div>
-                                            <div className="text-[9px] font-black uppercase tracking-widest text-gray-300">Match</div>
-                                        </div>
-                                    </div>
+                        {facets.positions.length > 0 && (
+                            <FacetGroup title="Position">
+                                {facets.positions.map((p) => (
+                                    <FacetRow key={p.id} label={p.title} count={p.count} checked={positions.has(p.id)} onChange={() => toggle(positions, setPositions, p.id)} />
+                                ))}
+                            </FacetGroup>
+                        )}
+                    </div>
+                </aside>
 
-                                    {/* Dimension mini-bars */}
-                                    <div className="space-y-1.5 mb-3">
-                                        {DIMS.slice(1).map((d) => {
-                                            const v = c[d.key] as number | null;
-                                            return (
-                                                <div key={d.key} className="flex items-center gap-2">
-                                                    <span className="w-20 text-[10px] font-semibold text-gray-400 shrink-0">{d.label}</span>
-                                                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                        <div className={`h-full rounded-full ${d.accent} transition-all duration-500`} style={{ width: `${v ?? 0}%` }} />
-                                                    </div>
-                                                    <span className="w-7 text-right text-[10px] font-mono text-gray-500">{v ?? '–'}</span>
+                {/* ===== Main column ===== */}
+                <div className="flex-1 overflow-y-auto">
+                    <div className="p-6 max-w-[1400px] mx-auto">
+                        {/* Micro-insights bar */}
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                            <Insight icon={Users} label="In view" value={`${insights.n}`} />
+                            <Insight icon={Gauge} label="Avg match" value={insights.avgOverall != null ? `${insights.avgOverall}%` : '—'} />
+                            <Insight icon={Gauge} label="Avg cognitive" value={insights.avgCognitive != null ? `${insights.avgCognitive}%` : '—'} />
+                            <Insight icon={Sparkles} label="Assessed" value={`${insights.assessedPct}%`} />
+                            <Insight icon={Users} label="Main source" value={insights.topSource ? `${titleize(insights.topSource.name)} ${insights.topSource.pct}%` : '—'} />
+                        </div>
+
+                        {/* Active chips */}
+                        {chips.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
+                                {chips.map((chip, i) => (
+                                    <button key={i} onClick={chip.clear}
+                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-primary-50 ring-1 ring-primary-200/60 text-primary-700 text-[12px] font-semibold hover:bg-primary-100 transition-colors">
+                                        {chip.label}
+                                        <X className="w-3 h-3 text-primary-400 group-hover:text-primary-700" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Candidate grid */}
+                        {filtered.length === 0 ? (
+                            <div className="text-center py-20 text-slate-400">
+                                <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                                No candidates match the current filters.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
+                                {filtered.map((c) => {
+                                    const st = hrStatus(c.status);
+                                    return (
+                                        <Link key={c.id} href={`/dashboard/candidates/${c.id}`}
+                                            className="group rounded-xl bg-white ring-1 ring-slate-200/60 p-4 hover:ring-slate-300 hover:shadow-sm transition-all duration-200">
+                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-slate-800 truncate group-hover:text-primary-700 transition-colors">{c.full_name}</div>
+                                                    <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate"><Mail className="w-3 h-3 shrink-0" /> {c.email}</div>
+                                                    <div className="text-[12px] text-slate-500 mt-0.5 truncate">{c.position_title || '—'}</div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                                <div className="text-center shrink-0">
+                                                    <div className={`text-2xl font-black tabular-nums ${scoreColor(c.overall_score)}`}>{c.overall_score ?? '—'}</div>
+                                                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-300">Match</div>
+                                                </div>
+                                            </div>
 
-                                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${(STATUS_STYLES[c.status] || STATUS_STYLES.applied).bg} ${(STATUS_STYLES[c.status] || STATUS_STYLES.applied).text}`}>
-                                                {titleize(c.status)}
-                                            </span>
-                                            <span className="text-[10px] text-gray-400">{titleize(c.source || 'direct')}</span>
-                                        </div>
-                                        <span className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 group-hover:text-primary-600 transition">
-                                            View <ExternalLink className="w-3 h-3" />
-                                        </span>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
+                                            {/* Dimension mini-bars */}
+                                            <div className="space-y-1.5 mb-3">
+                                                {DIMS.slice(1).map((d) => {
+                                                    const v = c[d.key] as number | null;
+                                                    return (
+                                                        <div key={d.key} className="flex items-center gap-2">
+                                                            <span className="w-20 text-[10px] font-semibold text-slate-400 shrink-0">{d.label}</span>
+                                                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                <div className={`h-full rounded-full ${d.accent} transition-all duration-500`} style={{ width: `${v ?? 0}%` }} />
+                                                            </div>
+                                                            <span className="w-7 text-right text-[10px] font-mono text-slate-500 tabular-nums">{v ?? '–'}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-md ring-1 ${st.cls}`}>{st.label}</span>
+                                                    <span className="text-[10px] text-slate-400">{titleize(c.source || 'direct')}</span>
+                                                </div>
+                                                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 group-hover:text-primary-600 transition-colors">View <ExternalLink className="w-3 h-3" /></span>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -365,9 +325,9 @@ export default function TreasuryPage() {
 
 function FacetGroup({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="mb-5 border-t border-gray-100 pt-4">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">{title}</div>
-            <div className="space-y-1 max-h-44 overflow-y-auto custom-scrollbar pr-1">{children}</div>
+        <div className="mb-4 border-t border-slate-100 pt-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">{title}</div>
+            <div className="space-y-0.5 max-h-44 overflow-y-auto pr-1">{children}</div>
         </div>
     );
 }
@@ -375,21 +335,20 @@ function FacetGroup({ title, children }: { title: string; children: React.ReactN
 function FacetRow({ label, count, checked, onChange }: { label: string; count: number; checked: boolean; onChange: () => void }) {
     return (
         <label className="flex items-center gap-2 py-0.5 cursor-pointer group">
-            <input type="checkbox" checked={checked} onChange={onChange}
-                className="w-3.5 h-3.5 rounded accent-primary-600 cursor-pointer" />
-            <span className={`flex-1 text-xs truncate ${checked ? 'text-gray-900 font-semibold' : 'text-gray-600'} group-hover:text-gray-900`}>{label}</span>
-            <span className="text-[10px] font-mono text-gray-300">{count}</span>
+            <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 rounded border-slate-300 accent-primary-600 cursor-pointer" />
+            <span className={`flex-1 text-[12px] truncate ${checked ? 'text-slate-900 font-semibold' : 'text-slate-600'} group-hover:text-slate-900`}>{label}</span>
+            <span className="text-[10px] font-mono text-slate-300 tabular-nums">{count}</span>
         </label>
     );
 }
 
 function Insight({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 ring-1 ring-slate-200/40 px-4 py-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+        <div className="rounded-xl bg-white ring-1 ring-slate-200/60 px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
-            <div className="text-lg font-black text-gray-900 truncate">{value}</div>
+            <div className="text-lg font-black text-slate-900 truncate">{value}</div>
         </div>
     );
 }

@@ -4,28 +4,28 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
-import { 
-    DndContext, 
-    DragOverlay, 
-    closestCorners, 
-    KeyboardSensor, 
-    PointerSensor, 
-    useSensor, 
+import {
+    DndContext,
+    DragOverlay,
+    closestCorners,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
     useSensors,
     DragStartEvent,
     DragOverEvent,
     DragEndEvent
 } from '@dnd-kit/core';
-import { 
-    arrayMove, 
-    SortableContext, 
-    sortableKeyboardCoordinates, 
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
     verticalListSortingStrategy,
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Users, Loader2, GripVertical, Mail, Calendar, CheckCircle, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Loader2, GripVertical, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import PageHeader from '@/components/dashboard/PageHeader';
 
 // --- Types & Constants ---
 const COLUMNS = [
@@ -71,41 +71,31 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
     };
 
     return (
-        <div 
+        <div
             ref={setNodeRef}
             style={style}
-            className={`bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-3 group transition-all hover:border-primary-300 hover:shadow-md ${isOverlay ? 'shadow-2xl border-primary-400 rotate-2' : ''}`}
+            className={`group bg-white p-3 rounded-lg ring-1 ring-slate-200/60 mb-2 transition-all hover:ring-slate-300 hover:shadow-sm ${isOverlay ? 'shadow-2xl ring-primary-300 rotate-2' : ''}`}
         >
-            <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                    <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition truncate pr-2">{candidate.full_name}</h4>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{candidate.position_title}</p>
+            <div className="flex justify-between items-start gap-2">
+                <div className="min-w-0 flex-1">
+                    <h4 className="text-[13px] font-semibold text-slate-800 group-hover:text-primary-700 transition-colors truncate">{candidate.full_name}</h4>
+                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide truncate">{candidate.position_title}</p>
                 </div>
-                <div 
-                    {...attributes} 
-                    {...listeners} 
-                    className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-600 transition"
-                >
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 -mr-1 text-slate-300 hover:text-slate-500 transition-colors">
                     <GripVertical className="w-4 h-4" />
                 </div>
             </div>
 
-            <div className="flex items-center justify-between mt-4">
-                <div className="flex -space-x-2">
-                    {candidate.assessment_results?.[0]?.overall_score ? (
-                        <div className="w-8 h-8 rounded-full bg-indigo-50 border-2 border-white flex items-center justify-center text-[10px] font-black text-indigo-700 shadow-sm" title="Neuro Score">
-                            {candidate.assessment_results[0].overall_score}
-                        </div>
-                    ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-300 shadow-sm">
-                            ?
-                        </div>
-                    )}
-                </div>
-                <Link 
-                    href={`/dashboard/candidates/${candidate.id}`}
-                    className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition"
-                >
+            <div className="flex items-center justify-between mt-3">
+                {candidate.assessment_results?.[0]?.overall_score ? (
+                    <div className="w-7 h-7 rounded-full bg-indigo-50 ring-1 ring-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700 tabular-nums" title="Match score">
+                        {candidate.assessment_results[0].overall_score}
+                    </div>
+                ) : (
+                    <div className="w-7 h-7 rounded-full bg-slate-50 ring-1 ring-slate-200/60 flex items-center justify-center text-[10px] font-bold text-slate-300">?</div>
+                )}
+                <Link href={`/dashboard/candidates/${candidate.id}`} onClick={(e) => e.stopPropagation()}
+                    className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-slate-100 rounded-md transition-colors">
                     <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
             </div>
@@ -125,32 +115,19 @@ function KanbanColumn({ id, title, candidates }: { id: string, title: string, ca
 
     return (
         <div className="w-72 flex-shrink-0 flex flex-col h-full overflow-hidden">
-            <div className="flex items-center justify-between mb-4 px-2">
-                <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-black text-gray-700 uppercase tracking-widest">{title}</h3>
-                    <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                        {candidates.length}
-                    </span>
-                </div>
-                <button className="text-gray-300 hover:text-gray-600"><MoreHorizontal className="w-4 h-4" /></button>
+            <div className="flex items-center gap-2 mb-2 px-1">
+                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{title}</h3>
+                <span className="bg-slate-200/70 text-slate-500 text-[10px] font-bold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
             </div>
-            
-            <div 
-                ref={setNodeRef}
-                className="flex-1 bg-gray-100/50 rounded-2xl p-3 overflow-y-auto no-scrollbar border-2 border-transparent hover:border-gray-200 transition"
-            >
-                <SortableContext 
-                    items={candidates.map(c => c.id)} 
-                    strategy={verticalListSortingStrategy}
-                >
+
+            <div ref={setNodeRef} className="flex-1 bg-slate-50 ring-1 ring-slate-200/50 rounded-xl p-2 overflow-y-auto no-scrollbar transition-colors">
+                <SortableContext items={candidates.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {candidates.map(c => (
                         <CandidateCard key={c.id} candidate={c} />
                     ))}
                 </SortableContext>
                 {candidates.length === 0 && (
-                    <div className="h-24 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-xs text-gray-400 font-medium">
-                        Empty
-                    </div>
+                    <div className="h-20 ring-1 ring-dashed ring-slate-200 rounded-lg flex items-center justify-center text-[11px] text-slate-300 font-medium">Empty</div>
                 )}
             </div>
         </div>
@@ -190,9 +167,9 @@ export default function PipelinePage() {
         }
     }, [ready, authenticated, user, router, loadCandidates]);
 
-    const activeCandidate = useMemo(() => 
+    const activeCandidate = useMemo(() =>
         activeId ? candidates.find(c => c.id === activeId) : null
-    , [activeId, candidates]);
+        , [activeId, candidates]);
 
     const groupedCandidates = useMemo(() => {
         const groups: Record<string, any[]> = {};
@@ -219,7 +196,7 @@ export default function PipelinePage() {
         // Determine target column
         let targetStatus = '';
         const overData = over.data.current;
-        
+
         if (overData?.type === 'Column') {
             targetStatus = overData.id;
         } else if (overData?.type === 'Candidate') {
@@ -228,7 +205,7 @@ export default function PipelinePage() {
 
         if (targetStatus && (STATUS_MAP[activeCandidate.status] || 'applied') !== targetStatus) {
             // Optimistically update
-            setCandidates(prev => prev.map(c => 
+            setCandidates(prev => prev.map(c =>
                 c.id === active.id ? { ...c, status: targetStatus } : c
             ));
         }
@@ -260,10 +237,12 @@ export default function PipelinePage() {
         }
     };
 
-    if (!ready || loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin w-10 h-10 text-primary-600" /></div>;
+    if (!ready || loading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-slate-300" /></div>;
 
     return (
-        <div className="h-full p-8 animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex flex-col h-full">
+            <PageHeader title="Hiring pipeline" count={candidates.length} />
+            <div className="flex-1 overflow-x-auto p-4">
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCorners}
@@ -271,13 +250,13 @@ export default function PipelinePage() {
                     onDragOver={handleDragOver}
                     onDragEnd={handleDragEnd}
                 >
-                    <div className="flex h-full gap-8 min-w-max pb-8">
+                    <div className="flex h-full gap-4 min-w-max pb-2">
                         {COLUMNS.map(column => (
-                            <KanbanColumn 
-                                key={column.id} 
-                                id={column.id} 
-                                title={column.title} 
-                                candidates={groupedCandidates[column.id] || []} 
+                            <KanbanColumn
+                                key={column.id}
+                                id={column.id}
+                                title={column.title}
+                                candidates={groupedCandidates[column.id] || []}
                             />
                         ))}
                     </div>
@@ -288,6 +267,7 @@ export default function PipelinePage() {
                         ) : null}
                     </DragOverlay>
                 </DndContext>
+            </div>
         </div>
     );
 }
