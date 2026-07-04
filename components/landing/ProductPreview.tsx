@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Target, Receipt, FolderKanban, LayoutDashboard, Users, Building2, Wallet, Heart } from 'lucide-react';
+import { Target, Receipt, FolderKanban, LayoutDashboard, Users, Building2, Wallet, Heart, Megaphone } from 'lucide-react';
 
-type Tab = 'sales' | 'finance' | 'projects';
+type Tab = 'sales' | 'finance' | 'marketing' | 'projects' | 'hr';
 
 const RAIL = [
-  { icon: LayoutDashboard }, { icon: Target }, { icon: Building2 },
-  { icon: Users }, { icon: Receipt }, { icon: Wallet }, { icon: FolderKanban }, { icon: Heart },
+  { icon: LayoutDashboard }, { icon: Target }, { icon: Building2 }, { icon: Users },
+  { icon: Receipt }, { icon: Wallet }, { icon: Megaphone }, { icon: FolderKanban }, { icon: Heart },
 ];
 
 function Chip({ label, tone }: { label: string; tone: string }) {
@@ -45,20 +45,24 @@ export default function ProductPreview() {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'sales', label: 'Sales' },
     { id: 'finance', label: 'Finance' },
+    { id: 'marketing', label: 'Marketing' },
     { id: 'projects', label: 'Projects' },
+    { id: 'hr', label: 'HR' },
   ];
 
   return (
     <div className="rounded-xl bg-white ring-1 ring-slate-200/70 shadow-2xl overflow-hidden">
       {/* window chrome */}
       <div className="h-9 flex items-center gap-2 px-3 border-b border-slate-200/70 bg-slate-50/60">
-        <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-        <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-        <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-        <div className="ml-3 flex items-center gap-1">
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+        </div>
+        <div className="sm:ml-3 flex items-center gap-1 overflow-x-auto no-scrollbar">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`h-6 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${tab === t.id ? 'bg-white text-slate-800 ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}>
+              className={`h-6 px-2.5 shrink-0 rounded-md text-[11px] font-semibold transition-colors ${tab === t.id ? 'bg-white text-slate-800 ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}>
               {t.label}
             </button>
           ))}
@@ -81,6 +85,7 @@ export default function ProductPreview() {
               <Column name="Won" color="#34d399"><Card title="Pulse" amount="$36,000" /><Card title="Lumen" amount="$12,000" /></Column>
             </div>
           )}
+
           {tab === 'finance' && (
             <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
               <div className="grid grid-cols-3 gap-2 px-3 h-7 items-center bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -98,11 +103,62 @@ export default function ProductPreview() {
               ))}
             </div>
           )}
+
+          {tab === 'marketing' && (
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-3 gap-2">
+                {[['Visitors', '2,480', 'text-slate-800'], ['Pageviews', '6,120', 'text-slate-800'], ['Live now', '7', 'text-emerald-600']].map((k) => (
+                  <div key={k[0]} className="rounded-lg ring-1 ring-slate-200/60 p-2">
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{k[0]}</div>
+                    <div className={`text-base font-black tabular-nums ${k[2]}`}>{k[1]}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-lg ring-1 ring-slate-200/60 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Visitors · last 12 days</div>
+                <div className="flex items-end gap-1.5 h-24">
+                  {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70].map((h, i) => (
+                    <div key={i} className="flex-1 rounded-sm bg-gradient-to-t from-indigo-400 to-fuchsia-400" style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
+                {[['/', '1,840'], ['/pricing', '920'], ['/blog/bus-covers-guide', '610']].map((r, i) => (
+                  <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-[11px] ${i ? 'border-t border-slate-100' : ''}`}>
+                    <span className="font-medium text-slate-600 truncate">{r[0]}</span>
+                    <span className="tabular-nums font-semibold text-slate-700">{r[1]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {tab === 'projects' && (
             <div className="flex gap-2.5 overflow-hidden">
               <Column name="Todo" color="#60a5fa"><Card title="Wire Stripe billing" sub="David R." /><Card title="Customer interviews" sub="Lena F." /></Column>
               <Column name="In progress" color="#a78bfa"><Card title="Design landing page" sub="Anna K." /></Column>
               <Column name="Done" color="#34d399"><Card title="Set up CI/CD" sub="Sara L." /></Column>
+            </div>
+          )}
+
+          {tab === 'hr' && (
+            <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-7 items-center bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <span>Candidate</span><span>Match</span><span>Status</span>
+              </div>
+              {[['Anna Kowalski', 'Senior Engineer', '92', 'Interview', 'bg-orange-50 text-orange-700 ring-orange-200/60'],
+                ['David Reyes', 'Sales Lead', '88', 'Offered', 'bg-emerald-50 text-emerald-700 ring-emerald-200/60'],
+                ['Marcus Obi', 'Data Scientist', '81', 'Assessed', 'bg-indigo-50 text-indigo-700 ring-indigo-200/60'],
+                ['Sara Lindqvist', 'Product Designer', '74', 'Screening', 'bg-amber-50 text-amber-700 ring-amber-200/60']].map((r) => (
+                <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-[52px] items-center border-t border-slate-100">
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-700 truncate">{r[0]}</div>
+                    <div className="text-[10px] text-slate-400 truncate">{r[1]}</div>
+                  </div>
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 ring-1 ring-indigo-100 text-[10px] font-black text-indigo-700 tabular-nums">{r[2]}</span>
+                  <Chip label={r[3]} tone={r[4]} />
+                </div>
+              ))}
             </div>
           )}
         </div>
