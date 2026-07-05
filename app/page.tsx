@@ -86,12 +86,9 @@ export default function HomePage() {
             Sales, finance, marketing, projects, and people — one relational core,
             fast and beautifully simple. No AI token bill.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="mt-8 flex justify-center">
             <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
               Start free <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/demo" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold transition-all duration-200 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md">
-              See a live demo
             </Link>
           </div>
           <p className="mt-4 text-[13px] text-slate-400 flex items-center gap-1.5 justify-center"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card · live in minutes</p>
