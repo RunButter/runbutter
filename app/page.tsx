@@ -221,6 +221,18 @@ export default function HomePage() {
         </Reveal>
       </section>
 
+      {/* ASCII wordmark — the signature motif, spelled in live glyphs */}
+      <section className="max-w-6xl mx-auto px-6 pb-10">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-3xl bg-slate-950 ring-1 ring-slate-800 h-[220px] md:h-[300px]">
+            <AsciiField text="HIREBTR" baseAlpha={0.05} peakAlpha={1} cell={11} />
+            <div className="absolute inset-0 flex items-end justify-center pb-6 pointer-events-none">
+              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-white/45">hire better · run everything</p>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <Reveal>

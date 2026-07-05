@@ -14,12 +14,14 @@ export default function AsciiField({
   peakAlpha = 1,
   cell = 14,
   edgeBias = 0.7,
+  text,
 }: {
   colors?: string[];
   baseAlpha?: number;
   peakAlpha?: number;
   cell?: number;
   edgeBias?: number;
+  text?: string;   // when set, dense glyphs form this word over a faint field
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -36,6 +38,7 @@ export default function AsciiField({
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let cols = 0, rows = 0, t = 0, raf = 0;
+    let mask: Uint8ClampedArray | null = null, maskW = 0, maskH = 0;   // optional text mask
     const mouse = { x: -9999, y: -9999, lastX: -9999, lastY: -9999 };
 
     // Expanding wave-rings left by cursor movement and clicks.
@@ -85,6 +88,28 @@ export default function AsciiField({
       ctx!.font = `${cell}px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx!.textBaseline = 'top';
       cols = Math.ceil(w / cell); rows = Math.ceil(h / cell);
+
+      // Build a text mask (once per resize): render the word big + bold to an
+      // offscreen canvas and sample its alpha per cell in frame() so the ASCII
+      // glyphs cluster into the word, with a faint field around it.
+      if (text && w > 0 && h > 0) {
+        const mc = document.createElement('canvas');
+        mc.width = w; mc.height = h;
+        const mx = mc.getContext('2d');
+        if (mx) {
+          mx.textAlign = 'center'; mx.textBaseline = 'middle';
+          mx.font = '900 100px ui-monospace, SFMono-Regular, Menlo, monospace';
+          const base = mx.measureText(text).width || 1;
+          const fs = Math.min((w * 0.84) / base * 100, h * 0.66);
+          mx.font = `900 ${fs}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+          mx.fillStyle = '#fff';
+          mx.fillText(text, w / 2, h / 2 + fs * 0.02);
+          mask = mx.getImageData(0, 0, w, h).data;
+          maskW = w; maskH = h;
+        }
+      } else {
+        mask = null;
+      }
     }
 
     function frame() {
@@ -120,9 +145,16 @@ export default function AsciiField({
               n = Math.min(1.4, n + band * band * rg.boost);
             }
           }
+          // text mask: boost density inside the word, fade the field outside
+          if (mask) {
+            const sx = Math.min(maskW - 1, (px + cell / 2) | 0);
+            const sy = Math.min(maskH - 1, (py + cell / 2) | 0);
+            const a = mask[((sy * maskW + sx) << 2) + 3] / 255;
+            n = a > 0.35 ? Math.min(1.4, n * 0.5 + 0.9) : n * 0.5;
+          }
           // calmer centre, denser edges via a position-dependent contour line
           const edge = Math.pow(Math.abs(x / cols - 0.5) * 2, 1.3);
-          const thresh = 0.4 + (1 - edge) * 0.26 * edgeBias;
+          const thresh = mask ? 0.46 : 0.4 + (1 - edge) * 0.26 * edgeBias;
           const level = (n - thresh) / (1 - thresh);
           if (level <= 0) continue;
           const ch = chars[Math.min(chars.length - 1, Math.floor(Math.pow(Math.min(1, level), 0.8) * (chars.length - 1)))];
@@ -170,7 +202,7 @@ export default function AsciiField({
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('click', onClick);
     };
-  }, [colors, baseAlpha, peakAlpha, cell, edgeBias]);
+  }, [colors, baseAlpha, peakAlpha, cell, edgeBias, text]);
 
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
 }
