@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles, Megaphone, ArrowLeftRight, FileText, Globe, Building2, CheckCheck } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Production only, so dev
 // and preview visits never pollute the stats. Site ids are public by nature —
@@ -30,15 +30,15 @@ const PILLARS = [
   { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding, and your team.', tone: 'text-cyan-600 bg-cyan-50' },
 ];
 
-// "Everything else in the box" — the newer modules that usually mean five more
-// subscriptions. Rendered as a bento grid to break the deep-dive zigzag rhythm.
+// "Everything else in the box" — the cross-cutting modules and utilities that
+// the deep-dives don't cover. Rendered as a bento grid to vary the rhythm.
 const CAPS = [
-  { icon: Megaphone, name: 'Marketing suite', body: 'Campaigns, a pixel-faithful social post studio with client review, and first-party web analytics.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
-  { icon: ArrowLeftRight, name: 'Bank transactions', body: 'A cash ledger that auto-matches payments to the right invoices and expenses.', tone: 'text-emerald-600', bg: 'bg-white' },
-  { icon: FileText, name: 'Invoicing & e-invoicing', body: 'Branded PDF invoices and offers, plus KSeF FA(3) export for Poland.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Globe, name: 'Web analytics', body: 'Cookieless, first-party visitor stats — no third-party trackers, no cookie banner.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-violet-600', bg: 'bg-white' },
-  { icon: CheckCheck, name: 'Bulk everything', body: 'Select, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
+  { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-violet-600', bg: 'bg-violet-50/70' },
+  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.', tone: 'text-indigo-600', bg: 'bg-white' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-white' },
+  { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
+  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-white' },
+  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-rose-600', bg: 'bg-rose-50/70' },
 ];
 
 const PLANS = [
@@ -218,18 +218,6 @@ export default function HomePage() {
             </details>
           ))}
         </div>
-        </Reveal>
-      </section>
-
-      {/* ASCII wordmark — the signature motif, spelled in live glyphs */}
-      <section className="max-w-6xl mx-auto px-6 pb-10">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-slate-950 ring-1 ring-slate-800 h-[220px] md:h-[300px]">
-            <AsciiField text="HIREBTR" baseAlpha={0.05} peakAlpha={1} cell={11} />
-            <div className="absolute inset-0 flex items-end justify-center pb-6 pointer-events-none">
-              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-white/45">hire better · run everything</p>
-            </div>
-          </div>
         </Reveal>
       </section>
 

@@ -2,9 +2,10 @@ import { Check } from 'lucide-react';
 import FinanceChart from '@/components/crm/FinanceChart';
 import type { FinanceSeriesPoint } from '@/lib/crm/data';
 
-// Deep-dive feature rows for the landing page. Each row pairs a copy block with a
+// Deep-dive feature rows for the landing page. Each pairs a copy block with a
 // static mockup of the REAL module UI (the Finance row even reuses the live
-// FinanceChart component) so the marketing matches the product.
+// FinanceChart component) so the marketing matches the product. The Marketing
+// section is a full-width band that breaks the left/right split rhythm.
 
 const FIN_SERIES: FinanceSeriesPoint[] = [
   { month: '2026-01', label: 'Jan', revenue: 18000, costs: 11000 },
@@ -90,34 +91,65 @@ function FinanceMock() {
   );
 }
 
-function RoadmapMock() {
-  const months = ['Jun', 'Jul', 'Aug'];
-  // hand-placed [leftPct, widthPct] bars + dot positions for a tidy preview
-  const lanes = [
-    { name: 'Launch', bar: [4, 46], color: '#34d399', dots: [8, 24, 44], dotColors: ['#f59e0b', '#f43f5e', '#f59e0b'] },
-    { name: 'Marketing', bar: [12, 56], color: '#34d399', dots: [16, 40, 62], dotColors: ['#f59e0b', '#3b82f6', '#94a3b8'] },
-    { name: 'Mobile', bar: [40, 52], color: '#fbbf24', dots: [44, 66, 88], dotColors: ['#3b82f6', '#94a3b8', '#f59e0b'] },
+function RecruitingMock() {
+  const rows: [string, string, string, string, string][] = [
+    ['Anna Kowalski', 'Senior Engineer', '92', 'Interview', 'bg-orange-50 text-orange-700 ring-orange-200/60'],
+    ['David Reyes', 'Sales Lead', '88', 'Offered', 'bg-emerald-50 text-emerald-700 ring-emerald-200/60'],
+    ['Marcus Obi', 'Data Scientist', '81', 'Assessed', 'bg-indigo-50 text-indigo-700 ring-indigo-200/60'],
+    ['Sara Lindqvist', 'Product Designer', '74', 'Screening', 'bg-amber-50 text-amber-700 ring-amber-200/60'],
   ];
   return (
     <MockWindow>
-      <div className="flex h-6 border-b border-slate-200/70 mb-1">
-        <div className="w-20 shrink-0" />
-        <div className="flex-1 flex">
-          {months.map((m) => <div key={m} className="flex-1 border-l border-slate-100 pl-1.5 text-[10px] font-semibold text-slate-400">{m}</div>)}
+      <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-7 items-center bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span>Candidate</span><span>Match</span><span>Status</span>
         </div>
+        {rows.map((r) => (
+          <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-[52px] items-center border-t border-slate-100">
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold text-slate-700 truncate">{r[0]}</div>
+              <div className="text-[10px] text-slate-400 truncate">{r[1]}</div>
+            </div>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 ring-1 ring-indigo-100 text-[10px] font-black text-indigo-700 tabular-nums">{r[2]}</span>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ring-1 ${r[4]}`}>{r[3]}</span>
+          </div>
+        ))}
       </div>
-      {lanes.map((l) => (
-        <div key={l.name} className="flex items-center h-11 border-b border-slate-100 last:border-0">
-          <div className="w-20 shrink-0 text-[11px] font-semibold text-slate-700 truncate pr-2">{l.name}</div>
-          <div className="flex-1 relative h-full">
-            {months.map((m, i) => <span key={m} className="absolute top-0 h-full w-px bg-slate-100" style={{ left: `${(i / months.length) * 100}%` }} />)}
-            <div className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full opacity-70" style={{ left: `${l.bar[0]}%`, width: `${l.bar[1]}%`, background: l.color }} />
-            {l.dots.map((d, i) => (
-              <span key={i} className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full ring-2 ring-white" style={{ left: `${d}%`, background: l.dotColors[i] }} />
+    </MockWindow>
+  );
+}
+
+function MarketingDash() {
+  return (
+    <MockWindow>
+      <div className="grid md:grid-cols-[1.1fr_1.4fr] gap-4">
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-2">
+            {[['Visitors', '2,480', 'text-slate-800'], ['Views', '6,120', 'text-slate-800'], ['Live', '7', 'text-emerald-600']].map((k) => (
+              <div key={k[0]} className="rounded-lg ring-1 ring-slate-200/60 p-2">
+                <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{k[0]}</div>
+                <div className={`text-base font-black tabular-nums ${k[2]}`}>{k[1]}</div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
+            {[['/', '1,840'], ['/pricing', '920'], ['/blog/bus-covers-guide', '610'], ['/contact', '340']].map((r, i) => (
+              <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-[11px] ${i ? 'border-t border-slate-100' : ''}`}>
+                <span className="font-medium text-slate-600 truncate">{r[0]}</span>
+                <span className="tabular-nums font-semibold text-slate-700">{r[1]}</span>
+              </div>
             ))}
           </div>
         </div>
-      ))}
+        <div className="rounded-lg ring-1 ring-slate-200/60 p-3 flex flex-col">
+          <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Visitors · last 14 days</div>
+          <div className="flex-1 flex items-end gap-1.5 min-h-[150px]">
+            {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70, 83, 92].map((h, i) => (
+              <div key={i} className="flex-1 rounded-sm bg-gradient-to-t from-indigo-400 to-fuchsia-400" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+      </div>
     </MockWindow>
   );
 }
@@ -152,6 +184,7 @@ export default function Showcase() {
         bullets={['Kanban deal stages with one-drag moves', 'Companies & people linked to every deal', 'Search, filter, and export in a click']}
         visual={<SalesMock />}
       />
+
       <Row
         reverse
         eyebrow="Finance" tone="text-emerald-600 bg-emerald-50"
@@ -160,12 +193,34 @@ export default function Showcase() {
         bullets={['Revenue vs costs, month by month', 'Bank transactions auto-matched to invoices', 'Branded PDF invoices, offers & e-invoice export']}
         visual={<FinanceMock />}
       />
+
+      {/* Full-width Marketing band — different layout family, breaks the rhythm */}
+      <div>
+        <div className="text-center max-w-2xl mx-auto mb-8">
+          <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Grow the top of the funnel</h3>
+          <p className="mt-3 text-slate-600 leading-relaxed">Plan campaigns, design and get client sign-off on social posts, and see exactly who is visiting — first-party and cookieless, no third-party trackers, no cookie banner.</p>
+        </div>
+        <MarketingDash />
+        <div className="mt-6 grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
+          {[
+            ['Campaigns', 'Budget, spend & leads by channel'],
+            ['Post studio', 'Pixel-faithful previews + pinned client comments'],
+            ['Web analytics', 'Cookieless visitors, top pages & referrers'],
+          ].map((c) => (
+            <div key={c[0]} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-3">
+              <div className="text-[13px] font-bold text-slate-800">{c[0]}</div>
+              <div className="text-[12px] text-slate-500 mt-0.5 leading-snug">{c[1]}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <Row
-        eyebrow="Projects & Roadmap" tone="text-violet-600 bg-violet-50"
-        title="Ship on time, every time"
-        body="Plan work on a clean issue board, then zoom out to a roadmap timeline that lays every project and due date on one Gantt-lite view."
-        bullets={['Project & issue boards that just work', 'Gantt-lite roadmap across all projects', 'Due dates and priorities at a glance']}
-        visual={<RoadmapMock />}
+        eyebrow="Recruiting & HR" tone="text-cyan-600 bg-cyan-50"
+        title="Hire better, by skills and personality"
+        body="The built-in ATS scores candidates on skills and psychometrics, then moves the shortlist along a drag-and-drop pipeline. Rule-based matching in Postgres — no per-token AI bill."
+        bullets={['Skills + Big-5 personality match scores', 'Drag-and-drop hiring pipeline & interviews', 'Talent Treasury to filter your whole pool']}
+        visual={<RecruitingMock />}
       />
     </section>
   );
