@@ -257,6 +257,10 @@ export const NAV = [
     { slug: 'roadmap', label: 'Roadmap', icon: 'GanttChartSquare', href: '/projects/roadmap' },
     { slug: 'board', label: 'Board', icon: 'Columns3', href: '/projects/board' },
   ]},
+  { group: 'Automate', items: [
+    { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
+    { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
+  ]},
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },

@@ -25,7 +25,8 @@ with checks(ord, step, probe, ok) as (
   (16, '0016 documents',         'invoice_items + invoices.kind',  ((to_regclass('public.invoice_items') is not null) and exists(select 1 from information_schema.columns where table_name='invoices' and column_name='kind'))),
   (17, '0017 branding',          'workspaces.logo_url + bucket',   (exists(select 1 from information_schema.columns where table_name='workspaces' and column_name='logo_url') and exists(select 1 from storage.buckets where id='branding'))),
   (18, '0018 quoting',           'invoice_items.discount_pct+tax', (exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='discount_pct') and exists(select 1 from information_schema.columns where table_name='invoice_items' and column_name='tax_rate'))),
-  (31, '0031 transactions',      'transactions + bank_accounts',   ((to_regclass('public.transactions') is not null) and (to_regclass('public.bank_accounts') is not null) and (select exists(select 1 from pg_proc where proname='get_transactions_ledger'))))
+  (31, '0031 transactions',      'transactions + bank_accounts',   ((to_regclass('public.transactions') is not null) and (to_regclass('public.bank_accounts') is not null) and (select exists(select 1 from pg_proc where proname='get_transactions_ledger')))),
+  (32, '0032 automations',       'automations + connections + api_keys', ((to_regclass('public.automations') is not null) and (to_regclass('public.connections') is not null) and (to_regclass('public.api_keys') is not null) and (select exists(select 1 from pg_proc where proname='claim_automation_events'))))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
