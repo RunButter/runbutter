@@ -1,0 +1,51 @@
+// BYO-key AI adapter. The user supplies their own provider key (stored encrypted);
+// HireBTR just proxies the call, so there is no platform token cost. No SDKs —
+// plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
+
+export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter';
+
+export interface ProviderDef { id: AIProvider; label: string; help: string; models: string[] }
+
+// Model lists are suggestions only — the field is free text, so users can type any
+// model their key supports without us shipping a stale hardcoded list.
+export const PROVIDERS: ProviderDef[] = [
+  { id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys', models: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001'] },
+  { id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'] },
+  { id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
+  { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model)', models: ['openai/gpt-4o', 'anthropic/claude-sonnet-5', 'google/gemini-2.5-flash'] },
+];
+export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
+
+export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string): Promise<string> {
+  if (provider === 'claude') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model, max_tokens: 2000, system, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
+    return (d.content || []).map((b: any) => b.text || '').join('').trim();
+  }
+
+  if (provider === 'gemini') {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
+    return (d.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('').trim();
+  }
+
+  // openai + openrouter are OpenAI-compatible
+  const base = provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+  const r = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);
+  return (d.choices?.[0]?.message?.content || '').trim();
+}
