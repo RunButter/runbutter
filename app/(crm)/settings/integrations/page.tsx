@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban } from 'lucide-react';
 import {
-  loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey,
-  type Connection, type ApiKey,
+  loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
+  type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
 
 const KINDS = ['generic', 'slack', 'discord', 'zapier', 'make', 'n8n'];
@@ -18,6 +18,7 @@ export default function IntegrationsPage() {
 
   const [connections, setConnections] = useState<Connection[]>([]);
   const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editConn, setEditConn] = useState<Partial<Connection> | null>(null);
@@ -30,8 +31,8 @@ export default function IntegrationsPage() {
 
   const reload = useCallback(() => {
     setLoading(true);
-    Promise.all([loadConnections(privy), loadApiKeys(privy)]).then(([c, k]) => {
-      setConnections(c.rows); setKeys(k.rows); setLive(c.live); setLoading(false);
+    Promise.all([loadConnections(privy), loadApiKeys(privy), loadWebhookDeliveries(privy)]).then(([c, k, d]) => {
+      setConnections(c.rows); setKeys(k.rows); setDeliveries(d.rows); setLive(c.live); setLoading(false);
     });
   }, [privy]);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
@@ -101,12 +102,30 @@ export default function IntegrationsPage() {
                       <div className="text-[13px] font-semibold text-slate-800 truncate">{c.label || 'Webhook'}</div>
                       <div className="text-[11px] text-slate-400 font-mono truncate">{c.url}</div>
                     </div>
+                    {c.secret && <button onClick={() => copy(c.secret!, 'sec' + c.id)} title="Copy signing secret" className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-500 hover:bg-slate-50 inline-flex items-center gap-1">{copied === 'sec' + c.id ? <Check className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />} Secret</button>}
                     <button onClick={() => setEditConn(c)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">Edit</button>
                     <button onClick={() => delConn(c)} disabled={!canEdit} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
             </div>
+            <p className="text-[11px] text-slate-400 mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-slate-100 rounded px-1">X-HireBTR-Signature</code> header (<code className="bg-slate-100 rounded px-1">t=…,v1=…</code>).</p>
           </section>
+
+          {/* Recent webhook deliveries */}
+          {deliveries.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><Webhook className="w-4 h-4 text-slate-400" /> Recent deliveries</h2>
+              <div className="rounded-xl bg-white ring-1 ring-slate-200/60 overflow-hidden">
+                {deliveries.map((d) => (
+                  <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-slate-100 last:border-0 text-[12px]">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'ok' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <span className="font-mono text-slate-600 truncate flex-1">{d.url}</span>
+                    <span className="text-slate-400 shrink-0">{d.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* API keys */}
           <section>

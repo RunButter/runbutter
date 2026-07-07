@@ -4,20 +4,50 @@ import { supabase } from '@/lib/supabase';
 import { getWorkspace } from './data';
 
 export type AutomationEvent = 'created' | 'updated';
+export type TriggerType = 'event' | 'webhook' | 'schedule';
+export interface Schedule { every: 'minute' | 'hour' | 'day'; at?: string }
 export interface Condition { field: string; op: string; value: string }
 export interface Action { type: string; config: Record<string, any> }
 export interface Automation {
-  id: string; name: string; enabled: boolean; object: string; event: AutomationEvent;
-  conditions: Condition[]; actions: Action[]; updated_at?: string;
+  id: string; name: string; enabled: boolean; trigger_type: TriggerType;
+  object: string; event: AutomationEvent; conditions: Condition[]; actions: Action[];
+  webhook_token?: string | null; schedule?: Schedule | null; updated_at?: string;
 }
 export interface AutomationRun { id: string; automation_name: string | null; action_type: string | null; status: string; detail: string | null; created_at: string }
-export interface Connection { id: string; label: string; kind: string; url: string; is_active: boolean }
+export interface Connection { id: string; label: string; kind: string; url: string; is_active: boolean; secret?: string }
+export interface WebhookDelivery { id: string; url: string | null; status: string; response_code: number | null; attempts: number; detail: string | null; created_at: string }
 export interface ApiKey { id: string; name: string; prefix: string; last_used_at: string | null; revoked: boolean; created_at: string }
 
+export interface Template { key: string; name: string; desc: string; tone: string; automation: Partial<Automation> }
+
+// Popular starter recipes (Activepieces/Zapier style). Cover event, incoming
+// webhook, and schedule triggers × webhook / email / create-record actions.
+export const TEMPLATES: Template[] = [
+  { key: 'new-person', name: 'New contact → Slack/Zapier', desc: 'When a person is added, POST them to a webhook.', tone: 'text-cyan-600 bg-cyan-50',
+    automation: { name: 'New contact → webhook', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: {} }] } },
+  { key: 'invoice-paid', name: 'Invoice paid → notify', desc: 'When an invoice is marked paid, ping your team.', tone: 'text-emerald-600 bg-emerald-50',
+    automation: { name: 'Invoice paid → notify', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: {} }] } },
+  { key: 'invoice-overdue', name: 'Overdue invoice → email', desc: 'Email a reminder when an invoice goes overdue.', tone: 'text-rose-600 bg-rose-50',
+    automation: { name: 'Overdue → email reminder', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'overdue' }], actions: [{ type: 'send_email', config: { subject: 'Invoice {{number}} is overdue', body: 'Hi — invoice {{number}} for {{amount}} is now overdue.' } }] } },
+  { key: 'big-txn', name: 'Large transaction → alert', desc: 'Get pinged when a big transaction lands.', tone: 'text-amber-600 bg-amber-50',
+    automation: { name: 'Large transaction alert', trigger_type: 'event', object: 'transactions', event: 'created', conditions: [{ field: 'amount', op: 'gt', value: '10000' }], actions: [{ type: 'send_webhook', config: {} }] } },
+  { key: 'inbound-lead', name: 'Incoming webhook → new contact', desc: 'Give a form or tool a URL that creates a person.', tone: 'text-indigo-600 bg-indigo-50',
+    automation: { name: 'Inbound lead → create contact', trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], actions: [{ type: 'create_record', config: { object: 'people', data: { first_name: '{{first_name}}', last_name: '{{last_name}}', email: '{{email}}' }, _data: '{\n  "first_name": "{{first_name}}",\n  "last_name": "{{last_name}}",\n  "email": "{{email}}"\n}' } }] } },
+  { key: 'daily-digest', name: 'Daily schedule → webhook', desc: 'Fire a webhook every day — e.g. a digest to Slack.', tone: 'text-violet-600 bg-violet-50',
+    automation: { name: 'Daily digest', trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] } },
+];
+
+export function webhookUrl(token?: string | null): string {
+  if (!token) return '';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hirebtr.com';
+  return `${origin}/api/hooks/${token}`;
+}
+
 const SAMPLE_AUTOMATIONS: Automation[] = [
-  { id: 's1', name: 'Won deal → draft invoice', enabled: true, object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: { label: 'Slack #finance' } }] },
-  { id: 's2', name: 'New candidate → notify Slack', enabled: true, object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: { label: 'Zapier' } }] },
-  { id: 's3', name: 'Overdue invoice → email reminder', enabled: false, object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'overdue' }], actions: [{ type: 'send_email', config: {} }] },
+  { id: 's1', name: 'Invoice paid → Slack', enabled: true, trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: { label: 'Slack #finance' } }] },
+  { id: 's2', name: 'New contact → notify Zapier', enabled: true, trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: { label: 'Zapier' } }] },
+  { id: 's3', name: 'Inbound lead → create contact', enabled: true, trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], webhook_token: 'hook_sampletoken', actions: [{ type: 'create_record', config: { object: 'people' } }] },
+  { id: 's4', name: 'Daily digest → webhook', enabled: false, trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] },
 ];
 const SAMPLE_RUNS: AutomationRun[] = [
   { id: 'r1', automation_name: 'New candidate → notify Slack', action_type: 'send_webhook', status: 'ok', detail: 'POST 200 · Zapier', created_at: '2026-07-05T09:12:00Z' },
@@ -70,6 +100,14 @@ export async function loadAutomationRuns(privy: string | null): Promise<{ rows: 
   const { data, error } = await supabase.rpc('get_automation_runs', { p_privy: privy, p_workspace: id, p_limit: 30 });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as AutomationRun[], live: true };
+}
+
+export async function loadWebhookDeliveries(privy: string | null): Promise<{ rows: WebhookDelivery[]; live: boolean }> {
+  const id = await ws(privy);
+  if (!privy || !id) return { rows: [], live: false };
+  const { data, error } = await supabase.rpc('get_webhook_deliveries', { p_privy: privy, p_workspace: id, p_limit: 20 });
+  if (error || !Array.isArray(data)) return { rows: [], live: false };
+  return { rows: data as WebhookDelivery[], live: true };
 }
 
 // ── Connections (outgoing webhooks) ───────────────────────────────────────────
