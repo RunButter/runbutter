@@ -210,6 +210,13 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'status', label: 'Status', type: 'tags', width: 130 },
       { key: 'assigned_to', label: 'Assigned to', type: 'relation', width: 180 },
     ],
+    form: [
+      { key: 'name', label: 'Name', input: 'text', required: true },
+      { key: 'category', label: 'Category', input: 'select', options: ['laptop', 'monitor', 'phone', 'license', 'other'] },
+      { key: 'serial_number', label: 'Serial number', input: 'text' },
+      { key: 'status', label: 'Status', input: 'select', options: ['available', 'assigned', 'repair', 'retired'] },
+      { key: 'assigned_to_person_id', label: 'Assigned to', input: 'relation', optionsObject: 'people' },
+    ],
   },
 };
 

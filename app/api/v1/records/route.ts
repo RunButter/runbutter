@@ -28,7 +28,7 @@ async function auth(req: Request) {
   return { admin, workspace: (data as any).workspace_id as string, privy: (data as any).owner_privy as string };
 }
 
-const ALLOWED = new Set(['people', 'companies', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'offers']);
+const ALLOWED = new Set(['people', 'companies', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'offers', 'assets']);
 
 export async function GET(req: Request) {
   const ctx = await auth(req);

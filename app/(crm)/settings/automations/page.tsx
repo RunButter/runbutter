@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Zap, Plus, Loader2, X, Trash2, Webhook, Mail, FilePlus, PencilLine, Bolt, Radio, Clock, Copy, Check, ArrowRight } from 'lucide-react';
+import { Zap, Plus, Loader2, X, Trash2, Webhook, Mail, FilePlus, PencilLine, Bolt, Radio, Clock, Copy, Check, ArrowRight, List, Workflow } from 'lucide-react';
+import AutomationFlow from '@/components/crm/AutomationFlow';
 import {
   loadAutomations, saveAutomation, setAutomationEnabled, deleteAutomation, loadAutomationRuns, loadConnections, webhookUrl, TEMPLATES,
   type Automation, type AutomationRun, type Connection, type Condition, type Action, type TriggerType,
 } from '@/lib/crm/automations';
 
-const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues'];
+const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
 const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
 const ACTION_TYPES = [
   { v: 'send_webhook', l: 'Send webhook', icon: Webhook },
@@ -50,6 +51,7 @@ export default function AutomationsPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Automation | null>(null);
+  const [view, setView] = useState<'board' | 'list'>('board');
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -76,9 +78,19 @@ export default function AutomationsPage() {
         <h1 className="text-sm font-bold text-slate-800 flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" /> Automations</h1>
         <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
-        <button onClick={() => setEditing(blank())} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>
-          <Plus className="w-3.5 h-3.5" /> New automation
-        </button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
+            {([['board', Workflow, 'Board'], ['list', List, 'List']] as const).map(([v, Icon, label]) => (
+              <button key={v} onClick={() => setView(v)}
+                className={`h-6 px-2 inline-flex items-center gap-1 rounded-md text-[11px] font-bold transition-colors ${view === v ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                <Icon className="w-3 h-3" /> {label}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => setEditing(blank())} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>
+            <Plus className="w-3.5 h-3.5" /> New automation
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -131,6 +143,7 @@ export default function AutomationsPage() {
                       <button onClick={() => remove(a)} disabled={!canEdit} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
+                  {view === 'board' && <AutomationFlow automation={a} onEdit={canEdit ? () => setEditing(forEditing(a)) : undefined} />}
                   {a.trigger_type === 'webhook' && a.webhook_token && <WebhookUrl token={a.webhook_token} />}
                 </div>
               ); })}

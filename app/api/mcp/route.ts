@@ -33,6 +33,7 @@ const OBJECTS: Record<string, string> = {
   campaigns: 'Marketing campaigns (name, channel, status, budget, spend, leads, starts_on, ends_on)',
   projects: 'Projects (name, identifier, status, description)',
   issues: 'Project issues/tasks (title, status backlog|todo|in_progress|done|cancelled, priority, due_date, description)',
+  assets: 'Company equipment (name, category laptop|monitor|phone|license|other, serial_number, status available|assigned|repair|retired, assigned_to_person_id)',
 };
 
 const TOOLS = [
