@@ -33,12 +33,12 @@ const PILLARS = [
 // "Everything else in the box" — the cross-cutting modules and utilities that
 // the deep-dives don't cover. Rendered as a bento grid to vary the rhythm.
 const CAPS = [
-  { icon: Zap, name: 'Automations', body: 'When something happens, do something — fire webhooks, send emails, create records. Templates included.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
-  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make — plus MCP, so AI agents can work inside your workspace.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Sparkles, name: 'AI docs — your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send emails, create records. Templates included.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
+  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier and Make, plus MCP so AI agents can work inside your workspace.', tone: 'text-indigo-600', bg: 'bg-white' },
+  { icon: Sparkles, name: 'AI docs with your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
   { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-violet-600', bg: 'bg-white' },
   { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP number, via MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-emerald-50/70' },
   { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
   { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-white' },
   { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-rose-600', bg: 'bg-white' },
@@ -86,22 +86,21 @@ export default function HomePage() {
             Run your whole company<br />in one clean workspace
           </h1>
           <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
-            Sales, finance, marketing, projects, and people — one relational core,
-            fast and beautifully simple. No AI token bill.
+            Sales, finance, marketing, projects, and people in one relational
+            workspace. Fast, simple, and no AI token bill.
           </p>
           <div className="mt-8 flex justify-center">
             <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="mt-4 text-[13px] text-slate-400 flex items-center gap-1.5 justify-center"><Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card · live in minutes</p>
         </div>
 
         {/* interactive product window */}
         <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 pt-2 pb-28">
           <Reveal>
             <ProductPreview />
-            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs — it&apos;s the real interface, on live sample data.</p>
+            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs. This is the real interface, on live sample data.</p>
           </Reveal>
         </div>
       </section>
@@ -109,7 +108,7 @@ export default function HomePage() {
       {/* Works-with strip */}
       <section className="border-t border-slate-100">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <p className="text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-5">Replaces a stack of tools · works with the ones you keep</p>
+          <p className="text-center text-[13px] text-slate-500 mb-5">Replaces a stack of tools. Works with the ones you keep.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-400">
             {['Stripe', 'Google Calendar', 'Resend', 'KSeF e-invoicing', 'CSV / Sheets', 'Zapier'].map((n) => (
               <span key={n} className="hover:text-slate-600 transition">{n}</span>
@@ -123,7 +122,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <h2 className="text-3xl font-black tracking-tight text-center">One workspace for the whole company</h2>
-            <p className="text-center text-slate-500 mt-2 mb-12">Every record relational and connected — a deal, a candidate, a campaign, an invoice, all in one place.</p>
+            <p className="text-center text-slate-500 mt-2 mb-12">Every record is relational and connected: a deal, a candidate, a campaign, an invoice, all in one place.</p>
           </Reveal>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {PILLARS.map((p, i) => (
@@ -155,7 +154,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <h2 className="text-3xl font-black tracking-tight text-center">Everything else, already in the box</h2>
-            <p className="text-center text-slate-500 mt-2 mb-12">The tools that usually mean five more subscriptions — built in, at no extra token cost.</p>
+            <p className="text-center text-slate-500 mt-2 mb-12">The tools that usually mean five more subscriptions, built in at no extra cost.</p>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {CAPS.map((c, i) => (
@@ -175,7 +174,7 @@ export default function HomePage() {
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
         <Reveal>
           <h2 className="text-3xl font-black tracking-tight text-center">Simple, transparent pricing</h2>
-          <p className="text-center text-slate-500 mt-2 mb-12">Start free, upgrade as you grow. No per-token AI bill, ever.</p>
+          <p className="text-center text-slate-500 mt-2 mb-12">Start free with no credit card, upgrade as you grow. No per-token AI bill, ever.</p>
         </Reveal>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
           {PLANS.map((pl, i) => (
@@ -202,12 +201,12 @@ export default function HomePage() {
         <p className="text-center text-slate-500 mt-2 mb-10">Everything you need to know before you start.</p>
         <div className="space-y-3">
           {[
-            { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core — a company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you have to glue together.' },
-            { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres — search, matching, reconciliation, and reporting run in the database. There is no per-token AI bill, so your cost stays flat as you grow.' },
+            { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you have to glue together.' },
+            { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres: search, matching, reconciliation, and reporting run in the database. There is no per-token AI bill, so your cost stays flat as you grow.' },
             { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger then reconciles incoming payments to the right invoice automatically.' },
-            { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click — your data is always yours.' },
+            { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
             { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions, and GDPR controls (consent logging, anonymization) are built in on higher plans. Our web analytics are first-party and cookieless.' },
-            { q: 'Can I start free and upgrade later?', a: 'Yes — start on the free plan with no credit card. Upgrade the moment you need more records, seats, or modules, and downgrade anytime.' },
+            { q: 'Can I start free and upgrade later?', a: 'Yes. Start on the free plan with no credit card, then upgrade the moment you need more records, seats, or modules. Downgrade anytime.' },
           ].map((f) => (
             <details key={f.q} className="group rounded-xl bg-white ring-1 ring-slate-200/70 px-5 py-4 [&_summary]:cursor-pointer">
               <summary className="flex items-center justify-between gap-4 list-none font-semibold text-slate-800 text-[15px]">
@@ -243,7 +242,7 @@ export default function HomePage() {
           <div>
             <Logo />
             <p className="mt-3 text-[13px] text-slate-400 leading-relaxed max-w-[30ch]">
-              The open company OS — sales, finance, marketing, projects, and people in one workspace.
+              The open company OS: sales, finance, marketing, projects, and people in one workspace.
             </p>
           </div>
           <div>

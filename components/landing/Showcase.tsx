@@ -160,7 +160,7 @@ function Row({ reverse, eyebrow, tone, title, body, bullets, visual }: {
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
       <div className={reverse ? 'lg:order-2' : ''}>
-        <div className={`inline-block text-[11px] font-black uppercase tracking-widest mb-3 px-2 py-0.5 rounded-full ${tone}`}>{eyebrow}</div>
+        <div className={`inline-block text-[12px] font-bold mb-3 px-2.5 py-0.5 rounded-full ${tone}`}>{eyebrow}</div>
         <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h3>
         <p className="mt-3 text-slate-600 leading-relaxed">{body}</p>
         <ul className="mt-5 space-y-2.5">
@@ -180,7 +180,7 @@ export default function Showcase() {
       <Row
         eyebrow="Sales CRM" tone="text-indigo-600 bg-indigo-50"
         title="Close more, guess less"
-        body="A drag-and-drop deal pipeline backed by relational companies and people. Every contact, deal, and note connected — no more scattered spreadsheets."
+        body="A drag-and-drop deal pipeline backed by relational companies and people. Every contact, deal, and note connected. No more scattered spreadsheets."
         bullets={['Kanban deal stages with one-drag moves', 'Companies & people linked to every deal', 'Search, filter, and export in a click']}
         visual={<SalesMock />}
       />
@@ -189,7 +189,7 @@ export default function Showcase() {
         reverse
         eyebrow="Finance" tone="text-emerald-600 bg-emerald-50"
         title="Know your numbers in real time"
-        body="Invoices in, expenses out, and a bank ledger that reconciles payments automatically — with a live dashboard of revenue, costs, and net over any period."
+        body="Invoices in, expenses out, and a bank ledger that reconciles payments automatically, with a live dashboard of revenue, costs, and net over any period."
         bullets={['Revenue vs costs, month by month', 'Bank transactions auto-matched to invoices', 'Branded PDF invoices, offers & e-invoice export']}
         visual={<FinanceMock />}
       />
@@ -198,7 +198,7 @@ export default function Showcase() {
       <div>
         <div className="text-center max-w-2xl mx-auto mb-8">
           <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Grow the top of the funnel</h3>
-          <p className="mt-3 text-slate-600 leading-relaxed">Plan campaigns, design and get client sign-off on social posts, and see exactly who is visiting — first-party and cookieless, no third-party trackers, no cookie banner.</p>
+          <p className="mt-3 text-slate-600 leading-relaxed">Plan campaigns, design and get client sign-off on social posts, and see exactly who is visiting. First-party and cookieless: no third-party trackers, no cookie banner.</p>
         </div>
         <MarketingDash />
         <div className="mt-6 grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
@@ -218,7 +218,7 @@ export default function Showcase() {
       <Row
         eyebrow="Recruiting & HR" tone="text-cyan-600 bg-cyan-50"
         title="Hire better, by skills and personality"
-        body="The built-in ATS scores candidates on skills and psychometrics, then moves the shortlist along a drag-and-drop pipeline. Rule-based matching in Postgres — no per-token AI bill."
+        body="The built-in ATS scores candidates on skills and psychometrics, then moves the shortlist along a drag-and-drop pipeline. Rule-based matching in Postgres, with no per-token AI bill."
         bullets={['Skills + Big-5 personality match scores', 'Drag-and-drop hiring pipeline & interviews', 'Talent Treasury to filter your whole pool']}
         visual={<RecruitingMock />}
       />

@@ -137,6 +137,7 @@ export default function AsciiField({
 
     // Window-level listeners + rect bounds check: the canvas sits BEHIND the
     // page content, so element-level events would never fire over text/cards.
+    // Pointer events (not mouse events) so the wake also works on touch/pen.
     const within = (e: MouseEvent) => {
       const r = canvas!.getBoundingClientRect();
       const x = e.clientX - r.left, y = e.clientY - r.top;
@@ -160,14 +161,14 @@ export default function AsciiField({
 
     resize();
     window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('click', onClick, { passive: true });
     if (reduced) frame(); else raf = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('pointermove', onMove);
       window.removeEventListener('click', onClick);
     };
   }, [colors, baseAlpha, peakAlpha, cell, edgeBias]);
