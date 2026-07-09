@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Sparkles, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck, Zap, Plug } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Production only, so dev
 // and preview visits never pollute the stats. Site ids are public by nature —
@@ -16,8 +16,8 @@ import Reveal from '@/components/landing/Reveal';
 const FEATURES = [
   'Drag-and-drop boards', 'Spreadsheet-style tables', 'CSV / Google Sheets import',
   'One-click export', 'Bulk select & actions', 'Bank reconciliation',
-  'Branded PDF invoices', 'First-party web analytics', 'Search anything',
-  'Custom categories', 'Zero AI token cost',
+  'Branded PDF invoices', 'First-party web analytics', 'Automations',
+  'REST API & signed webhooks', 'MCP for AI agents', 'Zero AI token cost',
 ];
 
 // Five pillars over one relational core. Each accent is categorical (a module
@@ -33,12 +33,15 @@ const PILLARS = [
 // "Everything else in the box" — the cross-cutting modules and utilities that
 // the deep-dives don't cover. Rendered as a bento grid to vary the rhythm.
 const CAPS = [
-  { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-violet-600', bg: 'bg-violet-50/70' },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something — fire webhooks, send emails, create records. Templates included.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
+  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make — plus MCP, so AI agents can work inside your workspace.', tone: 'text-indigo-600', bg: 'bg-white' },
+  { icon: Sparkles, name: 'AI docs — your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
+  { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-violet-600', bg: 'bg-white' },
   { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-white' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT / NIP — MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-emerald-50/70' },
   { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
   { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-white' },
-  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-rose-600', bg: 'bg-rose-50/70' },
+  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-rose-600', bg: 'bg-white' },
 ];
 
 const PLANS = [
@@ -236,14 +239,37 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-100">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] text-slate-400">
-          <Logo />
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-slate-700">Privacy</Link>
-            <Link href="/terms" className="hover:text-slate-700">Terms</Link>
-            <Link href="/contact" className="hover:text-slate-700">Contact</Link>
+        <div className="max-w-6xl mx-auto px-6 py-12 grid gap-10 sm:grid-cols-3">
+          <div>
+            <Logo />
+            <p className="mt-3 text-[13px] text-slate-400 leading-relaxed max-w-[30ch]">
+              The open company OS — sales, finance, marketing, projects, and people in one workspace.
+            </p>
           </div>
-          <span>© 2026 hirebtr.com</span>
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Product</div>
+            <ul className="space-y-2 text-[13px] text-slate-500">
+              <li><Link href="#product" className="hover:text-slate-800 transition">Features</Link></li>
+              <li><Link href="#pricing" className="hover:text-slate-800 transition">Pricing</Link></li>
+              <li><Link href="/auth/login" className="hover:text-slate-800 transition">Sign in</Link></li>
+              <li><Link href="/auth/register" className="hover:text-slate-800 transition">Start free</Link></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Company</div>
+            <ul className="space-y-2 text-[13px] text-slate-500">
+              <li><Link href="/contact" className="hover:text-slate-800 transition">Contact</Link></li>
+              <li><Link href="/privacy" className="hover:text-slate-800 transition">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-slate-800 transition">Terms</Link></li>
+              <li><Link href="/cookies" className="hover:text-slate-800 transition">Cookies</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-slate-100">
+          <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px] text-slate-400">
+            <span>© 2026 hirebtr.com</span>
+            <span>Built on Postgres · no AI token bill</span>
+          </div>
         </div>
       </footer>
     </div>

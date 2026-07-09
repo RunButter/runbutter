@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Menu } from 'lucide-react';
+import { Menu, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import NavRail from '@/components/crm/NavRail';
 import PlanGate from '@/components/PlanGate';
@@ -42,8 +42,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }
 
+  // Keep the shell visible while Privy initialises — a blank white flash
+  // between navigation and auth-ready reads as a broken page.
   if (!ready || !authenticated) {
-    return <div className="min-h-screen bg-white" />;
+    return (
+      <div className="flex h-screen overflow-hidden bg-white">
+        <div className="hidden lg:flex"><NavRail /></div>
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
+        </main>
+      </div>
+    );
   }
 
   const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];

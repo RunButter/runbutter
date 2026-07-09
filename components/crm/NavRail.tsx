@@ -11,6 +11,7 @@ import {
   Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
+import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
@@ -38,14 +39,20 @@ function Item({ it, active, onNavigate }: { it: any; active: boolean; onNavigate
 export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = usePrivy();
+  const { logout, ready, authenticated, user } = usePrivy();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
+  const [ws, setWs] = useState<WorkspaceContext | null>(null);
 
   useEffect(() => {
     try { const s = localStorage.getItem('hb-nav-collapsed'); if (s) setCollapsed(JSON.parse(s)); } catch {}
     setHydrated(true);
   }, []);
+
+  // Show the real workspace name + role in the footer once signed in.
+  useEffect(() => {
+    if (ready && authenticated && user) getWorkspace(user.id).then((w) => { if (w) setWs(w); }).catch(() => {});
+  }, [ready, authenticated, user]);
 
   const toggle = (g: string) =>
     setCollapsed((prev) => {
@@ -101,10 +108,10 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="border-t border-slate-200/70 p-2 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-white text-[11px] font-bold flex items-center justify-center">H</div>
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-white text-[11px] font-bold flex items-center justify-center">{(ws?.name || 'H')[0].toUpperCase()}</div>
         <div className="text-[12px] leading-tight min-w-0">
-          <div className="font-semibold text-slate-700 truncate">Workspace</div>
-          <div className="text-slate-400">Free plan</div>
+          <div className="font-semibold text-slate-700 truncate">{ws?.name || 'Workspace'}</div>
+          <div className="text-slate-400 capitalize">{ws?.role || 'Member'}</div>
         </div>
         <button
           aria-label="Sign out"
