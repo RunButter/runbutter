@@ -25,6 +25,18 @@ const actionIcon = (t: string) => ACTION_TYPES.find((a) => a.v === t)?.icon || Z
 const triggerIcon = (t: string) => TRIGGERS.find((x) => x.v === t)?.icon || Bolt;
 
 const blank = (): Automation => ({ id: '', name: '', enabled: true, trigger_type: 'event', object: 'companies', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: {} }] });
+
+// Deep-copy for editing, rebuilding the JSON textarea text (_data) from the
+// stored action data so re-opened create/update actions aren't shown empty.
+const forEditing = (a: Automation): Automation => {
+  const copy: Automation = JSON.parse(JSON.stringify(a));
+  for (const ac of copy.actions || []) {
+    if ((ac.type === 'create_record' || ac.type === 'update_record') && ac.config?.data && !ac.config._data) {
+      ac.config._data = JSON.stringify(ac.config.data, null, 2);
+    }
+  }
+  return copy;
+};
 const fmtWhen = (s: string) => new Date(s).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 export default function AutomationsPage() {
@@ -56,7 +68,7 @@ export default function AutomationsPage() {
     if (!privy || !confirm(`Delete "${a.name || 'this automation'}"?`)) return;
     await deleteAutomation(privy, a.id); reload();
   };
-  const fromTemplate = (t: Partial<Automation>) => setEditing({ ...blank(), ...t } as Automation);
+  const fromTemplate = (t: Partial<Automation>) => setEditing(forEditing({ ...blank(), ...t } as Automation));
 
   return (
     <>
@@ -115,7 +127,7 @@ export default function AutomationsPage() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {(a.actions || []).slice(0, 3).map((ac, i) => { const I = actionIcon(ac.type); return <I key={i} className="w-3.5 h-3.5 text-slate-400" />; })}
-                      <button onClick={() => setEditing(JSON.parse(JSON.stringify(a)))} disabled={!canEdit} className="ml-1 h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">Edit</button>
+                      <button onClick={() => setEditing(forEditing(a))} disabled={!canEdit} className="ml-1 h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">Edit</button>
                       <button onClick={() => remove(a)} disabled={!canEdit} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>

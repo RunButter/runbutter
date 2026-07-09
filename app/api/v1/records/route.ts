@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { runDispatcher } from '@/lib/automations/dispatcher';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,5 +55,8 @@ export async function POST(req: Request) {
   const rpcObject = object === 'offers' ? 'invoices' : object;
   const { data, error } = await ctx.admin.rpc('create_record', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: rpcObject, p_data: payload });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  // fire-and-forget: let any matching automations run promptly (Render keeps
+  // the process alive; the tick/cron is the safety net either way)
+  runDispatcher(ctx.admin, 10).catch(() => {});
   return NextResponse.json({ ok: true, id: data }, { status: 201 });
 }

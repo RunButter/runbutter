@@ -41,6 +41,12 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
 // invoices table so the whole generic CRUD stack works without bespoke SQL.
 const rpcObject = (o: string) => (o === 'offers' ? 'invoices' : o);
 
+// Nudge the automation dispatcher after a mutation (fire-and-forget) so rules
+// run within seconds without any cron wiring. Throttled server-side.
+function pingAutomations() {
+  try { void fetch('/api/automations/tick', { method: 'POST', keepalive: true }).catch(() => {}); } catch { /* SSR/no-op */ }
+}
+
 export async function loadRecords(privyUserId: string | null, object: string): Promise<RecordsResult> {
   const fallback: RecordsResult = { rows: MOCK_OBJECT_ROWS[object] || [], live: false };
   if (!privyUserId) return fallback;
@@ -73,12 +79,14 @@ export async function createRecord(privyUserId: string, object: string, values: 
   const payload = object === 'offers' ? { ...values, kind: 'offer' } : values;
   const { data, error } = await supabase.rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_data: payload });
   if (error) return { error: error.message };
+  pingAutomations();
   return { id: data as string };
 }
 
 export async function updateRecord(privyUserId: string, object: string, id: string, values: Record<string, any>): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { error } = await supabase.rpc('update_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id, p_data: values });
+  if (!error) pingAutomations();
   return error ? { error: error.message } : {};
 }
 
@@ -94,6 +102,7 @@ export async function importRecords(privyUserId: string, object: string, rows: R
   const payload = object === 'offers' ? rows.map((r) => ({ ...r, kind: 'offer' })) : rows;
   const { data, error } = await supabase.rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_rows: payload });
   if (error) return { error: error.message };
+  pingAutomations();
   return { count: data as number };
 }
 

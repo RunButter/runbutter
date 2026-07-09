@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
+import { runDispatcher } from '@/lib/automations/dispatcher';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,9 @@ async function enqueue(token: string, payload: Record<string, any>) {
   const { data, error } = await admin.rpc('enqueue_webhook_event', { p_token: token, p_payload: payload });
   if (error) return { status: 500 as const, body: { error: error.message } };
   if (!data) return { status: 404 as const, body: { error: 'No active automation for this webhook token' } };
+  // Drain a small batch right away so inbound triggers feel instant (the cron
+  // /tick remains the safety net if this instance dies mid-run).
+  try { await runDispatcher(admin, 10); } catch { /* queued; a later tick/cron picks it up */ }
   return { status: 202 as const, body: { ok: true, queued: true, automation: (data as any).automation } };
 }
 

@@ -76,7 +76,7 @@ export default function IntegrationsPage() {
               { name: 'n8n', body: 'Self-hosted automation. Webhook node in, HTTP Request node out — same URL + key.', tone: 'text-rose-600 bg-rose-50' },
               { name: 'Slack / Discord', body: 'Paste an Incoming Webhook URL as a connection; automations post updates to your channel.', tone: 'text-emerald-600 bg-emerald-50' },
               { name: 'REST API', body: 'Any script or backend: create + read records with a bearer API key. See endpoints below.', tone: 'text-indigo-600 bg-indigo-50' },
-              { name: 'MCP (soon)', body: 'Let Claude / AI agents read + write your workspace over MCP, authed by an API key.', tone: 'text-slate-500 bg-slate-100' },
+              { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-amber-600 bg-amber-50' },
             ].map((c) => (
               <div key={c.name} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-4">
                 <div className={`inline-flex text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
@@ -175,6 +175,16 @@ export default function IntegrationsPage() {
               <div className="text-slate-400 mt-3 mb-2"># List records</div>
               <div className="whitespace-pre">{`curl ${origin}/api/v1/records?object=companies \\
   -H "Authorization: Bearer hb_your_key"`}</div>
+              <div className="text-slate-400 mt-3 mb-2"># MCP — let Claude / AI agents work in this workspace (.mcp.json)</div>
+              <div className="whitespace-pre">{`{
+  "mcpServers": {
+    "hirebtr": {
+      "type": "http",
+      "url": "${origin}/api/mcp",
+      "headers": { "Authorization": "Bearer hb_your_key" }
+    }
+  }
+}`}</div>
             </div>
           </section>
         </div>
