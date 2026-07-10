@@ -17,6 +17,7 @@ export default function AiKeysPage() {
   const [provider, setProvider] = useState('claude');
   const [model, setModel] = useState('');
   const [key, setKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,11 +32,12 @@ export default function AiKeysPage() {
   const add = async () => {
     if (!privy) { setError('Sign in to add a key.'); return; }
     if (!key.trim()) { setError('Paste your API key.'); return; }
+    if (provider === 'custom' && !/^https?:\/\/.+/i.test(baseUrl.trim())) { setError('Enter the base URL of your OpenAI-compatible API, e.g. https://api.groq.com/openai/v1'); return; }
     setSaving(true); setError('');
-    const res = await saveAiKey(privy, provider, model || (def?.models[0] || ''), key.trim());
+    const res = await saveAiKey(privy, provider, model || (def?.models[0] || ''), key.trim(), provider === 'custom' ? baseUrl.trim() : undefined);
     setSaving(false);
     if (res.error) { setError(res.error); return; }
-    setKey(''); setModel(''); reload();
+    setKey(''); setModel(''); setBaseUrl(''); reload();
   };
   const makeDefault = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { is_default: true }); reload(); } };
   const toggle = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { enabled: !r.enabled }); reload(); } };
@@ -69,6 +71,11 @@ export default function AiKeysPage() {
                 <input list="ai-models" value={model} onChange={(e) => setModel(e.target.value)} placeholder={def?.models[0] || 'model id'} className={inputCls} />
                 <datalist id="ai-models">{def?.models.map((m) => <option key={m} value={m} />)}</datalist>
               </label>
+              {provider === 'custom' && (
+                <label className="block sm:col-span-2"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Base URL</span>
+                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.groq.com/openai/v1" className={inputCls + ' font-mono text-[12px]'} />
+                  <span className="text-[11px] text-slate-400 mt-1 block">The OpenAI-compatible root, usually ending in /v1. Works with Groq, Mistral, DeepSeek, Together, xAI, a local Ollama, or a LiteLLM proxy.</span></label>
+              )}
               <label className="block sm:col-span-2"><span className="block text-[12px] font-semibold text-slate-600 mb-1">API key</span>
                 <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-… / paste your key" className={inputCls + ' font-mono'} autoComplete="off" /></label>
             </div>
@@ -85,7 +92,7 @@ export default function AiKeysPage() {
                   <Sparkles className="w-4 h-4 text-slate-300 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[13px] font-semibold text-slate-800 flex items-center gap-1.5">{providerLabel(r.provider)}{r.is_default && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded px-1 py-0.5"><Star className="w-2.5 h-2.5" /> Default</span>}</div>
-                    <div className="text-[11px] text-slate-400 font-mono">{r.model || '—'} · key {r.key_hint}</div>
+                    <div className="text-[11px] text-slate-400 font-mono truncate">{r.model || '—'} · key {r.key_hint}{r.base_url ? ` · ${r.base_url}` : ''}</div>
                   </div>
                   {!r.is_default && <button onClick={() => makeDefault(r)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">Make default</button>}
                   <button onClick={() => toggle(r)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">{r.enabled ? 'Disable' : 'Enable'}</button>

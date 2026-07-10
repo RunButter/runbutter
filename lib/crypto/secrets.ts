@@ -9,10 +9,18 @@ const ALGO = 'aes-256-gcm';
 
 function masterKey(): Buffer {
   const raw = process.env.SECRETS_MASTER_KEY || process.env.KSEF_MASTER_KEY;
-  if (!raw) throw new Error('SECRETS_MASTER_KEY (or KSEF_MASTER_KEY) is not configured');
-  const key = /^[A-Fa-f0-9]{64}$/.test(raw) ? Buffer.from(raw, 'hex') : Buffer.from(raw, 'base64');
-  if (key.length !== 32) throw new Error('master key must decode to exactly 32 bytes (AES-256)');
-  return key;
+  if (raw) {
+    const key = /^[A-Fa-f0-9]{64}$/.test(raw) ? Buffer.from(raw, 'hex') : Buffer.from(raw, 'base64');
+    if (key.length !== 32) throw new Error('SECRETS_MASTER_KEY must decode to exactly 32 bytes (AES-256)');
+    return key;
+  }
+  // Zero-config fallback: derive a stable 32-byte key from the service-role
+  // key, which is already a required high-entropy server secret. Caveat:
+  // rotating the service-role key invalidates sealed secrets (users simply
+  // re-add their AI keys). Setting SECRETS_MASTER_KEY overrides this.
+  const svc = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (svc) return crypto.createHash('sha256').update(`hirebtr-secrets-v1:${svc}`).digest();
+  throw new Error('The server has no encryption key. Set SECRETS_MASTER_KEY (openssl rand -base64 32) in the host environment.');
 }
 
 export interface Sealed { cipher: string; iv: string; tag: string }

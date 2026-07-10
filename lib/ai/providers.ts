@@ -2,21 +2,23 @@
 // HireBTR just proxies the call, so there is no platform token cost. No SDKs —
 // plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
 
-export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter';
+export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
 export interface ProviderDef { id: AIProvider; label: string; help: string; models: string[] }
 
 // Model lists are suggestions only — the field is free text, so users can type any
-// model their key supports without us shipping a stale hardcoded list.
+// model their key supports without us shipping a stale hardcoded list. The
+// "custom" provider takes a base URL and covers every OpenAI-compatible API.
 export const PROVIDERS: ProviderDef[] = [
   { id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys', models: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001'] },
   { id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'] },
   { id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
   { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model)', models: ['openai/gpt-4o', 'anthropic/claude-sonnet-5', 'google/gemini-2.5-flash'] },
+  { id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, Ollama, LiteLLM…', models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'] },
 ];
 export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
 
-export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string): Promise<string> {
+export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string): Promise<string> {
   if (provider === 'claude') {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -38,8 +40,11 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     return (d.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('').trim();
   }
 
-  // openai + openrouter are OpenAI-compatible
-  const base = provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+  // openai, openrouter, and custom endpoints all speak the OpenAI chat format
+  const base = provider === 'custom'
+    ? (baseUrl || '').replace(/\/+$/, '')
+    : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+  if (!base) throw new Error('Custom provider needs a base URL (e.g. https://api.groq.com/openai/v1)');
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },

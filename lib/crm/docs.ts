@@ -4,7 +4,7 @@ import { getWorkspace } from './data';
 
 export interface DocMeta { id: string; title: string; snippet: string; updated_at: string }
 export interface Doc { id: string; title: string; body: string; updated_at?: string }
-export interface AiProviderRow { id: string; provider: string; model: string; key_hint: string; is_default: boolean; enabled: boolean }
+export interface AiProviderRow { id: string; provider: string; model: string; key_hint: string; is_default: boolean; enabled: boolean; base_url?: string | null }
 
 const SAMPLE_DOCS: DocMeta[] = [
   { id: 'd1', title: 'Q3 board update', snippet: 'Revenue is up 24% quarter over quarter, driven by the new Starter plan…', updated_at: '2026-07-07T10:00:00Z' },
@@ -66,11 +66,11 @@ export async function loadAiProviders(privy: string | null): Promise<{ rows: AiP
   return { rows: data as AiProviderRow[], live: true };
 }
 
-export async function saveAiKey(privy: string, provider: string, model: string, key: string): Promise<{ error?: string }> {
+export async function saveAiKey(privy: string, provider: string, model: string, key: string, baseUrl?: string): Promise<{ error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
   try {
-    const res = await fetch('/api/ai/keys', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ privyUserId: privy, workspaceId: wsId, provider, model, key }) });
+    const res = await fetch('/api/ai/keys', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ privyUserId: privy, workspaceId: wsId, provider, model, key, baseUrl }) });
     const data = await res.json();
     if (!res.ok) return { error: data.error || 'Failed to save key' };
     return {};

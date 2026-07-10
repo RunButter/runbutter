@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   const model = (secret as any).model || defaultModel(provider);
   const system = 'You are a concise writing assistant inside HireBTR, a business workspace app. ' + (MODES[mode] || MODES.write);
   try {
-    const out = await callAI(provider, apiKey, model, system, buildPrompt(mode, text, instruction));
+    const out = await callAI(provider, apiKey, model, system, buildPrompt(mode, text, instruction), (secret as any).base_url || undefined);
     return NextResponse.json({ ok: true, text: out, provider, model });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'AI request failed' }, { status: 502 });

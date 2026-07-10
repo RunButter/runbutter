@@ -31,7 +31,8 @@ with checks(ord, step, probe, ok) as (
   (34, '0034 docs + AI',          'docs + ai_providers', ((to_regclass('public.docs') is not null) and (to_regclass('public.ai_providers') is not null) and (select exists(select 1 from pg_proc where proname='get_ai_secret')))),
   (35, '0035 automation hardening','recursion guard + wrapper RPCs', ((select exists(select 1 from pg_proc where proname='automation_create_record')) and (select exists(select 1 from pg_proc where proname='emit_automation_event' and pg_get_functiondef(oid) ilike '%automation_depth%')))),
   (36, '0036 assets CRUD',        'create_record handles assets', ((select exists(select 1 from pg_proc where proname='create_record' and pg_get_functiondef(oid) ilike '%assigned_to_person_id%')))),
-  (37, '0037 pgcrypto fix',       'save_automation + create_api_key use core crypto', ((select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_functiondef(oid) ilike '%sha256%'))))
+  (37, '0037 pgcrypto fix',       'save_automation + create_api_key use core crypto', ((select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_functiondef(oid) ilike '%sha256%')))),
+  (38, '0038 custom AI provider', 'ai_providers.base_url + updated RPCs', (exists(select 1 from information_schema.columns where table_name='ai_providers' and column_name='base_url') and (select exists(select 1 from pg_proc where proname='store_ai_provider' and pg_get_functiondef(oid) ilike '%p_base_url%'))))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
