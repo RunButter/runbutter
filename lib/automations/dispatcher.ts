@@ -88,8 +88,9 @@ function tmplObj(obj: Record<string, any>, payload: Record<string, any>): Record
   for (const [k, v] of Object.entries(obj || {})) out[k] = typeof v === 'string' ? tmpl(v, payload) : v;
   return out;
 }
-// Svix-style signature: t=<unix>,v1=<hex hmac of "t.body">
-function sign(secret: string, body: string): string {
+// Svix-style signature: t=<unix>,v1=<hex hmac of "t.body">. Exported so the
+// connection "send test" route signs exactly like real deliveries.
+export function signWebhook(secret: string, body: string): string {
   const t = Math.floor(Date.now() / 1000);
   return `t=${t},v1=${createHmac('sha256', secret).update(`${t}.${body}`).digest('hex')}`;
 }
@@ -106,7 +107,7 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       if (!url) return { ok: false, detail: 'No webhook URL / connection' };
       const body = JSON.stringify({ event: ev.event, object: ev.object, automation: rule.name, record: ev.payload });
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (secret) headers['X-HireBTR-Signature'] = sign(secret, body);
+      if (secret) headers['X-HireBTR-Signature'] = signWebhook(secret, body);
       let code = 0, ok = false, detail = '';
       try { const r = await fetch(url, { method: 'POST', headers, body }); code = r.status; ok = r.ok; detail = `POST ${r.status} · ${label || url.slice(0, 36)}`; }
       catch (e: any) { detail = `POST failed · ${e?.message || 'network'}`; }

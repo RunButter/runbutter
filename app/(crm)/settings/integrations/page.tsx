@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban } from 'lucide-react';
+import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send } from 'lucide-react';
 import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
@@ -25,6 +25,8 @@ export default function IntegrationsPage() {
   const [newKeyName, setNewKeyName] = useState('');
   const [freshKey, setFreshKey] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
+  const [testing, setTesting] = useState('');
+  const [testResult, setTestResult] = useState<Record<string, { ok: boolean; text: string }>>({});
   const [origin, setOrigin] = useState('https://hirebtr.com');
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
@@ -46,6 +48,20 @@ export default function IntegrationsPage() {
     setEditConn(null); reload();
   };
   const delConn = async (c: Connection) => { if (!privy || !confirm('Delete this connection?')) return; await deleteConnection(privy, c.id); reload(); };
+
+  // Fire a signed sample payload — what Zapier/Make/n8n wait for during setup.
+  const testConn = async (c: Connection) => {
+    if (!privy) return;
+    setTesting(c.id);
+    try {
+      const res = await fetch('/api/integrations/test-webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ privyUserId: privy, connectionId: c.id }) });
+      const data = await res.json();
+      setTestResult((m) => ({ ...m, [c.id]: { ok: !!data.ok, text: data.detail || data.error || 'No response' } }));
+    } catch (e: any) {
+      setTestResult((m) => ({ ...m, [c.id]: { ok: false, text: e?.message || 'Request failed' } }));
+    }
+    setTesting('');
+  };
 
   const makeKey = async () => {
     if (!privy) return;
@@ -102,6 +118,13 @@ export default function IntegrationsPage() {
                       <div className="text-[13px] font-semibold text-slate-800 truncate">{c.label || 'Webhook'}</div>
                       <div className="text-[11px] text-slate-400 font-mono truncate">{c.url}</div>
                     </div>
+                    {testResult[c.id] && (
+                      <span className={`text-[11px] font-semibold shrink-0 ${testResult[c.id].ok ? 'text-emerald-600' : 'text-rose-600'}`}>{testResult[c.id].text}</span>
+                    )}
+                    <button onClick={() => testConn(c)} disabled={!canEdit || testing === c.id} title="Send a signed sample payload"
+                      className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-500 hover:bg-slate-50 inline-flex items-center gap-1 disabled:opacity-40">
+                      {testing === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Test
+                    </button>
                     {c.secret && <button onClick={() => copy(c.secret!, 'sec' + c.id)} title="Copy signing secret" className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-500 hover:bg-slate-50 inline-flex items-center gap-1">{copied === 'sec' + c.id ? <Check className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />} Secret</button>}
                     <button onClick={() => setEditConn(c)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40">Edit</button>
                     <button onClick={() => delConn(c)} disabled={!canEdit} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>

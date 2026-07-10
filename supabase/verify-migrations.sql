@@ -30,7 +30,8 @@ with checks(ord, step, probe, ok) as (
   (33, '0033 automations v2',     'webhook triggers + delivery log', ((to_regclass('public.webhook_deliveries') is not null) and exists(select 1 from information_schema.columns where table_name='automations' and column_name='trigger_type') and (select exists(select 1 from pg_proc where proname='enqueue_webhook_event')))),
   (34, '0034 docs + AI',          'docs + ai_providers', ((to_regclass('public.docs') is not null) and (to_regclass('public.ai_providers') is not null) and (select exists(select 1 from pg_proc where proname='get_ai_secret')))),
   (35, '0035 automation hardening','recursion guard + wrapper RPCs', ((select exists(select 1 from pg_proc where proname='automation_create_record')) and (select exists(select 1 from pg_proc where proname='emit_automation_event' and pg_get_functiondef(oid) ilike '%automation_depth%')))),
-  (36, '0036 assets CRUD',        'create_record handles assets', ((select exists(select 1 from pg_proc where proname='create_record' and pg_get_functiondef(oid) ilike '%assigned_to_person_id%'))))
+  (36, '0036 assets CRUD',        'create_record handles assets', ((select exists(select 1 from pg_proc where proname='create_record' and pg_get_functiondef(oid) ilike '%assigned_to_person_id%')))),
+  (37, '0037 pgcrypto fix',       'save_automation + create_api_key use core crypto', ((select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_functiondef(oid) ilike '%sha256%'))))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
@@ -45,7 +46,8 @@ with fresh(ord, what, ok) as (
   (3, 'get_invoice_document returns totals (0018)',      (select exists(select 1 from pg_proc where proname='get_invoice_document' and pg_get_functiondef(oid) ilike '%totals%'))),
   (4, 'get_invoice_document returns branding (0017)',    (select exists(select 1 from pg_proc where proname='get_invoice_document' and pg_get_functiondef(oid) ilike '%logo_url%'))),
   (5, 'save_invoice_items applies tax_rate (0018)',      (select exists(select 1 from pg_proc where proname='save_invoice_items'   and pg_get_functiondef(oid) ilike '%tax_rate%'))),
-  (6, 'create_record handles transactions (0031)',       (select exists(select 1 from pg_proc where proname='create_record'        and pg_get_functiondef(oid) ilike '%bank_account_id%')))
+  (6, 'create_record handles transactions (0031)',       (select exists(select 1 from pg_proc where proname='create_record'        and pg_get_functiondef(oid) ilike '%bank_account_id%'))),
+  (7, 'save_automation free of pgcrypto (0037)',          (select exists(select 1 from pg_proc where proname='save_automation'      and pg_get_functiondef(oid) not ilike '%gen_random_bytes%')))
 )
 select what, case when ok then '✅ latest' else '❌ STALE — re-run the newer migration' end as status
 from fresh order by ord;
