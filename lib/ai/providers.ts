@@ -1,6 +1,7 @@
 // BYO-key AI adapter. The user supplies their own provider key (stored encrypted);
 // HireBTR just proxies the call, so there is no platform token cost. No SDKs —
 // plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
+import { isSafeOutboundUrl } from '@/lib/security/http';
 
 export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
@@ -45,6 +46,8 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     ? (baseUrl || '').replace(/\/+$/, '')
     : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
   if (!base) throw new Error('Custom provider needs a base URL (e.g. https://api.groq.com/openai/v1)');
+  // Re-check stored URLs at call time too (SSRF guard; rows may predate 0038 validation).
+  if (provider === 'custom' && !isSafeOutboundUrl(base)) throw new Error('Custom base URL points at a private/unsafe host');
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },

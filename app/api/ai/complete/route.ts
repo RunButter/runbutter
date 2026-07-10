@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { openSecret } from '@/lib/crypto/secrets';
 import { callAI, PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { authorizePrivy } from '@/lib/auth/privy-verify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,8 @@ export async function POST(req: Request) {
   try { b = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
   const { privyUserId, workspaceId, mode, text, instruction } = b || {};
   if (!privyUserId || !workspaceId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+  const auth = await authorizePrivy(req, privyUserId);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
 
   const admin = createAdminClient();
   const { data: secret, error } = await admin.rpc('get_ai_secret', { p_privy: privyUserId, p_workspace: workspaceId });

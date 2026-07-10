@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { runDispatcher } from '@/lib/automations/dispatcher';
+import { readJsonCapped } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,8 +48,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const ctx = await auth(req);
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
-  let body: any;
-  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }
+  const capped = await readJsonCapped(req, 256 * 1024);
+  if (!capped.ok) return NextResponse.json({ error: capped.error }, { status: capped.status });
+  const body: any = capped.data;
   const object = body?.object || '';
   if (!ALLOWED.has(object)) return NextResponse.json({ error: `Unknown object. Allowed: ${[...ALLOWED].join(', ')}` }, { status: 400 });
   const payload = object === 'offers' ? { ...(body.data || {}), kind: 'offer' } : (body.data || {});

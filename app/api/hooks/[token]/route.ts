@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { runDispatcher } from '@/lib/automations/dispatcher';
+import { readJsonCapped } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,8 +27,10 @@ async function enqueue(token: string, payload: Record<string, any>) {
 }
 
 export async function POST(req: Request, { params }: { params: { token: string } }) {
-  let payload: Record<string, any> = {};
-  try { payload = await req.json(); } catch { payload = {}; }
+  // Public endpoint: cap the body so junk POSTs can't bloat the events table.
+  const body = await readJsonCapped(req, 64 * 1024);
+  if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
+  const payload = body.data && typeof body.data === 'object' ? body.data : {};
   const r = await enqueue(params.token, payload);
   return NextResponse.json(r.body, { status: r.status });
 }

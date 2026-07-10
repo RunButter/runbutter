@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { signWebhook } from '@/lib/automations/dispatcher';
+import { authorizePrivy } from '@/lib/auth/privy-verify';
+import { isSafeOutboundUrl } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +19,8 @@ export async function POST(req: Request) {
   try { b = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
   const { privyUserId, connectionId } = b || {};
   if (!privyUserId || !connectionId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const auth = await authorizePrivy(req, privyUserId);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
 
   const admin = createAdminClient();
   const { data: ws, error: wsErr } = await admin.rpc('get_my_workspace', { p_privy: privyUserId });
@@ -27,6 +31,7 @@ export async function POST(req: Request) {
   if (cErr) return NextResponse.json({ error: cErr.message }, { status: 403 });
   const conn = ((conns as any[]) || []).find((c) => c.id === connectionId);
   if (!conn) return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
+  if (!isSafeOutboundUrl(conn.url)) return NextResponse.json({ error: 'Blocked: private/unsafe webhook URL' }, { status: 400 });
 
   const body = JSON.stringify({
     event: 'test', object: 'test', automation: 'Test from HireBTR',

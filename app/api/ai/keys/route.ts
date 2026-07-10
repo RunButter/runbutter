@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { sealSecret, secretHint } from '@/lib/crypto/secrets';
+import { authorizePrivy } from '@/lib/auth/privy-verify';
+import { isSafeOutboundUrl } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,9 +22,11 @@ export async function POST(req: Request) {
   if (!privyUserId || !workspaceId || !PROVIDERS.has(provider) || !key || !String(key).trim()) {
     return NextResponse.json({ error: 'Missing/invalid fields' }, { status: 400 });
   }
-  if (provider === 'custom' && !/^https?:\/\/.+/i.test(String(baseUrl || '').trim())) {
-    return NextResponse.json({ error: 'Custom provider needs a base URL, e.g. https://api.groq.com/openai/v1' }, { status: 400 });
+  if (provider === 'custom' && !isSafeOutboundUrl(String(baseUrl || '').trim())) {
+    return NextResponse.json({ error: 'Custom provider needs a public https base URL, e.g. https://api.groq.com/openai/v1' }, { status: 400 });
   }
+  const auth = await authorizePrivy(req, privyUserId);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
   try {
     const plain = String(key).trim();
     const sealed = sealSecret(plain);

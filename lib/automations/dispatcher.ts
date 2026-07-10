@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto';
+import { isSafeOutboundUrl } from '@/lib/security/http';
 
 // Server-side dispatcher core, shared by:
 //   /api/automations/dispatch  (cron, secret-authed, the reliable path)
@@ -105,6 +106,10 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
         if (data) { url = (data as any).url; secret = (data as any).secret; label = label || (data as any).label; }
       }
       if (!url) return { ok: false, detail: 'No webhook URL / connection' };
+      if (!isSafeOutboundUrl(url)) {
+        await admin.rpc('log_webhook_delivery', { p_workspace: ev.workspace_id, p_connection: connId, p_automation: rule.id, p_url: url, p_status: 'failed', p_code: null, p_attempts: ev.attempts, p_detail: 'Blocked: private/unsafe URL (SSRF guard)' });
+        return { ok: false, detail: 'Blocked: private/unsafe webhook URL' };
+      }
       const body = JSON.stringify({ event: ev.event, object: ev.object, automation: rule.name, record: ev.payload });
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (secret) headers['X-HireBTR-Signature'] = signWebhook(secret, body);
