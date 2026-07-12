@@ -1,5 +1,7 @@
 import { createHmac } from 'crypto';
 import { isSafeOutboundUrl } from '@/lib/security/http';
+import { openSecret } from '@/lib/crypto/secrets';
+import { callAI, type AIProvider } from '@/lib/ai/providers';
 
 // Server-side dispatcher core, shared by:
 //   /api/automations/dispatch  (cron, secret-authed, the reliable path)
@@ -131,6 +133,25 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
         body: JSON.stringify({ from, to, subject: tmpl(cfg.subject || 'Notification from HireBTR', ev.payload), html: tmpl(cfg.body || '', ev.payload).replace(/\n/g, '<br>') }),
       });
       return { ok: r.ok, detail: `Email ${r.status} → ${to}` };
+    }
+
+    if (action.type === 'ask_ai') {
+      // "Agent step": run the workspace's BYO AI on the record; the output is
+      // injected as {{ai_output}} for every action after this one (chaining).
+      const { data: secret } = await admin.rpc('get_ai_secret', { p_privy: rule.owner_privy, p_workspace: ev.workspace_id });
+      if (!secret) return { ok: false, detail: 'No AI provider configured (Settings → AI keys)' };
+      let apiKey: string;
+      try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }
+      catch { return { ok: false, detail: 'Could not decrypt the stored AI key' }; }
+      const system = 'You are an automation step inside HireBTR, a business workspace. Follow the instruction using the JSON record provided. Return only the result text, no preamble.';
+      const prompt = `${tmpl(cfg.prompt || 'Summarize this record in two sentences.', ev.payload)}\n\nRecord (JSON):\n${JSON.stringify(ev.payload || {}).slice(0, 6000)}`;
+      try {
+        const out = await callAI((secret as any).provider as AIProvider, apiKey, (secret as any).model || '', system, prompt, (secret as any).base_url || undefined);
+        ev.payload = { ...(ev.payload || {}), ai_output: out };
+        return { ok: true, detail: `AI → ${out.slice(0, 80).replace(/\s+/g, ' ')}` };
+      } catch (e: any) {
+        return { ok: false, detail: `AI failed: ${e?.message || 'request error'}` };
+      }
     }
 
     if (action.type === 'create_record') {

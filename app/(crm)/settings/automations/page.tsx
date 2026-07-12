@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Zap, Plus, Loader2, X, Trash2, Webhook, Mail, FilePlus, PencilLine, Bolt, Radio, Clock, Copy, Check, ArrowRight, List, Workflow } from 'lucide-react';
+import { Zap, Plus, Loader2, X, Trash2, Webhook, Mail, FilePlus, PencilLine, Bolt, Radio, Clock, Copy, Check, ArrowRight, List, Workflow, Sparkles } from 'lucide-react';
 import AutomationFlow from '@/components/crm/AutomationFlow';
 import {
   loadAutomations, saveAutomation, setAutomationEnabled, deleteAutomation, loadAutomationRuns, loadConnections, webhookUrl, TEMPLATES,
@@ -12,6 +12,7 @@ import {
 const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
 const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
 const ACTION_TYPES = [
+  { v: 'ask_ai', l: 'Ask AI', icon: Sparkles },
   { v: 'send_webhook', l: 'Send webhook', icon: Webhook },
   { v: 'send_email', l: 'Send email', icon: Mail },
   { v: 'create_record', l: 'Create record', icon: FilePlus },
@@ -276,6 +277,14 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                   <select value={ac.type} onChange={(e) => setAction(i, { type: e.target.value, config: {} })} className={inputCls + ' flex-1'}>{ACTION_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}</select>
                   <button onClick={() => set({ actions: a.actions.filter((_, k) => k !== i) })} className="p-1.5 rounded-md text-slate-300 hover:text-rose-600"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
+                {ac.type === 'ask_ai' && (
+                  <div className="space-y-1.5">
+                    <textarea value={ac.config.prompt || ''} onChange={(e) => setCfg(i, { prompt: e.target.value })} rows={3}
+                      placeholder="Write a two-sentence brief on {{first_name}} {{last_name}} for the team"
+                      className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                    <p className="text-[11px] text-slate-400">Runs on your workspace AI key (Settings → AI keys). The answer becomes <code className="bg-slate-100 rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
+                  </div>
+                )}
                 {ac.type === 'send_webhook' && (
                   <select value={ac.config.connection_id || ''} onChange={(e) => setCfg(i, { connection_id: e.target.value, label: connections.find((c) => c.id === e.target.value)?.label })} className={inputCls}>
                     <option value="">— pick a connection (Integrations) —</option>

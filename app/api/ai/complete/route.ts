@@ -23,7 +23,9 @@ const MODES: Record<string, string> = {
 function buildPrompt(mode: string, text: string, instruction?: string): string {
   if (mode === 'write') return instruction || 'Write a short professional document.';
   const instr = instruction ? `\n\nAdditional instruction: ${instruction}` : '';
-  return `Text:\n"""\n${text || ''}\n"""${instr}`;
+  // Cap the input so a giant doc can't run up the user's token bill.
+  const body = String(text || '').slice(0, 24000);
+  return `Text:\n"""\n${body}\n"""${instr}`;
 }
 const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bolt, Radio, Clock, Filter, Webhook, Mail, FilePlus, PencilLine, Zap, ChevronRight } from 'lucide-react';
+import { Bolt, Radio, Clock, Filter, Webhook, Mail, FilePlus, PencilLine, Zap, ChevronRight, Sparkles } from 'lucide-react';
 import type { Automation } from '@/lib/crm/automations';
 
 // n8n-style visual flow for one automation: trigger → filter → action nodes on
@@ -9,6 +9,7 @@ import type { Automation } from '@/lib/crm/automations';
 // linear chains, so plain flex + connectors render them faithfully.
 
 const ACTION_META: Record<string, { label: string; icon: any }> = {
+  ask_ai: { label: 'Ask AI', icon: Sparkles },
   send_webhook: { label: 'Send webhook', icon: Webhook },
   send_email: { label: 'Send email', icon: Mail },
   create_record: { label: 'Create record', icon: FilePlus },
@@ -62,6 +63,7 @@ export default function AutomationFlow({ automation: a, onEdit }: { automation: 
           const sub = ac.type === 'send_webhook' ? (ac.config?.label || 'Pick a connection')
             : ac.type === 'create_record' ? cap(ac.config?.object || 'record')
             : ac.type === 'send_email' ? (ac.config?.to || 'Recipient')
+            : ac.type === 'ask_ai' ? (ac.config?.prompt || 'Prompt').slice(0, 40)
             : cap(a.object);
           return (
             <span key={i} className="flex items-center">

@@ -14,17 +14,23 @@ export const PROVIDERS: ProviderDef[] = [
   { id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys', models: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001'] },
   { id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'] },
   { id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
-  { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model)', models: ['openai/gpt-4o', 'anthropic/claude-sonnet-5', 'google/gemini-2.5-flash'] },
+  { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model; ids ending in :free cost nothing)', models: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5'] },
   { id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, Ollama, LiteLLM…', models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'] },
 ];
 export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
+
+// Explicit output ceiling on EVERY provider. Without it, OpenAI-compatible
+// gateways assume the model max (e.g. 16k) and pre-check affordability against
+// that ceiling — free/low-credit accounts get rejected before a single token.
+// ~1k tokens comfortably fits a one-page draft.
+const MAX_OUTPUT_TOKENS = 1024;
 
 export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string): Promise<string> {
   if (provider === 'claude') {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model, max_tokens: 2000, system, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model, max_tokens: MAX_OUTPUT_TOKENS, system, messages: [{ role: 'user', content: prompt }] }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
@@ -34,7 +40,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   if (provider === 'gemini') {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS } }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
@@ -51,7 +57,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: MAX_OUTPUT_TOKENS, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);

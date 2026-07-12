@@ -35,6 +35,11 @@ export const TEMPLATES: Template[] = [
     automation: { name: 'Inbound lead → create contact', trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], actions: [{ type: 'create_record', config: { object: 'people', data: { first_name: '{{first_name}}', last_name: '{{last_name}}', email: '{{email}}' }, _data: '{\n  "first_name": "{{first_name}}",\n  "last_name": "{{last_name}}",\n  "email": "{{email}}"\n}' } }] } },
   { key: 'daily-digest', name: 'Daily schedule → webhook', desc: 'Fire a webhook every day — e.g. a digest to Slack.', tone: 'text-violet-600 bg-violet-50',
     automation: { name: 'Daily digest', trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] } },
+  { key: 'ai-brief', name: 'New contact → AI brief → Slack', desc: 'AI writes a two-line brief on each new contact, then posts it.', tone: 'text-fuchsia-600 bg-fuchsia-50',
+    automation: { name: 'AI brief on new contact', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [
+      { type: 'ask_ai', config: { prompt: 'Write a two-sentence brief on {{first_name}} {{last_name}} ({{title}}, source: {{source}}) for the team.' } },
+      { type: 'send_webhook', config: {} },
+    ] } },
 ];
 
 export function webhookUrl(token?: string | null): string {
