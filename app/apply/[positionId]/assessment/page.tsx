@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import {
-    CheckCircle, AlertCircle, Loader2, ArrowRight,
-    Brain, Target, BarChart, ChevronRight, Clock
+    CheckCircle2, Loader2, ArrowRight, ArrowLeft,
+    Brain, Target, Clock, BarChart3, Check
 } from 'lucide-react';
 import LogoContainer from '@/components/LogoContainer';
 
+// Candidate assessment, one question at a time (Typeform-style): a real
+// per-question progress bar, auto-advance on answer, and no way to finish
+// with unanswered questions (the old version silently scored skipped
+// questions as "neutral"). Scoring + submission logic is unchanged.
 export default function AssessmentPage({ params }: { params: { positionId: string } }) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -22,10 +26,27 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: personality/workstyle, 2: screening, 3: completed
     const [submitting, setSubmitting] = useState(false);
     const [answers, setAnswers] = useState<Record<string, any>>({});
+    const [qIndex, setQIndex] = useState(0);   // active question within step 1
 
-    const handleAnswer = (questionId: number, option: string) => {
-        setAnswers(prev => ({ ...prev, [questionId]: option }));
-    };
+    const personalityQs = useMemo(
+        () => template?.questions?.filter((q: any) => q.category === 'personality' || q.category === 'work_style') || [],
+        [template],
+    );
+    const screeningQs = useMemo(
+        () => template?.questions?.filter((q: any) => q.category === 'screening') || [],
+        [template],
+    );
+    const totalQs = personalityQs.length + screeningQs.length;
+    const answeredCount = useMemo(
+        () => [...personalityQs, ...screeningQs].filter((q: any) => answers[q.id] !== undefined && answers[q.id] !== '').length,
+        [personalityQs, screeningQs, answers],
+    );
+    const progress = currentStep === 0 ? 0 : currentStep === 3 ? 100 : Math.round((answeredCount / Math.max(totalQs, 1)) * 100);
+
+    // MCQ screening answers are required; free-text stays optional.
+    const screeningMcqsAnswered = screeningQs
+        .filter((q: any) => q.type === 'choice')
+        .every((q: any) => answers[q.id] !== undefined);
 
     const loadCandidate = useCallback(async () => {
         const token = searchParams.get('token');
@@ -48,8 +69,6 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             const { candidate: can, company, template: tmpl } = data;
 
-            console.log('Assessment Init Data Loaded:', { hasCandidate: !!can, hasCompany: !!company, hasTemplate: !!tmpl });
-
             setCandidate(can);
             setCompanyInfo({
                 name: company.name,
@@ -58,11 +77,8 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             if (tmpl && tmpl.questions) {
                 const personalityQuestions = tmpl.questions.filter((q: any) => q.category === 'personality' || q.trait);
-                console.log('Template Questions Count:', tmpl.questions.length);
-                console.log('Personality Questions Count:', personalityQuestions.length);
-
                 if (personalityQuestions.length < 20) {
-                    console.log('Applying v4.3 Safeguard: Replacing with 20 default personality questions');
+                    // v4.3 safeguard: thin templates get the 20 default personality questions
                     const screeningQuestions = tmpl.questions.filter((q: any) => q.category === 'screening');
                     setTemplate({
                         ...tmpl,
@@ -72,7 +88,6 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     setTemplate(tmpl);
                 }
             } else {
-                console.log('No template found in RPC, using default personality questions only');
                 setTemplate({
                     questions: DEFAULT_PERSONALITY_QUESTIONS
                 });
@@ -92,6 +107,17 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         }
         loadCandidate();
     }, [candidateId, params.positionId, router, loadCandidate]);
+
+    // Answer + auto-advance for the one-at-a-time personality flow.
+    const answerAndAdvance = (questionId: number, option: string) => {
+        setAnswers(prev => ({ ...prev, [questionId]: option }));
+        setTimeout(() => {
+            setQIndex((i) => Math.min(i + 1, personalityQs.length));   // len = "all answered" panel
+        }, 180);
+    };
+    const handleAnswer = (questionId: number, option: string) => {
+        setAnswers(prev => ({ ...prev, [questionId]: option }));
+    };
 
     const handleComplete = async () => {
         setSubmitting(true);
@@ -181,7 +207,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 summary: `Candidate profile matches the ${neuroProfile.toUpperCase()} Neuro-Profile with a ${overall_score}% alignment rating.`
             };
 
-            // NEW: Use RPC for atomic and secure submission
+            // Use RPC for atomic and secure submission
             const { error: submitError } = await supabase.rpc('submit_assessment', {
                 p_candidate_id: candidateId,
                 p_token: searchParams.get('token'),
@@ -203,187 +229,171 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         }
     };
 
+    const CompanyMark = () =>
+        companyInfo?.logoUrl ? (
+            <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} width="130px" height="36px" className="h-9 w-auto" />
+        ) : (
+            <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-black text-sm">
+                    {companyInfo?.name?.charAt(0) || 'C'}
+                </div>
+                <span className="font-bold text-slate-800 text-[15px]">{companyInfo?.name}</span>
+            </div>
+        );
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+            <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
             </div>
         );
     }
 
     if (currentStep === 3) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
-                <div className="max-w-md">
-                    {companyInfo?.logoUrl ? (
-                        <div className="flex justify-center mb-8">
-                            <LogoContainer
-                                src={companyInfo.logoUrl}
-                                alt={companyInfo.name}
-                                width="240px"
-                                height="100px"
-                                showBorder={true}
-                                className="shadow-sm"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex justify-center mb-8">
-                            <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center border-2 border-primary-200">
-                                <span className="text-2xl font-bold text-primary-700">
-                                    {companyInfo?.name?.charAt(0) || 'C'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-12 h-12 text-green-600" />
+            <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-8 text-center">
+                    <div className="flex justify-center mb-6"><CompanyMark /></div>
+                    <div className="w-14 h-14 bg-emerald-50 ring-1 ring-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-5">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-4">Assessment Complete!</h1>
-                    <p className="text-gray-600 mb-8">
-                        Your profile has been updated and sent to the recruitment team.
-                        They will review your results and contact you for next steps.
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900 mb-2">Assessment complete</h1>
+                    <p className="text-[15px] text-slate-500">
+                        Your answers were sent to the recruitment team at {companyInfo?.name || 'the company'}.
+                        They will review your profile and contact you about next steps.
                     </p>
-                    <button
-                        onClick={() => window.close()}
-                        className="btn-secondary w-full"
-                    >
-                        Close Window
-                    </button>
-                    <div className="mt-4 text-[10px] text-gray-300">v4.3</div>
+                    <p className="mt-6 text-[13px] text-slate-400">You can safely close this tab.</p>
                 </div>
             </div>
         );
     }
 
+    const activeQ = personalityQs[qIndex];
+    const personalityDone = qIndex >= personalityQs.length;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b py-4 px-6 sticky top-0 z-10">
-                <div className="max-w-3xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        {companyInfo?.logoUrl ? (
-                            <LogoContainer
-                                src={companyInfo.logoUrl}
-                                alt={companyInfo.name}
-                                width="140px"
-                                height="40px"
-                                className="h-10 w-auto"
-                            />
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                                    {companyInfo?.name?.charAt(0) || 'C'}
-                                </div>
-                                <span className="font-bold text-gray-800">{companyInfo?.name}</span>
-                            </div>
+        <div className="min-h-[100dvh] bg-slate-50 flex flex-col">
+            {/* Header: company + real per-question progress */}
+            <header className="bg-white/90 backdrop-blur border-b border-slate-200/70 sticky top-0 z-10">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+                    <CompanyMark />
+                    <div className="flex items-center gap-3 min-w-0">
+                        {currentStep > 0 && (
+                            <span className="text-[12px] font-semibold text-slate-500 tabular-nums whitespace-nowrap">{answeredCount} / {totalQs}</span>
                         )}
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="hidden sm:block text-sm text-gray-500">
-                            Candidate: <span className="font-semibold text-gray-800">{candidate.full_name}</span>
-                        </div>
-                        <div className="h-2 w-32 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-primary-600 transition-all duration-500"
-                                style={{ width: `${(currentStep + 1) * 25}%` }}
-                            />
+                        <div className="h-1.5 w-24 sm:w-36 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary-600 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto px-6 py-12">
+            <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 {currentStep === 0 && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                            <Target className="w-8 h-8 text-primary-600" />
-                            Work Style & Personality Assessment
+                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
+                        <div className="w-11 h-11 rounded-xl bg-primary-50 ring-1 ring-primary-100 flex items-center justify-center mb-5">
+                            <Target className="w-5 h-5 text-primary-600" />
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mb-3">
+                            Work style & personality
                         </h1>
-                        <p className="text-gray-600 mb-8 text-lg">
-                            This assessment helps us understand how you work, collaborate, and solve problems.
-                            There are no right or wrong answers—just be yourself!
+                        <p className="text-[15px] text-slate-500 leading-relaxed mb-7">
+                            {candidate?.full_name ? `Hi ${String(candidate.full_name).split(' ')[0]} — this` : 'This'} short questionnaire
+                            helps {companyInfo?.name || 'the team'} understand how you work, collaborate, and solve problems.
+                            There are no right or wrong answers. Just be yourself.
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
-                                <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                                    <Clock className="w-5 h-5" /> Duration
-                                </h3>
-                                <p className="text-sm text-blue-700">Approximately 10-15 minutes to complete.</p>
-                            </div>
-                            <div className="p-4 rounded-xl bg-purple-50 border border-purple-100">
-                                <h3 className="font-bold text-purple-900 mb-2 flex items-center gap-2">
-                                    <BarChart className="w-5 h-5" /> Sections
-                                </h3>
-                                <p className="text-sm text-purple-700">Personality traits and hypothetical work scenarios.</p>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => setCurrentStep(1)}
-                            className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2"
-                        >
-                            Start Assessment
-                            <ArrowRight className="w-6 h-6" />
-                        </button>
-                    </div>
-                )}
-
-                {(currentStep === 1) && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-2">
-                            <Brain className="w-5 h-5 text-primary-500" />
-                            Personality & Work Style Analysis
-                        </h2>
-
-                        <div className="space-y-10 mb-12">
-                            {(template?.questions?.filter((q: any) => q.category === 'personality' || q.category === 'work_style') || []).map((q: any) => (
-                                <div key={q.id} className="space-y-4">
-                                    <p className="text-lg text-gray-800 font-medium leading-relaxed">
-                                        {q.text}
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {q.options.map((opt: string) => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => handleAnswer(q.id, opt)}
-                                                className={`px-4 py-2 rounded-xl border-2 transition-all duration-200 text-sm font-bold ${answers[q.id] === opt
-                                                    ? 'border-primary-600 bg-primary-600 text-white shadow-md transform scale-[1.02]'
-                                                    : 'border-gray-100 hover:border-primary-200 hover:bg-gray-50 text-gray-500'
-                                                    }`}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
+                        <div className="grid sm:grid-cols-3 gap-3 mb-8">
+                            {[
+                                { icon: Clock, label: 'Duration', value: '10-15 minutes' },
+                                { icon: BarChart3, label: 'Questions', value: `${totalQs} in total` },
+                                { icon: Brain, label: 'Format', value: 'One at a time' },
+                            ].map((c) => (
+                                <div key={c.label} className="rounded-xl bg-slate-50 ring-1 ring-slate-200/60 p-3.5">
+                                    <c.icon className="w-4 h-4 text-primary-600 mb-1.5" />
+                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{c.label}</div>
+                                    <div className="text-[13px] font-bold text-slate-700">{c.value}</div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center pt-8 border-t">
+                        <button
+                            onClick={() => { setCurrentStep(1); setQIndex(0); }}
+                            className="w-full h-12 rounded-xl bg-primary-600 text-white text-[15px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 active:scale-[0.99] transition"
+                        >
+                            Start <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
+                {currentStep === 1 && !personalityDone && activeQ && (
+                    <div key={activeQ.id} className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="text-[12px] font-semibold text-slate-400 mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
+                        <p className="text-lg sm:text-xl font-bold text-slate-900 leading-snug mb-6">{activeQ.text}</p>
+
+                        <div className="space-y-2">
+                            {activeQ.options.map((opt: string) => {
+                                const selected = answers[activeQ.id] === opt;
+                                return (
+                                    <button
+                                        key={opt}
+                                        onClick={() => answerAndAdvance(activeQ.id, opt)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ring-1 text-left text-[15px] font-medium transition-all ${selected
+                                            ? 'ring-primary-600 bg-primary-50 text-primary-900'
+                                            : 'ring-slate-200 text-slate-600 hover:ring-primary-300 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        <span className={`w-5 h-5 rounded-full ring-1 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-primary-600 ring-primary-600' : 'ring-slate-300 bg-white'}`}>
+                                            {selected && <Check className="w-3 h-3 text-white" />}
+                                        </span>
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-7 flex items-center justify-between">
                             <button
-                                onClick={() => setCurrentStep(0)}
-                                className="text-gray-400 hover:text-gray-800 font-bold flex items-center gap-1 transition"
+                                onClick={() => (qIndex === 0 ? setCurrentStep(0) : setQIndex(qIndex - 1))}
+                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
                             >
+                                <ArrowLeft className="w-3.5 h-3.5" /> Back
+                            </button>
+                            {answers[activeQ.id] !== undefined && (
+                                <button onClick={() => setQIndex(qIndex + 1)}
+                                    className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary-600 hover:text-primary-700 transition-colors">
+                                    Next <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {currentStep === 1 && personalityDone && (
+                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="w-12 h-12 bg-emerald-50 ring-1 ring-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Check className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <h2 className="text-xl font-black tracking-tight text-slate-900 mb-2">
+                            {screeningQs.length > 0 ? 'Section complete' : 'All questions answered'}
+                        </h2>
+                        <p className="text-[14px] text-slate-500 mb-7">
+                            {screeningQs.length > 0
+                                ? `${screeningQs.length} short question${screeningQs.length > 1 ? 's' : ''} from ${companyInfo?.name || 'the company'} left.`
+                                : 'Review is done in one click. Good luck!'}
+                        </p>
+                        <div className="flex items-center justify-center gap-3">
+                            <button onClick={() => setQIndex(personalityQs.length - 1)}
+                                className="h-11 px-5 rounded-xl ring-1 ring-slate-200 text-slate-600 text-[14px] font-semibold hover:bg-slate-50 transition-colors">
                                 Back
                             </button>
                             <button
-                                onClick={() => {
-                                    const screeningQs = template?.questions?.filter((q: any) => q.category === 'screening') || [];
-                                    if (screeningQs.length > 0) {
-                                        setCurrentStep(2);
-                                    } else {
-                                        handleComplete();
-                                    }
-                                }}
-                                className="btn-primary px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-primary-200"
+                                onClick={() => (screeningQs.length > 0 ? setCurrentStep(2) : handleComplete())}
                                 disabled={submitting}
+                                className="h-11 px-6 rounded-xl bg-primary-600 text-white text-[14px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition disabled:opacity-60"
                             >
-                                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                    <>
-                                        {(template?.questions?.filter((q: any) => q.category === 'screening') || []).length > 0 ? 'Next: Custom Questions' : 'Finish & Submit'}
-                                        <ChevronRight className="w-5 h-5" />
-                                    </>
+                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                    <>{screeningQs.length > 0 ? 'Continue' : 'Finish & submit'} <ArrowRight className="w-4 h-4" /></>
                                 )}
                             </button>
                         </div>
@@ -391,72 +401,65 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 2 && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-2">
-                            <Target className="w-5 h-5 text-indigo-500" />
-                            Custom Screening Questions
-                        </h2>
+                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <h2 className="text-xl font-black tracking-tight text-slate-900 mb-1.5">A few questions from {companyInfo?.name || 'the company'}</h2>
+                        <p className="text-[13px] text-slate-400 mb-8">Specific to this role.</p>
 
-                        <div className="space-y-12 mb-12">
-                            {(template?.questions?.filter((q: any) => q.category === 'screening') || []).map((q: any, idx: number) => (
-                                <div key={q.id} className="space-y-4">
-                                    <div className="flex items-start gap-4">
-                                        <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
-                                            {idx + 1}
-                                        </span>
-                                        <div className="flex-1 space-y-4">
-                                            <p className="text-lg text-gray-800 font-medium leading-relaxed pt-1">
-                                                {q.text}
-                                            </p>
+                        <div className="space-y-9 mb-9">
+                            {screeningQs.map((q: any, idx: number) => (
+                                <div key={q.id}>
+                                    <p className="text-[15px] font-bold text-slate-900 leading-snug mb-3.5">
+                                        <span className="text-slate-300 tabular-nums mr-1.5">{idx + 1}.</span>{q.text}
+                                        {q.type !== 'choice' && <span className="ml-2 text-[11px] font-medium text-slate-400">(optional)</span>}
+                                    </p>
 
-                                            {q.type === 'choice' ? (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    {q.options.map((opt: string) => (
-                                                        <button
-                                                            key={opt}
-                                                            onClick={() => handleAnswer(q.id, opt)}
-                                                            className={`px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 text-sm font-bold ${answers[q.id] === opt
-                                                                ? 'border-indigo-600 bg-indigo-600 text-white shadow-md'
-                                                                : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50 text-gray-500'
-                                                                }`}
-                                                        >
-                                                            {opt}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <textarea
-                                                    className="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-indigo-500 outline-none transition min-h-[120px] text-gray-700"
-                                                    placeholder="Type your answer here..."
-                                                    value={answers[q.id] || ''}
-                                                    onChange={(e) => handleAnswer(q.id, e.target.value)}
-                                                />
-                                            )}
+                                    {q.type === 'choice' ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {q.options.map((opt: string) => {
+                                                const selected = answers[q.id] === opt;
+                                                return (
+                                                    <button
+                                                        key={opt}
+                                                        onClick={() => handleAnswer(q.id, opt)}
+                                                        className={`px-4 py-3 rounded-xl ring-1 text-left text-[14px] font-medium transition-all ${selected
+                                                            ? 'ring-primary-600 bg-primary-50 text-primary-900'
+                                                            : 'ring-slate-200 text-slate-600 hover:ring-primary-300 hover:bg-slate-50'
+                                                            }`}
+                                                    >
+                                                        {opt}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <textarea
+                                            className="w-full p-3.5 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-shadow min-h-[110px] text-[14px] text-slate-700 placeholder:text-slate-400"
+                                            placeholder="Type your answer…"
+                                            value={answers[q.id] || ''}
+                                            onChange={(e) => handleAnswer(q.id, e.target.value)}
+                                        />
+                                    )}
                                 </div>
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center pt-8 border-t">
+                        <div className="flex items-center justify-between pt-6 border-t border-slate-100">
                             <button
-                                onClick={() => setCurrentStep(1)}
-                                className="text-gray-400 hover:text-gray-800 font-bold flex items-center gap-1 transition"
+                                onClick={() => { setCurrentStep(1); setQIndex(personalityQs.length); }}
+                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
                             >
-                                Back
+                                <ArrowLeft className="w-3.5 h-3.5" /> Back
                             </button>
-                            <button
-                                onClick={handleComplete}
-                                className="btn-primary bg-indigo-600 hover:bg-indigo-700 px-8 py-3 flex items-center gap-2 shadow-lg hover:shadow-indigo-200"
-                                disabled={submitting}
-                            >
-                                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                    <>
-                                        Finish & Submit
-                                        <CheckCircle className="w-5 h-5" />
-                                    </>
-                                )}
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {!screeningMcqsAnswered && <span className="text-[12px] text-slate-400 hidden sm:block">Answer the multiple-choice questions to finish</span>}
+                                <button
+                                    onClick={handleComplete}
+                                    disabled={submitting || !screeningMcqsAnswered}
+                                    className="h-11 px-6 rounded-xl bg-primary-600 text-white text-[14px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition disabled:opacity-50"
+                                >
+                                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (<>Finish & submit <CheckCircle2 className="w-4 h-4" /></>)}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
