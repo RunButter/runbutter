@@ -19,6 +19,22 @@ async function resolveWorkspace(privyUserId: string): Promise<string | null> {
 }
 
 export interface WorkspaceContext { id: string; name: string; role: string }
+// Sidebar unread badges: count of NEW records per tab since the client's
+// per-tab last-seen timestamps (a { slug: ISO } map). Best-effort — returns {}
+// on any error so the nav never breaks.
+export async function loadNavActivity(privyUserId: string | null, since: Record<string, string>): Promise<Record<string, number>> {
+  if (!privyUserId) return {};
+  try {
+    const { data, error } = await supabase.rpc('get_nav_activity', { p_privy: privyUserId, p_since: since });
+    if (error || !data || typeof data !== 'object') return {};
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(data as any)) out[k] = +(v as any) || 0;
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 export async function getWorkspace(privyUserId: string): Promise<WorkspaceContext | null> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await supabase.rpc('get_my_workspace', { p_privy: privyUserId });

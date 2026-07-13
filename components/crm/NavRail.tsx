@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
@@ -11,7 +11,7 @@ import {
   Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
-import { getWorkspace, loadBranding, type WorkspaceContext } from '@/lib/crm/data';
+import { getWorkspace, loadBranding, loadNavActivity, type WorkspaceContext } from '@/lib/crm/data';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
@@ -20,18 +20,32 @@ const ICONS: Record<string, any> = {
   Zap, Plug,
 };
 
-function Item({ it, active, onNavigate }: { it: any; active: boolean; onNavigate?: () => void }) {
+// Nav slugs the "new since you last looked" badge tracks (must match RPC keys).
+const TRACKED = ['people', 'companies', 'invoices', 'offers', 'expenses', 'transactions', 'issues', 'docs', 'candidates'];
+const SEEN_KEY = 'hb-nav-seen';
+const readSeen = (): Record<string, string> => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { return {}; } };
+const writeSeen = (m: Record<string, string>) => { try { localStorage.setItem(SEEN_KEY, JSON.stringify(m)); } catch {} };
+
+function Item({ it, active, count, onNavigate }: { it: any; active: boolean; count?: number; onNavigate?: () => void }) {
   const Icon = ICONS[it.icon] || Users;
+  const badge = !!count && count > 0;
   return (
     <Link
       href={it.href}
       onClick={onNavigate}
-      className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150 ${
-        active ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900 hover:bg-white/70'
+      className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-all duration-150 ${
+        active ? 'bg-white text-slate-900 font-medium shadow-sm ring-1 ring-slate-200/70'
+          : badge ? 'text-slate-800 font-semibold hover:bg-white/70'
+            : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-white/70'
       }`}
     >
-      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary-600' : ''}`} />
-      {it.label}
+      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary-600' : badge ? 'text-slate-600' : ''}`} />
+      <span className="truncate">{it.label}</span>
+      {badge && (
+        <span className="ml-auto shrink-0 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold tabular-nums leading-none">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
     </Link>
   );
 }
@@ -60,6 +74,34 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       if (b?.logo_url) setLogo(b.logo_url);
     }).catch(() => {});
   }, [ready, authenticated, user]);
+
+  // "New since you last looked" badges. Baseline every tab to now() on first
+  // ever load (so no badge storm), then poll + refresh on window focus.
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const refreshCounts = useCallback(() => {
+    if (!user) return;
+    const seen = readSeen();
+    let changed = false;
+    const nowIso = new Date().toISOString();
+    for (const s of TRACKED) if (!seen[s]) { seen[s] = nowIso; changed = true; }
+    if (changed) writeSeen(seen);
+    loadNavActivity(user.id, seen).then(setCounts);
+  }, [user]);
+
+  useEffect(() => {
+    if (!ready || !authenticated || !user) return;
+    refreshCounts();
+    const iv = setInterval(refreshCounts, 60000);
+    const onFocus = () => refreshCounts();
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(iv); window.removeEventListener('focus', onFocus); };
+  }, [ready, authenticated, user, refreshCounts]);
+
+  // Opening a tab marks it seen and clears its badge immediately.
+  const markSeen = (slug: string) => {
+    const seen = readSeen(); seen[slug] = new Date().toISOString(); writeSeen(seen);
+    setCounts((c) => (c[slug] ? { ...c, [slug]: 0 } : c));
+  };
 
   const toggle = (g: string) =>
     setCollapsed((prev) => {
@@ -96,7 +138,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           if (g.pinned) {
             return (
               <div key={g.group} className="px-2 mb-2">
-                {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} onNavigate={onNavigate} />)}
+                {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
               </div>
             );
           }
@@ -112,7 +154,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
               </button>
               {(open || !hydrated) && (
                 <div className="mt-0.5 space-y-0.5">
-                  {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} onNavigate={onNavigate} />)}
+                  {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
                 </div>
               )}
             </div>
