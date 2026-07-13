@@ -113,7 +113,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <aside className="w-60 h-full shrink-0 border-r border-slate-200/70 bg-slate-50/40 flex flex-col">
+    <aside className="w-60 h-full shrink-0 border-r border-slate-200/70 bg-slate-50 lg:bg-slate-50/40 flex flex-col">
       <button className="h-12 flex items-center gap-2 px-3 border-b border-slate-200/70 hover:bg-white/70 transition-colors">
         {logo ? (
           <img src={logo} alt="" className="w-6 h-6 rounded-md object-cover ring-1 ring-slate-200/70 shrink-0" />
