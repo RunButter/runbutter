@@ -59,47 +59,48 @@ export default function HomePage() {
       {/* Dogfood our own web analytics (production only). */}
       {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
 
-      {/* Header: dark, matching the hero — the brand bar */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-md">
+      {/* Header: light, clean brand bar */}
+      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/"><Logo dark /></Link>
-          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-400">
-            <Link href="#product" className="hover:text-white transition">Product</Link>
-            <Link href="#pricing" className="hover:text-white transition">Pricing</Link>
-            <Link href="/auth/login" className="hover:text-white transition">Sign in</Link>
-            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-100 transition">Start free</Link>
+          <Link href="/"><Logo /></Link>
+          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-500">
+            <Link href="#product" className="hover:text-slate-900 transition">Product</Link>
+            <Link href="#pricing" className="hover:text-slate-900 transition">Pricing</Link>
+            <Link href="/auth/login" className="hover:text-slate-900 transition">Sign in</Link>
+            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition">Start free</Link>
           </nav>
-          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-white text-slate-900 text-[13px] font-semibold inline-flex items-center">Start free</Link>
+          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-slate-900 text-white text-[13px] font-semibold inline-flex items-center">Start free</Link>
         </div>
       </header>
 
-      {/* Hero: dark canvas where the interactive ASCII field is THE visual.
-          The dark hero + dark closing CTA are deliberate bookends around a
-          light body; everything between stays on one light theme. */}
-      <section className="relative bg-slate-950">
-        <div className="absolute inset-0 overflow-hidden"><AsciiField baseAlpha={0.12} peakAlpha={1} /></div>
-        {/* scrim only behind the copy so the field stays vivid lower down */}
-        <div className="absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-slate-950/85 via-slate-950/35 to-transparent pointer-events-none" />
+      {/* Hero: light and clean. The interactive ASCII field drifts as a soft
+          living texture on white, lifted by a faint indigo aura. Copy sits on a
+          white scrim so it stays crisp; the product window breaks into the page. */}
+      <section className="relative bg-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_50%_-5%,rgba(99,102,241,0.10),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0"><AsciiField baseAlpha={0.24} peakAlpha={0.85} /></div>
+        {/* white veil behind the headline; the field stays visible lower + at the edges */}
+        <div className="absolute inset-x-0 top-0 h-[46%] bg-gradient-to-b from-white via-white/85 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/10 ring-1 ring-white/15 text-[11px] font-bold uppercase tracking-widest text-indigo-300 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white ring-1 ring-slate-200 text-[11px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm">
             <Sparkles className="w-3.5 h-3.5" /> The open company OS
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-white">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900">
             Run your whole company<br />in one clean workspace
           </h1>
-          <p className="mt-6 text-lg text-slate-300 max-w-xl mx-auto">
+          <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
             Sales, finance, marketing, projects, and people in one relational
             workspace. Fast, simple, and no AI token bill.
           </p>
           <div className="mt-8 flex justify-center">
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white text-slate-900 font-bold transition-all duration-200 hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40">
+            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
 
-        {/* the real product window breaks out of the dark hero into the page */}
+        {/* the real product window breaks out of the hero into the page */}
         <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 -mb-24 md:-mb-36">
           <Reveal><ProductPreview /></Reveal>
         </div>
