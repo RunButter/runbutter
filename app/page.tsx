@@ -31,17 +31,19 @@ const PILLARS = [
 ];
 
 // "Everything else in the box" — the cross-cutting modules and utilities that
-// the deep-dives don't cover. Rendered as a bento grid to vary the rhythm.
+// the deep-dives don't cover. Bento with one locked accent (indigo) and quiet
+// tinted cells for rhythm; the 5 pillar cards above stay the only place with
+// categorical module colors.
 const CAPS = [
-  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send emails, create records. Templates included.', tone: 'text-amber-600', bg: 'bg-amber-50/70' },
-  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier and Make, plus MCP so AI agents can work inside your workspace.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Sparkles, name: 'AI docs with your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50/70' },
-  { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-violet-600', bg: 'bg-white' },
-  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.', tone: 'text-indigo-600', bg: 'bg-white' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP number, via MF Biała lista and EU VIES.', tone: 'text-emerald-600', bg: 'bg-emerald-50/70' },
-  { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.', tone: 'text-sky-600', bg: 'bg-sky-50/70' },
-  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.', tone: 'text-amber-600', bg: 'bg-white' },
-  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-rose-600', bg: 'bg-white' },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send emails, create records. Templates included.', tone: 'text-primary-600', bg: 'bg-indigo-50/60' },
+  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier and Make, plus MCP so AI agents can work inside your workspace.', tone: 'text-primary-600', bg: 'bg-white' },
+  { icon: Sparkles, name: 'AI docs with your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.', tone: 'text-primary-600', bg: 'bg-slate-50' },
+  { icon: FolderKanban, name: 'Projects & roadmap', body: 'A Plane-style issue board plus a Gantt-lite roadmap across every project.', tone: 'text-primary-600', bg: 'bg-white' },
+  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.', tone: 'text-primary-600', bg: 'bg-indigo-50/60' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP number, via MF Biała lista and EU VIES.', tone: 'text-primary-600', bg: 'bg-white' },
+  { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.', tone: 'text-primary-600', bg: 'bg-slate-50' },
+  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.', tone: 'text-primary-600', bg: 'bg-white' },
+  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.', tone: 'text-primary-600', bg: 'bg-indigo-50/60' },
 ];
 
 const PLANS = [
@@ -57,57 +59,56 @@ export default function HomePage() {
       {/* Dogfood our own web analytics (production only). */}
       {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
+      {/* Header: dark, matching the hero — the brand bar */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/"><Logo /></Link>
-          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-500">
-            <Link href="#product" className="hover:text-slate-900 transition">Product</Link>
-            <Link href="#pricing" className="hover:text-slate-900 transition">Pricing</Link>
-            <Link href="/auth/login" className="hover:text-slate-900 transition">Sign in</Link>
-            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition">Start free</Link>
+          <Link href="/"><Logo dark /></Link>
+          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-400">
+            <Link href="#product" className="hover:text-white transition">Product</Link>
+            <Link href="#pricing" className="hover:text-white transition">Pricing</Link>
+            <Link href="/auth/login" className="hover:text-white transition">Sign in</Link>
+            <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-100 transition">Start free</Link>
           </nav>
-          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-slate-900 text-white text-[13px] font-semibold inline-flex items-center">Start free</Link>
+          <Link href="/auth/register" className="md:hidden h-8 px-3 rounded-lg bg-white text-slate-900 text-[13px] font-semibold inline-flex items-center">Start free</Link>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 z-0"><AsciiField baseAlpha={0.28} peakAlpha={1} /></div>
-        {/* whiten only the headline area so the ASCII gradient stays clearly
-            visible behind the product window below */}
-        <div className="absolute inset-x-0 top-0 h-[38%] z-[1] bg-gradient-to-b from-white via-white/85 to-transparent" />
+      {/* Hero: dark canvas where the interactive ASCII field is THE visual.
+          The dark hero + dark closing CTA are deliberate bookends around a
+          light body; everything between stays on one light theme. */}
+      <section className="relative bg-slate-950">
+        <div className="absolute inset-0 overflow-hidden"><AsciiField baseAlpha={0.12} peakAlpha={1} /></div>
+        {/* scrim only behind the copy so the field stays vivid lower down */}
+        <div className="absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-slate-950/85 via-slate-950/35 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white ring-1 ring-slate-200 text-[11px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/10 ring-1 ring-white/15 text-[11px] font-bold uppercase tracking-widest text-indigo-300 backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5" /> The open company OS
           </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-white">
             Run your whole company<br />in one clean workspace
           </h1>
-          <p className="mt-6 text-lg text-slate-600 max-w-xl mx-auto">
+          <p className="mt-6 text-lg text-slate-300 max-w-xl mx-auto">
             Sales, finance, marketing, projects, and people in one relational
             workspace. Fast, simple, and no AI token bill.
           </p>
           <div className="mt-8 flex justify-center">
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-slate-900 text-white font-bold transition-all duration-200 hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20">
+            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white text-slate-900 font-bold transition-all duration-200 hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
 
-        {/* interactive product window */}
-        <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 pt-2 pb-28">
-          <Reveal>
-            <ProductPreview />
-            <p className="text-center text-[12px] text-slate-500 mt-5">Click the tabs. This is the real interface, on live sample data.</p>
-          </Reveal>
+        {/* the real product window breaks out of the dark hero into the page */}
+        <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 -mb-24 md:-mb-36">
+          <Reveal><ProductPreview /></Reveal>
         </div>
       </section>
 
-      {/* Works-with strip */}
-      <section className="border-t border-slate-100">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+      {/* Works-with strip (top padding clears the overlapping window) */}
+      <section className="bg-white pt-36 md:pt-52">
+        <div className="max-w-5xl mx-auto px-6 pb-8">
+          <p className="text-center text-[12px] text-slate-400 mb-10">Click the tabs above. It is the real interface, on live sample data.</p>
           <p className="text-center text-[13px] text-slate-500 mb-5">Replaces a stack of tools. Works with the ones you keep.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-400">
             {['Stripe', 'Google Calendar', 'Resend', 'KSeF e-invoicing', 'CSV / Sheets', 'Zapier'].map((n) => (

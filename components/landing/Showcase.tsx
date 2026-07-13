@@ -178,7 +178,7 @@ export default function Showcase() {
   return (
     <section className="max-w-6xl mx-auto px-6 py-20 space-y-20">
       <Row
-        eyebrow="Sales CRM" tone="text-indigo-600 bg-indigo-50"
+        eyebrow="Sales CRM" tone="text-primary-700 bg-primary-50"
         title="Close more, guess less"
         body="A drag-and-drop deal pipeline backed by relational companies and people. Every contact, deal, and note connected. No more scattered spreadsheets."
         bullets={['Kanban deal stages with one-drag moves', 'Companies & people linked to every deal', 'Search, filter, and export in a click']}
@@ -187,7 +187,7 @@ export default function Showcase() {
 
       <Row
         reverse
-        eyebrow="Finance" tone="text-emerald-600 bg-emerald-50"
+        eyebrow="Finance" tone="text-primary-700 bg-primary-50"
         title="Know your numbers in real time"
         body="Invoices in, expenses out, and a bank ledger that reconciles payments automatically, with a live dashboard of revenue, costs, and net over any period."
         bullets={['Revenue vs costs, month by month', 'Bank transactions auto-matched to invoices', 'Branded PDF invoices, offers & e-invoice export']}
@@ -216,7 +216,7 @@ export default function Showcase() {
       </div>
 
       <Row
-        eyebrow="Recruiting & HR" tone="text-cyan-600 bg-cyan-50"
+        eyebrow="Recruiting & HR" tone="text-primary-700 bg-primary-50"
         title="Hire better, by skills and personality"
         body="The built-in ATS scores candidates on skills and psychometrics, then moves the shortlist along a drag-and-drop pipeline. Rule-based matching in Postgres, with no per-token AI bill."
         bullets={['Skills + Big-5 personality match scores', 'Drag-and-drop hiring pipeline & interviews', 'Talent Treasury to filter your whole pool']}
