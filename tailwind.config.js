@@ -47,10 +47,19 @@ module.exports = {
           800: '#3730a3', 900: '#312e81',
         },
       },
+      // text-* deliberately resolves to the text-safe variants: the same hue
+      // that reads well as a fill is too light as small text. bg-*/border-*
+      // still use the fill vars from `colors` above.
       textColor: {
         primary: hsl('--text-primary'),
         secondary: hsl('--text-secondary'),
         tertiary: hsl('--text-tertiary'),
+        // keep the sub-keys (text-accent-fg is the label on an accent fill);
+        // only the DEFAULT swaps to the text-safe variant.
+        accent: { DEFAULT: hsl('--accent-text'), fg: hsl('--accent-fg'), soft: hsl('--accent-soft') },
+        success: hsl('--success-text'),
+        warning: hsl('--warning-text'),
+        danger: hsl('--danger-text'),
       },
       borderColor: { DEFAULT: hsl('--border-subtle') },
       ringOffsetColor: { canvas: hsl('--canvas') },

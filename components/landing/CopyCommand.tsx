@@ -19,12 +19,12 @@ export default function CopyCommand({ command }: { command: string }) {
   return (
     <button
       onClick={copy}
-      className="group inline-flex items-center gap-3 max-w-full h-11 pl-4 pr-2 rounded-xl bg-slate-900 text-slate-100 ring-1 ring-slate-800 font-mono text-[13px] transition hover:ring-slate-700 dark:bg-slate-800 dark:ring-slate-700"
+      className="group inline-flex items-center gap-2.5 max-w-full h-10 pl-3 pr-1.5 rounded-md bg-surface-sunken border border-subtle text-primary font-mono text-sm transition-colors hover:border-strong"
     >
-      <span className="text-emerald-400 shrink-0 select-none">$</span>
+      <span className="text-success shrink-0 select-none">$</span>
       <span className="truncate">{command}</span>
-      <span className="ml-1 shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-800 text-slate-400 group-hover:text-white transition dark:bg-slate-700">
-        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+      <span className="ml-1 shrink-0 inline-flex items-center justify-center w-7 h-7 rounded text-tertiary group-hover:text-primary group-hover:bg-surface-hover transition-colors">
+        {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
       </span>
     </button>
   );

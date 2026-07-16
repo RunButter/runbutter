@@ -11,8 +11,17 @@ export default function ThemeToggle() {
   useEffect(() => { setDark(document.documentElement.classList.contains('dark')); }, []);
 
   const toggle = () => {
-    const next = !document.documentElement.classList.contains('dark');
-    document.documentElement.classList.toggle('dark', next);
+    const root = document.documentElement;
+    const next = !root.classList.contains('dark');
+
+    // Swap themes with transitions off for one frame. Our colors resolve from
+    // CSS vars, and an in-flight color transition against a var change leaves
+    // elements pinned to their old value (cards stayed white in dark mode).
+    root.classList.add('theme-switching');
+    root.classList.toggle('dark', next);
+    void root.offsetHeight; // force the style recalc while transitions are off
+    requestAnimationFrame(() => root.classList.remove('theme-switching'));
+
     try { localStorage.setItem('hb-theme', next ? 'dark' : 'light'); } catch {}
     setDark(next);
   };
@@ -21,7 +30,7 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle dark mode"
-      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 ring-1 ring-slate-200 hover:text-slate-900 hover:bg-slate-50 transition dark:text-slate-400 dark:ring-slate-700 dark:hover:text-white dark:hover:bg-slate-800"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-secondary border border-subtle hover:text-primary hover:bg-surface-sunken transition"
     >
       {/* Render nothing until mounted so SSR markup matches either theme. */}
       {dark === null ? null : dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

@@ -11,18 +11,18 @@ const RAIL = [
 ];
 
 function Chip({ label, tone }: { label: string; tone: string }) {
-  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ring-1 ${tone}`}>{label}</span>;
+  return <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${tone}`}>{label}</span>;
 }
 
 function Card({ title, sub, amount }: { title: string; sub?: string; amount?: string }) {
   return (
-    <div className="bg-white rounded-lg ring-1 ring-slate-200/70 p-2 mb-2">
+    <div className="bg-surface rounded-lg border border-subtle p-2 mb-2">
       <div className="flex items-center gap-1.5">
-        <div className="w-4 h-4 rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-400" />
-        <span className="text-[11px] font-semibold text-slate-700 truncate">{title}</span>
+        <div className="w-4 h-4 rounded-full bg-accent/30" />
+        <span className="text-[11px] font-semibold text-secondary truncate">{title}</span>
       </div>
-      {sub && <div className="text-[10px] text-slate-400 mt-0.5 pl-5.5">{sub}</div>}
-      {amount && <div className="text-[10px] font-bold text-emerald-600 mt-1">{amount}</div>}
+      {sub && <div className="text-[10px] text-tertiary mt-0.5 pl-5.5">{sub}</div>}
+      {amount && <div className="text-[10px] font-medium text-success mt-1">{amount}</div>}
     </div>
   );
 }
@@ -32,9 +32,9 @@ function Column({ name, color, children }: { name: string; color: string; childr
     <div className="w-[190px] shrink-0">
       <div className="flex items-center gap-1.5 mb-2 px-0.5">
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-        <span className="text-[11px] font-bold text-slate-600">{name}</span>
+        <span className="text-[11px] font-medium text-secondary">{name}</span>
       </div>
-      <div className="rounded-lg bg-slate-50/70 ring-1 ring-slate-200/50 p-2 min-h-[360px]">{children}</div>
+      <div className="rounded-lg bg-surface-sunken border border-subtle p-2 min-h-[360px]">{children}</div>
     </div>
   );
 }
@@ -51,18 +51,18 @@ export default function ProductPreview() {
   ];
 
   return (
-    <div className="rounded-xl bg-white ring-1 ring-slate-200/70 shadow-2xl overflow-hidden">
+    <div className="rounded-lg bg-surface border border-subtle shadow-popover overflow-hidden">
       {/* window chrome */}
-      <div className="h-9 flex items-center gap-2 px-3 border-b border-slate-200/70 bg-slate-50/60">
+      <div className="h-9 flex items-center gap-2 px-3 border-b border-subtle bg-surface-sunken">
         <div className="hidden sm:flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+          <span className="w-2.5 h-2.5 rounded-full bg-strong" />
+          <span className="w-2.5 h-2.5 rounded-full bg-strong" />
+          <span className="w-2.5 h-2.5 rounded-full bg-strong" />
         </div>
         <div className="sm:ml-3 flex items-center gap-1 overflow-x-auto no-scrollbar">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`h-6 px-2.5 shrink-0 rounded-md text-[11px] font-semibold transition-colors ${tab === t.id ? 'bg-white text-slate-800 ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'}`}>
+              className={`h-6 px-2.5 shrink-0 rounded-md text-[11px] font-semibold transition-colors ${tab === t.id ? 'bg-surface text-primary border border-subtle' : 'text-tertiary hover:text-secondary'}`}>
               {t.label}
             </button>
           ))}
@@ -71,9 +71,9 @@ export default function ProductPreview() {
 
       <div className="flex h-[460px]">
         {/* mini nav rail */}
-        <div className="w-11 shrink-0 border-r border-slate-200/70 bg-slate-50/40 flex flex-col items-center gap-3 py-3.5">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500 to-fuchsia-500" />
-          {RAIL.map((r, i) => <r.icon key={i} className="w-3.5 h-3.5 text-slate-300" />)}
+        <div className="w-11 shrink-0 border-r border-subtle bg-surface-sunken flex flex-col items-center gap-3 py-3.5">
+          <div className="w-5 h-5 rounded bg-accent" />
+          {RAIL.map((r, i) => <r.icon key={i} className="w-3.5 h-3.5 text-tertiary" />)}
         </div>
 
         {/* content */}
@@ -87,17 +87,17 @@ export default function ProductPreview() {
           )}
 
           {tab === 'finance' && (
-            <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
-              <div className="grid grid-cols-3 gap-2 px-3 h-7 items-center bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <div className="rounded-lg border border-subtle overflow-hidden">
+              <div className="grid grid-cols-3 gap-2 px-3 h-7 items-center bg-surface-sunken text-[10px] font-medium text-secondary uppercase tracking-wider">
                 <span>Invoice</span><span className="text-right">Amount</span><span className="text-right">Status</span>
               </div>
-              {[['INV-1001', '$24,000', 'paid', 'bg-emerald-50 text-emerald-700 ring-emerald-200/60'],
-                ['INV-1002', '$12,000', 'sent', 'bg-blue-50 text-blue-700 ring-blue-200/60'],
-                ['INV-1003', '$36,000', 'overdue', 'bg-rose-50 text-rose-700 ring-rose-200/60'],
-                ['INV-1004', '$4,500', 'draft', 'bg-slate-100 text-slate-500 ring-slate-200/60']].map((r) => (
-                <div key={r[0]} className="grid grid-cols-3 gap-2 px-3 h-9 items-center border-t border-slate-100 text-[11px]">
-                  <span className="font-semibold text-slate-700">{r[0]}</span>
-                  <span className="text-right tabular-nums font-semibold text-slate-800">{r[1]}</span>
+              {[['INV-1001', '$24,000', 'paid', 'bg-success/10 text-success'],
+                ['INV-1002', '$12,000', 'sent', 'bg-accent/10 text-accent'],
+                ['INV-1003', '$36,000', 'overdue', 'bg-danger/10 text-danger'],
+                ['INV-1004', '$4,500', 'draft', 'bg-surface-hover text-secondary']].map((r) => (
+                <div key={r[0]} className="grid grid-cols-3 gap-2 px-3 h-9 items-center border-t border-subtle text-[11px]">
+                  <span className="font-semibold text-secondary">{r[0]}</span>
+                  <span className="text-right tabular-nums font-semibold text-primary">{r[1]}</span>
                   <span className="text-right"><Chip label={r[2]} tone={r[3]} /></span>
                 </div>
               ))}
@@ -107,26 +107,26 @@ export default function ProductPreview() {
           {tab === 'marketing' && (
             <div className="space-y-2.5">
               <div className="grid grid-cols-3 gap-2">
-                {[['Visitors', '2,480', 'text-slate-800'], ['Pageviews', '6,120', 'text-slate-800'], ['Live now', '7', 'text-emerald-600']].map((k) => (
-                  <div key={k[0]} className="rounded-lg ring-1 ring-slate-200/60 p-2">
-                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{k[0]}</div>
-                    <div className={`text-base font-black tabular-nums ${k[2]}`}>{k[1]}</div>
+                {[['Visitors', '2,480', 'text-primary'], ['Pageviews', '6,120', 'text-primary'], ['Live now', '7', 'text-success']].map((k) => (
+                  <div key={k[0]} className="rounded-lg border border-subtle p-2">
+                    <div className="text-[9px] font-medium uppercase tracking-wide text-tertiary">{k[0]}</div>
+                    <div className={`text-base font-medium tabular-nums ${k[2]}`}>{k[1]}</div>
                   </div>
                 ))}
               </div>
-              <div className="rounded-lg ring-1 ring-slate-200/60 p-3">
-                <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">Visitors · last 12 days</div>
+              <div className="rounded-lg border border-subtle p-3">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-tertiary mb-2">Visitors · last 12 days</div>
                 <div className="flex items-end gap-1.5 h-24">
                   {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70].map((h, i) => (
-                    <div key={i} className="flex-1 rounded-sm bg-gradient-to-t from-indigo-400 to-fuchsia-400" style={{ height: `${h}%` }} />
+                    <div key={i} className="flex-1 rounded-sm bg-accent/70" style={{ height: `${h}%` }} />
                   ))}
                 </div>
               </div>
-              <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
+              <div className="rounded-lg border border-subtle overflow-hidden">
                 {[['/', '1,840'], ['/pricing', '920'], ['/blog/bus-covers-guide', '610']].map((r, i) => (
-                  <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-[11px] ${i ? 'border-t border-slate-100' : ''}`}>
-                    <span className="font-medium text-slate-600 truncate">{r[0]}</span>
-                    <span className="tabular-nums font-semibold text-slate-700">{r[1]}</span>
+                  <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-[11px] ${i ? 'border-t border-subtle' : ''}`}>
+                    <span className="font-medium text-secondary truncate">{r[0]}</span>
+                    <span className="tabular-nums font-semibold text-secondary">{r[1]}</span>
                   </div>
                 ))}
               </div>
@@ -142,20 +142,20 @@ export default function ProductPreview() {
           )}
 
           {tab === 'hr' && (
-            <div className="rounded-lg ring-1 ring-slate-200/60 overflow-hidden">
-              <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-7 items-center bg-slate-50/70 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <div className="rounded-lg border border-subtle overflow-hidden">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-7 items-center bg-surface-sunken text-[10px] font-medium text-secondary uppercase tracking-wider">
                 <span>Candidate</span><span>Match</span><span>Status</span>
               </div>
-              {[['Anna Kowalski', 'Senior Engineer', '92', 'Interview', 'bg-orange-50 text-orange-700 ring-orange-200/60'],
-                ['David Reyes', 'Sales Lead', '88', 'Offered', 'bg-emerald-50 text-emerald-700 ring-emerald-200/60'],
-                ['Marcus Obi', 'Data Scientist', '81', 'Assessed', 'bg-indigo-50 text-indigo-700 ring-indigo-200/60'],
-                ['Sara Lindqvist', 'Product Designer', '74', 'Screening', 'bg-amber-50 text-amber-700 ring-amber-200/60']].map((r) => (
-                <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-[52px] items-center border-t border-slate-100">
+              {[['Anna Kowalski', 'Senior Engineer', '92', 'Interview', 'bg-warning/10 text-warning'],
+                ['David Reyes', 'Sales Lead', '88', 'Offered', 'bg-success/10 text-success'],
+                ['Marcus Obi', 'Data Scientist', '81', 'Assessed', 'bg-accent/10 text-accent'],
+                ['Sara Lindqvist', 'Product Designer', '74', 'Screening', 'bg-warning/10 text-warning']].map((r) => (
+                <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-[52px] items-center border-t border-subtle">
                   <div className="min-w-0">
-                    <div className="text-[11px] font-semibold text-slate-700 truncate">{r[0]}</div>
-                    <div className="text-[10px] text-slate-400 truncate">{r[1]}</div>
+                    <div className="text-[11px] font-semibold text-secondary truncate">{r[0]}</div>
+                    <div className="text-[10px] text-tertiary truncate">{r[1]}</div>
                   </div>
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-50 ring-1 ring-indigo-100 text-[10px] font-black text-indigo-700 tabular-nums">{r[2]}</span>
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-[10px] font-medium text-accent tabular-nums">{r[2]}</span>
                   <Chip label={r[3]} tone={r[4]} />
                 </div>
               ))}

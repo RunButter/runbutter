@@ -15,15 +15,15 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
         <div className={`flex items-center gap-3 ${className}`}>
             {/* Precision-recreated Pixelated Arrow SVG from user attachment */}
             <svg
-                width="40"
-                height="40"
+                width="28"
+                height="28"
                 viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="flex-shrink-0"
             >
-                {/* The specific color from the user's PNG is a vibrant indigo/blue */}
-                <g fill="#4F46E5">
+                {/* Follows the accent token so the mark themes with the rest. */}
+                <g fill="currentColor" className="text-accent">
                     {/* Top tail */}
                     <rect x="10" y="10" width="20" height="20" />
                     <rect x="30" y="20" width="20" height="20" />
@@ -40,8 +40,8 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
             </svg>
 
             {!iconOnly && (
-                <span className={`text-2xl font-black tracking-tighter ${dark ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                    hirebtr<span className="text-primary-600">.com</span>
+                <span className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-primary'}`}>
+                    hirebtr<span className="text-accent">.com</span>
                 </span>
             )}
         </div>
