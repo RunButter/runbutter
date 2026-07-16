@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck, Zap, Plug, Sparkles, Github } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck, Zap, Plug, Sparkles, Github, Database, Terminal } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Production only, so dev
 // and preview visits never pollute the stats. Site ids are public by nature —
@@ -16,191 +16,228 @@ import ThemeToggle from '@/components/landing/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
 
 const REPO_URL = 'https://github.com/CasperCrypto/hirebtr';
+// Monochrome ASCII: greys read on both canvases; the drift shifts between them.
+const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 
-const FEATURES = [
-  'Drag-and-drop boards', 'Spreadsheet-style tables', 'CSV / Google Sheets import',
-  'One-click export', 'Bulk select & actions', 'Bank reconciliation',
-  'Branded PDF invoices', 'First-party web analytics', 'Automations',
-  'REST API & signed webhooks', 'MCP for AI agents', 'Zero AI token cost',
+const MODULES = [
+  { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline on one relational core.' },
+  { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, a bank ledger that auto-reconciles, and live revenue KPIs.' },
+  { icon: Megaphone, name: 'Marketing', body: 'Campaigns, a social post studio, and cookieless first-party web analytics.' },
+  { icon: FolderKanban, name: 'Projects', body: 'Projects and issues on a clean board, with a Gantt-lite roadmap.' },
+  { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding checklists, and team pulse.' },
 ];
 
-// Five pillars over one relational core.
-const PILLARS = [
-  { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline.' },
-  { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, a bank ledger, and live revenue KPIs.' },
-  { icon: Megaphone, name: 'Marketing', body: 'Campaigns, a social post studio, and web analytics.' },
-  { icon: FolderKanban, name: 'Projects', body: 'Projects and issues on a clean board.' },
-  { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding, and your team.' },
-];
-
+// Cross-cutting capabilities, shown as a bento with rhythm (the first tile is
+// wide). Monochrome throughout — no hue.
 const CAPS = [
-  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send emails, create records. Templates included.' },
-  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier and Make, plus MCP so AI agents can work inside your workspace.' },
-  { icon: Sparkles, name: 'AI docs with your key', body: 'Draft and edit documents with Claude, GPT, or Gemini using your own API key. No token markup.' },
-  { icon: FolderKanban, name: 'Projects & roadmap', body: 'An issue board plus a Gantt-lite roadmap across every project.' },
-  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Export compliant FA(3) e-invoices for Poland, straight from your documents.' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP number, via MF Biała lista and EU VIES.' },
-  { icon: Table, name: 'Import & export', body: 'Bring data in from CSV or a Google Sheet; export any list back with one click.' },
-  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export, and delete in bulk on every object list.' },
-  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, data anonymization, and cookieless first-party analytics.' },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records. Templates included.', wide: true },
+  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make.' },
+  { icon: Sparkles, name: 'AI docs, your key', body: 'Draft with Claude, GPT or Gemini. No token markup.' },
+  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, from your documents.' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
+  { icon: Table, name: 'Import & export', body: 'CSV or Google Sheets in, any list out, one click.' },
+  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
+  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export and delete across every list.' },
 ];
 
 const PLANS = [
-  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'Sales · Finance · Marketing · Projects · HR', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
+  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'All five modules', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
   { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', '3 seats · 250 records / object', 'Custom branding & PDF invoices', 'Resume search & Talent Treasury'], cta: 'Start free', href: '/auth/register?plan=starter', highlight: true },
-  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR controls'], cta: 'Start free', href: '/auth/register?plan=professional', highlight: false },
+  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR'], cta: 'Start free', href: '/auth/register?plan=professional', highlight: false },
   { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Professional', 'Unlimited seats & records', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
 const FAQ = [
-  { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you have to glue together.' },
+  { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together.' },
   { q: 'Is it open source?', a: 'Yes, MIT licensed. Clone the repo, run it against your own Supabase and Privy, and self-host for free. Or use the hosted version and skip the setup.' },
-  { q: 'Do I pay per AI token?', a: 'Never. The core is built on native Postgres: search, matching, reconciliation, and reporting run in the database. AI writing assist runs on your own API key, so there is no per-token markup from us.' },
-  { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger then reconciles incoming payments to the right invoice automatically.' },
+  { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing assist uses your own API key, so there is no per-token markup from us.' },
+  { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
-  { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Our web analytics are first-party and cookieless.' },
+  { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
 ];
+
+const MCP_SNIPPET = `{
+  "mcpServers": {
+    "hirebtr": {
+      "type": "http",
+      "url": "https://hirebtr.com/api/mcp",
+      "headers": { "Authorization": "Bearer hb_..." }
+    }
+  }
+}`;
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-canvas text-primary antialiased">
-      {/* Dogfood our own web analytics (production only). */}
       {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
 
+      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-subtle bg-canvas/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/"><Logo /></Link>
+          <Link href="/"><Logo mono /></Link>
           <nav className="flex items-center gap-2 md:gap-6 text-sm text-secondary">
-            <Link href="#product" className="hidden md:inline hover:text-primary transition-colors">Product</Link>
+            <Link href="#features" className="hidden md:inline hover:text-primary transition-colors">Features</Link>
+            <Link href="#developers" className="hidden md:inline hover:text-primary transition-colors">Developers</Link>
             <Link href="#pricing" className="hidden md:inline hover:text-primary transition-colors">Pricing</Link>
             <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 hover:text-primary transition-colors"><Github className="w-4 h-4" /> GitHub</a>
-            <Link href="/auth/login" className="hidden md:inline hover:text-primary transition-colors">Sign in</Link>
             <ThemeToggle />
-            <Link href="/auth/register" className="inline-flex items-center h-8 px-3 rounded-md bg-accent text-accent-fg text-sm font-medium hover:bg-accent/90 transition-colors">Start free</Link>
+            <Link href="/auth/register" className="inline-flex items-center h-8 px-3 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">Start free</Link>
           </nav>
         </div>
       </header>
 
-      {/* Hero: the ASCII field drifts as a living texture behind a canvas scrim.
-          Restrained type — the product window is the hero visual, not the words. */}
+      {/* ── Hero ─────────────────────────────────────────────────────────────
+          Taller than a standard hero: the type sits high, then a big
+          interactive product window is the centrepiece and breaks into the
+          page below. Monochrome ASCII drifts behind a canvas scrim. */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0"><AsciiField baseAlpha={0.2} peakAlpha={0.75} /></div>
-        <div className="absolute inset-x-0 top-0 h-[52%] bg-gradient-to-b from-canvas via-canvas/90 to-transparent pointer-events-none" />
+        <div className="absolute inset-0"><AsciiField colors={MONO} baseAlpha={0.16} peakAlpha={0.6} /></div>
+        <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-canvas via-canvas/92 to-transparent pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 pb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-medium tracking-tight leading-[1.1] text-primary">
-            Run your whole company<br />in one clean workspace
+        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-24 md:pt-32 pb-14 text-center">
+          <div className="inline-flex items-center gap-1.5 h-6 px-2.5 mb-6 rounded-full border border-subtle bg-surface text-2xs font-medium text-secondary">
+            <span className="w-1.5 h-1.5 rounded-full bg-inverse" /> Open source · MIT licensed
+          </div>
+          <h1 className="text-4xl md:text-6xl font-medium tracking-tight leading-[1.05] text-primary">
+            The whole company,<br />in one clean workspace
           </h1>
-          <p className="mt-5 text-base text-secondary max-w-lg mx-auto leading-relaxed">
-            Sales, finance, marketing, projects, and people in one relational workspace.
-            Open source, fast, no AI token bill.
+          <p className="mt-6 text-base md:text-lg text-secondary max-w-xl mx-auto leading-relaxed">
+            Sales, finance, marketing, projects, and people on one relational core.
+            Built on Postgres, no AI token bill, yours to self-host.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command={`git clone ${REPO_URL}.git`} />
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md bg-accent text-accent-fg text-sm font-medium hover:bg-accent/90 transition-colors">
+            <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="mt-4 text-xs text-tertiary">Free hosted plan, or self-host it yourself. MIT licensed.</p>
+          <p className="mt-4 text-xs text-tertiary">Free hosted plan, or self-host it yourself in minutes.</p>
         </div>
 
-        {/* the real product window breaks out of the hero into the page */}
-        <div id="product" className="relative z-10 max-w-6xl mx-auto px-6 -mb-20 md:-mb-32">
+        {/* the big product window breaks out of the hero into the page */}
+        <div id="product" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 -mb-24 md:-mb-40">
           <Reveal><ProductPreview /></Reveal>
         </div>
       </section>
 
-      {/* Works-with strip (top padding clears the overlapping window) */}
-      <section className="pt-32 md:pt-44">
-        <div className="max-w-5xl mx-auto px-6 pb-10">
-          <p className="text-center text-xs text-tertiary mb-8">Click the tabs above. It is the real interface, on live sample data.</p>
-          <p className="text-center text-sm text-secondary mb-5">Replaces a stack of tools. Works with the ones you keep.</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-tertiary">
-            {['Stripe', 'Google Calendar', 'Resend', 'KSeF e-invoicing', 'CSV / Sheets', 'Zapier'].map((n) => (
-              <span key={n} className="hover:text-secondary transition-colors">{n}</span>
+      {/* Modules strip (top padding clears the overlapping window) */}
+      <section className="pt-36 md:pt-56">
+        <div className="max-w-6xl mx-auto px-6 pb-8">
+          <p className="text-center text-xs text-tertiary mb-10">Switch tabs in the window above. It is the real interface, on sample data.</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 border border-subtle rounded-xl divide-y md:divide-y-0 md:divide-x divide-subtle overflow-hidden">
+            {MODULES.map((m) => (
+              <div key={m.name} className="p-5 hover:bg-surface-hover transition-colors">
+                <m.icon className="w-4 h-4 text-primary mb-3" />
+                <div className="text-sm font-medium text-primary">{m.name}</div>
+                <p className="text-xs text-secondary mt-1 leading-relaxed">{m.body}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pillars */}
-      <section className="border-t border-subtle">
+      {/* ── Features bento ──────────────────────────────────────────────── */}
+      <section id="features" className="border-t border-subtle mt-12">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-center">One workspace for the whole company</h2>
-            <p className="text-center text-secondary mt-3 mb-12 max-w-xl mx-auto">Every record is relational and connected: a deal, a candidate, a campaign, an invoice, all in one place.</p>
+            <div className="max-w-2xl">
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Everything else, already in the box</h2>
+              <p className="text-secondary mt-3 leading-relaxed">The tools that usually mean five more subscriptions, built in and connected to the same records. Fast, keyboard-first, no extra cost.</p>
+            </div>
           </Reveal>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {PILLARS.map((p, i) => (
-              <Reveal key={p.name} delay={i * 60}>
-                <div className="h-full rounded-lg bg-surface border border-subtle p-4 transition-colors hover:border-strong">
-                  <p.icon className="w-4 h-4 text-accent mb-3" />
-                  <h3 className="text-sm font-medium text-primary">{p.name}</h3>
-                  <p className="text-xs text-secondary mt-1 leading-relaxed">{p.body}</p>
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {CAPS.map((c, i) => (
+              <Reveal key={c.name} delay={i * 40} className={c.wide ? 'sm:col-span-2' : ''}>
+                <div className="h-full rounded-xl bg-surface border border-subtle p-5 transition-colors hover:border-strong">
+                  <div className="w-8 h-8 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center mb-4">
+                    <c.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-medium text-primary">{c.name}</h3>
+                  <p className="text-xs text-secondary mt-1 leading-relaxed max-w-[42ch]">{c.body}</p>
                 </div>
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
 
-          <Reveal delay={120}>
-            <div className="mt-8 flex flex-wrap justify-center gap-1.5">
-              {FEATURES.map((f) => (
-                <span key={f} className="px-2 py-1 rounded border border-subtle text-xs text-secondary transition-colors hover:border-strong hover:text-primary">{f}</span>
-              ))}
+      {/* Feature deep-dives (alternating rows with real mock UIs) */}
+      <div className="border-t border-subtle">
+        <Showcase />
+      </div>
+
+      {/* ── Developers / open source ─────────────────────────────────────── */}
+      <section id="developers" className="border-t border-subtle bg-surface-sunken">
+        <div className="max-w-6xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <Reveal>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Open, and built for agents</h2>
+              <p className="text-secondary mt-4 leading-relaxed max-w-[52ch]">
+                One REST API, signed webhooks, and a native MCP server so AI agents read and write your
+                workspace directly. Self-host the whole thing, or start on the hosted plan.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  [Database, 'Native Postgres core. Search, matching and reporting run in the database, so there is no per-token AI cost.'],
+                  [Terminal, 'REST API + MCP. Point Claude, Cursor, Zapier or your own scripts at the same verified endpoints the app uses.'],
+                  [Github, 'MIT licensed. Clone it, run it against your own Supabase and Privy, own your data end to end.'],
+                ].map(([Icon, text]: any) => (
+                  <li key={text} className="flex items-start gap-3">
+                    <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span className="text-sm text-secondary leading-relaxed">{text}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <CopyCommand command={`git clone ${REPO_URL}.git`} />
+                <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle bg-surface text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
+                  <Github className="w-4 h-4" /> Star on GitHub
+                </a>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            {/* Monochrome terminal card: the MCP config, mono on inverse. */}
+            <div className="rounded-xl overflow-hidden border border-subtle shadow-popover">
+              <div className="h-9 flex items-center gap-2 px-3.5 bg-inverse/95">
+                <span className="w-2.5 h-2.5 rounded-full bg-inverse-fg/25" />
+                <span className="w-2.5 h-2.5 rounded-full bg-inverse-fg/25" />
+                <span className="w-2.5 h-2.5 rounded-full bg-inverse-fg/25" />
+                <span className="ml-2 text-2xs font-mono text-inverse-fg/60">.mcp.json</span>
+              </div>
+              <pre className="bg-inverse text-inverse-fg/90 text-xs font-mono leading-relaxed p-4 overflow-x-auto">{MCP_SNIPPET}</pre>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* Feature deep-dives */}
-      <Showcase />
-
-      {/* Everything-else bento */}
-      <section className="border-t border-subtle">
-        <div className="max-w-6xl mx-auto px-6 py-20">
-          <Reveal>
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-center">Everything else, already in the box</h2>
-            <p className="text-center text-secondary mt-3 mb-12 max-w-xl mx-auto">The tools that usually mean five more subscriptions, built in at no extra cost.</p>
-          </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {CAPS.map((c, i) => (
-              <Reveal key={c.name} delay={i * 50}>
-                <div className="h-full rounded-lg bg-surface border border-subtle p-4 transition-colors hover:border-strong">
-                  <c.icon className="w-4 h-4 text-accent mb-3" />
-                  <h3 className="text-sm font-medium text-primary">{c.name}</h3>
-                  <p className="text-xs text-secondary mt-1 leading-relaxed">{c.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
+      {/* ── Pricing ──────────────────────────────────────────────────────── */}
       <section id="pricing" className="border-t border-subtle">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-center">Simple, transparent pricing</h2>
-            <p className="text-center text-secondary mt-3 mb-12 max-w-xl mx-auto">Start free with no credit card, upgrade as you grow. No per-token AI bill, ever.</p>
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Simple, transparent pricing</h2>
+              <p className="text-secondary mt-3">Start free with no credit card, upgrade as you grow. No per-token AI bill, ever.</p>
+            </div>
           </Reveal>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
             {PLANS.map((pl, i) => (
-              <Reveal key={pl.name} delay={i * 60} className="flex">
-                <div className={`rounded-lg p-5 flex flex-col w-full bg-surface border transition-colors ${pl.highlight ? 'border-accent' : 'border-subtle hover:border-strong'}`}>
+              <Reveal key={pl.name} delay={i * 50} className="flex">
+                <div className={`rounded-xl p-5 flex flex-col w-full bg-surface border transition-colors ${pl.highlight ? 'border-strong ring-1 ring-strong' : 'border-subtle hover:border-strong'}`}>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-primary">{pl.name}</h3>
-                    {pl.highlight && <span className="text-2xs font-medium text-accent bg-accent/10 rounded px-1.5 py-0.5">Popular</span>}
+                    {pl.highlight && <span className="text-2xs font-medium bg-inverse text-inverse-fg rounded px-1.5 py-0.5">Popular</span>}
                   </div>
-                  <div className="mt-3 mb-1 font-mono text-2xl text-primary">{pl.price}</div>
+                  <div className="mt-3 mb-1 font-mono text-3xl text-primary">{pl.price}</div>
                   <div className="text-xs text-tertiary mb-5">{pl.sub}</div>
-                  <ul className="space-y-2 mb-6 flex-grow">
+                  <ul className="space-y-2.5 mb-6 flex-grow">
                     {pl.features.map((f) => (
                       <li key={f} className="flex items-start gap-2 text-xs text-secondary">
-                        <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />{f}
+                        <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />{f}
                       </li>
                     ))}
                   </ul>
-                  <Link href={pl.href} className={`h-8 rounded-md text-sm font-medium text-center inline-flex items-center justify-center transition-colors ${pl.highlight ? 'bg-accent text-accent-fg hover:bg-accent/90' : 'bg-surface border border-subtle text-primary hover:bg-surface-hover'}`}>{pl.cta}</Link>
+                  <Link href={pl.href} className={`h-9 rounded-md text-sm font-medium text-center inline-flex items-center justify-center transition-opacity ${pl.highlight ? 'bg-inverse text-inverse-fg hover:opacity-90' : 'bg-surface border border-subtle text-primary hover:bg-surface-hover'}`}>{pl.cta}</Link>
                 </div>
               </Reveal>
             ))}
@@ -208,16 +245,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="border-t border-subtle">
         <div className="max-w-3xl mx-auto px-6 py-20">
           <Reveal>
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-center">Questions, answered</h2>
-            <p className="text-center text-secondary mt-3 mb-10">Everything you need to know before you start.</p>
-            <div className="border-t border-subtle">
+            <h2 className="text-2xl md:text-4xl font-medium tracking-tight text-center">Questions, answered</h2>
+            <div className="mt-10 border-t border-subtle">
               {FAQ.map((f) => (
                 <details key={f.q} className="group border-b border-subtle [&_summary]:cursor-pointer">
-                  <summary className="flex items-center justify-between gap-4 list-none py-4 text-sm font-medium text-primary hover:text-accent transition-colors">
+                  <summary className="flex items-center justify-between gap-4 list-none py-4 text-sm font-medium text-primary hover:text-secondary transition-colors">
                     {f.q}
                     <span className="text-tertiary text-lg leading-none transition-transform group-open:rotate-45">+</span>
                   </summary>
@@ -229,21 +265,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="border-t border-subtle">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
-            <div className="relative overflow-hidden rounded-xl border border-subtle bg-surface px-8 py-16 text-center">
-              <div className="absolute inset-0 opacity-70"><AsciiField baseAlpha={0.06} peakAlpha={0.5} /></div>
+            <div className="relative overflow-hidden rounded-2xl bg-inverse px-8 py-20 text-center">
+              <div className="absolute inset-0 opacity-40"><AsciiField colors={['160,160,168', '120,120,130']} baseAlpha={0.05} peakAlpha={0.4} /></div>
               <div className="relative pointer-events-none">
-                <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-primary">Your company, organized.</h2>
-                <p className="mt-3 text-secondary max-w-lg mx-auto">One workspace for sales, finance, marketing, projects, and people. Set it up in minutes.</p>
-                <div className="pointer-events-auto mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md bg-accent text-accent-fg text-sm font-medium hover:bg-accent/90 transition-colors">
+                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-inverse-fg">Your company, organized.</h2>
+                <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for sales, finance, marketing, projects, and people. Set it up in minutes.</p>
+                <div className="pointer-events-auto mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse-fg text-inverse text-sm font-medium hover:opacity-90 transition-opacity">
                     Start free <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
-                    <Github className="w-4 h-4" /> Star on GitHub
+                  <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md border border-inverse-fg/25 text-inverse-fg text-sm font-medium hover:bg-inverse-fg/10 transition-colors">
+                    <Github className="w-4 h-4" /> View source
                   </a>
                 </div>
               </div>
@@ -256,7 +292,7 @@ export default function HomePage() {
       <footer className="border-t border-subtle">
         <div className="max-w-6xl mx-auto px-6 py-12 grid gap-10 sm:grid-cols-3">
           <div>
-            <Logo />
+            <Logo mono />
             <p className="mt-3 text-xs text-tertiary leading-relaxed max-w-[32ch]">
               The open company OS: sales, finance, marketing, projects, and people in one workspace.
             </p>
@@ -264,7 +300,7 @@ export default function HomePage() {
           <div>
             <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Product</div>
             <ul className="space-y-2 text-xs text-secondary">
-              <li><Link href="#product" className="hover:text-primary transition-colors">Features</Link></li>
+              <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
               <li><Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
               <li><a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>
               <li><Link href="/auth/register" className="hover:text-primary transition-colors">Start free</Link></li>

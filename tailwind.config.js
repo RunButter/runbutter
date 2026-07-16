@@ -30,6 +30,10 @@ module.exports = {
           fg: hsl('--accent-fg'),
           soft: hsl('--accent-soft'),
         },
+        inverse: {
+          DEFAULT: hsl('--inverse'),
+          fg: hsl('--inverse-fg'),
+        },
         success: hsl('--success'),
         warning: hsl('--warning'),
         danger: hsl('--danger'),

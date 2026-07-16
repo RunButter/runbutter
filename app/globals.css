@@ -29,6 +29,11 @@
     --accent-fg:     0 0% 100%;
     --accent-soft:   243 75% 96%;
 
+    /* Neutral solid fill — the monochrome CTA. Near-black on light, near-white
+       on dark. Lets a page go fully grayscale without touching the accent. */
+    --inverse:       240 10% 10%;
+    --inverse-fg:    0 0% 100%;
+
     --success: 152 60% 36%;
     --warning: 35 92% 42%;
     --danger:  0 72% 51%;
@@ -61,6 +66,9 @@
     --accent:        243 72% 56%;
     --accent-fg:     0 0% 100%;
     --accent-soft:   243 60% 18%;
+
+    --inverse:       0 0% 96%;
+    --inverse-fg:    240 10% 8%;
 
     --success: 152 55% 45%;
     --warning: 35 90% 55%;

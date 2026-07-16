@@ -4,13 +4,16 @@ interface LogoProps {
     className?: string;
     iconOnly?: boolean;
     dark?: boolean;
+    /** Render grayscale (mark + suffix follow the text tokens, no accent hue). */
+    mono?: boolean;
 }
 
 /**
  * hirebtr.com Logo Component
  * Renders the custom pixelated arrow icon and brand text.
  */
-const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = false }) => {
+const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = false, mono = false }) => {
+    const markClass = mono ? 'text-primary' : 'text-accent';
     return (
         <div className={`flex items-center gap-3 ${className}`}>
             {/* Precision-recreated Pixelated Arrow SVG from user attachment */}
@@ -22,8 +25,8 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
                 xmlns="http://www.w3.org/2000/svg"
                 className="flex-shrink-0"
             >
-                {/* Follows the accent token so the mark themes with the rest. */}
-                <g fill="currentColor" className="text-accent">
+                {/* Follows a text token so the mark themes with the rest. */}
+                <g fill="currentColor" className={markClass}>
                     {/* Top tail */}
                     <rect x="10" y="10" width="20" height="20" />
                     <rect x="30" y="20" width="20" height="20" />
@@ -41,7 +44,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
 
             {!iconOnly && (
                 <span className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-primary'}`}>
-                    hirebtr<span className="text-accent">.com</span>
+                    hirebtr<span className={mono ? 'text-tertiary' : 'text-accent'}>.com</span>
                 </span>
             )}
         </div>
