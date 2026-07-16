@@ -40,7 +40,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
             </svg>
 
             {!iconOnly && (
-                <span className={`text-2xl font-black tracking-tighter ${dark ? 'text-white' : 'text-gray-900'}`}>
+                <span className={`text-2xl font-black tracking-tighter ${dark ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                     hirebtr<span className="text-primary-600">.com</span>
                 </span>
             )}

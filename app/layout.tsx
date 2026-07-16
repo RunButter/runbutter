@@ -15,9 +15,16 @@ export const metadata: Metadata = {
   },
 };
 
+// Set the theme class before first paint so there is no light/dark flash.
+// Honors a saved choice (hb-theme), else the OS preference.
+const NO_FLASH = `(function(){try{var t=localStorage.getItem('hb-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

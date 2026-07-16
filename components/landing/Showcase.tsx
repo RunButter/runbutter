@@ -160,12 +160,12 @@ function Row({ reverse, eyebrow, tone, title, body, bullets, visual }: {
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
       <div className={reverse ? 'lg:order-2' : ''}>
-        <div className={`inline-block text-[12px] font-bold mb-3 px-2.5 py-0.5 rounded-full ${tone}`}>{eyebrow}</div>
-        <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h3>
-        <p className="mt-3 text-slate-600 leading-relaxed">{body}</p>
+        <div className={`inline-block text-[12px] font-bold mb-3 px-2.5 py-0.5 rounded-full dark:!bg-indigo-500/10 dark:!text-indigo-300 ${tone}`}>{eyebrow}</div>
+        <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">{title}</h3>
+        <p className="mt-3 text-slate-600 leading-relaxed dark:text-slate-300">{body}</p>
         <ul className="mt-5 space-y-2.5">
           {bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-[14px] text-slate-700"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />{b}</li>
+            <li key={b} className="flex items-start gap-2 text-[14px] text-slate-700 dark:text-slate-300"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />{b}</li>
           ))}
         </ul>
       </div>
@@ -197,8 +197,8 @@ export default function Showcase() {
       {/* Full-width Marketing band — different layout family, breaks the rhythm */}
       <div>
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Grow the top of the funnel</h3>
-          <p className="mt-3 text-slate-600 leading-relaxed">Plan campaigns, design and get client sign-off on social posts, and see exactly who is visiting. First-party and cookieless: no third-party trackers, no cookie banner.</p>
+          <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Grow the top of the funnel</h3>
+          <p className="mt-3 text-slate-600 leading-relaxed dark:text-slate-300">Plan campaigns, design and get client sign-off on social posts, and see exactly who is visiting. First-party and cookieless: no third-party trackers, no cookie banner.</p>
         </div>
         <MarketingDash />
         <div className="mt-6 grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
@@ -207,9 +207,9 @@ export default function Showcase() {
             ['Post studio', 'Pixel-faithful previews + pinned client comments'],
             ['Web analytics', 'Cookieless visitors, top pages & referrers'],
           ].map((c) => (
-            <div key={c[0]} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-3">
-              <div className="text-[13px] font-bold text-slate-800">{c[0]}</div>
-              <div className="text-[12px] text-slate-500 mt-0.5 leading-snug">{c[1]}</div>
+            <div key={c[0]} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-3 dark:bg-slate-900 dark:ring-slate-800">
+              <div className="text-[13px] font-bold text-slate-800 dark:text-white">{c[0]}</div>
+              <div className="text-[12px] text-slate-500 mt-0.5 leading-snug dark:text-slate-400">{c[1]}</div>
             </div>
           ))}
         </div>
