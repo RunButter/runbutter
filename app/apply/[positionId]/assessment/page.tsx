@@ -191,7 +191,8 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             const finalResults = {
                 candidate_id: candidateId,
                 overall_score,
-                cognitive_score: 85 + Math.floor(Math.random() * 10),
+                // No cognitive test exists yet — store null, never a fabricated number.
+                cognitive_score: null,
                 personality_score: Math.round((openness + conscientiousness + extraversion + agreeableness + (100 - neuroticism)) / 5),
                 work_style_score: Math.round((conscientiousness + extraversion) / 2),
                 screening_score,
@@ -203,7 +204,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     strategic: openness,
                     innovation: openness
                 },
-                cognitive_data: { logic: 88, patterns: 82, problem_solving: 90 },
+                cognitive_data: null,
                 summary: `Candidate profile matches the ${neuroProfile.toUpperCase()} Neuro-Profile with a ${overall_score}% alignment rating.`
             };
 

@@ -476,7 +476,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 { label: 'Cognitive Score', value: results.cognitive_score, color: 'bg-blue-50 text-blue-600 border-blue-100' },
                                 { label: 'Personality Fit', value: results.personality_score, color: 'bg-purple-50 text-purple-600 border-purple-100' },
                                 { label: 'Work Style', value: results.work_style_score, color: 'bg-orange-50 text-orange-600 border-orange-100' }
-                            ].map((stat) => (
+                            ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className={`${stat.color} p-6 rounded-2xl border text-left`}>
                                     <div className="text-4xl font-black leading-none">{stat.value}</div>
                                     <div className="mt-2 text-xs font-bold uppercase tracking-widest opacity-80">{stat.label}</div>
@@ -519,19 +519,23 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </div>
                                 </div>
                                 <div className="space-y-8">
-                                    <h3 className="text-lg font-black text-gray-900 mb-8">Cognitive Assessment</h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[
-                                            { label: 'Logical Reasoning', value: results.cognitive_data?.logic || 85 },
-                                            { label: 'Pattern Recognition', value: results.cognitive_data?.patterns || 78 },
-                                            { label: 'Problem Solving', value: results.cognitive_data?.problem_solving || 92 }
-                                        ].map((stat) => (
-                                            <div key={stat.label} className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                                <div className="text-2xl font-black text-gray-800">{stat.value}</div>
-                                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">{stat.label}</div>
+                                    {results.cognitive_data && (
+                                        <>
+                                            <h3 className="text-lg font-black text-gray-900 mb-8">Cognitive Assessment</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {[
+                                                    { label: 'Logical Reasoning', value: results.cognitive_data?.logic },
+                                                    { label: 'Pattern Recognition', value: results.cognitive_data?.patterns },
+                                                    { label: 'Problem Solving', value: results.cognitive_data?.problem_solving }
+                                                ].filter((stat) => stat.value != null).map((stat) => (
+                                                    <div key={stat.label} className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                                        <div className="text-2xl font-black text-gray-800">{stat.value}</div>
+                                                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">{stat.label}</div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
+                                        </>
+                                    )}
                                     <div className="p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100">
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="text-xs font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">

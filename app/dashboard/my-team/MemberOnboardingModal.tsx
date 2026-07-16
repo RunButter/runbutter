@@ -53,10 +53,13 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
         const next = !done[key];
         setDone((d) => ({ ...d, [key]: next }));
         try {
-            await supabase.rpc('set_onboarding_task', {
+            // rpc() never throws — surface { error } explicitly or the optimistic
+            // toggle sticks even when the save failed.
+            const { error } = await supabase.rpc('set_onboarding_task', {
                 p_privy_user_id: privyUserId, p_candidate_id: member.id,
                 p_task_key: key, p_title: title, p_is_done: next,
             });
+            if (error) throw error;
             onChange?.();
         } catch (e) {
             console.error('toggle task failed', e);
@@ -68,12 +71,16 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
         setSavingPulse(true);
         setMood(m);
         try {
-            await supabase.rpc('record_pulse', {
+            const { error } = await supabase.rpc('record_pulse', {
                 p_privy_user_id: privyUserId, p_candidate_id: member.id,
                 p_week_start: currentWeekStart(), p_mood: m, p_note: null,
             });
+            if (error) throw error;
             onChange?.();
-        } catch (e) { console.error('record pulse failed', e); }
+        } catch (e) {
+            console.error('record pulse failed', e);
+            setMood(null);
+        }
         finally { setSavingPulse(false); }
     };
 

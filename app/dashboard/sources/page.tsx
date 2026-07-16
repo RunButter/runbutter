@@ -62,6 +62,8 @@ export default function SourcesPage() {
 
             setPositions(posRes.data || []);
             if (posRes.data?.[0]) setPosId(posRes.data[0].id);
+            if ((linksRes as any).error) console.error('get_tracking_links failed', (linksRes as any).error);
+            if ((attrRes as any).error) console.error('get_source_attribution failed', (attrRes as any).error);
             setLinks((linksRes as any).data || []);
             setAttribution((attrRes as any).data || []);
         } catch (e) {
