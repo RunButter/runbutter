@@ -80,16 +80,16 @@ export default function InvoiceItemsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl max-h-[88vh] flex flex-col bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
-          <h2 className="text-sm font-bold text-slate-800">Line items</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
+          <h2 className="text-sm font-semibold text-primary">Line items</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="py-12 flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <div className="py-12 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
           ) : (<>
           {/* Add controls */}
           <div className="flex items-center gap-2 mb-3">
@@ -98,34 +98,34 @@ export default function InvoiceItemsModal({
                 options={products.map((p) => ({ id: p.id, name: p.name, hint: money(p.unit_price), image: p.image }))}
                 buttonClassName="!h-8 !text-[12px]" />
             </div>
-            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"><Plus className="w-3.5 h-3.5" /> Custom line</button>
+            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Plus className="w-3.5 h-3.5" /> Custom line</button>
           </div>
 
           {/* Rows */}
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-tertiary">
               <span>Description</span><span className="text-right">Qty</span><span className="text-right">Unit</span><span className="text-right">Disc%</span><span className="text-right">VAT%</span><span className="text-right">Amount</span><span />
             </div>
-            {rows.length === 0 && <div className="py-8 text-center text-[13px] text-slate-400">No line items. Add a product or a custom line above.</div>}
+            {rows.length === 0 && <div className="py-8 text-center text-[13px] text-tertiary">No line items. Add a product or a custom line above.</div>}
             {rows.map((r, i) => {
               const amount = (Number(r.quantity) || 0) * (Number(r.unit_price) || 0) * (1 - (Number(r.discount_pct) || 0) / 100);
               return (
                 <div key={i} className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 items-center">
                   <div className="flex items-center gap-2 min-w-0">
-                    {r.image && <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-slate-200/60 shrink-0" />}
+                    {r.image && <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-subtle shrink-0" />}
                     <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Description"
-                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
+                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" />
                   </div>
                   <input type="number" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
                   <input type="number" value={r.unit_price} onChange={(e) => setRow(i, { unit_price: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
                   <input type="number" value={r.discount_pct} onChange={(e) => setRow(i, { discount_pct: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
                   <input type="number" value={r.tax_rate} onChange={(e) => setRow(i, { tax_rate: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
-                  <div className="text-[13px] text-right tabular-nums font-semibold text-slate-700">{money(amount)}</div>
-                  <button onClick={() => removeRow(i)} aria-label="Remove" className="p-1 rounded-md text-slate-300 hover:text-rose-600 hover:bg-rose-50"><Trash2 className="w-3.5 h-3.5" /></button>
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                  <div className="text-[13px] text-right tabular-nums font-semibold text-secondary">{money(amount)}</div>
+                  <button onClick={() => removeRow(i)} aria-label="Remove" className="p-1 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               );
             })}
@@ -135,14 +135,14 @@ export default function InvoiceItemsModal({
           </>)}
         </div>
 
-        <div className="shrink-0 flex items-center gap-3 p-3 border-t border-slate-200/70">
-          <div className="text-[12px] text-slate-500">
-            Net <span className="font-semibold text-slate-700 tabular-nums">{money(totals.net)}</span>
-            <span className="mx-1.5 text-slate-300">·</span>VAT <span className="font-semibold text-slate-700 tabular-nums">{money(totals.tax)}</span>
-            <span className="mx-1.5 text-slate-300">·</span>Total <span className="font-black text-slate-900 tabular-nums">{money(totals.total)}</span>
+        <div className="shrink-0 flex items-center gap-3 p-3 border-t border-subtle">
+          <div className="text-[12px] text-secondary">
+            Net <span className="font-semibold text-secondary tabular-nums">{money(totals.net)}</span>
+            <span className="mx-1.5 text-tertiary">·</span>VAT <span className="font-semibold text-secondary tabular-nums">{money(totals.tax)}</span>
+            <span className="mx-1.5 text-tertiary">·</span>Total <span className="font-semibold text-primary tabular-nums">{money(totals.total)}</span>
           </div>
-          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save items
           </button>
         </div>

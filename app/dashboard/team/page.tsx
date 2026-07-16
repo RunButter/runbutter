@@ -113,16 +113,16 @@ export default function TeamPage() {
         }
     };
 
-    if (!ready || loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-primary-600" /></div>;
+    if (!ready || loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-accent" /></div>;
 
     const isAdmin = currentUserRole === 'owner' || currentUserRole === 'admin';
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            <header className="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="min-h-screen bg-surface-sunken pb-12">
+            <header className="bg-surface border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
-                    <Users className="w-6 h-6 text-primary-600" />
-                    <h1 className="text-xl font-bold text-gray-800">Team Management</h1>
+                    <Users className="w-6 h-6 text-accent" />
+                    <h1 className="text-xl font-semibold text-primary">Team Management</h1>
                 </div>
                 {isAdmin && (
                     <button 
@@ -143,35 +143,35 @@ export default function TeamPage() {
                 )}
 
                 <Paywall isLocked={company?.plan === 'free'} featureName="Team Collaboration">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="bg-surface rounded-2xl shadow-sm border border-subtle overflow-hidden">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                    <th className="px-6 py-4 font-bold">Team Member</th>
-                                    <th className="px-6 py-4 font-bold">Role</th>
-                                    <th className="px-6 py-4 font-bold">Status</th>
-                                    <th className="px-6 py-4 font-bold text-right">Actions</th>
+                                <tr className="bg-surface-sunken text-secondary text-xs uppercase tracking-wider">
+                                    <th className="px-6 py-4 font-semibold">Team Member</th>
+                                    <th className="px-6 py-4 font-semibold">Role</th>
+                                    <th className="px-6 py-4 font-semibold">Status</th>
+                                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-subtle">
                                 {team.map((member) => (
-                                    <tr key={member.id} className="hover:bg-gray-50 transition">
+                                    <tr key={member.id} className="hover:bg-surface-sunken transition">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold uppercase">
+                                                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-accent font-semibold uppercase">
                                                     {member.full_name?.charAt(0) || '?'}
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-gray-900">{member.full_name}</div>
-                                                    <div className="text-sm text-gray-500">{member.email}</div>
+                                                    <div className="font-semibold text-primary">{member.full_name}</div>
+                                                    <div className="text-sm text-secondary">{member.email}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
                                                 member.role === 'owner' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                member.role === 'admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                                'bg-gray-100 text-gray-700 border-gray-200'
+                                                member.role === 'admin' ? 'bg-accent/10 text-accent border-accent/20' :
+                                                'bg-surface-hover text-secondary border-subtle'
                                             }`}>
                                                 {member.role.toUpperCase()}
                                             </span>
@@ -191,7 +191,7 @@ export default function TeamPage() {
                                             {isAdmin && member.role !== 'owner' && (
                                                 <button 
                                                     onClick={() => handleRemoveMember(member.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    className="p-2 text-tertiary hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -207,17 +207,17 @@ export default function TeamPage() {
 
             {/* Invite Modal */}
             {showInviteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                            <UserPlus className="w-5 h-5 text-primary-600" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
+                            <UserPlus className="w-5 h-5 text-accent" />
                             Invite Team Member
                         </h3>
-                        <p className="text-gray-500 text-sm mb-6">Send an email invitation to collaborate on your recruitment pipeline.</p>
+                        <p className="text-secondary text-sm mb-6">Send an email invitation to collaborate on your recruitment pipeline.</p>
                         
                         <form onSubmit={handleInvite} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                                <label className="block text-sm font-semibold text-secondary mb-2">Full Name</label>
                                 <input 
                                     type="text" 
                                     required
@@ -228,7 +228,7 @@ export default function TeamPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                                <label className="block text-sm font-semibold text-secondary mb-2">Email Address</label>
                                 <input 
                                     type="email" 
                                     required
@@ -239,9 +239,9 @@ export default function TeamPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Role</label>
+                                <label className="block text-sm font-semibold text-secondary mb-2">Role</label>
                                 <select 
-                                    className="input-field w-full rounded-xl bg-white"
+                                    className="input-field w-full rounded-xl bg-surface"
                                     value={inviteRole}
                                     onChange={(e) => setInviteRole(e.target.value)}
                                 >

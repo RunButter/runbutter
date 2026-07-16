@@ -224,7 +224,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 case 'assessment_completed':
                     return (
                         <div className="space-y-1">
-                            <p className="font-semibold text-primary-700">Scored {d.overall_score}% Compatibility</p>
+                            <p className="font-semibold text-accent">Scored {d.overall_score}% Compatibility</p>
                             <p className="italic">&quot;{d.summary}&quot;</p>
                         </div>
                     );
@@ -346,17 +346,17 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     const WorkStyleBar = ({ label, left, right, value = 0 }: any) => (
         <div className="space-y-2">
-            <div className="flex justify-between text-sm font-bold text-gray-700">
+            <div className="flex justify-between text-sm font-semibold text-secondary">
                 <span>{label}</span>
-                <span className="text-primary-600">{(value || 0)}% {(value || 0) > 50 ? right : left}</span>
+                <span className="text-accent">{(value || 0)}% {(value || 0) > 50 ? right : left}</span>
             </div>
-            <div className="h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+            <div className="h-3 bg-surface-hover rounded-full overflow-hidden border border-subtle">
                 <div
                     className="h-full bg-primary-500 rounded-full transition-all duration-500"
                     style={{ width: `${value || 0}%` }}
                 />
             </div>
-            <div className="flex justify-between text-[10px] text-gray-400 uppercase font-bold tracking-tighter">
+            <div className="flex justify-between text-[10px] text-tertiary uppercase font-semibold tracking-tighter">
                 <span>{left}</span>
                 <span>{right}</span>
             </div>
@@ -365,19 +365,19 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     if (!ready || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+            <div className="min-h-screen bg-surface-sunken flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-accent animate-spin" />
             </div>
         );
     }
 
     if (!candidate) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center flex-col gap-6 p-6 text-center">
+            <div className="min-h-screen bg-surface-sunken flex items-center justify-center flex-col gap-6 p-6 text-center">
                 <div className="flex flex-col items-center">
                     <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-800">Candidate not found</h2>
-                    <p className="text-gray-500 mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them.</p>
+                    <h2 className="text-2xl font-semibold text-primary">Candidate not found</h2>
+                    <p className="text-secondary mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them.</p>
                 </div>
 
                 <div className="flex gap-4">
@@ -389,21 +389,21 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            <header className="bg-white border-b sticky top-0 z-10 transition-shadow hover:shadow-sm">
+        <div className="min-h-screen bg-surface-sunken pb-12">
+            <header className="bg-surface border-b sticky top-0 z-10 transition-shadow hover:shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                        <Link href="/dashboard/candidates" className="p-2 hover:bg-gray-100 rounded-full transition shrink-0">
-                            <ArrowLeft className="w-5 h-5 text-gray-600" />
+                        <Link href="/dashboard/candidates" className="p-2 hover:bg-surface-hover rounded-full transition shrink-0">
+                            <ArrowLeft className="w-5 h-5 text-secondary" />
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800">{candidate.full_name}</h1>
-                            <p className="text-sm text-gray-500">{candidate.position?.title} • {candidate.position?.department}</p>
+                            <h1 className="text-xl font-semibold text-primary">{candidate.full_name}</h1>
+                            <p className="text-sm text-secondary">{candidate.position?.title} • {candidate.position?.department}</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
                         <select
-                            className="input-field py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 col-span-2 sm:col-span-1 sm:w-auto"
+                            className="input-field py-2 text-sm border-subtle rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 col-span-2 sm:col-span-1 sm:w-auto"
                             value={candidate.status}
                             onChange={(e) => updateStatus(e.target.value)}
                         >
@@ -419,7 +419,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <Mail className="w-4 h-4" /> Message
                         </button>
                         <button
-                            className={`flex items-center justify-center gap-2 py-2 px-4 shadow-sm text-sm rounded border w-full sm:w-auto ${companyPlan === 'free' ? 'bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed' : 'btn-primary'}`}
+                            className={`flex items-center justify-center gap-2 py-2 px-4 shadow-sm text-sm rounded border w-full sm:w-auto ${companyPlan === 'free' ? 'bg-surface-hover text-secondary border-subtle cursor-not-allowed' : 'btn-primary'}`}
                             onClick={() => {
                                 if (companyPlan === 'free') {
                                     alert('Automatic Interview Scheduling is a Premium feature. Upgrade your plan to use it!');
@@ -438,23 +438,23 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
-                    <section className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
-                        <div className="bg-white p-8 border-b border-gray-100">
+                    <section className="bg-surface rounded-3xl shadow-2xl border border-subtle overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+                        <div className="bg-surface p-8 border-b border-subtle">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
-                                    <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                                    <h2 className="text-2xl font-semibold text-primary flex items-center gap-3">
                                         Candidate Assessment Report
                                     </h2>
-                                    <p className="mt-1 text-gray-500 font-medium flex items-center gap-2">
+                                    <p className="mt-1 text-secondary font-medium flex items-center gap-2">
                                         {candidate.full_name} • {candidate.position?.title} • Completed: {new Date(results.completed_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition text-sm flex items-center gap-2 shadow-sm">
+                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition text-sm flex items-center gap-2 shadow-sm">
                                         <Users className="w-4 h-4" />
                                         Simulate Team Fit
                                     </button>
-                                    <button className="px-5 py-2.5 bg-gray-50 text-gray-700 font-bold rounded-xl border border-gray-200 hover:bg-gray-100 transition text-sm">
+                                    <button className="px-5 py-2.5 bg-surface-sunken text-secondary font-semibold rounded-xl border border-subtle hover:bg-surface-hover transition text-sm">
                                         Switch to Candidate View
                                     </button>
                                 </div>
@@ -469,26 +469,26 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 { label: 'Work Style', value: results.work_style_score, color: 'bg-orange-50 text-orange-600 border-orange-100' }
                             ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className={`${stat.color} p-6 rounded-2xl border text-left`}>
-                                    <div className="text-4xl font-black leading-none">{stat.value}</div>
-                                    <div className="mt-2 text-xs font-bold uppercase tracking-widest opacity-80">{stat.label}</div>
+                                    <div className="text-4xl font-semibold leading-none">{stat.value}</div>
+                                    <div className="mt-2 text-xs font-semibold uppercase tracking-widest opacity-80">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="px-8 pb-12">
                             <div className="mb-12">
-                                <h3 className="text-lg font-black text-gray-900 mb-8">Big 5 Personality Traits</h3>
-                                <div className="bg-gray-50/50 rounded-3xl p-12 flex items-center justify-center relative">
+                                <h3 className="text-lg font-semibold text-primary mb-8">Big 5 Personality Traits</h3>
+                                <div className="bg-surface-sunken/50 rounded-3xl p-12 flex items-center justify-center relative">
                                     <div className="h-[360px] w-full max-w-[500px]">
                                         {radarData && <Radar data={radarData} options={radarOptions} />}
                                     </div>
-                                    <div className="absolute bottom-8 flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                    <div className="absolute bottom-8 flex gap-6 text-[10px] font-semibold uppercase tracking-widest text-tertiary">
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 rounded-full bg-primary-500 opacity-20 border border-primary-500" />
                                             Candidate Profile
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full border-2 border-dashed border-gray-300" />
+                                            <div className="w-3 h-3 rounded-full border-2 border-dashed border-subtle" />
                                             Role Benchmark
                                         </div>
                                     </div>
@@ -497,7 +497,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
                                 <div>
-                                    <h3 className="text-lg font-black text-gray-900 mb-8">Work Style Preferences</h3>
+                                    <h3 className="text-lg font-semibold text-primary mb-8">Work Style Preferences</h3>
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-2 gap-6">
                                             <WorkStyleBar label="Collaboration vs Independent" left="Individualist" right="Collaborative" value={results.work_style_data.collaboration} />
@@ -512,28 +512,28 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 <div className="space-y-8">
                                     {results.cognitive_data && (
                                         <>
-                                            <h3 className="text-lg font-black text-gray-900 mb-8">Cognitive Assessment</h3>
+                                            <h3 className="text-lg font-semibold text-primary mb-8">Cognitive Assessment</h3>
                                             <div className="grid grid-cols-2 gap-4">
                                                 {[
                                                     { label: 'Logical Reasoning', value: results.cognitive_data?.logic },
                                                     { label: 'Pattern Recognition', value: results.cognitive_data?.patterns },
                                                     { label: 'Problem Solving', value: results.cognitive_data?.problem_solving }
                                                 ].filter((stat) => stat.value != null).map((stat) => (
-                                                    <div key={stat.label} className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                                        <div className="text-2xl font-black text-gray-800">{stat.value}</div>
-                                                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">{stat.label}</div>
+                                                    <div key={stat.label} className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
+                                                        <div className="text-2xl font-semibold text-primary">{stat.value}</div>
+                                                        <div className="text-[10px] font-semibold text-secondary uppercase tracking-widest mt-1">{stat.label}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </>
                                     )}
-                                    <div className="p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                    <div className="p-6 bg-accent/10 rounded-2xl border border-accent/20">
                                         <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-xs font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">
+                                            <h4 className="text-xs font-semibold text-accent uppercase tracking-widest flex items-center gap-2">
                                                 <Target className="w-4 h-4" />
                                                 Neuro-Profile Analysis
                                             </h4>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-blue-100 text-blue-700' :
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-blue-100 text-blue-700' :
                                                 candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-orange-100 text-orange-700' :
                                                     candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-purple-100 text-purple-700' :
                                                         'bg-emerald-100 text-emerald-700'
@@ -541,31 +541,31 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                                 {candidate?.position?.neuro_profile?.replace('-', ' ') || 'HARD TECH'}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                                        <p className="text-sm text-secondary leading-relaxed font-medium italic">
                                             &quot;{results.summary || 'Analysis pending based on trait alignment.'}&quot;
                                         </p>
                                     </div>
 
                                     {results.screening_answers && results.screening_answers.length > 0 && (
-                                        <div className="pt-8 border-t border-gray-100">
-                                            <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
-                                                <Target className="w-5 h-5 text-indigo-500" />
+                                        <div className="pt-8 border-t border-subtle">
+                                            <h3 className="text-lg font-semibold text-primary mb-6 flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-accent" />
                                                 Screening & Qualification
                                             </h3>
                                             <div className="space-y-4">
                                                 {results.screening_answers.map((sa: any, idx: number) => (
-                                                    <div key={idx} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Question {idx + 1}</div>
-                                                        <p className="text-sm font-bold text-gray-800 mb-3">{sa.question}</p>
+                                                    <div key={idx} className="p-4 bg-surface-sunken rounded-xl border border-subtle">
+                                                        <div className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Question {idx + 1}</div>
+                                                        <p className="text-sm font-semibold text-primary mb-3">{sa.question}</p>
                                                         <div className="flex items-center justify-between">
                                                             <div className={`text-sm px-3 py-1 rounded-lg font-medium ${sa.is_correct === true ? 'bg-green-100 text-green-700 border border-green-200' :
                                                                 sa.is_correct === false ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                                                                    'bg-white text-gray-700 border border-gray-200'
+                                                                    'bg-surface text-secondary border border-subtle'
                                                                 }`}>
                                                                 {sa.answer}
                                                             </div>
                                                             {sa.is_correct !== null && (
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-tertiary">
                                                                     {sa.is_correct ? 'Correct Match' : 'Mismatch'}
                                                                 </span>
                                                             )}
@@ -580,13 +580,13 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
                     </section>
                 ) : (
-                    <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-6">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                    <div className="bg-surface rounded-3xl p-12 text-center border-2 border-dashed border-subtle flex flex-col items-center justify-center gap-6">
+                        <div className="w-20 h-20 bg-surface-sunken rounded-full flex items-center justify-center text-tertiary">
                             <Brain className="w-10 h-10" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-gray-800">No Assessment Results</h3>
-                            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
+                            <h3 className="text-xl font-semibold text-primary">No Assessment Results</h3>
+                            <p className="text-sm text-secondary mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
                         </div>
                         <div className="flex gap-3">
                             <button onClick={generateDemoResults} className="btn-secondary py-2 px-6 flex items-center gap-2">
@@ -604,44 +604,44 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Left Column: Basic Info & Resume */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Profile Info */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <User className="w-5 h-5 text-primary-600" />
+                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-8">
+                            <h3 className="text-lg font-semibold text-primary mb-6 flex items-center gap-2">
+                                <User className="w-5 h-5 text-accent" />
                                 Contact Details
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
                                         <Mail className="w-5 h-5 text-primary-500" />
                                         <span className="font-medium truncate">{candidate.email}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
                                         <Phone className="w-5 h-5 text-primary-500" />
                                         <span className="font-medium">{candidate.phone || 'N/A'}</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
                                         <Linkedin className="w-5 h-5 text-[#0077b5]" />
                                         {candidate.linkedin_url ? (
-                                            <a href={candidate.linkedin_url} target="_blank" className="text-primary-600 hover:underline font-medium">
+                                            <a href={candidate.linkedin_url} target="_blank" className="text-accent hover:underline font-medium">
                                                 View LinkedIn Profile
                                             </a>
                                         ) : (
-                                            <span className="text-gray-400">Not provided</span>
+                                            <span className="text-tertiary">Not provided</span>
                                         )}
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-gray-600">
-                                        <Calendar className="w-5 h-5 text-gray-400" />
+                                    <div className="flex items-center gap-3 text-secondary">
+                                        <Calendar className="w-5 h-5 text-tertiary" />
                                         <div>
-                                            <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">Applied</div>
+                                            <div className="text-xs text-tertiary uppercase font-semibold tracking-wider">Applied</div>
                                             <div className="font-medium">{new Date(candidate.applied_at).toLocaleDateString()}</div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3 text-gray-600">
-                                        <Briefcase className="w-5 h-5 text-gray-400" />
+                                    <div className="flex items-center gap-3 text-secondary">
+                                        <Briefcase className="w-5 h-5 text-tertiary" />
                                         <div>
-                                            <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">Source</div>
+                                            <div className="text-xs text-tertiary uppercase font-semibold tracking-wider">Source</div>
                                             <div className="font-medium capitalize">{candidate.source}</div>
                                         </div>
                                     </div>
@@ -650,26 +650,26 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* CV Viewer */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="p-6 border-b bg-gray-50 flex items-center justify-between">
-                                <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-primary-600" />
+                        <div className="bg-surface rounded-3xl shadow-sm border border-subtle overflow-hidden">
+                            <div className="p-6 border-b bg-surface-sunken flex items-center justify-between">
+                                <h3 className="font-semibold text-primary flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-accent" />
                                     Resume & Documents
                                 </h3>
                                 {candidate.cv_url && (
                                     <div className="flex gap-2">
-                                        <a href={candidate.cv_url} target="_blank" className="btn-secondary py-1.5 px-4 text-xs font-bold flex items-center gap-2">
+                                        <a href={candidate.cv_url} target="_blank" className="btn-secondary py-1.5 px-4 text-xs font-semibold flex items-center gap-2">
                                             Open External <ChevronRight className="w-4 h-4" />
                                         </a>
                                     </div>
                                 )}
                             </div>
-                            <div className="bg-white min-h-[600px] flex flex-col">
+                            <div className="bg-surface min-h-[600px] flex flex-col">
                                 {candidate.cv_url ? (
                                     <div className="flex-1 flex flex-col">
-                                        <div className="p-4 bg-gray-50/50 border-b flex justify-between items-center">
-                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Interactive Preview</p>
-                                            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-black uppercase">Secure Viewer</span>
+                                        <div className="p-4 bg-surface-sunken/50 border-b flex justify-between items-center">
+                                            <p className="text-xs font-semibold text-secondary uppercase tracking-widest">Interactive Preview</p>
+                                            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold uppercase">Secure Viewer</span>
                                         </div>
                                         <iframe
                                             src={`${candidate.cv_url}#toolbar=0`}
@@ -679,12 +679,12 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </div>
                                 ) : (
                                     <div className="p-24 text-center flex flex-col items-center justify-center gap-6">
-                                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                                        <div className="w-20 h-20 bg-surface-sunken rounded-full flex items-center justify-center text-tertiary">
                                             <AlertCircle className="w-10 h-10" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-800 text-lg">No resume uploaded</p>
-                                            <p className="text-gray-500 text-sm mt-1">This candidate applied without a CV attachment.</p>
+                                            <p className="font-semibold text-primary text-lg">No resume uploaded</p>
+                                            <p className="text-secondary text-sm mt-1">This candidate applied without a CV attachment.</p>
                                         </div>
                                     </div>
                                 )}
@@ -695,9 +695,9 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Right Column: Mini Stats & activity */}
                     <div className="space-y-8">
                         {/* Status Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <Target className="w-5 h-5 text-primary-600" />
+                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-6">
+                            <h3 className="font-semibold text-primary mb-6 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-accent" />
                                 Pipeline Status
                             </h3>
                             <div className="space-y-4">
@@ -707,18 +707,18 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             <CheckCircle className="w-6 h-6 text-green-600" />
                                         </div>
                                         <div>
-                                            <div className="font-bold text-green-800">Candidate Hired</div>
+                                            <div className="font-semibold text-green-800">Candidate Hired</div>
                                             <div className="text-xs text-green-600">Successfully matched with role</div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="p-4 rounded-xl bg-primary-50 border border-primary-100 flex items-center gap-4">
+                                    <div className="p-4 rounded-xl bg-accent/10 border border-primary-100 flex items-center gap-4">
                                         <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                            <Clock className="w-6 h-6 text-primary-600" />
+                                            <Clock className="w-6 h-6 text-accent" />
                                         </div>
                                         <div>
-                                            <div className="font-bold text-primary-800 capitalize">{candidate.status.replace('_', ' ')}</div>
-                                            <div className="text-xs text-primary-600">Pending next action</div>
+                                            <div className="font-semibold text-primary-800 capitalize">{candidate.status.replace('_', ' ')}</div>
+                                            <div className="text-xs text-accent">Pending next action</div>
                                         </div>
                                     </div>
                                 )}
@@ -726,22 +726,22 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* Activity Timeline */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                            <h3 className="font-bold text-gray-800 mb-8 flex items-center gap-2">
-                                <BarChart className="w-5 h-5 text-primary-600" />
+                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-6">
+                            <h3 className="font-semibold text-primary mb-8 flex items-center gap-2">
+                                <BarChart className="w-5 h-5 text-accent" />
                                 Hiring Activity
                             </h3>
-                            <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
+                            <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-hover">
                                 {activity.map((act) => (
                                     <div key={act.id} className="relative pl-8 group">
-                                        <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-white border-2 border-primary-500 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-sm">
+                                        <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface border-2 border-primary-500 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-sm">
                                             <div className="w-2 h-2 rounded-full bg-primary-500" />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-bold text-gray-800 leading-tight capitalize">{act.action.replace(/_/g, ' ')}</div>
-                                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">{new Date(act.created_at).toLocaleString()}</div>
+                                            <div className="text-sm font-semibold text-primary leading-tight capitalize">{act.action.replace(/_/g, ' ')}</div>
+                                            <div className="text-[10px] text-tertiary font-semibold uppercase tracking-wider mt-1">{new Date(act.created_at).toLocaleString()}</div>
                                             {act.details && (
-                                                <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-100 mt-2 shadow-sm">
+                                                <div className="text-xs text-secondary bg-surface-sunken p-3 rounded-xl border border-subtle mt-2 shadow-sm">
                                                     {renderActivityDetails(act)}
                                                 </div>
                                             )}
@@ -749,7 +749,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </div>
                                 ))}
                                 {activity.length === 0 && (
-                                    <p className="text-center text-gray-400 py-4 text-sm font-medium">No activity recorded yet.</p>
+                                    <p className="text-center text-tertiary py-4 text-sm font-medium">No activity recorded yet.</p>
                                 )}
                             </div>
                         </div>
@@ -779,13 +779,13 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
             {/* Schedule Modal */}
             {showScheduleModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Schedule Interview</h3>
-                        <p className="text-gray-500 text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-semibold text-primary mb-2">Schedule Interview</h3>
+                        <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
 
                         <div className="mb-6">
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Date & Time</label>
+                            <label className="block text-sm font-semibold text-secondary mb-2">Date & Time</label>
                             <input
                                 type="datetime-local"
                                 className="input-field w-full rounded-xl"

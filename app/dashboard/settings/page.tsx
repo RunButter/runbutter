@@ -238,21 +238,21 @@ export default function SettingsPage() {
 
     if (!ready || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+            <div className="min-h-screen bg-surface-sunken flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-accent animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b">
+        <div className="min-h-screen bg-surface-sunken">
+            <header className="bg-surface border-b">
                 <div className="max-w-4xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-full transition">
-                            <ArrowLeft className="w-5 h-5 text-gray-600" />
+                        <Link href="/dashboard" className="p-2 hover:bg-surface-hover rounded-full transition">
+                            <ArrowLeft className="w-5 h-5 text-secondary" />
                         </Link>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Company Settings</h1>
+                        <h1 className="text-xl sm:text-2xl font-semibold text-primary">Company Settings</h1>
                     </div>
                     <button
                         onClick={handleSubmit}
@@ -281,9 +281,9 @@ export default function SettingsPage() {
                     )}
 
                     {/* Branding Section */}
-                    <section className="bg-white rounded-2xl shadow-sm border p-8">
-                        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                            <Building2 className="w-6 h-6 text-primary-600" />
+                    <section className="bg-surface rounded-2xl shadow-sm border p-8">
+                        <h2 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2">
+                            <Building2 className="w-6 h-6 text-accent" />
                             Company Identity
                         </h2>
 
@@ -291,7 +291,7 @@ export default function SettingsPage() {
                             <div className="grid md:grid-cols-2 gap-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                                        <label className="block text-sm font-medium text-secondary mb-2">Company Name</label>
                                         <input
                                             type="text"
                                             className="input-field"
@@ -300,26 +300,26 @@ export default function SettingsPage() {
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             required
                                         />
-                                        <p className="mt-1 text-xs text-gray-500">This name appears on the application pages and in emails.</p>
+                                        <p className="mt-1 text-xs text-secondary">This name appears on the application pages and in emails.</p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Subdomain (Read-only)</label>
+                                        <label className="block text-sm font-medium text-secondary mb-2">Subdomain (Read-only)</label>
                                         <div className="relative">
-                                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                                             <input
                                                 type="text"
-                                                className="input-field pl-10 bg-gray-50 cursor-not-allowed"
+                                                className="input-field pl-10 bg-surface-sunken cursor-not-allowed"
                                                 value={formData.subdomain}
                                                 readOnly
                                             />
                                         </div>
-                                        <p className="mt-1 text-xs text-gray-500">Your portal: {formData.subdomain}.hirebtr.com</p>
+                                        <p className="mt-1 text-xs text-secondary">Your portal: {formData.subdomain}.hirebtr.com</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="block text-sm font-medium text-gray-700">Company Logo</label>
+                                    <label className="block text-sm font-medium text-secondary">Company Logo</label>
 
                                     {logoPreview ? (
                                         <div className="relative group w-fit">
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                                                 width="240px"
                                                 height="120px"
                                                 showBorder={true}
-                                                className="bg-gray-50"
+                                                className="bg-surface-sunken"
                                             />
                                             <button
                                                 type="button"
@@ -340,16 +340,16 @@ export default function SettingsPage() {
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center justify-center w-[240px] h-[120px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                                        <div className="flex items-center justify-center w-[240px] h-[120px] border-2 border-dashed border-subtle rounded-xl bg-surface-sunken">
                                             <div className="text-center">
-                                                <Building2 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                                <p className="text-xs text-gray-500">No logo uploaded</p>
+                                                <Building2 className="w-8 h-8 text-tertiary mx-auto mb-2" />
+                                                <p className="text-xs text-secondary">No logo uploaded</p>
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="flex items-center gap-4">
-                                        <label className="cursor-pointer bg-white px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition flex items-center gap-2">
+                                        <label className="cursor-pointer bg-surface px-4 py-2 border rounded-lg text-sm font-medium text-secondary hover:bg-surface-sunken transition flex items-center gap-2">
                                             <Upload className="w-4 h-4" />
                                             {logoPreview ? 'Change Logo' : 'Upload Logo'}
                                             <input
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                                                 onChange={handleLogoChange}
                                             />
                                         </label>
-                                        <p className="text-xs text-gray-500">PNG, JPG, WebP. Max 2MB.</p>
+                                        <p className="text-xs text-secondary">PNG, JPG, WebP. Max 2MB.</p>
                                     </div>
                                 </div>
                             </div>
@@ -368,26 +368,26 @@ export default function SettingsPage() {
 
                     {/* Integrations Section */}
                     {company && user && (
-                        <section className="bg-white rounded-2xl shadow-sm border p-8">
-                            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                <Globe className="w-6 h-6 text-primary-600" />
+                        <section className="bg-surface rounded-2xl shadow-sm border p-8">
+                            <h2 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2">
+                                <Globe className="w-6 h-6 text-accent" />
                                 Connected Apps & Integrations
                             </h2>
 
                             <div className="space-y-6">
-                                <div className="p-6 border border-gray-100 rounded-xl flex items-center justify-between">
+                                <div className="p-6 border border-subtle rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200 shadow-sm font-bold text-xl text-gray-600">
+                                        <div className="w-12 h-12 bg-surface-sunken rounded-lg flex items-center justify-center border border-subtle shadow-sm font-semibold text-xl text-secondary">
                                             G
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-gray-800">Google Calendar</h3>
-                                            <p className="text-sm text-gray-500">Automatically schedule interviews and generate Google Meet links.</p>
+                                            <h3 className="font-semibold text-primary">Google Calendar</h3>
+                                            <p className="text-sm text-secondary">Automatically schedule interviews and generate Google Meet links.</p>
                                         </div>
                                     </div>
                                     <div>
                                         {isGoogleConnected ? (
-                                            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200">
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 font-semibold rounded-lg border border-green-200">
                                                 <CheckCircle className="w-4 h-4" /> Connected
                                             </div>
                                         ) : (
@@ -402,14 +402,14 @@ export default function SettingsPage() {
                                 </div>
 
                                 {/* Webhooks & notifications */}
-                                <div className="p-6 border border-gray-100 rounded-xl">
+                                <div className="p-6 border border-subtle rounded-xl">
                                     <div className="flex items-start gap-4 mb-5">
-                                        <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center border border-primary-100 text-primary-600 shrink-0">
+                                        <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-primary-100 text-accent shrink-0">
                                             <Zap className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-gray-800">Webhooks &amp; notifications</h3>
-                                            <p className="text-sm text-gray-500">
+                                            <h3 className="font-semibold text-primary">Webhooks &amp; notifications</h3>
+                                            <p className="text-sm text-secondary">
                                                 Get pinged on new applications, stage changes, and hires. Paste an incoming
                                                 webhook URL from <strong>Slack</strong> or <strong>Discord</strong>, or a
                                                 catch-hook from <strong>Zapier / Make / n8n</strong> to reach thousands of other apps.
@@ -420,17 +420,17 @@ export default function SettingsPage() {
                                     {webhooks.length > 0 && (
                                         <div className="space-y-2 mb-5">
                                             {webhooks.map((w) => (
-                                                <div key={w.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-600 shrink-0">{w.type}</span>
+                                                <div key={w.id} className="flex items-center gap-3 p-3 bg-surface-sunken rounded-lg border border-subtle">
+                                                    <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 rounded-md bg-surface border border-subtle text-secondary shrink-0">{w.type}</span>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="text-sm font-semibold text-gray-800 truncate">{w.label || w.type}</div>
-                                                        <div className="text-xs text-gray-400 truncate">{w.url}</div>
+                                                        <div className="text-sm font-semibold text-primary truncate">{w.label || w.type}</div>
+                                                        <div className="text-xs text-tertiary truncate">{w.url}</div>
                                                     </div>
                                                     <button onClick={() => testWebhook(w)} disabled={hookTesting === w.id}
-                                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:border-primary-200 hover:text-primary-600 flex items-center gap-1.5 shrink-0">
+                                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-subtle text-secondary hover:border-primary-200 hover:text-accent flex items-center gap-1.5 shrink-0">
                                                         {hookTesting === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Test
                                                     </button>
-                                                    <button onClick={() => removeWebhook(w.id)} className="p-2 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 shrink-0">
+                                                    <button onClick={() => removeWebhook(w.id)} className="p-2 rounded-lg text-tertiary hover:text-rose-600 hover:bg-rose-50 shrink-0">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -462,9 +462,9 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
 
-                                    {hookMsg && <p className="text-sm mt-3 text-gray-600">{hookMsg}</p>}
+                                    {hookMsg && <p className="text-sm mt-3 text-secondary">{hookMsg}</p>}
 
-                                    <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+                                    <p className="text-xs text-tertiary mt-4 leading-relaxed">
                                         <strong>Slack:</strong> create an Incoming Webhook at api.slack.com/messaging/webhooks. ·{' '}
                                         <strong>Discord:</strong> Channel → Edit → Integrations → Webhooks. ·{' '}
                                         <strong>Zapier/Make:</strong> start a flow with a “Webhooks → Catch Hook” trigger and paste its URL.
@@ -475,8 +475,8 @@ export default function SettingsPage() {
                     )}
 
                     {/* Tips Section */}
-                    <div className="p-6 bg-primary-50 rounded-2xl border border-primary-100">
-                        <h3 className="font-bold text-primary-900 mb-2">Why add branding?</h3>
+                    <div className="p-6 bg-accent/10 rounded-2xl border border-primary-100">
+                        <h3 className="font-semibold text-primary-900 mb-2">Why add branding?</h3>
                         <p className="text-sm text-primary-800 leading-relaxed">
                             Adding your company logo and name creates a professional experience for candidates.
                             Companies with complete profiles see a 24% higher completion rate on assessments.

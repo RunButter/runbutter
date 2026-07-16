@@ -96,97 +96,97 @@ export default function BrandingPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-slate-200/70">
-        <h1 className="text-sm font-bold text-slate-800">Branding</h1>
-        <span className="text-[11px] text-slate-400">Logo &amp; details on your invoices and offers</span>
+      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+        <h1 className="text-sm font-semibold text-primary">Branding</h1>
+        <span className="text-[11px] text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
-          className="ml-auto h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
         </button>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
           <div className="max-w-4xl grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Logo</label>
+                <label className="block text-[12px] font-semibold text-secondary mb-1.5">Logo</label>
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-lg ring-1 ring-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 shrink-0">
+                  <div className="w-14 h-14 rounded-lg ring-1 ring-subtle flex items-center justify-center overflow-hidden bg-surface-sunken shrink-0">
                     {form.logo_url ? <img src={form.logo_url} alt="" className="w-full h-full object-contain" /> : <div className="w-7 h-7 rounded" style={{ background: form.accent_color }} />}
                   </div>
-                  <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer">
+                  <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
                     {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
                     <input type="file" accept="image/*" className="hidden" onChange={onLogoFile} disabled={!privy || uploading} />
                   </label>
-                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-[12px] text-slate-400 hover:text-rose-600">Remove</button>}
+                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-[12px] text-tertiary hover:text-rose-600">Remove</button>}
                 </div>
                 <input value={form.logo_url} onChange={(e) => set({ logo_url: e.target.value })} placeholder="…or paste a logo image URL"
-                  className="mt-2 w-full h-9 px-2.5 text-[12px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="mt-2 w-full h-9 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1">Legal company name</label>
+                <label className="block text-[12px] font-semibold text-secondary mb-1">Legal company name</label>
                 <input value={form.legal_name} onChange={(e) => set({ legal_name: e.target.value })} placeholder={wsName}
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
 
               {/* Country-driven legal identity */}
-              <div className="rounded-xl ring-1 ring-slate-200/70 p-3.5 space-y-3">
+              <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Legal identity — shown on invoices</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Legal identity — shown on invoices</span>
                   <select value={form.country} onChange={(e) => set({ country: e.target.value })}
-                    className="h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
+                    className="h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 {identityFields(form.country).map((f) => (
                   <div key={f.key}>
-                    <label className="block text-[12px] font-semibold text-slate-600 mb-1">{f.label}</label>
+                    <label className="block text-[12px] font-semibold text-secondary mb-1">{f.label}</label>
                     <input value={form[f.key]} onChange={(e) => set({ [f.key]: e.target.value } as any)} placeholder={f.placeholder}
-                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
                   </div>
                 ))}
               </div>
 
               {/* Bank details (universal) */}
-              <div className="rounded-xl ring-1 ring-slate-200/70 p-3.5 space-y-3">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Bank — for payment on invoices</span>
+              <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Bank — for payment on invoices</span>
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1">IBAN / account number</label>
+                  <label className="block text-[12px] font-semibold text-secondary mb-1">IBAN / account number</label>
                   <input value={form.iban} onChange={(e) => set({ iban: e.target.value })} placeholder="PL00 0000 0000 0000 0000 0000 0000"
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1">Bank name</label>
+                  <label className="block text-[12px] font-semibold text-secondary mb-1">Bank name</label>
                   <input value={form.bank_name} onChange={(e) => set({ bank_name: e.target.value })}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1">Address</label>
+                <label className="block text-[12px] font-semibold text-secondary mb-1">Address</label>
                 <textarea value={form.address} onChange={(e) => set({ address: e.target.value })} rows={2} placeholder="Street, city, country"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1">Accent color</label>
+                <label className="block text-[12px] font-semibold text-secondary mb-1">Accent color</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
-                    className="w-9 h-9 rounded-md ring-1 ring-slate-200 cursor-pointer bg-white" />
+                    className="w-9 h-9 rounded-md ring-1 ring-subtle cursor-pointer bg-surface" />
                   <input value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
-                    className="w-28 h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                    className="w-28 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1">Invoice footer / payment terms</label>
+                <label className="block text-[12px] font-semibold text-secondary mb-1">Invoice footer / payment terms</label>
                 <textarea value={form.invoice_footer} onChange={(e) => set({ invoice_footer: e.target.value })} rows={3} placeholder="Payment within 14 days · bank details · VAT no…"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
 
               {!privy && <p className="text-[12px] text-amber-600">Sign in to upload a logo and save branding.</p>}
@@ -195,31 +195,31 @@ export default function BrandingPage() {
 
             {/* Live preview */}
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Preview</div>
-              <div className="rounded-xl bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-2">Preview</div>
+              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-sm overflow-hidden">
                 <div className="h-1.5" style={{ background: form.accent_color }} />
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       {form.logo_url ? <img src={form.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain" /> : <div className="w-10 h-10 rounded-lg" style={{ background: form.accent_color }} />}
                       <div>
-                        <div className="text-[15px] font-black text-slate-900">{displayName}</div>
-                        <div className="text-[11px] text-slate-400 whitespace-pre-line">{form.address || 'hirebtr.com'}</div>
+                        <div className="text-[15px] font-semibold text-primary">{displayName}</div>
+                        <div className="text-[11px] text-tertiary whitespace-pre-line">{form.address || 'hirebtr.com'}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-black text-slate-900">Invoice</div>
-                      <div className="text-[12px] text-slate-400">INV-1001</div>
+                      <div className="text-lg font-semibold text-primary">Invoice</div>
+                      <div className="text-[12px] text-tertiary">INV-1001</div>
                     </div>
                   </div>
-                  <div className="mt-6 flex justify-between text-[14px] font-black border-t border-slate-100 pt-3">
-                    <span className="text-slate-900">Total due</span>
+                  <div className="mt-6 flex justify-between text-[14px] font-semibold border-t border-subtle pt-3">
+                    <span className="text-primary">Total due</span>
                     <span style={{ color: form.accent_color }}>$4,150.00</span>
                   </div>
-                  {form.invoice_footer && <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 whitespace-pre-line">{form.invoice_footer}</div>}
+                  {form.invoice_footer && <div className="mt-4 pt-3 border-t border-subtle text-[11px] text-secondary whitespace-pre-line">{form.invoice_footer}</div>}
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-slate-400">This is how your invoices and offers will look.</p>
+              <p className="mt-2 text-[11px] text-tertiary">This is how your invoices and offers will look.</p>
             </div>
           </div>
         )}

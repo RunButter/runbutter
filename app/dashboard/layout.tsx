@@ -46,10 +46,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // between navigation and auth-ready reads as a broken page.
   if (!ready || !authenticated) {
     return (
-      <div className="flex h-screen overflow-hidden bg-white">
+      <div className="flex h-screen overflow-hidden bg-surface">
         <div className="hidden lg:flex"><NavRail /></div>
         <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
+          <Loader2 className="w-8 h-8 text-tertiary animate-spin" />
         </main>
       </div>
     );
@@ -58,20 +58,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white text-slate-900">
-      {mobileOpen && <div className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
+    <div className="flex h-screen overflow-hidden bg-surface text-primary">
+      {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
       <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden h-12 shrink-0 flex items-center gap-2 px-3 border-b border-slate-200/70">
-          <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-slate-600 hover:bg-slate-100 rounded-lg">
+        <header className="lg:hidden h-12 shrink-0 flex items-center gap-2 px-3 border-b border-subtle">
+          <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-lg">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-bold text-slate-800">HireBTR</span>
+          <span className="text-sm font-semibold text-primary">HireBTR</span>
         </header>
-        <div className="flex-1 overflow-y-auto bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto bg-surface-sunken/30">
           {company && requiredFeature ? (
             <PlanGate plan={company.plan} feature={requiredFeature}>{children}</PlanGate>
           ) : (

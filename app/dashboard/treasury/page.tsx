@@ -33,7 +33,7 @@ const titleize = (s: string) =>
     (s || 'unknown').replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 const scoreColor = (v: number | null) =>
-    v == null ? 'text-slate-300'
+    v == null ? 'text-tertiary'
         : v >= 66 ? 'text-emerald-600'
             : v >= 33 ? 'text-amber-500'
                 : 'text-rose-500';
@@ -165,21 +165,21 @@ export default function TreasuryPage() {
     };
 
     if (!ready || loading) {
-        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-slate-300 animate-spin" /></div>;
+        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-tertiary animate-spin" /></div>;
     }
 
     return (
         <div className="flex flex-col h-full">
             <PageHeader title="Talent Treasury" count={filtered.length}>
                 <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
-                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
                 </div>
                 <div className="relative">
-                    <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary pointer-events-none" />
                     <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}
-                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
+                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
                         {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                 </div>
@@ -187,14 +187,14 @@ export default function TreasuryPage() {
 
             <div className="flex-1 flex overflow-hidden">
                 {/* ===== Faceted Sidebar ===== */}
-                <aside className="w-64 shrink-0 border-r border-slate-200/70 bg-white overflow-y-auto hidden md:block">
+                <aside className="w-64 shrink-0 border-r border-subtle bg-surface overflow-y-auto hidden md:block">
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-tertiary">
                                 <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
                             </h3>
                             {chips.length > 0 && (
-                                <button onClick={resetAll} className="flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700">
+                                <button onClick={resetAll} className="flex items-center gap-1 text-[11px] font-semibold text-accent hover:text-accent">
                                     <RotateCcw className="w-3 h-3" /> Reset
                                 </button>
                             )}
@@ -205,12 +205,12 @@ export default function TreasuryPage() {
                             {DIMS.map((d) => (
                                 <div key={d.key}>
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[12px] font-semibold text-slate-600">{d.label}</span>
-                                        <span className="text-[11px] font-mono text-slate-400 tabular-nums">min {mins[d.key]}</span>
+                                        <span className="text-[12px] font-semibold text-secondary">{d.label}</span>
+                                        <span className="text-[11px] font-mono text-tertiary tabular-nums">min {mins[d.key]}</span>
                                     </div>
                                     <input type="range" min={0} max={100} step={1} value={mins[d.key]}
                                         onChange={(e) => setMins((m) => ({ ...m, [d.key]: Number(e.target.value) }))}
-                                        className="w-full accent-primary-600 cursor-pointer" />
+                                        className="w-full accent-accent cursor-pointer" />
                                 </div>
                             ))}
                         </div>
@@ -254,9 +254,9 @@ export default function TreasuryPage() {
                             <div className="flex flex-wrap items-center gap-2 mb-4">
                                 {chips.map((chip, i) => (
                                     <button key={i} onClick={chip.clear}
-                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-primary-50 ring-1 ring-primary-200/60 text-primary-700 text-[12px] font-semibold hover:bg-primary-100 transition-colors">
+                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-accent/10 ring-1 ring-primary-200/60 text-accent text-[12px] font-semibold hover:bg-primary-100 transition-colors">
                                         {chip.label}
-                                        <X className="w-3 h-3 text-primary-400 group-hover:text-primary-700" />
+                                        <X className="w-3 h-3 text-primary-400 group-hover:text-accent" />
                                     </button>
                                 ))}
                             </div>
@@ -264,7 +264,7 @@ export default function TreasuryPage() {
 
                         {/* Candidate grid */}
                         {filtered.length === 0 ? (
-                            <div className="text-center py-20 text-slate-400">
+                            <div className="text-center py-20 text-tertiary">
                                 <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
                                 No candidates match the current filters.
                             </div>
@@ -274,16 +274,16 @@ export default function TreasuryPage() {
                                     const st = hrStatus(c.status);
                                     return (
                                         <Link key={c.id} href={`/dashboard/candidates/${c.id}`}
-                                            className="group rounded-xl bg-white ring-1 ring-slate-200/60 p-4 hover:ring-slate-300 hover:shadow-sm transition-all duration-200">
+                                            className="group rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all duration-200">
                                             <div className="flex items-start justify-between gap-3 mb-3">
                                                 <div className="min-w-0">
-                                                    <div className="font-bold text-slate-800 truncate group-hover:text-primary-700 transition-colors">{c.full_name}</div>
-                                                    <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate"><Mail className="w-3 h-3 shrink-0" /> {c.email}</div>
-                                                    <div className="text-[12px] text-slate-500 mt-0.5 truncate">{c.position_title || '—'}</div>
+                                                    <div className="font-semibold text-primary truncate group-hover:text-accent transition-colors">{c.full_name}</div>
+                                                    <div className="flex items-center gap-1 text-[11px] text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> {c.email}</div>
+                                                    <div className="text-[12px] text-secondary mt-0.5 truncate">{c.position_title || '—'}</div>
                                                 </div>
                                                 <div className="text-center shrink-0">
-                                                    <div className={`text-2xl font-black tabular-nums ${scoreColor(c.overall_score)}`}>{c.overall_score ?? '—'}</div>
-                                                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-300">Match</div>
+                                                    <div className={`text-2xl font-semibold tabular-nums ${scoreColor(c.overall_score)}`}>{c.overall_score ?? '—'}</div>
+                                                    <div className="text-[9px] font-semibold uppercase tracking-widest text-tertiary">Match</div>
                                                 </div>
                                             </div>
 
@@ -293,22 +293,22 @@ export default function TreasuryPage() {
                                                     const v = c[d.key] as number | null;
                                                     return (
                                                         <div key={d.key} className="flex items-center gap-2">
-                                                            <span className="w-20 text-[10px] font-semibold text-slate-400 shrink-0">{d.label}</span>
-                                                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                            <span className="w-20 text-[10px] font-semibold text-tertiary shrink-0">{d.label}</span>
+                                                            <div className="flex-1 h-1.5 bg-surface-hover rounded-full overflow-hidden">
                                                                 <div className={`h-full rounded-full ${d.accent} transition-all duration-500`} style={{ width: `${v ?? 0}%` }} />
                                                             </div>
-                                                            <span className="w-7 text-right text-[10px] font-mono text-slate-500 tabular-nums">{v ?? '–'}</span>
+                                                            <span className="w-7 text-right text-[10px] font-mono text-secondary tabular-nums">{v ?? '–'}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
 
-                                            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                                            <div className="flex items-center justify-between pt-3 border-t border-subtle">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-md ring-1 ${st.cls}`}>{st.label}</span>
-                                                    <span className="text-[10px] text-slate-400">{titleize(c.source || 'direct')}</span>
+                                                    <span className="text-[10px] text-tertiary">{titleize(c.source || 'direct')}</span>
                                                 </div>
-                                                <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 group-hover:text-primary-600 transition-colors">View <ExternalLink className="w-3 h-3" /></span>
+                                                <span className="flex items-center gap-1 text-[11px] font-semibold text-tertiary group-hover:text-accent transition-colors">View <ExternalLink className="w-3 h-3" /></span>
                                             </div>
                                         </Link>
                                     );
@@ -326,8 +326,8 @@ export default function TreasuryPage() {
 
 function FacetGroup({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="mb-4 border-t border-slate-100 pt-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">{title}</div>
+        <div className="mb-4 border-t border-subtle pt-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-1.5">{title}</div>
             <div className="space-y-0.5 max-h-44 overflow-y-auto pr-1">{children}</div>
         </div>
     );
@@ -336,20 +336,20 @@ function FacetGroup({ title, children }: { title: string; children: React.ReactN
 function FacetRow({ label, count, checked, onChange }: { label: string; count: number; checked: boolean; onChange: () => void }) {
     return (
         <label className="flex items-center gap-2 py-0.5 cursor-pointer group">
-            <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 rounded border-slate-300 accent-primary-600 cursor-pointer" />
-            <span className={`flex-1 text-[12px] truncate ${checked ? 'text-slate-900 font-semibold' : 'text-slate-600'} group-hover:text-slate-900`}>{label}</span>
-            <span className="text-[10px] font-mono text-slate-300 tabular-nums">{count}</span>
+            <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 rounded border-subtle accent-accent cursor-pointer" />
+            <span className={`flex-1 text-[12px] truncate ${checked ? 'text-primary font-semibold' : 'text-secondary'} group-hover:text-primary`}>{label}</span>
+            <span className="text-[10px] font-mono text-tertiary tabular-nums">{count}</span>
         </label>
     );
 }
 
 function Insight({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="rounded-xl bg-white ring-1 ring-slate-200/60 px-4 py-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+        <div className="rounded-xl bg-surface ring-1 ring-subtle px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
-            <div className="text-lg font-black text-slate-900 truncate">{value}</div>
+            <div className="text-lg font-semibold text-primary truncate">{value}</div>
         </div>
     );
 }

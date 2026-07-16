@@ -143,7 +143,7 @@ export default function AnalyticsPage() {
     };
 
     if (!ready || loading) {
-        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-slate-300 animate-spin" /></div>;
+        return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-tertiary animate-spin" /></div>;
     }
 
     const kpis = [
@@ -155,8 +155,8 @@ export default function AnalyticsPage() {
 
     return (
         <>
-            <PageHeader title="Analytics" badge={<span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600">Live</span>}>
-                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors">
+            <PageHeader title="Analytics" badge={<span className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600">Live</span>}>
+                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>
             </PageHeader>
@@ -166,40 +166,40 @@ export default function AnalyticsPage() {
                     <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                             {kpis.map((k) => (
-                                <div key={k.label} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-4">
+                                <div key={k.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{k.label}</span>
-                                        <k.icon className="w-4 h-4 text-slate-300" />
+                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{k.label}</span>
+                                        <k.icon className="w-4 h-4 text-tertiary" />
                                     </div>
-                                    <div className={`mt-2 text-2xl font-black tabular-nums ${k.tone}`}>{k.value}</div>
+                                    <div className={`mt-2 text-2xl font-semibold tabular-nums ${k.tone}`}>{k.value}</div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="grid lg:grid-cols-3 gap-4">
-                            <div className="lg:col-span-2 rounded-xl bg-white ring-1 ring-slate-200/60 p-5">
+                            <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle p-5">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2"><BarChart className="w-4 h-4 text-primary-600" /> Application volume by position</h3>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">All time</span>
+                                    <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><BarChart className="w-4 h-4 text-accent" /> Application volume by position</h3>
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">
                                     <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-white ring-1 ring-slate-200/60 p-5">
-                                <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2"><PieChart className="w-4 h-4 text-primary-600" /> Candidate sources</h3>
+                            <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                                <h3 className="text-sm font-semibold text-primary mb-5 flex items-center gap-2"><PieChart className="w-4 h-4 text-accent" /> Candidate sources</h3>
                                 <div className="h-[220px] relative">
                                     <Pie options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={pieData} />
                                 </div>
                                 <div className="mt-5 space-y-2">
                                     {pieData.labels.map((label: string, i: number) => (
                                         <div key={label} className="flex items-center justify-between text-[13px]">
-                                            <div className="flex items-center gap-2 text-slate-600">
+                                            <div className="flex items-center gap-2 text-secondary">
                                                 <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i % 5] }} />
                                                 {label}
                                             </div>
-                                            <span className="font-bold text-slate-800 tabular-nums">{hasSourceData ? (sourceData[i] as number) : 0}</span>
+                                            <span className="font-semibold text-primary tabular-nums">{hasSourceData ? (sourceData[i] as number) : 0}</span>
                                         </div>
                                     ))}
                                 </div>

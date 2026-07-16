@@ -55,38 +55,38 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-5 border-b border-subtle">
                     <div>
-                        <h3 className="font-black text-gray-900 flex items-center gap-2"><Mail className="w-5 h-5 text-primary-600" /> Message {candidate.full_name?.split(' ')[0]}</h3>
-                        <p className="text-xs text-gray-400">{candidate.email}</p>
+                        <h3 className="font-semibold text-primary flex items-center gap-2"><Mail className="w-5 h-5 text-accent" /> Message {candidate.full_name?.split(' ')[0]}</h3>
+                        <p className="text-xs text-tertiary">{candidate.email}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="p-5 space-y-4">
                     {templates.length > 0 && (
                         <label className="block">
-                            <span className="block text-xs font-semibold text-gray-600 mb-1">Start from a template</span>
+                            <span className="block text-xs font-semibold text-secondary mb-1">Start from a template</span>
                             <select onChange={(e) => e.target.value && applyTemplate(e.target.value)} defaultValue=""
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-primary-500">
+                                className="w-full px-3 py-2 text-sm border border-subtle rounded-lg bg-surface outline-none focus:ring-2 focus:ring-primary-500">
                                 <option value="">— None —</option>
                                 {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
                         </label>
                     )}
                     <label className="block">
-                        <span className="block text-xs font-semibold text-gray-600 mb-1">Subject</span>
+                        <span className="block text-xs font-semibold text-secondary mb-1">Subject</span>
                         <input value={subject} onChange={(e) => setSubject(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary-500" />
+                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none focus:ring-2 focus:ring-primary-500" />
                     </label>
                     <label className="block">
-                        <span className="block text-xs font-semibold text-gray-600 mb-1">Message</span>
+                        <span className="block text-xs font-semibold text-secondary mb-1">Message</span>
                         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary-500" />
+                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none focus:ring-2 focus:ring-primary-500" />
                     </label>
-                    <p className="text-[11px] text-gray-400">Variables like <code className="px-1 bg-gray-100 rounded">{'{{first_name}}'}</code> are filled in automatically when sent.</p>
+                    <p className="text-[11px] text-tertiary">Variables like <code className="px-1 bg-surface-hover rounded">{'{{first_name}}'}</code> are filled in automatically when sent.</p>
                     {error && <p className="text-sm text-rose-600">{error}</p>}
                     <div className="flex justify-end gap-2">
                         <button onClick={onClose} className="btn-secondary">Cancel</button>

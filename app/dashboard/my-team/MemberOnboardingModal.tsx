@@ -88,26 +88,26 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
     const completed = checklist.filter((c) => done[c.key]).length;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-6 border-b border-subtle sticky top-0 bg-surface">
                     <div>
-                        <h3 className="text-xl font-black text-gray-900">{member.full_name}</h3>
-                        <p className="text-sm text-gray-500">{member.position_title || 'Team member'} · Onboarding</p>
+                        <h3 className="text-xl font-semibold text-primary">{member.full_name}</h3>
+                        <p className="text-sm text-secondary">{member.position_title || 'Team member'} · Onboarding</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="p-6 space-y-8">
                     {/* Manager brief */}
                     <section>
-                        <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-gray-400 mb-3">
+                        <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-tertiary mb-3">
                             <Brain className="w-4 h-4" /> Manager brief
                         </h4>
-                        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 space-y-2">
+                        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 space-y-2">
                             {brief.map((b, i) => (
-                                <p key={i} className="text-sm text-gray-700 leading-relaxed flex gap-2">
-                                    <span className="text-indigo-400 font-black">•</span> {b}
+                                <p key={i} className="text-sm text-secondary leading-relaxed flex gap-2">
+                                    <span className="text-accent font-semibold">•</span> {b}
                                 </p>
                             ))}
                         </div>
@@ -115,13 +115,13 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
 
                     {/* Weekly pulse */}
                     <section>
-                        <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-gray-400 mb-3">
+                        <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-tertiary mb-3">
                             <Activity className="w-4 h-4" /> This week&apos;s pulse
                         </h4>
                         <div className="flex gap-2">
                             {MOODS.map((m) => (
                                 <button key={m.key} disabled={savingPulse} onClick={() => logPulse(m.key)}
-                                    className={`flex-1 py-3 rounded-xl border text-sm font-bold transition ${mood === m.key ? m.cls : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                                    className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition ${mood === m.key ? m.cls : 'bg-surface border-subtle text-secondary hover:border-subtle'}`}>
                                     <div className="text-xl mb-0.5">{m.emoji}</div>
                                     {m.label}
                                 </button>
@@ -132,20 +132,20 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
                     {/* Onboarding checklist */}
                     <section>
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-gray-400">
+                            <h4 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-tertiary">
                                 <ClipboardList className="w-4 h-4" /> Onboarding checklist
                             </h4>
-                            <span className="text-xs font-mono text-gray-400">{completed}/{checklist.length}</span>
+                            <span className="text-xs font-mono text-tertiary">{completed}/{checklist.length}</span>
                         </div>
                         {loading ? (
-                            <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary-600" /></div>
+                            <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-accent" /></div>
                         ) : (
                             <div className="space-y-1.5">
                                 {checklist.map((c) => (
-                                    <label key={c.key} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer">
+                                    <label key={c.key} className="flex items-center gap-3 p-2.5 rounded-lg border border-subtle hover:bg-surface-sunken cursor-pointer">
                                         <input type="checkbox" checked={!!done[c.key]} onChange={() => toggle(c.key, c.title)}
-                                            className="w-4 h-4 rounded accent-primary-600 cursor-pointer" />
-                                        <span className={`text-sm ${done[c.key] ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{c.title}</span>
+                                            className="w-4 h-4 rounded accent-accent cursor-pointer" />
+                                        <span className={`text-sm ${done[c.key] ? 'text-tertiary line-through' : 'text-secondary'}`}>{c.title}</span>
                                     </label>
                                 ))}
                             </div>

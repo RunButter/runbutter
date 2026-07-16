@@ -46,16 +46,16 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
   return (
     <div className="min-w-[820px]">
       {/* month header + today marker */}
-      <div className="flex h-8 border-b border-slate-200/70 bg-white">
-        <div className="w-52 shrink-0 border-r border-slate-200/70" />
+      <div className="flex h-8 border-b border-subtle bg-surface">
+        <div className="w-52 shrink-0 border-r border-subtle" />
         <div className="flex-1 relative">
           {months.map((m) => (
-            <div key={m.key} className="absolute top-0 h-full border-l border-slate-100 flex items-center" style={{ left: `${m.left}%`, width: `${m.width}%` }}>
-              <span className="pl-2 text-[11px] font-semibold text-slate-400">{m.label}</span>
+            <div key={m.key} className="absolute top-0 h-full border-l border-subtle flex items-center" style={{ left: `${m.left}%`, width: `${m.width}%` }}>
+              <span className="pl-2 text-[11px] font-semibold text-tertiary">{m.label}</span>
             </div>
           ))}
           <div className="absolute top-0 h-full" style={{ left: `${todayPct}%` }}>
-            <span className="absolute -translate-x-1/2 top-1.5 text-[9px] font-bold uppercase tracking-wide text-primary-600 bg-primary-50 rounded px-1">Today</span>
+            <span className="absolute -translate-x-1/2 top-1.5 text-[9px] font-semibold uppercase tracking-wide text-accent bg-accent/10 rounded px-1">Today</span>
           </div>
         </div>
       </div>
@@ -72,18 +72,18 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
         const barColor = STATUS_COLOR[p.status] || STATUS_COLOR.active;
 
         return (
-          <div key={p.id} className="flex items-stretch border-b border-slate-100 hover:bg-slate-50/40 transition-colors">
-            <Link href={`/projects/${p.id}`} className="group w-52 shrink-0 px-3 py-3 border-r border-slate-200/70 flex flex-col justify-center min-w-0">
-              <span className="text-[13px] font-semibold text-slate-800 truncate group-hover:text-primary-700">{p.name}</span>
+          <div key={p.id} className="flex items-stretch border-b border-subtle hover:bg-surface-sunken/40 transition-colors">
+            <Link href={`/projects/${p.id}`} className="group w-52 shrink-0 px-3 py-3 border-r border-subtle flex flex-col justify-center min-w-0">
+              <span className="text-[13px] font-semibold text-primary truncate group-hover:text-accent">{p.name}</span>
               <span className="mt-1 flex items-center gap-1.5">
-                {p.identifier && <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 rounded px-1 py-0.5">{p.identifier}</span>}
-                <span className="text-[11px] text-slate-400">{p.issues.length} {p.issues.length === 1 ? 'issue' : 'issues'}{undated ? ` · ${undated} undated` : ''}</span>
+                {p.identifier && <span className="text-[9px] font-semibold uppercase tracking-wide text-tertiary bg-surface-hover rounded px-1 py-0.5">{p.identifier}</span>}
+                <span className="text-[11px] text-tertiary">{p.issues.length} {p.issues.length === 1 ? 'issue' : 'issues'}{undated ? ` · ${undated} undated` : ''}</span>
               </span>
             </Link>
 
             <div className="flex-1 relative py-4">
               {/* month gridlines */}
-              {months.map((m) => <span key={m.key} className="absolute top-0 h-full w-px bg-slate-100" style={{ left: `${m.left}%` }} />)}
+              {months.map((m) => <span key={m.key} className="absolute top-0 h-full w-px bg-surface-hover" style={{ left: `${m.left}%` }} />)}
               {/* today line */}
               <span className="absolute top-0 h-full w-px bg-primary-400/60" style={{ left: `${todayPct}%` }} />
               {/* project span bar */}

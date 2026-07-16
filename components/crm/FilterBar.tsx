@@ -32,27 +32,27 @@ export default function FilterBar({ object, rows, value, onChange }: {
   const setFacet = (k: string, v: string) => onChange({ ...value, facets: { ...value.facets, [k]: v } });
 
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-slate-200/70 bg-slate-50/40">
+    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle bg-surface-sunken/40">
       {usableFacets.map((f) => (
         <select key={f.key} value={value.facets[f.key] || ''} onChange={(e) => setFacet(f.key, e.target.value)}
-          className={`h-7 px-2 text-[12px] rounded-md bg-white ring-1 outline-none focus:ring-2 focus:ring-primary-500 capitalize ${value.facets[f.key] ? 'ring-primary-300 text-primary-700 font-semibold' : 'ring-slate-200 text-slate-600'}`}>
+          className={`h-7 px-2 text-[12px] rounded-md bg-surface ring-1 outline-none focus:ring-2 focus:ring-primary-500 capitalize ${value.facets[f.key] ? 'ring-primary-300 text-accent font-semibold' : 'ring-subtle text-secondary'}`}>
           <option value="">{f.label}: all</option>
           {distinct[f.key].map((o) => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
         </select>
       ))}
       {dateField && (
-        <div className="flex items-center gap-1 text-[12px] text-slate-500 ml-0.5">
+        <div className="flex items-center gap-1 text-[12px] text-secondary ml-0.5">
           <span>{dateField.label}</span>
           <input type="date" value={value.from} onChange={(e) => onChange({ ...value, from: e.target.value })}
-            className="h-7 px-1.5 text-[12px] rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
-          <span className="text-slate-300">→</span>
+            className="h-7 px-1.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" />
+          <span className="text-tertiary">→</span>
           <input type="date" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })}
-            className="h-7 px-1.5 text-[12px] rounded-md bg-white ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-primary-500" />
+            className="h-7 px-1.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
       )}
       {hasActiveFilters(value) && (
         <button onClick={() => onChange(EMPTY_FILTERS)}
-          className="h-7 px-2 inline-flex items-center gap-1 text-[12px] font-medium text-slate-500 hover:text-rose-600">
+          className="h-7 px-2 inline-flex items-center gap-1 text-[12px] font-medium text-secondary hover:text-rose-600">
           <X className="w-3.5 h-3.5" /> Clear
         </button>
       )}

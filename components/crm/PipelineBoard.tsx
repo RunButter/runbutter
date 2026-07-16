@@ -20,15 +20,15 @@ function CardBody({ rec, dragging = false }: { rec: PipelineRecord; dragging?: b
   const subject = subjectOf(rec);
   const sub = rec.person?.title || rec.company?.domain;
   return (
-    <div className={`bg-white rounded-lg ring-1 ring-slate-200/70 p-2.5 ${dragging ? 'shadow-lg ring-slate-300 rotate-1' : 'hover:ring-slate-300'} transition-all duration-150`}>
+    <div className={`bg-surface rounded-lg ring-1 ring-subtle p-2.5 ${dragging ? 'shadow-lg ring-strong rotate-1' : 'hover:ring-strong'} transition-all duration-150`}>
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">{initials(subject)}</div>
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">{initials(subject)}</div>
         <div className="min-w-0">
-          <div className="text-[13px] font-semibold text-slate-800 truncate">{subject}</div>
-          {sub && <div className="text-[11px] text-slate-400 truncate">{sub}</div>}
+          <div className="text-[13px] font-semibold text-primary truncate">{subject}</div>
+          {sub && <div className="text-[11px] text-tertiary truncate">{sub}</div>}
         </div>
       </div>
-      {rec.amount ? <div className="mt-2 text-[11px] font-bold text-emerald-600 tabular-nums">${rec.amount.toLocaleString()}</div> : null}
+      {rec.amount ? <div className="mt-2 text-[11px] font-semibold text-emerald-600 tabular-nums">${rec.amount.toLocaleString()}</div> : null}
     </div>
   );
 }
@@ -50,12 +50,12 @@ function Column({ stage, records }: { stage: PipelineStage; records: PipelineRec
     <div className="w-64 shrink-0 flex flex-col max-h-full">
       <div className="flex items-center gap-2 px-1 mb-2">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: stage.color }} />
-        <span className="text-[12px] font-bold text-slate-700">{stage.name}</span>
-        <span className="text-[11px] text-slate-400 tabular-nums">{records.length}</span>
-        {sum > 0 && <span className="ml-auto text-[11px] font-semibold text-slate-400 tabular-nums">${sum.toLocaleString()}</span>}
+        <span className="text-[12px] font-semibold text-secondary">{stage.name}</span>
+        <span className="text-[11px] text-tertiary tabular-nums">{records.length}</span>
+        {sum > 0 && <span className="ml-auto text-[11px] font-semibold text-tertiary tabular-nums">${sum.toLocaleString()}</span>}
       </div>
       <div ref={setNodeRef}
-        className={`flex-1 overflow-y-auto rounded-xl p-2 ring-1 transition-colors duration-150 ${isOver ? 'bg-primary-50/60 ring-primary-200' : 'bg-slate-50/60 ring-slate-200/50'}`}>
+        className={`flex-1 overflow-y-auto rounded-xl p-2 ring-1 transition-colors duration-150 ${isOver ? 'bg-accent/10 ring-primary-200' : 'bg-surface-sunken/60 ring-subtle'}`}>
         {records.map((r) => <Card key={r.id} rec={r} />)}
       </div>
     </div>

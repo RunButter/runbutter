@@ -34,38 +34,38 @@ export default function SendDocumentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-md flex flex-col bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
-          <h2 className="text-sm font-bold text-slate-800 capitalize">Send {label}</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-md flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
+          <h2 className="text-sm font-semibold text-primary capitalize">Send {label}</h2>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
         {done ? (
           <div className="p-8 flex flex-col items-center text-center gap-2">
             <CheckCircle2 className="w-9 h-9 text-emerald-500" />
-            <div className="text-sm font-bold text-slate-800">{done === 'sent' ? `${label[0].toUpperCase() + label.slice(1)} sent` : 'Ready to send'}</div>
-            <div className="text-[12px] text-slate-400">{done === 'sent' ? `Emailed to ${to}.` : 'Email is not configured (no RESEND_API_KEY) — wire it to deliver.'}</div>
+            <div className="text-sm font-semibold text-primary">{done === 'sent' ? `${label[0].toUpperCase() + label.slice(1)} sent` : 'Ready to send'}</div>
+            <div className="text-[12px] text-tertiary">{done === 'sent' ? `Emailed to ${to}.` : 'Email is not configured (no RESEND_API_KEY) — wire it to deliver.'}</div>
           </div>
         ) : (
           <>
             <div className="p-4 space-y-3">
               <label className="block">
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">Recipient email <span className="text-rose-500">*</span></span>
+                <span className="block text-[12px] font-semibold text-secondary mb-1">Recipient email <span className="text-rose-500">*</span></span>
                 <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="client@company.com"
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </label>
               <label className="block">
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">Message <span className="text-slate-400 font-normal">(optional)</span></span>
+                <span className="block text-[12px] font-semibold text-secondary mb-1">Message <span className="text-tertiary font-normal">(optional)</span></span>
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} placeholder={`Hi — please find the ${label} attached…`}
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </label>
-              <p className="text-[11px] text-slate-400">A branded {label} summary with a link to view &amp; download the PDF will be emailed. Sending marks it as “sent”.</p>
+              <p className="text-[11px] text-tertiary">A branded {label} summary with a link to view &amp; download the PDF will be emailed. Sending marks it as “sent”.</p>
               {error && <p className="text-[12px] text-rose-600">{error}</p>}
             </div>
-            <div className="shrink-0 flex items-center gap-2 p-3 border-t border-slate-200/70">
-              <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-              <button onClick={send} disabled={sending} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-50">
+            <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">
+              <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+              <button onClick={send} disabled={sending} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                 {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send
               </button>
             </div>

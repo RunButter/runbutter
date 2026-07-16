@@ -180,25 +180,25 @@ export default function EditPositionPage({ params }: { params: { id: string } })
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-primary-600 animate-spin" />
+            <div className="min-h-screen bg-surface-sunken flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-accent animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b">
+        <div className="min-h-screen bg-surface-sunken">
+            <header className="bg-surface border-b">
                 <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
-                    <Link href="/dashboard/positions" className="p-2 hover:bg-gray-100 rounded-lg">
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    <Link href="/dashboard/positions" className="p-2 hover:bg-surface-hover rounded-lg">
+                        <ArrowLeft className="w-5 h-5 text-secondary" />
                     </Link>
-                    <h1 className="text-xl font-bold text-gray-800">Edit Position</h1>
+                    <h1 className="text-xl font-semibold text-primary">Edit Position</h1>
                 </div>
             </header>
 
             <main className="max-w-3xl mx-auto px-6 py-8">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div className="bg-surface rounded-2xl shadow-sm border border-subtle p-8">
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                             {error}
@@ -208,7 +208,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+                                <label className="block text-sm font-medium text-secondary mb-2">Job Title</label>
                                 <input
                                     type="text"
                                     className="input-field"
@@ -220,9 +220,9 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                <label className="block text-sm font-medium text-secondary mb-2">Department</label>
                                 <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                                     <input
                                         type="text"
                                         className="input-field pl-10"
@@ -234,9 +234,9 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                <label className="block text-sm font-medium text-secondary mb-2">Location</label>
                                 <div className="relative">
-                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                                     <input
                                         type="text"
                                         className="input-field pl-10"
@@ -248,7 +248,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Employment Type</label>
+                                <label className="block text-sm font-medium text-secondary mb-2">Employment Type</label>
                                 <select
                                     className="input-field"
                                     value={formData.employment_type}
@@ -263,7 +263,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <label className="block text-sm font-medium text-secondary mb-2">Description</label>
                             <textarea
                                 className="input-field min-h-[120px]"
                                 placeholder="Describe the role, responsibilities, and requirements..."
@@ -273,7 +273,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                         </div>
 
                         <div className="pt-6 border-t font-sans">
-                            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">
+                            <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-tertiary mb-4">
                                 [ SELECT NEURO-PROFILE ]
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -289,18 +289,18 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                         onClick={() => setFormData({ ...formData, neuro_profile: profile.id })}
                                         className={`p-4 rounded-xl border-2 text-left transition-all duration-200 relative group ${formData.neuro_profile === profile.id
                                             ? `${profile.color} shadow-md scale-[1.02]`
-                                            : 'border-gray-100 hover:border-gray-200 bg-white'
+                                            : 'border-subtle hover:border-subtle bg-surface'
                                             }`}
                                     >
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-sm font-black tracking-wider">{profile.label}</span>
+                                            <span className="text-sm font-semibold tracking-wider">{profile.label}</span>
                                             {formData.neuro_profile === profile.id && (
                                                 <div className="w-4 h-4 rounded-full bg-current flex items-center justify-center p-0.5">
-                                                    <div className="w-full h-full rounded-full bg-white" />
+                                                    <div className="w-full h-full rounded-full bg-surface" />
                                                 </div>
                                             )}
                                         </div>
-                                        <p className={`text-[10px] font-bold uppercase tracking-widest ${formData.neuro_profile === profile.id ? 'opacity-80' : 'text-gray-400 opacity-60'}`}>
+                                        <p className={`text-[10px] font-semibold uppercase tracking-widest ${formData.neuro_profile === profile.id ? 'opacity-80' : 'text-tertiary opacity-60'}`}>
                                             {profile.focus}
                                         </p>
                                     </button>
@@ -309,27 +309,27 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                         </div>
 
                         <div className="pt-6 border-t">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <Target className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-accent" />
                                 Custom Screening Questions
                             </h3>
-                            <p className="text-sm text-gray-500 mb-6">
+                            <p className="text-sm text-secondary mb-6">
                                 Update the questions to filter candidates for this role.
                             </p>
 
                             <div className="space-y-6">
                                 {screeningQuestions.map((q, qIndex) => (
-                                    <div key={q.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200 relative">
+                                    <div key={q.id} className="p-4 bg-surface-sunken rounded-xl border border-subtle relative">
                                         <button
                                             type="button"
                                             onClick={() => removeMCQ(qIndex)}
-                                            className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                                            className="absolute top-4 right-4 text-tertiary hover:text-red-500"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Question {qIndex + 1} (Multiple Choice)</label>
+                                                <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Question {qIndex + 1} (Multiple Choice)</label>
                                                 <input
                                                     type="text"
                                                     className="input-field"
@@ -343,7 +343,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                                     <div key={oIndex} className="relative">
                                                         <input
                                                             type="text"
-                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-green-500 bg-green-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-green-500 bg-green-50' : 'border-subtle focus:border-indigo-500'}`}
                                                             placeholder={`Option ${oIndex + 1}`}
                                                             value={opt}
                                                             onChange={e => updateMCQOption(qIndex, oIndex, e.target.value)}
@@ -351,7 +351,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                                         <button
                                                             type="button"
                                                             onClick={() => updateMCQ(qIndex, 'correctIndex', oIndex)}
-                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-green-600 bg-white shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-green-600 bg-surface shadow-sm' : 'text-tertiary hover:text-secondary'}`}
                                                             title="Mark as expected answer"
                                                         >
                                                             <CheckCircle className="w-4 h-4" />
@@ -367,18 +367,18 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                     <button
                                         type="button"
                                         onClick={addMCQ}
-                                        className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition flex items-center justify-center gap-2"
+                                        className="w-full py-3 border-2 border-dashed border-subtle rounded-xl text-sm font-medium text-secondary hover:border-indigo-300 hover:text-accent transition flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Add Multi-Choice Question
                                     </button>
                                 )}
 
-                                <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                                    <label className="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Final Open-Ended Question</label>
+                                <div className="p-4 bg-accent/10 rounded-xl border border-accent/20">
+                                    <label className="block text-xs font-semibold text-accent uppercase tracking-wider mb-2">Final Open-Ended Question</label>
                                     <input
                                         type="text"
-                                        className="input-field bg-white"
+                                        className="input-field bg-surface"
                                         placeholder="e.g. Why are you interested in this role?"
                                         value={openEndedQuestion.text}
                                         onChange={e => setOpenEndedQuestion({ ...openEndedQuestion, text: e.target.value })}

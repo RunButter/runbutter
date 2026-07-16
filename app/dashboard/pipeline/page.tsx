@@ -75,28 +75,28 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-white p-3 rounded-lg ring-1 ring-slate-200/60 mb-2 transition-all hover:ring-slate-300 hover:shadow-sm ${isOverlay ? 'shadow-2xl ring-primary-300 rotate-2' : ''}`}
+            className={`group bg-surface p-3 rounded-lg ring-1 ring-subtle mb-2 transition-all hover:ring-strong hover:shadow-sm ${isOverlay ? 'shadow-2xl ring-primary-300 rotate-2' : ''}`}
         >
             <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0 flex-1">
-                    <h4 className="text-[13px] font-semibold text-slate-800 group-hover:text-primary-700 transition-colors truncate">{candidate.full_name}</h4>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide truncate">{candidate.position_title}</p>
+                    <h4 className="text-[13px] font-semibold text-primary group-hover:text-accent transition-colors truncate">{candidate.full_name}</h4>
+                    <p className="text-[10px] text-tertiary font-semibold uppercase tracking-wide truncate">{candidate.position_title}</p>
                 </div>
-                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 -mr-1 text-slate-300 hover:text-slate-500 transition-colors">
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 -mr-1 text-tertiary hover:text-secondary transition-colors">
                     <GripVertical className="w-4 h-4" />
                 </div>
             </div>
 
             <div className="flex items-center justify-between mt-3">
                 {candidate.assessment_results?.[0]?.overall_score ? (
-                    <div className="w-7 h-7 rounded-full bg-indigo-50 ring-1 ring-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700 tabular-nums" title="Match score">
+                    <div className="w-7 h-7 rounded-full bg-accent/10 ring-1 ring-accent/20 flex items-center justify-center text-[10px] font-semibold text-accent tabular-nums" title="Match score">
                         {candidate.assessment_results[0].overall_score}
                     </div>
                 ) : (
-                    <div className="w-7 h-7 rounded-full bg-slate-50 ring-1 ring-slate-200/60 flex items-center justify-center text-[10px] font-bold text-slate-300">?</div>
+                    <div className="w-7 h-7 rounded-full bg-surface-sunken ring-1 ring-subtle flex items-center justify-center text-[10px] font-semibold text-tertiary">?</div>
                 )}
                 <Link href={`/dashboard/candidates/${candidate.id}`} onClick={(e) => e.stopPropagation()}
-                    className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-slate-100 rounded-md transition-colors">
+                    className="p-1.5 text-tertiary hover:text-accent hover:bg-surface-hover rounded-md transition-colors">
                     <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
             </div>
@@ -117,18 +117,18 @@ function KanbanColumn({ id, title, candidates }: { id: string, title: string, ca
     return (
         <div className="w-72 flex-shrink-0 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-2 px-1">
-                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{title}</h3>
-                <span className="bg-slate-200/70 text-slate-500 text-[10px] font-bold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
+                <h3 className="text-[11px] font-semibold text-secondary uppercase tracking-wider">{title}</h3>
+                <span className="bg-slate-200/70 text-secondary text-[10px] font-semibold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
             </div>
 
-            <div ref={setNodeRef} className="flex-1 bg-slate-50 ring-1 ring-slate-200/50 rounded-xl p-2 overflow-y-auto no-scrollbar transition-colors">
+            <div ref={setNodeRef} className="flex-1 bg-surface-sunken ring-1 ring-subtle rounded-xl p-2 overflow-y-auto no-scrollbar transition-colors">
                 <SortableContext items={candidates.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {candidates.map(c => (
                         <CandidateCard key={c.id} candidate={c} />
                     ))}
                 </SortableContext>
                 {candidates.length === 0 && (
-                    <div className="h-20 ring-1 ring-dashed ring-slate-200 rounded-lg flex items-center justify-center text-[11px] text-slate-300 font-medium">Empty</div>
+                    <div className="h-20 ring-1 ring-dashed ring-subtle rounded-lg flex items-center justify-center text-[11px] text-tertiary font-medium">Empty</div>
                 )}
             </div>
         </div>
@@ -238,7 +238,7 @@ export default function PipelinePage() {
         }
     };
 
-    if (!ready || loading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-slate-300" /></div>;
+    if (!ready || loading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-tertiary" /></div>;
 
     return (
         <div className="flex flex-col h-full">

@@ -128,16 +128,16 @@ export default function SourcesPage() {
     const maxApplicants = Math.max(1, ...attribution.map((a) => Number(a.applicants || 0)));
 
     if (!ready || loading) {
-        return <div className="h-full flex items-center justify-center"><Loader2 className="w-10 h-10 text-primary-600 animate-spin" /></div>;
+        return <div className="h-full flex items-center justify-center"><Loader2 className="w-10 h-10 text-accent animate-spin" /></div>;
     }
 
     return (
         <div className="p-5 lg:p-8 max-w-[1200px] mx-auto">
             <div className="mb-6">
-                <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                    <Radio className="w-5 h-5 text-primary-600" /> Source Tracking
+                <h1 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
+                    <Radio className="w-5 h-5 text-accent" /> Source Tracking
                 </h1>
-                <p className="text-sm text-gray-500">Generate tracking links per job board and see what actually converts.</p>
+                <p className="text-sm text-secondary">Generate tracking links per job board and see what actually converts.</p>
             </div>
 
             {/* KPI row */}
@@ -151,12 +151,12 @@ export default function SourcesPage() {
             <div className="grid lg:grid-cols-5 gap-6">
                 {/* Generator */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 p-5 sticky top-4">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Plus className="w-4 h-4 text-primary-600" /> New tracking link
+                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5 sticky top-4">
+                        <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
+                            <Plus className="w-4 h-4 text-accent" /> New tracking link
                         </h3>
                         {positions.length === 0 ? (
-                            <p className="text-sm text-gray-500">Create a position first to generate links.</p>
+                            <p className="text-sm text-secondary">Create a position first to generate links.</p>
                         ) : (
                             <div className="space-y-3">
                                 <Field label="Position">
@@ -188,21 +188,21 @@ export default function SourcesPage() {
                 {/* Links + breakdown */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Source breakdown */}
-                    <div className="bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 p-5">
-                        <h3 className="font-bold text-gray-900 mb-4">Where candidates come from</h3>
+                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5">
+                        <h3 className="font-semibold text-primary mb-4">Where candidates come from</h3>
                         {attribution.length === 0 ? (
-                            <p className="text-sm text-gray-400">No applicants yet.</p>
+                            <p className="text-sm text-tertiary">No applicants yet.</p>
                         ) : (
                             <div className="space-y-3">
                                 {attribution.map((a) => (
                                     <div key={a.source}>
                                         <div className="flex justify-between items-center text-xs mb-1">
-                                            <span className="font-semibold text-gray-700">{titleize(a.source)}</span>
-                                            <span className="text-gray-400 font-mono">
+                                            <span className="font-semibold text-secondary">{titleize(a.source)}</span>
+                                            <span className="text-tertiary font-mono">
                                                 {a.applicants} appl · {a.hired} hired{a.avg_match != null ? ` · ${a.avg_match}% avg` : ''}
                                             </span>
                                         </div>
-                                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div className="h-2 bg-surface-hover rounded-full overflow-hidden">
                                             <div className="h-full bg-primary-500 rounded-full transition-all duration-500"
                                                 style={{ width: `${(Number(a.applicants) / maxApplicants) * 100}%` }} />
                                         </div>
@@ -213,31 +213,31 @@ export default function SourcesPage() {
                     </div>
 
                     {/* Links list */}
-                    <div className="bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 p-5">
-                        <h3 className="font-bold text-gray-900 mb-4">Your tracking links</h3>
+                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5">
+                        <h3 className="font-semibold text-primary mb-4">Your tracking links</h3>
                         {links.length === 0 ? (
-                            <p className="text-sm text-gray-400">No links yet. Generate one on the left.</p>
+                            <p className="text-sm text-tertiary">No links yet. Generate one on the left.</p>
                         ) : (
                             <div className="space-y-2">
                                 {links.map((l) => (
-                                    <div key={l.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
+                                    <div key={l.id} className="flex items-center gap-3 p-3 rounded-xl border border-subtle hover:bg-surface-sunken transition">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-100">{titleize(l.source || 'other')}</span>
-                                                <span className="text-sm font-semibold text-gray-800 truncate">{l.label || l.position_title || 'Untitled'}</span>
+                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-primary-100">{titleize(l.source || 'other')}</span>
+                                                <span className="text-sm font-semibold text-primary truncate">{l.label || l.position_title || 'Untitled'}</span>
                                             </div>
-                                            <div className="text-[11px] text-gray-400 truncate font-mono mt-0.5">{buildUrl(l)}</div>
+                                            <div className="text-[11px] text-tertiary truncate font-mono mt-0.5">{buildUrl(l)}</div>
                                         </div>
                                         <div className="text-center shrink-0 px-2">
-                                            <div className="text-sm font-black text-gray-800">{l.click_count || 0}</div>
-                                            <div className="text-[9px] uppercase tracking-widest text-gray-300 font-black">clicks</div>
+                                            <div className="text-sm font-semibold text-primary">{l.click_count || 0}</div>
+                                            <div className="text-[9px] uppercase tracking-widest text-tertiary font-semibold">clicks</div>
                                         </div>
                                         <div className="text-center shrink-0 px-2">
-                                            <div className="text-sm font-black text-gray-800">{l.applicant_count || 0}</div>
-                                            <div className="text-[9px] uppercase tracking-widest text-gray-300 font-black">applied</div>
+                                            <div className="text-sm font-semibold text-primary">{l.applicant_count || 0}</div>
+                                            <div className="text-[9px] uppercase tracking-widest text-tertiary font-semibold">applied</div>
                                         </div>
                                         <button onClick={() => copy(l)}
-                                            className="shrink-0 p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-primary-600 hover:border-primary-200 transition">
+                                            className="shrink-0 p-2 rounded-lg border border-subtle text-secondary hover:text-accent hover:border-primary-200 transition">
                                             {copied === l.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                                         </button>
                                     </div>
@@ -267,7 +267,7 @@ export default function SourcesPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <label className="block">
-            <span className="block text-xs font-semibold text-gray-600 mb-1">{label}</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">{label}</span>
             {children}
         </label>
     );
@@ -275,11 +275,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 ring-1 ring-slate-200/40 px-4 py-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+        <div className="bg-surface rounded-xl border border-subtle ring-1 ring-subtle px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
-            <div className="text-xl font-black text-gray-900">{value}</div>
+            <div className="text-xl font-semibold text-primary">{value}</div>
         </div>
     );
 }

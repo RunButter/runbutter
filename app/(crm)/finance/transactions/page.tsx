@@ -29,7 +29,7 @@ const fmtDate = (s?: string | null) => {
 const STATUS_PILL: Record<string, string> = {
   posted: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
   pending: 'bg-amber-50 text-amber-700 ring-amber-200/60',
-  excluded: 'bg-slate-100 text-slate-400 ring-slate-200/60',
+  excluded: 'bg-surface-hover text-tertiary ring-subtle',
 };
 
 export default function TransactionsPage() {
@@ -116,46 +116,46 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-slate-200/70">
-        <h1 className="text-sm font-bold text-slate-800">Transactions</h1>
-        <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+        <h1 className="text-sm font-semibold text-primary">Transactions</h1>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
-              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
           </div>
-          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-100 ring-1 ring-slate-200/60">
+          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {PERIODS.map((p) => (
               <button key={p.label} onClick={() => setMonths(p.months)}
-                className={`h-6 px-2 rounded-md text-[11px] font-bold transition-colors ${months === p.months ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{p.label}</button>
+                className={`h-6 px-2 rounded-md text-[11px] font-semibold transition-colors ${months === p.months ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{p.label}</button>
             ))}
           </div>
           <button onClick={() => exportCsv(filtered)} disabled={filtered.length === 0}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40"><Download className="w-3.5 h-3.5" /> Export</button>
+            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40"><Download className="w-3.5 h-3.5" /> Export</button>
           <button onClick={() => setImporting(true)} disabled={!canEdit}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-40" title={!canEdit ? 'Sign in to import' : ''}><Upload className="w-3.5 h-3.5" /> Import</button>
+            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40" title={!canEdit ? 'Sign in to import' : ''}><Upload className="w-3.5 h-3.5" /> Import</button>
           <button onClick={() => setForm({ initial: { txn_date: new Date().toISOString().slice(0, 10), status: 'posted', method: 'transfer' } })} disabled={!canEdit}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</button>
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</button>
         </div>
       </header>
 
       {/* Account tabs */}
-      <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-slate-200/70 overflow-x-auto">
+      <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-subtle overflow-x-auto">
         <button onClick={() => setAccount(null)}
-          className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === null ? 'bg-white ring-slate-300 shadow-sm' : 'ring-slate-200/60 hover:bg-slate-50'}`}>
-          <div className="text-[12px] font-bold text-slate-800 leading-tight">All accounts</div>
-          <div className="text-[11px] tabular-nums text-slate-500 leading-tight">{money(totalCash)}</div>
+          className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === null ? 'bg-surface ring-strong shadow-sm' : 'ring-subtle hover:bg-surface-sunken'}`}>
+          <div className="text-[12px] font-semibold text-primary leading-tight">All accounts</div>
+          <div className="text-[11px] tabular-nums text-secondary leading-tight">{money(totalCash)}</div>
         </button>
         {accounts.map((a) => (
           <button key={a.id} onClick={() => setAccount(a.id)}
-            className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === a.id ? 'bg-white ring-slate-300 shadow-sm' : 'ring-slate-200/60 hover:bg-slate-50'}`}>
-            <div className="text-[12px] font-bold text-slate-800 leading-tight flex items-center gap-1.5"><Landmark className="w-3 h-3 text-slate-400" /> {a.name}</div>
-            <div className={`text-[11px] tabular-nums leading-tight ${a.balance < 0 ? 'text-rose-600' : 'text-slate-500'}`}>{money(a.balance)}</div>
+            className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === a.id ? 'bg-surface ring-strong shadow-sm' : 'ring-subtle hover:bg-surface-sunken'}`}>
+            <div className="text-[12px] font-semibold text-primary leading-tight flex items-center gap-1.5"><Landmark className="w-3 h-3 text-tertiary" /> {a.name}</div>
+            <div className={`text-[11px] tabular-nums leading-tight ${a.balance < 0 ? 'text-rose-600' : 'text-secondary'}`}>{money(a.balance)}</div>
           </button>
         ))}
         <button onClick={() => setAddingAccount(true)} disabled={!canEdit}
-          className="h-9 shrink-0 px-2.5 rounded-lg text-[12px] font-semibold text-slate-500 ring-1 ring-dashed ring-slate-300 hover:bg-slate-50 disabled:opacity-40 inline-flex items-center gap-1.5" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> Account</button>
+          className="h-9 shrink-0 px-2.5 rounded-lg text-[12px] font-semibold text-secondary ring-1 ring-dashed ring-strong hover:bg-surface-sunken disabled:opacity-40 inline-flex items-center gap-1.5" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> Account</button>
       </div>
 
       {/* Summary cards */}
@@ -164,14 +164,14 @@ export default function TransactionsPage() {
           { label: 'Money in', value: money(summary.inflow), tone: 'text-emerald-600', icon: ArrowUpRight },
           { label: 'Money out', value: money(summary.outflow), tone: 'text-rose-600', icon: ArrowDownRight },
           { label: 'Net', value: money(summary.net), tone: summary.net >= 0 ? 'text-emerald-600' : 'text-rose-600', icon: ArrowLeftRightGlyph },
-          { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-amber-600' : 'text-slate-400', icon: Link2 },
+          { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-amber-600' : 'text-tertiary', icon: Link2 },
         ].map((c) => (
-          <div key={c.label} className="rounded-xl bg-white ring-1 ring-slate-200/60 p-3.5">
+          <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{c.label}</span>
-              <c.icon className="w-4 h-4 text-slate-300" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
+              <c.icon className="w-4 h-4 text-tertiary" />
             </div>
-            <div className={`mt-1 text-xl font-black tabular-nums ${c.tone}`}>{c.value}</div>
+            <div className={`mt-1 text-xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
           </div>
         ))}
       </div>
@@ -179,17 +179,17 @@ export default function TransactionsPage() {
       {/* Ledger */}
       <div className="flex-1 overflow-auto px-4 pb-6">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
-          <div className="rounded-xl bg-white ring-1 ring-slate-200/60 overflow-hidden">
+          <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
             <table className="w-full text-[13px] border-separate border-spacing-0">
               <thead>
                 <tr>
-                  <th className="w-9 px-3 h-9 bg-slate-50/60 border-b border-slate-200/70">
-                    <input type="checkbox" checked={allShownSelected} onChange={toggleAll} className="rounded border-slate-300 accent-primary-600 cursor-pointer" />
+                  <th className="w-9 px-3 h-9 bg-surface-sunken/60 border-b border-subtle">
+                    <input type="checkbox" checked={allShownSelected} onChange={toggleAll} className="rounded border-subtle accent-accent cursor-pointer" />
                   </th>
                   {['Date', 'Description', 'Category', 'Account', 'Status', 'Reconciled', 'Amount'].map((h, i) => (
-                    <th key={h} className={`px-3 h-9 bg-slate-50/60 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-200/70 ${i === 6 ? 'text-right' : 'text-left'}`}>{h}</th>
+                    <th key={h} className={`px-3 h-9 bg-surface-sunken/60 text-[11px] font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${i === 6 ? 'text-right' : 'text-left'}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -199,33 +199,33 @@ export default function TransactionsPage() {
                   const excluded = r.status === 'excluded';
                   return (
                     <tr key={r.id} onClick={() => setDrawer(r)}
-                      className={`group cursor-pointer transition-colors ${on ? 'bg-primary-50/40' : 'hover:bg-slate-50/70'} ${excluded ? 'opacity-50' : ''}`}>
-                      <td className="px-3 h-[44px] border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
+                      className={`group cursor-pointer transition-colors ${on ? 'bg-accent/10' : 'hover:bg-surface-sunken/70'} ${excluded ? 'opacity-50' : ''}`}>
+                      <td className="px-3 h-[44px] border-b border-subtle" onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox" checked={on} onChange={() => toggle(r.id)}
-                          className={`rounded border-slate-300 accent-primary-600 cursor-pointer transition-opacity ${on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+                          className={`rounded border-subtle accent-accent cursor-pointer transition-opacity ${on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                       </td>
-                      <td className="px-3 h-[44px] border-b border-slate-100 text-slate-500 tabular-nums whitespace-nowrap">{fmtDate(r.txn_date)}</td>
-                      <td className="px-3 h-[44px] border-b border-slate-100 font-semibold text-slate-800 max-w-[280px] truncate">{r.description || '—'}</td>
-                      <td className="px-3 h-[44px] border-b border-slate-100">
+                      <td className="px-3 h-[44px] border-b border-subtle text-secondary tabular-nums whitespace-nowrap">{fmtDate(r.txn_date)}</td>
+                      <td className="px-3 h-[44px] border-b border-subtle font-semibold text-primary max-w-[280px] truncate">{r.description || '—'}</td>
+                      <td className="px-3 h-[44px] border-b border-subtle">
                         {r.category
-                          ? <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 bg-slate-50 text-slate-600 ring-slate-200/60 capitalize">{r.category}</span>
-                          : <span className="text-[12px] text-slate-300">Uncategorized</span>}
+                          ? <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 bg-surface-sunken text-secondary ring-subtle capitalize">{r.category}</span>
+                          : <span className="text-[12px] text-tertiary">Uncategorized</span>}
                       </td>
-                      <td className="px-3 h-[44px] border-b border-slate-100 text-slate-500 truncate max-w-[140px]">{r.account || '—'}</td>
-                      <td className="px-3 h-[44px] border-b border-slate-100">
+                      <td className="px-3 h-[44px] border-b border-subtle text-secondary truncate max-w-[140px]">{r.account || '—'}</td>
+                      <td className="px-3 h-[44px] border-b border-subtle">
                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 capitalize ${STATUS_PILL[r.status] || STATUS_PILL.posted}`}>{r.status}</span>
                       </td>
-                      <td className="px-3 h-[44px] border-b border-slate-100">
+                      <td className="px-3 h-[44px] border-b border-subtle">
                         {r.match
-                          ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary-700"><Link2 className="w-3 h-3" /> {r.match}</span>
-                          : <span className="text-[11px] text-slate-300">—</span>}
+                          ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent"><Link2 className="w-3 h-3" /> {r.match}</span>
+                          : <span className="text-[11px] text-tertiary">—</span>}
                       </td>
-                      <td className={`px-3 h-[44px] border-b border-slate-100 text-right tabular-nums font-bold ${r.amount < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{money(r.amount)}</td>
+                      <td className={`px-3 h-[44px] border-b border-subtle text-right tabular-nums font-semibold ${r.amount < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{money(r.amount)}</td>
                     </tr>
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} className="px-3 py-14 text-center text-slate-400">No transactions in this period. Import a bank statement or add one.</td></tr>
+                  <tr><td colSpan={8} className="px-3 py-14 text-center text-tertiary">No transactions in this period. Import a bank statement or add one.</td></tr>
                 )}
               </tbody>
             </table>
@@ -289,30 +289,30 @@ function BulkBar({ count, canEdit, categorySuggestions, onClear, onCategorize, o
   const [cat, setCat] = useState('');
   const [showCat, setShowCat] = useState(false);
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 bg-slate-900 text-white rounded-xl shadow-2xl shadow-slate-900/30 pl-3 pr-1.5 py-1.5 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-150">
-      <span className="font-semibold tabular-nums">{count} selected</span>
-      <button onClick={onClear} className="text-white/50 hover:text-white text-[12px] font-medium ml-1 mr-1">clear</button>
-      <span className="w-px h-5 bg-white/15" />
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 bg-surface border border-strong text-primary rounded-lg shadow-popover pl-3 pr-1.5 py-1.5 text-[13px] animate-in fade-in slide-in-from-bottom-2 duration-150">
+      <span className="font-medium tabular-nums">{count} selected</span>
+      <button onClick={onClear} className="text-tertiary hover:text-primary text-[12px] font-medium ml-1 mr-1">clear</button>
+      <span className="w-px h-5 bg-subtle" />
       {canEdit && (
         <div className="relative">
-          <button onClick={() => setShowCat((s) => !s)} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold hover:bg-white/10"><Tag className="w-3.5 h-3.5" /> Categorize</button>
+          <button onClick={() => setShowCat((s) => !s)} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-medium text-secondary hover:bg-surface-hover hover:text-primary"><Tag className="w-3.5 h-3.5" /> Categorize</button>
           {showCat && (
-            <div className="absolute bottom-9 left-0 w-56 bg-white text-slate-800 rounded-lg ring-1 ring-slate-200 shadow-xl p-2" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute bottom-9 left-0 w-56 bg-surface text-primary rounded-lg border border-subtle shadow-popover p-2" onClick={(e) => e.stopPropagation()}>
               <input autoFocus list="bulk-cats" value={cat} onChange={(e) => setCat(e.target.value)} placeholder="Category…"
                 onKeyDown={(e) => { if (e.key === 'Enter' && cat.trim()) { onCategorize(cat.trim()); setShowCat(false); setCat(''); } }}
-                className="w-full h-8 px-2 text-[13px] rounded-md ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                className="w-full h-8 px-2 text-[13px] rounded-md border border-subtle bg-surface text-primary placeholder:text-tertiary focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none" />
               <datalist id="bulk-cats">{categorySuggestions.map((c) => <option key={c} value={c} />)}</datalist>
               <button onClick={() => { if (cat.trim()) { onCategorize(cat.trim()); setShowCat(false); setCat(''); } }}
-                className="mt-1.5 w-full h-7 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700">Apply</button>
+                className="mt-1.5 w-full h-7 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90">Apply</button>
             </div>
           )}
         </div>
       )}
-      {canEdit && <button onClick={() => onStatus('posted')} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold hover:bg-white/10"><Check className="w-3.5 h-3.5" /> Posted</button>}
-      {canEdit && <button onClick={() => onStatus('excluded')} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold hover:bg-white/10"><Ban className="w-3.5 h-3.5" /> Exclude</button>}
-      <button onClick={onExport} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold hover:bg-white/10"><Download className="w-3.5 h-3.5" /> Export</button>
-      {canEdit && <button onClick={onDelete} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-semibold text-rose-300 hover:bg-rose-500/20"><Trash2 className="w-3.5 h-3.5" /> Delete</button>}
-      <button onClick={onClear} aria-label="Close" className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
+      {canEdit && <button onClick={() => onStatus('posted')} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-medium text-secondary hover:bg-surface-hover hover:text-primary"><Check className="w-3.5 h-3.5" /> Posted</button>}
+      {canEdit && <button onClick={() => onStatus('excluded')} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-medium text-secondary hover:bg-surface-hover hover:text-primary"><Ban className="w-3.5 h-3.5" /> Exclude</button>}
+      <button onClick={onExport} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-medium text-secondary hover:bg-surface-hover hover:text-primary"><Download className="w-3.5 h-3.5" /> Export</button>
+      {canEdit && <button onClick={onDelete} className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md font-medium text-danger hover:bg-danger/10"><Trash2 className="w-3.5 h-3.5" /> Delete</button>}
+      <button onClick={onClear} aria-label="Close" className="h-7 w-7 inline-flex items-center justify-center rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
     </div>
   );
 }
@@ -360,36 +360,36 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
 
   const out = txn.amount < 0;
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-slate-900/30 backdrop-blur-[1px]" onClick={onClose}>
-      <div className="w-full max-w-sm h-full bg-white shadow-2xl ring-1 ring-slate-200/70 flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
-          <h2 className="text-sm font-bold text-slate-800">Transaction</h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-[60] flex justify-end bg-black/40" onClick={onClose}>
+      <div className="w-full max-w-sm h-full bg-surface shadow-2xl ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
+          <h2 className="text-sm font-semibold text-primary">Transaction</h2>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           <div>
-            <div className="text-[15px] font-bold text-slate-800">{txn.description || '—'}</div>
-            <div className={`text-2xl font-black tabular-nums ${out ? 'text-rose-600' : 'text-emerald-600'}`}>{money(txn.amount)}</div>
-            <div className="text-[12px] text-slate-400 mt-0.5">{fmtDate(txn.txn_date)} · {txn.account || 'No account'} · {txn.method.replace(/_/g, ' ')}</div>
+            <div className="text-[15px] font-semibold text-primary">{txn.description || '—'}</div>
+            <div className={`text-2xl font-semibold tabular-nums ${out ? 'text-rose-600' : 'text-emerald-600'}`}>{money(txn.amount)}</div>
+            <div className="text-[12px] text-tertiary mt-0.5">{fmtDate(txn.txn_date)} · {txn.account || 'No account'} · {txn.method.replace(/_/g, ' ')}</div>
           </div>
 
           {canEdit ? (
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">Category</span>
+                <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
                 <input list="drawer-cats" value={cat} onChange={(e) => setCat(e.target.value)} placeholder="Uncategorized"
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
                 <datalist id="drawer-cats">{categorySuggestions.map((c) => <option key={c} value={c} />)}</datalist>
               </label>
               <label className="block">
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">Status</span>
+                <span className="block text-[12px] font-semibold text-secondary mb-1">Status</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none capitalize">
+                  className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none capitalize">
                   {['posted', 'pending', 'excluded'].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </label>
-              <button onClick={saveEdits} disabled={busy === 'save'} className="col-span-2 h-8 rounded-md text-[13px] font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
+              <button onClick={saveEdits} disabled={busy === 'save'} className="col-span-2 h-8 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
                 {busy === 'save' && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save changes
               </button>
             </div>
@@ -399,31 +399,31 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
 
           {/* Reconciliation */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold uppercase tracking-wider text-tertiary">
               <Sparkles className="w-3.5 h-3.5" /> Reconciliation
             </div>
             {txn.match ? (
-              <div className="rounded-lg ring-1 ring-primary-200/60 bg-primary-50/60 p-3">
-                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-primary-700"><Link2 className="w-3.5 h-3.5" /> {txn.match}</div>
-                <p className="text-[12px] text-slate-500 mt-1">Linked and marked paid.</p>
-                {canEdit && <button onClick={unmatch} disabled={busy === 'unmatch'} className="mt-2 h-7 px-2.5 rounded-md text-[12px] font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-white inline-flex items-center gap-1.5 disabled:opacity-50">{busy === 'unmatch' && <Loader2 className="w-3 h-3 animate-spin" />} Unmatch</button>}
+              <div className="rounded-lg ring-1 ring-primary-200/60 bg-accent/10 p-3">
+                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-accent"><Link2 className="w-3.5 h-3.5" /> {txn.match}</div>
+                <p className="text-[12px] text-secondary mt-1">Linked and marked paid.</p>
+                {canEdit && <button onClick={unmatch} disabled={busy === 'unmatch'} className="mt-2 h-7 px-2.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface inline-flex items-center gap-1.5 disabled:opacity-50">{busy === 'unmatch' && <Loader2 className="w-3 h-3 animate-spin" />} Unmatch</button>}
               </div>
             ) : suggestions === null ? (
-              <div className="h-16 flex items-center justify-center text-slate-300"><Loader2 className="w-4 h-4 animate-spin" /></div>
+              <div className="h-16 flex items-center justify-center text-tertiary"><Loader2 className="w-4 h-4 animate-spin" /></div>
             ) : suggestions.length === 0 ? (
-              <p className="text-[12px] text-slate-400">{canEdit ? `No open ${out ? 'expenses/bills' : 'invoices'} match this amount.` : 'Sign in to see suggested matches.'}</p>
+              <p className="text-[12px] text-tertiary">{canEdit ? `No open ${out ? 'expenses/bills' : 'invoices'} match this amount.` : 'Sign in to see suggested matches.'}</p>
             ) : (
               <div className="space-y-1.5">
-                <p className="text-[12px] text-slate-500">Suggested {out ? 'bills/expenses' : 'invoices'} — matching marks the document paid.</p>
+                <p className="text-[12px] text-secondary">Suggested {out ? 'bills/expenses' : 'invoices'} — matching marks the document paid.</p>
                 {suggestions.map((s) => (
-                  <div key={`${s.kind}-${s.id}`} className="flex items-center gap-2 rounded-lg ring-1 ring-slate-200/70 p-2.5 hover:ring-slate-300">
+                  <div key={`${s.kind}-${s.id}`} className="flex items-center gap-2 rounded-lg ring-1 ring-subtle p-2.5 hover:ring-strong">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-slate-800 truncate">{s.label}</div>
-                      <div className="text-[11px] text-slate-400 tabular-nums">${Number(s.amount).toLocaleString()} · {fmtDate(s.date)} · {s.status}</div>
+                      <div className="text-[13px] font-semibold text-primary truncate">{s.label}</div>
+                      <div className="text-[11px] text-tertiary tabular-nums">${Number(s.amount).toLocaleString()} · {fmtDate(s.date)} · {s.status}</div>
                     </div>
                     {canEdit && (
                       <button onClick={() => doMatch(s.kind, s.id)} disabled={busy === s.id}
-                        className="h-7 px-2.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-50">
+                        className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                         {busy === s.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Match
                       </button>
                     )}
@@ -458,28 +458,28 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-sm bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 flex items-center justify-between px-4 border-b border-slate-200/70">
-          <h2 className="text-sm font-bold text-slate-800">New bank account</h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
+          <h2 className="text-sm font-semibold text-primary">New bank account</h2>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
-          <label className="block"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Name *</span>
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" /></label>
+          <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Name *</span>
+            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Currency</span>
-              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none uppercase" /></label>
-            <label className="block"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Opening balance</span>
-              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" /></label>
+            <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Currency</span>
+              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none uppercase" /></label>
+            <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Opening balance</span>
+              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
           </div>
-          <label className="block"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Institution</span>
-            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" /></label>
+          <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Institution</span>
+            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
           {error && <p className="text-[12px] text-rose-600">{error}</p>}
         </div>
-        <div className="flex items-center justify-end gap-2 p-3 border-t border-slate-200/70">
-          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-          <button onClick={save} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create</button>
+        <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
+          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={save} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create</button>
         </div>
       </div>
     </div>
@@ -550,40 +550,40 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
 
   const sel = (key: string) => (
     <select value={map[key] ?? -1} onChange={(e) => setMap((m) => ({ ...m, [key]: Number(e.target.value) }))}
-      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
+      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
       <option value={-1}>— skip —</option>
       {headers.map((h, i) => <option key={i} value={i}>{h}</option>)}
     </select>
   );
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-xl ring-1 ring-slate-200/70 shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200/70">
-          <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-            {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-slate-400 hover:bg-slate-100"><ArrowLeft className="w-4 h-4" /></button>}
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
+          <h2 className="text-sm font-semibold text-primary flex items-center gap-2">
+            {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
             Import transactions
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
           {step === 'source' && (
             <div className="space-y-4">
-              <label className="block"><span className="block text-[12px] font-semibold text-slate-600 mb-1">Import into account</span>
-                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none">
+              <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Import into account</span>
+                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
                   <option value="">— no account —</option>
                   {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </label>
-              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-slate-300 text-[13px] text-slate-500 cursor-pointer hover:ring-slate-400 hover:bg-slate-50">
+              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-strong text-[13px] text-secondary cursor-pointer hover:ring-slate-400 hover:bg-surface-sunken">
                 <Upload className="w-4 h-4" /> Upload a bank-statement .csv
                 <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => readFile(e.target.files?.[0])} />
               </label>
               <div>
-                <span className="block text-[12px] font-semibold text-slate-600 mb-1">…or paste CSV</span>
+                <span className="block text-[12px] font-semibold text-secondary mb-1">…or paste CSV</span>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="Date,Description,Amount&#10;2026-07-01,Stripe payout,4200&#10;2026-07-02,AWS,-820"
-                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
               {error && <p className="text-[12px] text-rose-600">{error}</p>}
             </div>
@@ -591,18 +591,18 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
 
           {step === 'map' && (
             <div className="space-y-3">
-              <p className="text-[12px] text-slate-500">{rows.length} rows detected. Map your columns:</p>
+              <p className="text-[12px] text-secondary">{rows.length} rows detected. Map your columns:</p>
               {[['txn_date', 'Date'], ['description', 'Description'], ['category', 'Category']].map(([k, label]) => (
-                <div key={k} className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-slate-700">{label}</span>{sel(k)}</div>
+                <div key={k} className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-secondary">{label}</span>{sel(k)}</div>
               ))}
-              <div className="h-px bg-slate-100 my-1" />
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Amount — one signed column, or separate debit/credit</p>
-              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-slate-700">Amount (signed)</span>{sel('amount')}</div>
-              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-slate-700">Money out (debit)</span>{sel('debit')}</div>
-              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-slate-700">Money in (credit)</span>{sel('credit')}</div>
+              <div className="h-px bg-surface-hover my-1" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-tertiary">Amount — one signed column, or separate debit/credit</p>
+              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-secondary">Amount (signed)</span>{sel('amount')}</div>
+              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-secondary">Money out (debit)</span>{sel('debit')}</div>
+              <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-[13px] font-medium text-secondary">Money in (credit)</span>{sel('credit')}</div>
               {map.debit < 0 && map.credit < 0 && (
-                <label className="flex items-center gap-2 text-[12px] text-slate-600 pt-1">
-                  <input type="checkbox" checked={flip} onChange={(e) => setFlip(e.target.checked)} className="rounded border-slate-300 accent-primary-600" />
+                <label className="flex items-center gap-2 text-[12px] text-secondary pt-1">
+                  <input type="checkbox" checked={flip} onChange={(e) => setFlip(e.target.checked)} className="rounded border-subtle accent-accent" />
                   Positive numbers are money OUT (flip the sign)
                 </label>
               )}
@@ -613,21 +613,21 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
           {step === 'done' && (
             <div className="py-8 text-center">
               <Check className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-800">Imported {count} transactions</p>
-              <p className="text-[12px] text-slate-500 mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (bad date/amount).` : 'All rows imported.'}</p>
+              <p className="text-sm font-semibold text-primary">Imported {count} transactions</p>
+              <p className="text-[12px] text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (bad date/amount).` : 'All rows imported.'}</p>
             </div>
           )}
         </div>
 
-        <div className="shrink-0 flex items-center justify-end gap-2 p-3 border-t border-slate-200/70">
+        <div className="shrink-0 flex items-center justify-end gap-2 p-3 border-t border-subtle">
           {step === 'source' && <>
-            <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-            <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40">Continue</button>
+            <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+            <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40">Continue</button>
           </>}
           {step === 'map' && (
-            <button onClick={run} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows</button>
+            <button onClick={run} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows</button>
           )}
-          {step === 'done' && <button onClick={onDone} className="h-8 px-3 rounded-md text-[13px] font-bold text-white bg-primary-600 hover:bg-primary-700">Done</button>}
+          {step === 'done' && <button onClick={onDone} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90">Done</button>}
         </div>
       </div>
     </div>

@@ -154,9 +154,9 @@ export default function ObjectPage() {
           extraActions={isDoc ? (
             <>
               <button onClick={() => setItemsFor(detail.id)} disabled={!privy} title={!privy ? 'Sign in' : ''}
-                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50 disabled:opacity-40 disabled:cursor-not-allowed"><Package className="w-3.5 h-3.5" /> Products</button>
+                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent hover:bg-accent/10 disabled:opacity-40 disabled:cursor-not-allowed"><Package className="w-3.5 h-3.5" /> Products</button>
               <button onClick={() => router.push(`/documents/${detail.id}`)}
-                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-primary-700 hover:bg-primary-50"><FileText className="w-3.5 h-3.5" /> Document</button>
+                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent hover:bg-accent/10"><FileText className="w-3.5 h-3.5" /> Document</button>
             </>
           ) : undefined} />
       )}
