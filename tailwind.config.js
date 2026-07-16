@@ -1,4 +1,10 @@
 /** @type {import('tailwindcss').Config} */
+
+// Semantic tokens -> Tailwind utilities. Components should use THESE
+// (bg-surface, text-secondary, border-subtle, bg-accent) rather than literal
+// palette colors, so a theme change is a token change, not a per-file rewrite.
+const hsl = (v) => `hsl(var(${v}) / <alpha-value>)`;
+
 module.exports = {
   darkMode: 'class',
   content: [
@@ -9,21 +15,61 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['var(--font-geist-sans)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {
+        canvas: hsl('--canvas'),
+        surface: {
+          DEFAULT: hsl('--surface'),
+          hover: hsl('--surface-hover'),
+          sunken: hsl('--surface-sunken'),
+        },
+        accent: {
+          DEFAULT: hsl('--accent'),
+          fg: hsl('--accent-fg'),
+          soft: hsl('--accent-soft'),
+        },
+        success: hsl('--success'),
+        warning: hsl('--warning'),
+        danger: hsl('--danger'),
+
+        // Line colors. Declared as full colors (not just borderColor) so
+        // dividers can use bg-subtle and rules can use border-subtle.
+        subtle: hsl('--border-subtle'),
+        strong: hsl('--border-strong'),
+
+        // Kept so existing `primary-600` call sites keep compiling while pages
+        // migrate onto the accent token. Do not use in new code.
         primary: {
           50: '#f5f7ff', 100: '#ebf0ff', 200: '#d6e0ff', 300: '#b3c5ff',
           400: '#8ca3ff', 500: '#6b82ff', 600: '#4f46e5', 700: '#4338ca',
           800: '#3730a3', 900: '#312e81',
         },
       },
-      boxShadow: {
-        soft: '0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06)',
-        'soft-md': '0 4px 12px rgba(16,24,40,0.06), 0 2px 4px rgba(16,24,40,0.04)',
-        'soft-lg': '0 12px 32px rgba(16,24,40,0.10), 0 4px 8px rgba(16,24,40,0.04)',
+      textColor: {
+        primary: hsl('--text-primary'),
+        secondary: hsl('--text-secondary'),
+        tertiary: hsl('--text-tertiary'),
       },
-      borderRadius: { xl: '0.875rem', '2xl': '1.125rem' },
+      borderColor: { DEFAULT: hsl('--border-subtle') },
+      ringOffsetColor: { canvas: hsl('--canvas') },
+      borderRadius: {
+        md: 'calc(var(--radius) - 2px)',
+        lg: 'var(--radius)',
+        xl: 'calc(var(--radius) + 4px)',
+      },
+      boxShadow: {
+        // Only floating surfaces get elevation; panels stay flat.
+        popover: '0 8px 24px -6px hsl(240 10% 10% / 0.12), 0 2px 6px -2px hsl(240 10% 10% / 0.08)',
+      },
+      fontSize: {
+        // Compact product scale.
+        '2xs': ['11px', '14px'],
+        xs: ['12px', '16px'],
+        sm: ['13px', '18px'],
+        base: ['14px', '20px'],
+      },
     },
   },
   plugins: [],

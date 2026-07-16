@@ -33,16 +33,16 @@ function Item({ it, active, count, onNavigate }: { it: any; active: boolean; cou
     <Link
       href={it.href}
       onClick={onNavigate}
-      className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-all duration-150 ${
-        active ? 'bg-white text-slate-900 font-medium shadow-sm ring-1 ring-slate-200/70'
-          : badge ? 'text-slate-800 font-semibold hover:bg-white/70'
-            : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-white/70'
+      className={`flex items-center gap-2.5 h-7 px-2 rounded-md text-sm transition-colors duration-100 ${
+        active ? 'bg-surface-hover text-primary font-medium'
+          : badge ? 'text-primary font-medium hover:bg-surface-hover'
+            : 'text-secondary hover:text-primary hover:bg-surface-hover'
       }`}
     >
-      <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-primary-600' : badge ? 'text-slate-600' : ''}`} />
+      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-accent' : 'text-tertiary'}`} />
       <span className="truncate">{it.label}</span>
       {badge && (
-        <span className="ml-auto shrink-0 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold tabular-nums leading-none">
+        <span className="ml-auto shrink-0 min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded bg-accent text-accent-fg text-2xs font-medium tabular-nums leading-none">
           {count > 99 ? '99+' : count}
         </span>
       )}
@@ -113,23 +113,23 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <aside className="w-60 h-full shrink-0 border-r border-slate-200/70 bg-slate-50 lg:bg-slate-50/40 flex flex-col">
-      <button className="h-12 flex items-center gap-2 px-3 border-b border-slate-200/70 hover:bg-white/70 transition-colors">
+    <aside className="w-60 h-full shrink-0 bg-canvas flex flex-col">
+      <button className="h-12 flex items-center gap-2 px-3 hover:bg-surface-hover transition-colors">
         {logo ? (
-          <img src={logo} alt="" className="w-6 h-6 rounded-md object-cover ring-1 ring-slate-200/70 shrink-0" />
+          <img src={logo} alt="" className="w-5 h-5 rounded object-cover border border-subtle shrink-0" />
         ) : (
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary-600 to-purple-600 shrink-0 flex items-center justify-center text-[10px] font-black text-white">
+          <div className="w-5 h-5 rounded bg-accent shrink-0 flex items-center justify-center text-2xs font-semibold text-accent-fg">
             {(ws?.name || 'H')[0].toUpperCase()}
           </div>
         )}
-        <span className="text-sm font-bold tracking-tight text-slate-800 truncate">{ws?.name || 'HireBTR'}</span>
-        <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400 ml-auto shrink-0" />
+        <span className="text-sm font-medium text-primary truncate">{ws?.name || 'HireBTR'}</span>
+        <ChevronsUpDown className="w-3.5 h-3.5 text-tertiary ml-auto shrink-0" />
       </button>
 
-      <div className="px-2 pt-2">
-        <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-slate-400 bg-white ring-1 ring-slate-200/70 hover:ring-slate-300 transition-all">
+      <div className="px-2 pb-2">
+        <button className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-sm text-tertiary hover:bg-surface-hover transition-colors">
           <Search className="w-3.5 h-3.5" /> Search
-          <span className="ml-auto text-[10px] font-semibold border border-slate-200 rounded px-1 py-0.5">⌘K</span>
+          <span className="ml-auto text-2xs font-mono text-tertiary">⌘K</span>
         </button>
       </div>
 
@@ -147,7 +147,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
             <div key={g.group} className="px-2 mb-1">
               <button
                 onClick={() => toggle(g.group)}
-                className="w-full flex items-center gap-1 px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                className="w-full flex items-center gap-1 px-2 py-1.5 text-2xs font-medium uppercase tracking-wider text-tertiary hover:text-secondary transition-colors"
               >
                 <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${open ? 'rotate-90' : ''}`} />
                 {g.group}
@@ -162,20 +162,20 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-slate-200/70 p-2 flex items-center gap-2">
+      <div className="border-t border-subtle p-2 flex items-center gap-2">
         {logo ? (
-          <img src={logo} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200/70 shrink-0" />
+          <img src={logo} alt="" className="w-6 h-6 rounded-full object-cover border border-subtle shrink-0" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0">{(ws?.name || 'H')[0].toUpperCase()}</div>
+          <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center shrink-0">{(ws?.name || 'H')[0].toUpperCase()}</div>
         )}
-        <div className="text-[12px] leading-tight min-w-0">
-          <div className="font-semibold text-slate-700 truncate">{ws?.name || 'Workspace'}</div>
-          <div className="text-slate-400 capitalize">{ws?.role || 'Member'}</div>
+        <div className="text-xs leading-tight min-w-0">
+          <div className="font-medium text-primary truncate">{ws?.name || 'Workspace'}</div>
+          <div className="text-tertiary capitalize">{ws?.role || 'Member'}</div>
         </div>
         <button
           aria-label="Sign out"
           onClick={async () => { await logout(); router.push('/auth/login'); }}
-          className="ml-auto p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+          className="ml-auto p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-surface-hover transition-colors"
         >
           <LogOut className="w-4 h-4" />
         </button>

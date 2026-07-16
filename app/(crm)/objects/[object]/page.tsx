@@ -13,6 +13,9 @@ import RecordDetail from '@/components/crm/RecordDetail';
 import ImportModal from '@/components/crm/ImportModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
+import PageHeader from '@/components/dashboard/PageHeader';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { Package } from 'lucide-react';
 
 export default function ObjectPage() {
@@ -118,31 +121,27 @@ export default function ObjectPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-slate-200/70">
-        <h1 className="text-sm font-bold text-slate-800">{object.plural}</h1>
-        <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 rounded-md px-1.5 py-0.5 tabular-nums">{filtered.length}</span>
-        <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
-        <div className="ml-auto flex items-center gap-1.5">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
-              className="h-7 w-44 pl-7 pr-2 text-[12px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" />
-          </div>
-          <button onClick={exportCsv} disabled={filtered.length === 0}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Download className="w-3.5 h-3.5" /> Export</button>
-          <button onClick={() => setImporting(true)} disabled={!canEdit}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><Upload className="w-3.5 h-3.5" /> Import</button>
-          <button onClick={newRecord} disabled={!canEdit}
-            title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"><Plus className="w-3.5 h-3.5" /> New</button>
+      <PageHeader
+        title={object.plural}
+        count={filtered.length}
+        badge={<Badge tone={live ? 'success' : 'warning'}>{live ? 'Live' : 'Sample'}</Badge>}
+      >
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
+            className="h-7 w-44 pl-7 pr-2 text-xs bg-surface-sunken border border-subtle rounded-md text-primary placeholder:text-tertiary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25" />
         </div>
-      </header>
+        <Button size="sm" onClick={exportCsv} disabled={filtered.length === 0}><Download className="w-3.5 h-3.5" /> Export</Button>
+        <Button size="sm" onClick={() => setImporting(true)} disabled={!canEdit}><Upload className="w-3.5 h-3.5" /> Import</Button>
+        <Button size="sm" variant="primary" onClick={newRecord} disabled={!canEdit}
+          title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</Button>
+      </PageHeader>
 
       <FilterBar object={object} rows={rows} value={filters} onChange={setFilters} />
 
       <div className="flex-1 overflow-auto">
         {loading ? (
-          <div className="h-full flex items-center justify-center text-slate-300"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
         ) : (
           <RecordTable object={object} rows={filtered}
             onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}
