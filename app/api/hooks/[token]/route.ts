@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { runDispatcher } from '@/lib/automations/dispatcher';
-import { readJsonCapped } from '@/lib/security/http';
+import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,6 +27,8 @@ async function enqueue(token: string, payload: Record<string, any>) {
 }
 
 export async function POST(req: Request, { params }: { params: { token: string } }) {
+  const rl = rateLimit(`hook:${params.token}:${clientIp(req)}`, 120);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   // Public endpoint: cap the body so junk POSTs can't bloat the events table.
   const body = await readJsonCapped(req, 64 * 1024);
   if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
@@ -36,6 +38,8 @@ export async function POST(req: Request, { params }: { params: { token: string }
 }
 
 export async function GET(req: Request, { params }: { params: { token: string } }) {
+  const rl = rateLimit(`hook:${params.token}:${clientIp(req)}`, 120);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const payload = Object.fromEntries(new URL(req.url).searchParams.entries());
   const r = await enqueue(params.token, payload);
   return NextResponse.json(r.body, { status: r.status });

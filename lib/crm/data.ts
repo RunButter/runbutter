@@ -6,6 +6,7 @@
 import { supabase } from '@/lib/supabase';
 import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_POSTS, mockPostDetail, MOCK_PROJECTS, MOCK_ISSUES, mockBankAccounts, mockLedger } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
+import { rpc } from '@/lib/rpc';
 
 export interface RecordsResult { rows: any[]; live: boolean }
 export interface BoardResult { stages: PipelineStage[]; records: PipelineRecord[]; live: boolean }
@@ -13,7 +14,7 @@ export interface FinanceResult { revenue: number; outstanding: number; expenses:
 
 async function resolveWorkspace(privyUserId: string): Promise<string | null> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('get_my_workspace', { p_privy: privyUserId });
+  const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
   if (error || !data) return null;
   return (data as any).id ?? null;
 }
@@ -25,7 +26,7 @@ export interface WorkspaceContext { id: string; name: string; role: string }
 export async function loadNavActivity(privyUserId: string | null, since: Record<string, string>): Promise<Record<string, number>> {
   if (!privyUserId) return {};
   try {
-    const { data, error } = await supabase.rpc('get_nav_activity', { p_privy: privyUserId, p_since: since });
+    const { data, error } = await rpc('get_nav_activity', { p_privy: privyUserId, p_since: since });
     if (error || !data || typeof data !== 'object') return {};
     const out: Record<string, number> = {};
     for (const [k, v] of Object.entries(data as any)) out[k] = +(v as any) || 0;
@@ -37,19 +38,19 @@ export async function loadNavActivity(privyUserId: string | null, since: Record<
 
 export async function getWorkspace(privyUserId: string): Promise<WorkspaceContext | null> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('get_my_workspace', { p_privy: privyUserId });
+  const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
   if (error || !data) return null;
   const d = data as any;
   return { id: d.id, name: d.name, role: d.role || 'member' };
 }
 
 export async function getMembers(privyUserId: string, workspaceId: string): Promise<any[]> {
-  const { data, error } = await supabase.rpc('get_members', { p_privy: privyUserId, p_workspace: workspaceId });
+  const { data, error } = await rpc('get_members', { p_privy: privyUserId, p_workspace: workspaceId });
   return error || !Array.isArray(data) ? [] : data;
 }
 
 export async function setMemberRole(privyUserId: string, workspaceId: string, accountId: string, role: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('set_member_role', { p_privy: privyUserId, p_workspace: workspaceId, p_account: accountId, p_role: role });
+  const { error } = await rpc('set_member_role', { p_privy: privyUserId, p_workspace: workspaceId, p_account: accountId, p_role: role });
   return error ? { error: error.message } : {};
 }
 
@@ -69,7 +70,7 @@ export async function loadRecords(privyUserId: string | null, object: string): P
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data, error } = await supabase.rpc('list_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object) });
+    const { data, error } = await rpc('list_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object) });
     if (error || !Array.isArray(data)) return fallback;
     // split the shared invoices table into invoices vs offers by kind
     let rows = data as any[];
@@ -84,7 +85,7 @@ export async function loadRecords(privyUserId: string | null, object: string): P
 // ── CRUD ────────────────────────────────────────────────────────────────────
 export async function getRecord(privyUserId: string, object: string, id: string): Promise<any | null> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('get_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
+  const { data, error } = await rpc('get_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   if (error) return null;
   return data;
 }
@@ -93,7 +94,7 @@ export async function createRecord(privyUserId: string, object: string, values: 
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
   const payload = object === 'offers' ? { ...values, kind: 'offer' } : values;
-  const { data, error } = await supabase.rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_data: payload });
+  const { data, error } = await rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_data: payload });
   if (error) return { error: error.message };
   pingAutomations();
   return { id: data as string };
@@ -101,14 +102,14 @@ export async function createRecord(privyUserId: string, object: string, values: 
 
 export async function updateRecord(privyUserId: string, object: string, id: string, values: Record<string, any>): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('update_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id, p_data: values });
+  const { error } = await rpc('update_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id, p_data: values });
   if (!error) pingAutomations();
   return error ? { error: error.message } : {};
 }
 
 export async function deleteRecord(privyUserId: string, object: string, id: string): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('delete_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
+  const { error } = await rpc('delete_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   return error ? { error: error.message } : {};
 }
 
@@ -116,7 +117,7 @@ export async function importRecords(privyUserId: string, object: string, rows: R
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
   const payload = object === 'offers' ? rows.map((r) => ({ ...r, kind: 'offer' })) : rows;
-  const { data, error } = await supabase.rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_rows: payload });
+  const { data, error } = await rpc('import_records', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_rows: payload });
   if (error) return { error: error.message };
   pingAutomations();
   return { count: data as number };
@@ -125,7 +126,7 @@ export async function importRecords(privyUserId: string, object: string, rows: R
 // Convert an accepted offer into a draft invoice (clones positions); returns the new invoice id.
 export async function convertOffer(privyUserId: string, offerId: string): Promise<{ id?: string; error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('convert_offer_to_invoice', { p_privy: privyUserId, p_offer: offerId });
+  const { data, error } = await rpc('convert_offer_to_invoice', { p_privy: privyUserId, p_offer: offerId });
   if (error) return { error: error.message };
   return { id: data as string };
 }
@@ -148,7 +149,7 @@ export async function loadFinance(privyUserId: string | null): Promise<FinanceRe
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data, error } = await supabase.rpc('get_finance_summary', { p_privy: privyUserId, p_workspace: ws });
+    const { data, error } = await rpc('get_finance_summary', { p_privy: privyUserId, p_workspace: ws });
     if (error || !data) return fallback;
     const d = data as any;
     return { revenue: +d.revenue || 0, outstanding: +d.outstanding || 0, expenses: +d.expenses || 0, invoices: +d.invoices || 0, live: true };
@@ -170,7 +171,7 @@ export async function loadFinanceAnalytics(privyUserId: string | null, months: n
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback();
-    const { data, error } = await supabase.rpc('get_finance_analytics', { p_privy: privyUserId, p_workspace: ws, p_months: months });
+    const { data, error } = await rpc('get_finance_analytics', { p_privy: privyUserId, p_workspace: ws, p_months: months });
     if (error || !data) return fallback();
     const d = data as any;
     return {
@@ -208,7 +209,7 @@ export async function loadBankAccounts(privyUserId: string | null): Promise<{ ac
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data, error } = await supabase.rpc('get_bank_accounts', { p_privy: privyUserId, p_workspace: ws });
+    const { data, error } = await rpc('get_bank_accounts', { p_privy: privyUserId, p_workspace: ws });
     if (error || !Array.isArray(data)) return fallback;
     return { accounts: (data as any[]).map((a) => ({ ...a, opening_balance: +a.opening_balance || 0, balance: +a.balance || 0, txn_count: +a.txn_count || 0 })), live: true };
   } catch {
@@ -219,14 +220,14 @@ export async function loadBankAccounts(privyUserId: string | null): Promise<{ ac
 export async function createBankAccount(privyUserId: string, name: string, currency: string, opening: number, institution?: string): Promise<{ id?: string; error?: string }> {
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('create_bank_account', { p_privy: privyUserId, p_workspace: ws, p_name: name, p_currency: currency, p_opening: opening, p_institution: institution || null });
+  const { data, error } = await rpc('create_bank_account', { p_privy: privyUserId, p_workspace: ws, p_name: name, p_currency: currency, p_opening: opening, p_institution: institution || null });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function deleteBankAccount(privyUserId: string, accountId: string): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('delete_bank_account', { p_privy: privyUserId, p_account: accountId });
+  const { error } = await rpc('delete_bank_account', { p_privy: privyUserId, p_account: accountId });
   return error ? { error: error.message } : {};
 }
 
@@ -236,7 +237,7 @@ export async function loadLedger(privyUserId: string | null, accountId: string |
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback();
-    const { data, error } = await supabase.rpc('get_transactions_ledger', { p_privy: privyUserId, p_workspace: ws, p_account: accountId, p_months: months });
+    const { data, error } = await rpc('get_transactions_ledger', { p_privy: privyUserId, p_workspace: ws, p_account: accountId, p_months: months });
     if (error || !data) return fallback();
     const d = data as any;
     const s = d.summary || {};
@@ -252,20 +253,20 @@ export async function loadLedger(privyUserId: string | null, accountId: string |
 
 export async function suggestMatches(privyUserId: string, txnId: string): Promise<MatchSuggestion[]> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('suggest_transaction_matches', { p_privy: privyUserId, p_txn: txnId });
+  const { data, error } = await rpc('suggest_transaction_matches', { p_privy: privyUserId, p_txn: txnId });
   if (error || !Array.isArray(data)) return [];
   return (data as any[]).map((m) => ({ ...m, amount: +m.amount || 0 }));
 }
 
 export async function reconcileTransaction(privyUserId: string, txnId: string, kind: 'invoice' | 'expense' | 'none', targetId?: string): Promise<{ error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { error } = await supabase.rpc('reconcile_transaction', { p_privy: privyUserId, p_txn: txnId, p_kind: kind, p_target: targetId ?? null });
+  const { error } = await rpc('reconcile_transaction', { p_privy: privyUserId, p_txn: txnId, p_kind: kind, p_target: targetId ?? null });
   return error ? { error: error.message } : {};
 }
 
 export async function bulkUpdateTransactions(privyUserId: string, ids: string[], patch: Record<string, any>): Promise<{ count?: number; error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('update_transactions_bulk', { p_privy: privyUserId, p_ids: ids, p_patch: patch });
+  const { data, error } = await rpc('update_transactions_bulk', { p_privy: privyUserId, p_ids: ids, p_patch: patch });
   if (error) return { error: error.message };
   return { count: +(data as any) || 0 };
 }
@@ -280,7 +281,7 @@ export async function loadRoadmap(privyUserId: string | null): Promise<{ project
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback();
-    const { data, error } = await supabase.rpc('get_roadmap', { p_privy: privyUserId, p_workspace: ws });
+    const { data, error } = await rpc('get_roadmap', { p_privy: privyUserId, p_workspace: ws });
     if (error || !Array.isArray(data)) return fallback();
     return { projects: data as RoadmapProject[], live: true };
   } catch {
@@ -322,7 +323,7 @@ export async function loadProject(privyUserId: string | null, projectId: string)
   if (!privyUserId) return mock();
   try {
     await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-    const { data, error } = await supabase.rpc('get_project', { p_privy: privyUserId, p_project: projectId });
+    const { data, error } = await rpc('get_project', { p_privy: privyUserId, p_project: projectId });
     if (error || !data) return mock();
     const d = data as any;
     return { project: d.project || {}, stages: ISSUE_STAGES, records: toRecords(d.issues || []), live: true };
@@ -372,7 +373,7 @@ export interface WorkspaceBranding {
   iban: string | null; bank_name: string | null;
 }
 export async function loadBranding(privyUserId: string, workspaceId: string): Promise<WorkspaceBranding | null> {
-  const { data, error } = await supabase.rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
+  const { data, error } = await rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error || !data) return null;
   const d = data as any;
   return {
@@ -382,7 +383,7 @@ export async function loadBranding(privyUserId: string, workspaceId: string): Pr
   };
 }
 export async function saveBranding(privyUserId: string, workspaceId: string, data: Partial<WorkspaceBranding>): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('save_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId, p_data: data });
+  const { error } = await rpc('save_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId, p_data: data });
   return error ? { error: error.message } : {};
 }
 
@@ -391,7 +392,7 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
   if (!privyUserId) return fallback();
   try {
     await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-    const { data, error } = await supabase.rpc('get_invoice_document', { p_privy: privyUserId, p_id: id });
+    const { data, error } = await rpc('get_invoice_document', { p_privy: privyUserId, p_id: id });
     if (error || !data) return fallback();
     return mapDocument(data);
   } catch {
@@ -414,7 +415,7 @@ export async function loadPublicDocument(id: string, token: string): Promise<Inv
 export interface ItemInput { product_id?: string; description?: string; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number }
 export async function saveInvoiceItems(privyUserId: string, invoiceId: string, items: ItemInput[]): Promise<{ total?: number; error?: string }> {
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await supabase.rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
+  const { data, error } = await rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
   if (error) return { error: error.message };
   return { total: +(data as any) || 0 };
 }
@@ -436,7 +437,7 @@ export async function loadSites(privyUserId: string | null): Promise<{ sites: Si
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return { sites: [], live: false };
-    const { data, error } = await supabase.rpc('get_sites', { p_privy: privyUserId, p_workspace: ws });
+    const { data, error } = await rpc('get_sites', { p_privy: privyUserId, p_workspace: ws });
     if (error || !Array.isArray(data)) return { sites: [], live: false };
     return { sites: data as Site[], live: true };
   } catch {
@@ -447,13 +448,13 @@ export async function loadSites(privyUserId: string | null): Promise<{ sites: Si
 export async function createSite(privyUserId: string, domain: string, name?: string): Promise<{ id?: string; error?: string }> {
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('create_site', { p_privy: privyUserId, p_workspace: ws, p_domain: domain, p_name: name || null });
+  const { data, error } = await rpc('create_site', { p_privy: privyUserId, p_workspace: ws, p_domain: domain, p_name: name || null });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function deleteSite(privyUserId: string, siteId: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('delete_site', { p_privy: privyUserId, p_site: siteId });
+  const { error } = await rpc('delete_site', { p_privy: privyUserId, p_site: siteId });
   return error ? { error: error.message } : {};
 }
 
@@ -461,7 +462,7 @@ export async function loadSiteStats(privyUserId: string | null, siteId: string |
   const fallback = (): SiteStats => ({ ...mockSiteStats(days), live_flag: false });
   if (!privyUserId || !siteId) return fallback();
   try {
-    const { data, error } = await supabase.rpc('get_site_stats', { p_privy: privyUserId, p_site: siteId, p_days: days });
+    const { data, error } = await rpc('get_site_stats', { p_privy: privyUserId, p_site: siteId, p_days: days });
     if (error || !data) return fallback();
     const d = data as any;
     return {
@@ -496,7 +497,7 @@ export async function loadPosts(privyUserId: string | null): Promise<{ posts: Po
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data, error } = await supabase.rpc('get_posts', { p_privy: privyUserId, p_workspace: ws });
+    const { data, error } = await rpc('get_posts', { p_privy: privyUserId, p_workspace: ws });
     if (error || !Array.isArray(data)) return fallback;
     return { posts: data as PostListItem[], live: true };
   } catch {
@@ -510,7 +511,7 @@ export async function loadPost(privyUserId: string | null, id: string): Promise<
   if (!uuid) return { ...(mockPostDetail(id) as any), live: false };
   if (!privyUserId) return null;
   try {
-    const { data, error } = await supabase.rpc('get_post', { p_privy: privyUserId, p_id: id });
+    const { data, error } = await rpc('get_post', { p_privy: privyUserId, p_id: id });
     if (error || !data) return null;
     return { ...(data as any), live: true };
   } catch {
@@ -521,18 +522,18 @@ export async function loadPost(privyUserId: string | null, id: string): Promise<
 export async function savePost(privyUserId: string, id: string | null, values: Record<string, any>): Promise<{ id?: string; error?: string }> {
   const ws = await resolveWorkspace(privyUserId);
   if (!ws) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('save_post', { p_privy: privyUserId, p_workspace: ws, p_id: id, p_data: values });
+  const { data, error } = await rpc('save_post', { p_privy: privyUserId, p_workspace: ws, p_id: id, p_data: values });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function addPostComment(privyUserId: string, postId: string, body: string, x?: number, y?: number): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('add_post_comment', { p_privy: privyUserId, p_post: postId, p_body: body, p_x: x ?? null, p_y: y ?? null });
+  const { error } = await rpc('add_post_comment', { p_privy: privyUserId, p_post: postId, p_body: body, p_x: x ?? null, p_y: y ?? null });
   return error ? { error: error.message } : {};
 }
 
 export async function setPostCommentResolved(privyUserId: string, commentId: string, resolved: boolean): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('set_post_comment_resolved', { p_privy: privyUserId, p_comment: commentId, p_resolved: resolved });
+  const { error } = await rpc('set_post_comment_resolved', { p_privy: privyUserId, p_comment: commentId, p_resolved: resolved });
   return error ? { error: error.message } : {};
 }
 
@@ -558,9 +559,9 @@ export async function loadBoard(privyUserId: string | null, slug: string, kind: 
   try {
     const ws = await resolveWorkspace(privyUserId);
     if (!ws) return fallback;
-    const { data: pipelineId, error: pErr } = await supabase.rpc('get_pipeline_by_kind', { p_privy: privyUserId, p_workspace: ws, p_kind: kind });
+    const { data: pipelineId, error: pErr } = await rpc('get_pipeline_by_kind', { p_privy: privyUserId, p_workspace: ws, p_kind: kind });
     if (pErr || !pipelineId) return fallback;
-    const { data, error } = await supabase.rpc('get_pipeline_board', { p_privy: privyUserId, p_pipeline: pipelineId });
+    const { data, error } = await rpc('get_pipeline_board', { p_privy: privyUserId, p_pipeline: pipelineId });
     if (error || !data) return fallback;
     return { stages: (data as any).stages || [], records: (data as any).records || [], live: true };
   } catch {

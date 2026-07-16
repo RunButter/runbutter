@@ -25,6 +25,37 @@ export function isSafeOutboundUrl(raw: string): boolean {
   return true;
 }
 
+// rateLimit — fixed-window per-key limiter for public routes. In-memory and
+// per-instance (Render runs one persistent Node server), so treat the limits
+// as abuse ceilings, not precise quotas.
+const buckets = new Map<string, { n: number; reset: number }>();
+
+export function rateLimit(key: string, limit: number, windowMs = 60_000): { ok: boolean; retryAfterS: number } {
+  const now = Date.now();
+  if (buckets.size > 10_000) {
+    for (const [k, v] of buckets) if (v.reset < now) buckets.delete(k);
+  }
+  const b = buckets.get(key);
+  if (!b || b.reset < now) {
+    buckets.set(key, { n: 1, reset: now + windowMs });
+    return { ok: true, retryAfterS: 0 };
+  }
+  if (b.n >= limit) return { ok: false, retryAfterS: Math.max(1, Math.ceil((b.reset - now) / 1000)) };
+  b.n++;
+  return { ok: true, retryAfterS: 0 };
+}
+
+export function clientIp(req: Request): string {
+  return (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+}
+
+export function tooMany(retryAfterS: number) {
+  return new Response(JSON.stringify({ error: 'Too many requests. Slow down and retry.' }), {
+    status: 429,
+    headers: { 'content-type': 'application/json', 'retry-after': String(retryAfterS) },
+  });
+}
+
 export interface CappedJson { ok: true; data: any }
 export interface CappedJsonError { ok: false; status: number; error: string }
 

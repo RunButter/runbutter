@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, Mail, Send, Loader2, Check } from 'lucide-react';
+import { rpc } from '@/lib/rpc';
 
 interface Props {
     candidate: any;
@@ -22,7 +23,7 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await supabase.rpc('get_message_templates', { p_privy_user_id: privyUserId });
+                const { data } = await rpc('get_message_templates', { p_privy_user_id: privyUserId });
                 setTemplates(data || []);
             } catch (e) { console.error('load templates failed', e); }
         })();

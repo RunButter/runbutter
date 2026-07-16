@@ -6,6 +6,7 @@ import {
   useDraggable, useDroppable, type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
+import { rpc } from '@/lib/rpc';
 
 function initials(s: string) {
   return (s || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -73,7 +74,7 @@ export default function PipelineBoard({ stages, records: initial }: { stages: Pi
     if (!over) return;
     const stageId = String(over.id);
     setRecords((rs) => rs.map((r) => (r.id === active.id ? { ...r, stage_id: stageId } : r)));
-    // Persist: supabase.rpc('move_pipeline_record', { p_privy, p_record: active.id, p_stage: stageId, p_position: 0 })
+    // Persist: rpc('move_pipeline_record', { p_privy, p_record: active.id, p_stage: stageId, p_position: 0 })
   }
 
   const activeRec = records.find((r) => r.id === activeId) || null;

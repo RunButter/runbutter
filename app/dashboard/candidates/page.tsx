@@ -8,6 +8,7 @@ import { Search, Mail, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { hrStatus } from '@/lib/hr/overview';
+import { rpc } from '@/lib/rpc';
 
 function StatusPill({ status }: { status: string }) {
     const st = hrStatus(status);
@@ -55,7 +56,7 @@ export default function CandidatesPage() {
 
             // Single RPC handles both the full list (empty query) and Boolean
             // keyword search across resume text, ranked by ts_rank.
-            const { data, error } = await supabase.rpc('search_candidates_for_recruiter', {
+            const { data, error } = await rpc('search_candidates_for_recruiter', {
                 p_privy_user_id: privyUserId,
                 p_query: query || null,
             });

@@ -2,6 +2,7 @@
 // Privy pattern via getWorkspace(); Sample fallback so the pages always render.
 import { supabase } from '@/lib/supabase';
 import { getWorkspace } from './data';
+import { rpc } from '@/lib/rpc';
 
 export type AutomationEvent = 'created' | 'updated';
 export type TriggerType = 'event' | 'webhook' | 'schedule';
@@ -75,7 +76,7 @@ export async function loadAutomations(privy: string | null): Promise<{ rows: Aut
   const fallback = { rows: SAMPLE_AUTOMATIONS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_automations', { p_privy: privy, p_workspace: id });
+  const { data, error } = await rpc('get_automations', { p_privy: privy, p_workspace: id });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as Automation[], live: true };
 }
@@ -83,18 +84,18 @@ export async function loadAutomations(privy: string | null): Promise<{ rows: Aut
 export async function saveAutomation(privy: string, id: string | null, data: Partial<Automation>): Promise<{ id?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data: res, error } = await supabase.rpc('save_automation', { p_privy: privy, p_workspace: wsId, p_id: id, p_data: data });
+  const { data: res, error } = await rpc('save_automation', { p_privy: privy, p_workspace: wsId, p_id: id, p_data: data });
   if (error) return { error: error.message };
   return { id: res as string };
 }
 
 export async function setAutomationEnabled(privy: string, id: string, enabled: boolean): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('set_automation_enabled', { p_privy: privy, p_id: id, p_enabled: enabled });
+  const { error } = await rpc('set_automation_enabled', { p_privy: privy, p_id: id, p_enabled: enabled });
   return error ? { error: error.message } : {};
 }
 
 export async function deleteAutomation(privy: string, id: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('delete_automation', { p_privy: privy, p_id: id });
+  const { error } = await rpc('delete_automation', { p_privy: privy, p_id: id });
   return error ? { error: error.message } : {};
 }
 
@@ -102,7 +103,7 @@ export async function loadAutomationRuns(privy: string | null): Promise<{ rows: 
   const fallback = { rows: SAMPLE_RUNS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_automation_runs', { p_privy: privy, p_workspace: id, p_limit: 30 });
+  const { data, error } = await rpc('get_automation_runs', { p_privy: privy, p_workspace: id, p_limit: 30 });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as AutomationRun[], live: true };
 }
@@ -110,7 +111,7 @@ export async function loadAutomationRuns(privy: string | null): Promise<{ rows: 
 export async function loadWebhookDeliveries(privy: string | null): Promise<{ rows: WebhookDelivery[]; live: boolean }> {
   const id = await ws(privy);
   if (!privy || !id) return { rows: [], live: false };
-  const { data, error } = await supabase.rpc('get_webhook_deliveries', { p_privy: privy, p_workspace: id, p_limit: 20 });
+  const { data, error } = await rpc('get_webhook_deliveries', { p_privy: privy, p_workspace: id, p_limit: 20 });
   if (error || !Array.isArray(data)) return { rows: [], live: false };
   return { rows: data as WebhookDelivery[], live: true };
 }
@@ -120,7 +121,7 @@ export async function loadConnections(privy: string | null): Promise<{ rows: Con
   const fallback = { rows: SAMPLE_CONNECTIONS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_connections', { p_privy: privy, p_workspace: id });
+  const { data, error } = await rpc('get_connections', { p_privy: privy, p_workspace: id });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as Connection[], live: true };
 }
@@ -128,13 +129,13 @@ export async function loadConnections(privy: string | null): Promise<{ rows: Con
 export async function saveConnection(privy: string, id: string | null, c: { label: string; kind: string; url: string; is_active?: boolean }): Promise<{ id?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('save_connection', { p_privy: privy, p_workspace: wsId, p_id: id, p_label: c.label, p_kind: c.kind, p_url: c.url, p_active: c.is_active ?? true });
+  const { data, error } = await rpc('save_connection', { p_privy: privy, p_workspace: wsId, p_id: id, p_label: c.label, p_kind: c.kind, p_url: c.url, p_active: c.is_active ?? true });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function deleteConnection(privy: string, id: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('delete_connection', { p_privy: privy, p_id: id });
+  const { error } = await rpc('delete_connection', { p_privy: privy, p_id: id });
   return error ? { error: error.message } : {};
 }
 
@@ -143,7 +144,7 @@ export async function loadApiKeys(privy: string | null): Promise<{ rows: ApiKey[
   const fallback = { rows: [] as ApiKey[], live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_api_keys', { p_privy: privy, p_workspace: id });
+  const { data, error } = await rpc('get_api_keys', { p_privy: privy, p_workspace: id });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as ApiKey[], live: true };
 }
@@ -151,12 +152,12 @@ export async function loadApiKeys(privy: string | null): Promise<{ rows: ApiKey[
 export async function createApiKey(privy: string, name: string): Promise<{ key?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('create_api_key', { p_privy: privy, p_workspace: wsId, p_name: name });
+  const { data, error } = await rpc('create_api_key', { p_privy: privy, p_workspace: wsId, p_name: name });
   if (error) return { error: error.message };
   return { key: data as string };
 }
 
 export async function revokeApiKey(privy: string, id: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('revoke_api_key', { p_privy: privy, p_id: id });
+  const { error } = await rpc('revoke_api_key', { p_privy: privy, p_id: id });
   return error ? { error: error.message } : {};
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { runDispatcher } from '@/lib/automations/dispatcher';
-import { readJsonCapped } from '@/lib/security/http';
+import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,6 +32,8 @@ async function auth(req: Request) {
 const ALLOWED = new Set(['people', 'companies', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'offers', 'assets']);
 
 export async function GET(req: Request) {
+  const rl = rateLimit(`v1:${clientIp(req)}`, 120);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const ctx = await auth(req);
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
   const object = new URL(req.url).searchParams.get('object') || '';
@@ -46,6 +48,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`v1:${clientIp(req)}`, 120);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const ctx = await auth(req);
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
   const capped = await readJsonCapped(req, 256 * 1024);

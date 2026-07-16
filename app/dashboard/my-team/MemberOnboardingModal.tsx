@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, ClipboardList, Brain, Loader2, Activity } from 'lucide-react';
 import { generateBrief, generateChecklist } from '@/lib/onboarding';
+import { rpc } from '@/lib/rpc';
 
 interface Props {
     member: any;
@@ -38,7 +39,7 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await supabase.rpc('get_onboarding_tasks', {
+                const { data } = await rpc('get_onboarding_tasks', {
                     p_privy_user_id: privyUserId, p_candidate_id: member.id,
                 });
                 const map: Record<string, boolean> = {};
@@ -55,7 +56,7 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
         try {
             // rpc() never throws — surface { error } explicitly or the optimistic
             // toggle sticks even when the save failed.
-            const { error } = await supabase.rpc('set_onboarding_task', {
+            const { error } = await rpc('set_onboarding_task', {
                 p_privy_user_id: privyUserId, p_candidate_id: member.id,
                 p_task_key: key, p_title: title, p_is_done: next,
             });
@@ -71,7 +72,7 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
         setSavingPulse(true);
         setMood(m);
         try {
-            const { error } = await supabase.rpc('record_pulse', {
+            const { error } = await rpc('record_pulse', {
                 p_privy_user_id: privyUserId, p_candidate_id: member.id,
                 p_week_start: currentWeekStart(), p_mood: m, p_note: null,
             });

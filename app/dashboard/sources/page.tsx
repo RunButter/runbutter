@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import {
     Radio, Plus, Copy, Check, Loader2, MousePointerClick, Users, TrendingUp, Link2,
 } from 'lucide-react';
+import { rpc } from '@/lib/rpc';
 
 const CHANNELS = [
     { value: 'linkedin', label: 'LinkedIn' },
@@ -56,8 +57,8 @@ export default function SourcesPage() {
                 companyUser
                     ? supabase.from('positions').select('id, title').eq('company_id', companyUser.company_id).order('created_at', { ascending: false })
                     : Promise.resolve({ data: [] as any[] }),
-                supabase.rpc('get_tracking_links', { p_privy_user_id: privyUserId }),
-                supabase.rpc('get_source_attribution', { p_privy_user_id: privyUserId }),
+                rpc('get_tracking_links', { p_privy_user_id: privyUserId }),
+                rpc('get_source_attribution', { p_privy_user_id: privyUserId }),
             ]);
 
             setPositions(posRes.data || []);
@@ -88,7 +89,7 @@ export default function SourcesPage() {
         if (!posId || !user) return;
         setCreating(true);
         try {
-            const { data, error } = await supabase.rpc('create_tracking_link', {
+            const { data, error } = await rpc('create_tracking_link', {
                 p_privy_user_id: user.id,
                 p_position_id: posId,
                 p_label: label || null,

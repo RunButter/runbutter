@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import LogoContainer from '@/components/LogoContainer';
+import { rpc } from '@/lib/rpc';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -82,7 +83,7 @@ export default function SettingsPage() {
             setIsGoogleConnected(!!token);
 
             // Load the company's webhook integrations
-            const { data: hooks } = await supabase.rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });
+            const { data: hooks } = await rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });
             setWebhooks(Array.isArray(hooks) ? hooks : []);
 
         } catch (err: any) {
@@ -187,7 +188,7 @@ export default function SettingsPage() {
 
     const refreshWebhooks = async () => {
         if (!user) return;
-        const { data } = await supabase.rpc('get_webhook_endpoints', { p_privy_user_id: user.id });
+        const { data } = await rpc('get_webhook_endpoints', { p_privy_user_id: user.id });
         setWebhooks(Array.isArray(data) ? data : []);
     };
 
@@ -195,7 +196,7 @@ export default function SettingsPage() {
         if (!user || !newHook.url.trim()) { setHookMsg('Paste a webhook URL first.'); return; }
         setHookSaving(true); setHookMsg('');
         try {
-            const { error } = await supabase.rpc('upsert_webhook_endpoint', {
+            const { error } = await rpc('upsert_webhook_endpoint', {
                 p_privy_user_id: user.id, p_id: null,
                 p_label: newHook.label.trim() || newHook.type,
                 p_type: newHook.type, p_url: newHook.url.trim(),
@@ -214,7 +215,7 @@ export default function SettingsPage() {
     const removeWebhook = async (id: string) => {
         if (!user || !confirm('Remove this integration?')) return;
         try {
-            const { error } = await supabase.rpc('delete_webhook_endpoint', { p_privy_user_id: user.id, p_id: id });
+            const { error } = await rpc('delete_webhook_endpoint', { p_privy_user_id: user.id, p_id: id });
             if (error) throw error;
             setWebhooks((prev) => prev.filter((w) => w.id !== id));
         } catch (e: any) {

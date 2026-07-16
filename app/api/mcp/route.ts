@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { runDispatcher } from '@/lib/automations/dispatcher';
-import { readJsonCapped } from '@/lib/security/http';
+import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,6 +111,8 @@ const rpcError = (id: any, code: number, message: string, status = 200) =>
   NextResponse.json({ jsonrpc: '2.0', id: id ?? null, error: { code, message } }, { status });
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`mcp:${clientIp(req)}`, 120);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   const capped = await readJsonCapped(req, 256 * 1024);
   if (!capped.ok) return rpcError(null, -32700, capped.error, capped.status);
   const msg: any = capped.data;

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Plus, Trash2, Loader2, Save, X } from 'lucide-react';
 import { TEMPLATE_VARS } from '@/lib/render-template';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { rpc } from '@/lib/rpc';
 
 const CATEGORIES = ['invite', 'decline', 'offer', 'reminder', 'custom'];
 const CAT_STYLE: Record<string, string> = {
@@ -36,7 +37,7 @@ export default function TemplatesPage() {
     const load = async (privyUserId: string) => {
         try {
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-            const { data, error } = await supabase.rpc('get_message_templates', { p_privy_user_id: privyUserId });
+            const { data, error } = await rpc('get_message_templates', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setTemplates(data || []);
         } catch (e) { console.error('load templates failed', e); }
@@ -48,7 +49,7 @@ export default function TemplatesPage() {
         setSaving(true);
         try {
             // supabase.rpc() returns { error } — it does NOT throw — so check it explicitly.
-            const { error } = await supabase.rpc('upsert_message_template', {
+            const { error } = await rpc('upsert_message_template', {
                 p_privy_user_id: user.id, p_id: editing.id, p_name: editing.name,
                 p_subject: editing.subject, p_body: editing.body, p_category: editing.category,
             });
@@ -62,7 +63,7 @@ export default function TemplatesPage() {
     const remove = async (id: string) => {
         if (!user || !confirm('Delete this template?')) return;
         try {
-            const { error } = await supabase.rpc('delete_message_template', { p_privy_user_id: user.id, p_id: id });
+            const { error } = await rpc('delete_message_template', { p_privy_user_id: user.id, p_id: id });
             if (error) throw error;
             await load(user.id);
         } catch (e: any) { alert(e?.message || 'Delete failed'); }

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase';
 import { openSecret } from '@/lib/crypto/secrets';
 import { callAI, PROVIDERS, type AIProvider } from '@/lib/ai/providers';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
+import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,8 @@ function buildPrompt(mode: string, text: string, instruction?: string): string {
 const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`ai:${clientIp(req)}`, 30);
+  if (!rl.ok) return tooMany(rl.retryAfterS);
   let b: any;
   try { b = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
   const { privyUserId, workspaceId, mode, text, instruction } = b || {};

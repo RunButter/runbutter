@@ -22,6 +22,7 @@ import {
 import { Radar } from 'react-chartjs-2';
 import TeamFitModal from './TeamFitModal';
 import CandidateMessageModal from './CandidateMessageModal';
+import { rpc } from '@/lib/rpc';
 
 ChartJS.register(
     RadialLinearScale,
@@ -56,7 +57,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         if (treasury || !user) return;
         setLoadingFit(true);
         try {
-            const { data } = await supabase.rpc('get_treasury_dataset', { p_privy_user_id: user.id });
+            const { data } = await rpc('get_treasury_dataset', { p_privy_user_id: user.id });
             setTreasury(data || []);
         } catch (e) {
             console.error('Error loading team profiles:', e);
@@ -81,7 +82,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             // Ensure session is initialized for any RLS secondary queries
             await supabase.auth.getUser();
 
-            const { data, error } = await supabase.rpc('get_candidate_details', {
+            const { data, error } = await rpc('get_candidate_details', {
                 p_candidate_id: params.id,
                 p_privy_user_id: user.id
             });

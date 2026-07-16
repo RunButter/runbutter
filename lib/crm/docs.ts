@@ -1,6 +1,7 @@
 // Data layer for the Docs module + BYO-AI keys (migration 0034).
 import { supabase } from '@/lib/supabase';
 import { getWorkspace } from './data';
+import { rpc } from '@/lib/rpc';
 
 export interface DocMeta { id: string; title: string; snippet: string; updated_at: string }
 export interface Doc { id: string; title: string; body: string; updated_at?: string }
@@ -28,7 +29,7 @@ export async function loadDocs(privy: string | null): Promise<{ rows: DocMeta[];
   const fallback = { rows: SAMPLE_DOCS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_docs', { p_privy: privy, p_workspace: id });
+  const { data, error } = await rpc('get_docs', { p_privy: privy, p_workspace: id });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as DocMeta[], live: true };
 }
@@ -38,7 +39,7 @@ export async function loadDoc(privy: string | null, docId: string): Promise<Doc 
   if (!uuid) return SAMPLE_DOC(docId);           // sample ids (d1…) render sample content
   if (!privy) return null;
   await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privy, is_local: false });
-  const { data, error } = await supabase.rpc('get_doc', { p_privy: privy, p_id: docId });
+  const { data, error } = await rpc('get_doc', { p_privy: privy, p_id: docId });
   if (error || !data) return null;
   return data as Doc;
 }
@@ -46,13 +47,13 @@ export async function loadDoc(privy: string | null, docId: string): Promise<Doc 
 export async function saveDoc(privy: string, id: string | null, title: string, body: string): Promise<{ id?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await supabase.rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body });
+  const { data, error } = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body });
   if (error) return { error: error.message };
   return { id: data as string };
 }
 
 export async function deleteDoc(privy: string, id: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('delete_doc', { p_privy: privy, p_id: id });
+  const { error } = await rpc('delete_doc', { p_privy: privy, p_id: id });
   return error ? { error: error.message } : {};
 }
 
@@ -61,7 +62,7 @@ export async function loadAiProviders(privy: string | null): Promise<{ rows: AiP
   const fallback = { rows: SAMPLE_PROVIDERS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await supabase.rpc('get_ai_providers', { p_privy: privy, p_workspace: id });
+  const { data, error } = await rpc('get_ai_providers', { p_privy: privy, p_workspace: id });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as AiProviderRow[], live: true };
 }
@@ -78,12 +79,12 @@ export async function saveAiKey(privy: string, provider: string, model: string, 
 }
 
 export async function setAiProviderMeta(privy: string, id: string, patch: { model?: string; is_default?: boolean; enabled?: boolean }): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('set_ai_provider_meta', { p_privy: privy, p_id: id, p_model: patch.model ?? null, p_default: patch.is_default ?? null, p_enabled: patch.enabled ?? null });
+  const { error } = await rpc('set_ai_provider_meta', { p_privy: privy, p_id: id, p_model: patch.model ?? null, p_default: patch.is_default ?? null, p_enabled: patch.enabled ?? null });
   return error ? { error: error.message } : {};
 }
 
 export async function deleteAiProvider(privy: string, id: string): Promise<{ error?: string }> {
-  const { error } = await supabase.rpc('delete_ai_provider', { p_privy: privy, p_id: id });
+  const { error } = await rpc('delete_ai_provider', { p_privy: privy, p_id: id });
   return error ? { error: error.message } : {};
 }
 

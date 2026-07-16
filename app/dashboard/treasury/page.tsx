@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { hrStatus } from '@/lib/hr/overview';
+import { rpc } from '@/lib/rpc';
 
 // Psychometric dimensions the sliders filter on (discrete 0-100 score columns).
 const DIMS = [
@@ -63,7 +64,7 @@ export default function TreasuryPage() {
         try {
             await supabase.auth.getUser();
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-            const { data: rows, error } = await supabase.rpc('get_treasury_dataset', { p_privy_user_id: privyUserId });
+            const { data: rows, error } = await rpc('get_treasury_dataset', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setData(rows || []);
         } catch (e) {

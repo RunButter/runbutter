@@ -26,6 +26,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Loader2, GripVertical, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { rpc } from '@/lib/rpc';
 
 // --- Types & Constants ---
 const COLUMNS = [
@@ -150,7 +151,7 @@ export default function PipelinePage() {
     const loadCandidates = useCallback(async (privyUserId: string) => {
         try {
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-            const { data, error } = await supabase.rpc('get_candidates_for_recruiter', { p_privy_user_id: privyUserId });
+            const { data, error } = await rpc('get_candidates_for_recruiter', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setCandidates(data || []);
         } catch (error) {

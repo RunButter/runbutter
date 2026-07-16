@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Users, Loader2, AlertTriangle, Heart, ClipboardList, Layers } from 'lucide-react';
 import MemberOnboardingModal from './MemberOnboardingModal';
 import { vibeLabel } from '@/lib/onboarding';
+import { rpc } from '@/lib/rpc';
 
 const MOOD_EMOJI: Record<string, string> = { happy: '😀', balanced: '😐', overwhelmed: '😟' };
 
@@ -30,7 +31,7 @@ export default function MyTeamPage() {
         try {
             await supabase.auth.getUser();
             await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-            const { data, error } = await supabase.rpc('get_my_team', { p_privy_user_id: privyUserId });
+            const { data, error } = await rpc('get_my_team', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setTeam(data || []);
         } catch (e) {

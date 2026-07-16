@@ -33,7 +33,8 @@ with checks(ord, step, probe, ok) as (
   (36, '0036 assets CRUD',        'create_record handles assets', ((select exists(select 1 from pg_proc where proname='create_record' and pg_get_functiondef(oid) ilike '%assigned_to_person_id%')))),
   (37, '0037 pgcrypto fix',       'save_automation + create_api_key use core crypto', ((select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_functiondef(oid) ilike '%sha256%')))),
   (38, '0038 custom AI provider', 'ai_providers.base_url + updated RPCs', (exists(select 1 from information_schema.columns where table_name='ai_providers' and column_name='base_url') and (select exists(select 1 from pg_proc where proname='store_ai_provider' and pg_get_functiondef(oid) ilike '%p_base_url%')))),
-  (39, '0039 nav activity',       'sidebar unread-badge RPC', (select exists(select 1 from pg_proc where proname='get_nav_activity')))
+  (39, '0039 nav activity',       'sidebar unread-badge RPC', (select exists(select 1 from pg_proc where proname='get_nav_activity'))),
+  (40, '0040 lock rpcs',          'anon can no longer execute list_records', (select coalesce(bool_and(not has_function_privilege('anon', p.oid, 'execute')), false) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('list_records','get_ai_secret')))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
