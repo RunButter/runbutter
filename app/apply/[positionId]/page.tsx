@@ -136,35 +136,26 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         throw new Error('Position not found');
       }
 
-      // Enforce the company's candidate cap (plan limit). Fail-open if the RPC
-      // is unavailable so infra issues never block a genuine applicant.
-      const { data: canAccept } = await supabase.rpc('company_can_accept_candidate', { p_company_id: position.company_id });
-      if (canAccept === false) {
-        throw new Error('This position is no longer accepting applications. Please check back later.');
-      }
-
-      // Create candidate
-      const { data: candidate, error: candidateError } = await supabase
-        .from('candidates')
-        .insert({
-          company_id: position.company_id,
-          position_id: params.positionId,
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone || null,
-          linkedin_url: formData.linkedinUrl || null,
-          status: 'applied',
-          source: attribution.source || 'direct',
-          utm_source: attribution.utm_source,
-          utm_medium: attribution.utm_medium,
-          utm_campaign: attribution.utm_campaign,
-          referrer: attribution.referrer,
-          tracking_link_id: attribution.tracking_link_id,
-        })
-        .select()
-        .single();
+      // Create the candidate + log the application in one SECURITY DEFINER RPC.
+      // This replaces the direct anon table writes (candidates/activity_log are
+      // no longer anon-accessible) and enforces the plan cap server-side. The
+      // returned access_token gates the follow-up CV attach.
+      const { data: created, error: candidateError } = await supabase.rpc('apply_to_position', {
+        p_position_id: params.positionId,
+        p_full_name: formData.fullName,
+        p_email: formData.email,
+        p_phone: formData.phone || null,
+        p_linkedin: formData.linkedinUrl || null,
+        p_source: attribution.source || 'direct',
+        p_utm_source: attribution.utm_source,
+        p_utm_medium: attribution.utm_medium,
+        p_utm_campaign: attribution.utm_campaign,
+        p_referrer: attribution.referrer,
+        p_tracking_link_id: attribution.tracking_link_id,
+      });
 
       if (candidateError) throw candidateError;
+      const candidate = created as { id: string; access_token: string };
 
       // Upload CV
       const cvUrl = await uploadCV(cvFile, candidate.id);
@@ -173,11 +164,10 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         throw new Error('Failed to upload CV');
       }
 
-      // Update candidate with CV URL
-      await supabase
-        .from('candidates')
-        .update({ cv_url: cvUrl })
-        .eq('id', candidate.id);
+      // Attach the CV url (gated by the access_token we just received).
+      await supabase.rpc('set_candidate_cv', {
+        p_candidate_id: candidate.id, p_access_token: candidate.access_token, p_cv_url: cvUrl,
+      });
 
       // Extract resume text for zero-cost FTS search (fire-and-forget —
       // must never block or fail the candidate's application).
@@ -186,17 +176,6 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidateId: candidate.id, cvUrl }),
       }).catch(console.error);
-
-      // Log activity
-      await supabase.from('activity_log').insert({
-        company_id: position.company_id,
-        candidate_id: candidate.id,
-        action: 'application_submitted',
-        details: {
-          position_title: position.title,
-          cv_uploaded: true,
-        },
-      });
 
       // Notify the company's webhook integrations (Slack/Discord/Zapier/…),
       // fire-and-forget so it never blocks or fails the application.

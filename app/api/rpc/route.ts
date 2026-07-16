@@ -50,6 +50,9 @@ const ALLOWED = new Set([
   'get_my_team', 'get_onboarding_tasks', 'set_onboarding_task', 'record_pulse',
   'get_candidates_for_recruiter', 'search_candidates_for_recruiter',
   'get_candidate_details', 'get_pipeline_board', 'log_candidate_message',
+  // HR crown-jewel table access (0041) — recruiter side, verified proxy only
+  'hr_overview_data', 'hr_analytics_data', 'hr_candidate_activity',
+  'hr_update_candidate_status', 'hr_seed_demo_result', 'hr_google_connected',
 ]);
 
 function db() {

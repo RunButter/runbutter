@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
+import { rpc } from '@/lib/rpc';
 import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2, Briefcase } from 'lucide-react';
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -49,29 +49,16 @@ export default function AnalyticsPage() {
 
     const loadAnalytics = useCallback(async () => {
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user?.id, is_local: false });
-            const { data: companyUser } = await supabase
-                .from('company_users')
-                .select('company:companies(*)')
-                .eq('privy_user_id', user?.id)
-                .single();
-
-            if (companyUser) {
-                const comp: any = Array.isArray(companyUser.company) ? companyUser.company[0] : companyUser.company;
-                if (!comp || !comp.id) return;
-
+            if (!user?.id) return;
+            // Verified RPC — candidates/positions are no longer anon-readable.
+            const { data, error } = await rpc('hr_analytics_data', { p_privy: user.id });
+            if (error || !data) return;
+            const comp: any = data.company;
+            if (comp && comp.id) {
                 setCompany(comp);
 
-                // Fetch real data
-                const { data: positions } = await supabase
-                    .from('positions')
-                    .select('id, title, status')
-                    .eq('company_id', comp.id);
-
-                const { data: candidates } = await supabase
-                    .from('candidates')
-                    .select('id, status, source, position_id')
-                    .eq('company_id', comp.id);
+                const positions = data.positions as { id: string; title: string; status: string }[] | null;
+                const candidates = data.candidates as { id: string; status: string; source: string; position_id: string }[] | null;
 
                 const totalPositions = positions?.length || 0;
                 const totalCandidates = candidates?.length || 0;

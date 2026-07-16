@@ -112,14 +112,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             const { data: comp } = await supabase.from('companies').select('plan').eq('id', can.company_id).single();
             setCompanyPlan(comp?.plan || 'free');
 
-            // Fetch activity log (still using standard fetch as it is secondary)
-            const { data: acts } = await supabase
-                .from('activity_log')
-                .select('*')
-                .eq('candidate_id', params.id)
-                .order('created_at', { ascending: false });
-
-            setActivity(acts || []);
+            // Activity log via verified RPC (activity_log is no longer anon-readable).
+            const { data: acts } = await rpc('hr_candidate_activity', {
+                p_privy: user.id, p_candidate_id: params.id,
+            });
+            setActivity(Array.isArray(acts) ? acts : []);
 
             if (can.assessment_results && can.assessment_results.length > 0) {
                 setResults(can.assessment_results[0]);
@@ -177,10 +174,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 summary: "This candidate shows strong leadership potential with a highly collaborative work style. They matched 100% on core technical screening questions. Their detailed open-ended response about multi-tenant SaaS architecture is particularly impressive."
             };
 
-            const { error } = await supabase.from('assessment_results').insert(demoResults);
-            if (error) throw error;
-
-            await supabase.from('candidates').update({ status: 'assessment_completed' }).eq('id', params.id);
+            if (!user?.id) return;
+            const { data, error } = await rpc('hr_seed_demo_result', {
+                p_privy: user.id, p_candidate_id: params.id, p_results: demoResults,
+            });
+            if (error || data === false) throw error || new Error('Seed rejected');
             loadCandidateData();
         } catch (error) {
             console.error('Error generating demo data:', error);
@@ -192,12 +190,12 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     const updateStatus = async (newStatus: string) => {
         try {
-            const { error } = await supabase
-                .from('candidates')
-                .update({ status: newStatus })
-                .eq('id', params.id);
-
-            if (error) throw error;
+            if (!user?.id) return;
+            // Verified RPC updates the row AND writes the audit entry atomically.
+            const { data, error } = await rpc('hr_update_candidate_status', {
+                p_privy: user.id, p_candidate_id: params.id, p_status: newStatus,
+            });
+            if (error || data === false) throw error || new Error('Update rejected');
 
             setCandidate({ ...candidate, status: newStatus });
 
@@ -207,14 +205,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ candidateId: params.id, status: newStatus, privyUserId: user?.id }),
             }).catch(console.error);
-
-            // Log activity
-            await supabase.from('activity_log').insert({
-                company_id: candidate.company_id,
-                candidate_id: candidate.id,
-                action: 'status_updated',
-                details: { old_status: candidate.status, new_status: newStatus }
-            });
 
             loadCandidateData();
         } catch (error) {

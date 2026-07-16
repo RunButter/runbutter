@@ -3,7 +3,7 @@
 // interviews), which are company-scoped via company_users.privy_user_id + the
 // app.current_privy_user_id RLS session var. Falls back to sample data when the
 // user isn't signed in or has no company, so the surface always renders.
-import { supabase } from '@/lib/supabase';
+import { rpc } from '@/lib/rpc';
 
 export interface HrStats {
   totalCandidates: number; activePositions: number; assessmentsCompleted: number;
@@ -66,39 +66,27 @@ function mockOverview(): HrOverview {
 export async function loadHrOverview(privyUserId: string | null): Promise<HrOverview> {
   if (!privyUserId) return mockOverview();
   try {
-    await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-    const { data: cu } = await supabase
-      .from('company_users')
-      .select('company_id, company:companies(name, plan)')
-      .eq('privy_user_id', privyUserId)
-      .maybeSingle();
-    if (!cu?.company_id) return mockOverview();
-    const companyId = cu.company_id;
-    const company: any = Array.isArray(cu.company) ? cu.company[0] : cu.company;
+    // One verified RPC (hr_overview_data) replaces the direct table reads —
+    // the crown-jewel tables are no longer reachable with the anon key.
+    const { data, error } = await rpc('hr_overview_data', { p_privy: privyUserId });
+    if (error || !data) return mockOverview();
+    const company: any = data.company;
 
-    const [statusRes, posRes, intRes, assessRes, recentRes] = await Promise.all([
-      supabase.from('candidates').select('status, applied_at').eq('company_id', companyId).limit(5000),
-      supabase.from('positions').select('*', { count: 'exact', head: true }).eq('company_id', companyId).eq('is_active', true),
-      supabase.from('interviews').select('candidate:candidates!inner(company_id)', { count: 'exact', head: true }).eq('status', 'scheduled').eq('candidate.company_id', companyId).gte('scheduled_at', new Date().toISOString()),
-      supabase.from('assessment_responses').select('candidate:candidates!inner(company_id)', { count: 'exact', head: true }).eq('is_completed', true).eq('candidate.company_id', companyId),
-      supabase.from('candidates').select('id, full_name, email, status, applied_at, position:positions(title)').eq('company_id', companyId).order('applied_at', { ascending: false }).limit(6),
-    ]);
-
-    const rows = (statusRes.data || []) as { status: string; applied_at: string | null }[];
+    const rows = (data.status_rows || []) as { status: string; applied_at: string | null }[];
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const funnel = FUNNEL.map((f) => ({ key: f.key, label: f.label, tone: f.tone, count: rows.filter((r) => f.match(r.status)).length }));
     const stats: HrStats = {
       totalCandidates: rows.length,
-      activePositions: posRes.count || 0,
-      assessmentsCompleted: assessRes.count || 0,
-      upcomingInterviews: intRes.count || 0,
+      activePositions: data.active_positions || 0,
+      assessmentsCompleted: data.assessments_completed || 0,
+      upcomingInterviews: data.upcoming_interviews || 0,
       newApplications: rows.filter((r) => r.applied_at && new Date(r.applied_at).getTime() >= weekAgo).length,
       pendingReview: rows.filter((r) => r.status === 'applied' || r.status === 'screening').length,
       hired: rows.filter((r) => r.status === 'hired').length,
     };
-    const recent: HrCandidate[] = (recentRes.data || []).map((c: any) => ({
+    const recent: HrCandidate[] = (data.recent || []).map((c: any) => ({
       id: c.id, full_name: c.full_name, email: c.email, status: c.status, applied_at: c.applied_at,
-      position_title: Array.isArray(c.position) ? c.position[0]?.title : c.position?.title ?? null,
+      position_title: c.position_title ?? null,
     }));
 
     return { company: company ? { name: company.name, plan: company.plan } : null, stats, funnel, recent, live: true };

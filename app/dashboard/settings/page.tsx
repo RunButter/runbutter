@@ -72,15 +72,10 @@ export default function SettingsPage() {
             });
             setLogoPreview(companyUser.company.logo_url);
 
-            // Check Google Integration Status
-            const { data: token } = await supabase
-                .from('integration_tokens')
-                .select('id, company_users!inner(privy_user_id)')
-                .eq('company_users.privy_user_id', privyUserId)
-                .eq('provider', 'google')
-                .maybeSingle();
-            
-            setIsGoogleConnected(!!token);
+            // Check Google Integration Status (integration_tokens is no longer
+            // anon-readable — go through the verified RPC).
+            const { data: connected } = await rpc('hr_google_connected', { p_privy: privyUserId });
+            setIsGoogleConnected(connected === true);
 
             // Load the company's webhook integrations
             const { data: hooks } = await rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });

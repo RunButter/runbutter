@@ -34,7 +34,9 @@ with checks(ord, step, probe, ok) as (
   (37, '0037 pgcrypto fix',       'save_automation + create_api_key use core crypto', ((select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_functiondef(oid) ilike '%sha256%')))),
   (38, '0038 custom AI provider', 'ai_providers.base_url + updated RPCs', (exists(select 1 from information_schema.columns where table_name='ai_providers' and column_name='base_url') and (select exists(select 1 from pg_proc where proname='store_ai_provider' and pg_get_functiondef(oid) ilike '%p_base_url%')))),
   (39, '0039 nav activity',       'sidebar unread-badge RPC', (select exists(select 1 from pg_proc where proname='get_nav_activity'))),
-  (40, '0040 lock rpcs',          'anon can no longer execute list_records', (select coalesce(bool_and(not has_function_privilege('anon', p.oid, 'execute')), false) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('list_records','get_ai_secret')))
+  (40, '0040 lock rpcs',          'anon can no longer execute list_records', (select coalesce(bool_and(not has_function_privilege('anon', p.oid, 'execute')), false) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('list_records','get_ai_secret'))),
+  (41, '0041 hr secure rpcs',     'apply_to_position + hr_overview_data exist', ((select exists(select 1 from pg_proc where proname='apply_to_position')) and (select exists(select 1 from pg_proc where proname='hr_overview_data')))),
+  (42, '0042 lock legacy tables', 'anon can no longer SELECT candidates', (not has_table_privilege('anon', 'public.candidates', 'select')))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;
