@@ -66,12 +66,12 @@ export async function POST(req: Request) {
         // 5. Send Invite Email via Resend
         if (process.env.RESEND_API_KEY) {
             await resend.emails.send({
-                from: 'HireBtr <no-reply@runbutter.app>',
+                from: 'RunButter <no-reply@runbutter.app>',
                 to: email,
-                subject: `You've been invited to join ${company?.name} on HireBtr`,
+                subject: `You've been invited to join ${company?.name} on RunButter`,
                 html: `
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
-                        <h2>Welcome to HireBtr!</h2>
+                        <h2>Welcome to RunButter!</h2>
                         <p>You have been invited to collaborate with your team at <b>${company?.name}</b>.</p>
                         <p>Your assigned role is: <b>${role.toUpperCase()}</b></p>
                         <br/>
