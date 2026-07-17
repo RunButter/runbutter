@@ -119,7 +119,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           <img src={logo} alt="" className="w-5 h-5 rounded object-cover border border-subtle shrink-0" />
         ) : (
           <div className="w-5 h-5 rounded bg-accent shrink-0 flex items-center justify-center text-2xs font-semibold text-accent-fg">
-            {(ws?.name || 'H')[0].toUpperCase()}
+            {(ws?.name || 'R')[0].toUpperCase()}
           </div>
         )}
         <span className="text-sm font-medium text-primary truncate">{ws?.name || 'RunButter'}</span>
@@ -166,7 +166,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
         {logo ? (
           <img src={logo} alt="" className="w-6 h-6 rounded-full object-cover border border-subtle shrink-0" />
         ) : (
-          <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center shrink-0">{(ws?.name || 'H')[0].toUpperCase()}</div>
+          <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center shrink-0">{(ws?.name || 'R')[0].toUpperCase()}</div>
         )}
         <div className="text-xs leading-tight min-w-0">
           <div className="font-medium text-primary truncate">{ws?.name || 'Workspace'}</div>

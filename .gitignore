@@ -7,3 +7,6 @@ dist/
 build/
 auth.sqlite
 .gemini/
+
+# Brand design source (raw exports); shipped assets live in public/
+RunButter.app/

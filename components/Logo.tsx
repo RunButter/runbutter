@@ -3,48 +3,32 @@ import React from 'react';
 interface LogoProps {
     className?: string;
     iconOnly?: boolean;
+    /** On a dark background: wordmark goes white. */
     dark?: boolean;
-    /** Render grayscale (mark + suffix follow the text tokens, no accent hue). */
+    /** Reserved for callers that want a grayscale mark (e.g. print). Default
+     *  shows the brand's yellow butter — the one hit of colour on an otherwise
+     *  monochrome surface. */
     mono?: boolean;
 }
 
 /**
- * runbutter.app Logo Component
- * Renders the custom pixelated arrow icon and brand text.
+ * RunButter logo: the butter-stick mark (public/logo.svg) + wordmark.
+ * The mark stays brand-yellow everywhere; the wordmark follows the theme
+ * so the whole thing reads in both light and dark.
  */
 const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = false, mono = false }) => {
-    const markClass = mono ? 'text-primary' : 'text-accent';
     return (
-        <div className={`flex items-center gap-3 ${className}`}>
-            {/* Precision-recreated Pixelated Arrow SVG from user attachment */}
-            <svg
-                width="28"
-                height="28"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="flex-shrink-0"
-            >
-                {/* Follows a text token so the mark themes with the rest. */}
-                <g fill="currentColor" className={markClass}>
-                    {/* Top tail */}
-                    <rect x="10" y="10" width="20" height="20" />
-                    <rect x="30" y="20" width="20" height="20" />
-                    <rect x="50" y="30" width="20" height="20" />
-
-                    {/* Middle tip */}
-                    <rect x="70" y="40" width="20" height="20" />
-
-                    {/* Bottom tail */}
-                    <rect x="50" y="50" width="20" height="20" />
-                    <rect x="30" y="60" width="20" height="20" />
-                    <rect x="10" y="70" width="20" height="20" />
-                </g>
-            </svg>
-
+        <div className={`flex items-center gap-2 ${className}`}>
+            <img
+                src="/logo.svg"
+                alt="RunButter"
+                width={26}
+                height={26}
+                className={`w-[26px] h-[26px] shrink-0 ${mono ? 'grayscale' : ''}`}
+            />
             {!iconOnly && (
                 <span className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-primary'}`}>
-                    runbutter<span className={mono ? 'text-tertiary' : 'text-accent'}>.app</span>
+                    runbutter<span className="text-tertiary">.app</span>
                 </span>
             )}
         </div>
