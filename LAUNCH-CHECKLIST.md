@@ -11,7 +11,7 @@ and dashboards, not the repo.
 - Brand text `HireBTR`/`hirebtr` → `RunButter`/`runbutter` (200 spots, 107 files)
 - Domain `hirebtr.com` → `runbutter.app` everywhere (emails, legal pages, MCP snippet)
 - MCP server key `"hirebtr"` → `"runbutter"`, package name, page `<title>`, Logo wordmark → `runbutter.app`
-- Git URL `github.com/CasperCrypto/hirebtr` → `github.com/runbutter/runbutter` **(placeholder — adjust in step 2 if your org name differs)**
+- Git URL `github.com/CasperCrypto/hirebtr` → `github.com/RunButter/runbutter` **(placeholder — adjust in step 2 if your org name differs)**
 - **Preserved on purpose:** the `hb_` API-key prefix (SQL-generated; old keys keep
   resolving) and `hb-*` localStorage keys (renaming just resets saved theme/nav).
   Optional later: add a migration to make new keys `rb_`.
@@ -27,7 +27,7 @@ Typecheck + production build pass. Review the branch, then merge to `main`.
 3. Point this repo at it and push:
    ```bash
    git remote remove upstream                # drop CasperCrypto/hirebtr
-   git remote add origin https://github.com/runbutter/runbutter.git
+   git remote add origin https://github.com/RunButter/runbutter.git
    git checkout main && git merge rebrand/runbutter
    git push -u origin main
    ```
@@ -56,8 +56,14 @@ Typecheck + production build pass. Review the branch, then merge to `main`.
 ## 3. Render (hosting) — env + domain
 Update the running service (or create a fresh one from the new repo):
 - `NEXT_PUBLIC_APP_URL = https://runbutter.app`
+- ⚠️ **`NEXT_PUBLIC_PRIVY_APP_ID = cmlqpi7i600630cjlgazh281n`** — the hardcoded
+  fallback was REMOVED for open-sourcing. If this env var isn't set in Render,
+  **login breaks** (Privy can't init) and server-side token verification fails
+  closed. Set it before deploying the rebrand. (It's a public value, not a secret.)
 - Keep: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-  `SUPABASE_SERVICE_ROLE_KEY`, `SECRETS_MASTER_KEY`, `NEXT_PUBLIC_PRIVY_APP_ID`.
+  `SUPABASE_SERVICE_ROLE_KEY`, `SECRETS_MASTER_KEY`.
+- `NEXT_PUBLIC_ANALYTICS_SITE_ID = a0f643e7-6b67-4290-8a8d-72f65cf7e341` — also
+  no longer hardcoded; set it to keep your own web analytics working (optional).
 - **Still pending from before:** real `STRIPE_WEBHOOK_SECRET` (see §7) and a
   **cron** hitting `POST /api/automations/dispatch` with header
   `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>` every minute (scheduled automations).
@@ -111,11 +117,11 @@ Google Cloud Console → **APIs & Services → Credentials → your OAuth client
 
 ---
 
-## 9. Logo / brand art  (optional but visible)
-- The current mark is the pixel-arrow in `components/Logo.tsx` (now follows the
-  accent/mono token) and the favicon data-URI in `app/layout.tsx` (still hardcoded
-  `#4F46E5`). Swap both when you have the real RunButter logo.
-- The landing hero uses a monochrome ASCII field — no logo art needed there.
+## 9. Logo / brand art  **[done]**
+- Real butter logo wired in: `public/logo.svg` (mark) drives `components/Logo.tsx`;
+  full favicon set in `public/` + `app/icon.svg`; OpenGraph/Twitter cards point at
+  `public/logo.png`. Raw design exports live in `RunButter.app/` (gitignored).
+- Optional polish later: a proper 1200×630 OG image (currently the square logo).
 
 ---
 

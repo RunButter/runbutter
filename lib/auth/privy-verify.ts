@@ -12,7 +12,8 @@ import { createPublicKey, verify as cryptoVerify } from 'crypto';
 // verification INFRASTRUCTURE unavailable (JWKS unreachable) → allow degraded,
 // so an auth.privy.io outage can't take our API down with it.
 
-const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'cmlqpi7i600630cjlgazh281n';
+// Public identifier, env-only (no hardcoded default — a self-host uses its own).
+const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
 const JWKS_URL = `https://auth.privy.io/api/v1/apps/${APP_ID}/jwks.json`;
 const JWKS_TTL_MS = 10 * 60 * 1000;
 
@@ -47,6 +48,10 @@ export type PrivyVerify =
   | { status: 'unavailable'; reason: string };
 
 export async function verifyPrivyToken(req: Request): Promise<PrivyVerify> {
+  // No app id = misconfiguration, not a transient outage. Fail CLOSED (invalid),
+  // never 'unavailable' — otherwise the /api/rpc proxy would fail-open and trust
+  // client-supplied identities, re-opening the spoof if the env var is missing.
+  if (!APP_ID) return { status: 'invalid', reason: 'Privy app id not configured' };
   const token = tokenFrom(req);
   if (!token) return { status: 'invalid', reason: 'No auth token on the request' };
   const parts = token.split('.');

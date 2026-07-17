@@ -2,11 +2,11 @@ import Link from 'next/link';
 import Script from 'next/script';
 import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck, Zap, Plug, Sparkles, Github, Database, Terminal } from 'lucide-react';
 
-// Self-tracking (dogfooding our own web analytics). Production only, so dev
-// and preview visits never pollute the stats. Site ids are public by nature —
-// they appear in any tracked page's HTML.
-const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || 'a0f643e7-6b67-4290-8a8d-72f65cf7e341';
-const TRACK = process.env.NODE_ENV === 'production';
+// Self-tracking (dogfooding our own web analytics). Env-only so a self-host
+// never reports into someone else's stats; production only. Site ids are public
+// by nature (they appear in any tracked page's HTML).
+const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || '';
+const TRACK = process.env.NODE_ENV === 'production' && !!ANALYTICS_SITE_ID;
 import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
@@ -15,7 +15,7 @@ import Reveal from '@/components/landing/Reveal';
 import ThemeToggle from '@/components/landing/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
 
-const REPO_URL = 'https://github.com/runbutter/runbutter';
+const REPO_URL = 'https://github.com/RunButter/runbutter';
 // Monochrome ASCII: greys read on both canvases; the drift shifts between them.
 const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 

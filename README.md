@@ -3,7 +3,7 @@
 One relational workspace for the whole company: **Sales · Finance · Marketing · Projects · HR**, plus Docs, Automations, and an open integration layer (REST, webhooks, MCP). Built to run cheaply: Postgres does the heavy lifting, and there are **no platform LLM costs** — AI features run on each workspace's own API keys.
 
 ```bash
-git clone https://github.com/runbutter/runbutter.git
+git clone https://github.com/RunButter/runbutter.git
 cd runbutter && npm install
 cp .env.example .env.local   # fill in Supabase + Privy
 npm run dev
