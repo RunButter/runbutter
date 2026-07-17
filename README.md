@@ -28,16 +28,35 @@ Next.js 14 (App Router) · React · Tailwind · Supabase (Postgres) · [Privy](h
 
 ## Self-hosting
 
+RunButter brings its own database and auth — you supply your own instances
+(both have free tiers). Nothing is shared with the hosted service.
+
+| Service | Needed? | Free? | What it's for |
+|---|---|---|---|
+| **Supabase** | Required | Yes | Postgres database + file storage |
+| **Privy** | Required | Yes | Sign-in (email / Google) |
+| Resend | Optional | Yes (100/day) | Candidate & status emails |
+| Stripe | Optional | Yes | Billing / paid plans |
+| Google Cloud | Optional | Yes | Calendar interview scheduling |
+
+Everything optional **degrades gracefully** — the app runs fine without it.
+Minimum to boot: Supabase + Privy, about 15 minutes.
+
 1. **Supabase**: create a project, then in the SQL Editor run, in order:
-   - `supabase-schema.sql` (base ATS schema), then the root `add-*.sql` modules,
-   - everything in `supabase/migrations/` in numeric order (`0001` → `0040`).
-   - Paste `supabase/verify-migrations.sql` afterwards — every row should be ✅.
-   - Note `0040_lock_rpcs.sql` must run **after** the app is deployed (it cuts browser-key access to RPCs that the app now proxies server-side).
-2. **Privy**: create an app at dashboard.privy.io, copy the App ID.
-3. **Env**: copy `.env.example` → `.env.local` and fill in the required block. Everything else (Stripe, Resend, Google Calendar, analytics, KSeF) is optional and degrades gracefully.
-4. `npm run dev`, or `npm run build && npm start` in production.
+   - `supabase-schema.sql` (base schema), then the root `add-*.sql` modules,
+   - everything in `supabase/migrations/` in numeric order (`0001` → `0042`),
+   - then paste `supabase/verify-migrations.sql` — every row should be ✅.
+   - Enable the `pg_cron` and `unaccent` extensions (GDPR auto-anonymization).
+   - `0040`/`0042` revoke browser-key table access, so run them **after** the app is deployed.
+2. **Privy**: create a free app at dashboard.privy.io, copy the App ID, and add
+   your domain (e.g. `http://localhost:3000`) to its allowed origins.
+3. **Env**: copy `.env.example` → `.env.local`, fill in the Required block
+   (Supabase + Privy + app URL). Leave the Optional blocks empty to start.
+4. `npm install`, then `npm run dev` (or `npm run build && npm start` in prod).
 5. Optional cron for scheduled automations (event/webhook triggers already fire instantly):
    `POST /api/automations/dispatch` with header `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY`, every minute.
+
+**Don't want to self-host?** Just sign up at [runbutter.app](https://runbutter.app) — same app, zero setup.
 
 ## Connect AI agents (MCP)
 
