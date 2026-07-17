@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0006_projects.sql
+-- RunButter Platform Core — 0006_projects.sql
 -- Plane-style Project Management: projects + issues (board reuses the existing
 -- kanban engine). Additive & prod-safe. Depends on 0001–0005.
 -- ============================================================================

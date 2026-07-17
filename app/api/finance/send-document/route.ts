@@ -97,7 +97,7 @@ export async function POST(req: Request) {
         ${d.notes ? `<p style="font-size:13px;color:#6B7280;line-height:1.6;">${esc(d.notes)}</p>` : ''}
         ${footer ? `<p style="font-size:12px;color:#6B7280;line-height:1.6;border-top:1px solid #E5E7EB;padding-top:12px;">${esc(footer)}</p>` : ''}
         <hr style="border:0;border-top:1px solid #E5E7EB;margin:24px 0;" />
-        <p style="font-size:12px;color:#9CA3AF;text-align:center;">Sent via hirebtr.com</p>
+        <p style="font-size:12px;color:#9CA3AF;text-align:center;">Sent via runbutter.app</p>
       </div>`;
 
     if (!process.env.RESEND_API_KEY) {
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error: sendErr } = await resend.emails.send({
-      from: 'hirebtr.com <hello@hirebtr.com>',
+      from: 'runbutter.app <hello@runbutter.app>',
       to: [to],
       subject: `${title} ${d.number || ''} from ${sellerName}`.trim(),
       html,

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0029_analytics_v2.sql
+-- RunButter Platform Core — 0029_analytics_v2.sql
 -- Web analytics v2: get_site_stats (from 0027) additionally returns the
 -- desktop/mobile device split. Additive & prod-safe. Depends on 0027. Run AFTER.
 -- ============================================================================

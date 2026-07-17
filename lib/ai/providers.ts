@@ -1,5 +1,5 @@
 // BYO-key AI adapter. The user supplies their own provider key (stored encrypted);
-// HireBTR just proxies the call, so there is no platform token cost. No SDKs —
+// RunButter just proxies the call, so there is no platform token cost. No SDKs —
 // plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
 import { isSafeOutboundUrl } from '@/lib/security/http';
 

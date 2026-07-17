@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0011_project_dashboard.sql
+-- RunButter Platform Core — 0011_project_dashboard.sql
 -- A project's own dashboard: fetch the project + its issues in one call.
 -- Additive & prod-safe. Depends on 0001–0010.
 -- ============================================================================

@@ -15,7 +15,7 @@ import Reveal from '@/components/landing/Reveal';
 import ThemeToggle from '@/components/landing/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
 
-const REPO_URL = 'https://github.com/CasperCrypto/hirebtr';
+const REPO_URL = 'https://github.com/runbutter/runbutter';
 // Monochrome ASCII: greys read on both canvases; the drift shifts between them.
 const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 
@@ -58,9 +58,9 @@ const FAQ = [
 
 const MCP_SNIPPET = `{
   "mcpServers": {
-    "hirebtr": {
+    "runbutter": {
       "type": "http",
-      "url": "https://hirebtr.com/api/mcp",
+      "url": "https://runbutter.app/api/mcp",
       "headers": { "Authorization": "Bearer hb_..." }
     }
   }
@@ -318,7 +318,7 @@ export default function HomePage() {
         </div>
         <div className="border-t border-subtle">
           <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-tertiary">
-            <span>© 2026 hirebtr.com</span>
+            <span>© 2026 runbutter.app</span>
             <span>Built on Postgres · MIT licensed · no AI token bill</span>
           </div>
         </div>

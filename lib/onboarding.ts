@@ -1,6 +1,6 @@
 // Rule-based onboarding "copilot" — generates a manager brief and a tailored
 // onboarding checklist purely from a hire's psychometric scores.
-// Deterministic and free: NO LLM / API calls (per HireBTR's cost model).
+// Deterministic and free: NO LLM / API calls (per RunButter's cost model).
 
 export interface TraitInput {
     full_name?: string;

@@ -1,4 +1,4 @@
--- TalentInsight Migration Script
+-- runbutter Migration Script
 -- Run this in the Supabase SQL Editor to add missing columns and tables
 
 -- 1. Add missing columns to 'companies'

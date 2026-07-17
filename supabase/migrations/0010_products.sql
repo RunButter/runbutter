@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0010_products.sql
+-- RunButter Platform Core — 0010_products.sql
 -- Products / Inventory catalog (items + prices) — the basis for invoice/offer
 -- line items (the composer comes next). Additive & prod-safe. Depends on 0001–0009.
 -- ============================================================================

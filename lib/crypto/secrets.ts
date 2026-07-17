@@ -19,7 +19,7 @@ function masterKey(): Buffer {
   // rotating the service-role key invalidates sealed secrets (users simply
   // re-add their AI keys). Setting SECRETS_MASTER_KEY overrides this.
   const svc = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (svc) return crypto.createHash('sha256').update(`hirebtr-secrets-v1:${svc}`).digest();
+  if (svc) return crypto.createHash('sha256').update(`runbutter-secrets-v1:${svc}`).digest();
   throw new Error('The server has no encryption key. Set SECRETS_MASTER_KEY (openssl rand -base64 32) in the host environment.');
 }
 

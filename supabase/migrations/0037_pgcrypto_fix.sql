@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0037_pgcrypto_fix.sql
+-- RunButter Platform Core — 0037_pgcrypto_fix.sql
 -- BUG FIX: "function gen_random_bytes(integer) does not exist" when saving an
 -- automation (webhook trigger) or creating an API key.
 --

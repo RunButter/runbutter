@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { error } = await resend.emails.send({
-            from: 'hirebtr.com <hello@hirebtr.com>',
+            from: 'runbutter.app <hello@runbutter.app>',
             to: [candidate.email],
             subject: finalSubject,
             html: `
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
                     <div style="line-height: 1.6; white-space: pre-wrap;">${finalBodyText
                         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
                     <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 24px 0;" />
-                    <p style="font-size: 12px; color: #6B7280; text-align: center;">Powered by hirebtr.com</p>
+                    <p style="font-size: 12px; color: #6B7280; text-align: center;">Powered by runbutter.app</p>
                 </div>
             `,
         });

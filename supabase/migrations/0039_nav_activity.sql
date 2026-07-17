@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0039_nav_activity.sql
+-- RunButter Platform Core — 0039_nav_activity.sql
 -- Sidebar unread badges: "how many NEW records since I last looked at each
 -- tab?" One RPC, one round trip. The client keeps a per-tab last-seen
 -- timestamp (localStorage) and sends it as jsonb; keys missing from p_since

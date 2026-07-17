@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# TalentInsight Quick Start Script
+# runbutter Quick Start Script
 # This script helps you get started quickly with local development
 
-echo "🚀 TalentInsight - Quick Start Setup"
+echo "🚀 runbutter - Quick Start Setup"
 echo "===================================="
 echo ""
 

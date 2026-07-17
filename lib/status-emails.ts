@@ -99,7 +99,7 @@ export async function sendStatusEmail(
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
-        from: 'hirebtr.com <hello@hirebtr.com>',
+        from: 'runbutter.app <hello@runbutter.app>',
         to: [candidate.email],
         subject,
         html: `
@@ -112,7 +112,7 @@ export async function sendStatusEmail(
                 <p style="margin-top: 24px;">If you have any questions, just reply to this email.</p>
                 <p>Best regards,<br/>The ${ctx.company} Hiring Team</p>
                 <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 24px 0;" />
-                <p style="font-size: 12px; color: #6B7280; text-align: center;">Powered by hirebtr.com</p>
+                <p style="font-size: 12px; color: #6B7280; text-align: center;">Powered by runbutter.app</p>
             </div>
         `,
     });

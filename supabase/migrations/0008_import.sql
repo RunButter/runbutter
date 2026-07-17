@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0008_import.sql
+-- RunButter Platform Core — 0008_import.sql
 -- Bulk import for any object. Reuses create_record per row (so all per-object
 -- column mapping/validation is shared). Bad rows are skipped, not fatal.
 -- Additive & prod-safe. Depends on 0001–0007.

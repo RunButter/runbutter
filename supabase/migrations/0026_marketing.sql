@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0026_marketing.sql
+-- RunButter Platform Core — 0026_marketing.sql
 -- Marketing pillar: campaigns (channel, budget/spend, leads, dates), threaded
 -- through the generic CRUD RPCs (extended from 0021; delete_record keeps the
 -- role gate from 0012). import_records reuses create_record so CSV import

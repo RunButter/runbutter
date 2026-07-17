@@ -1,4 +1,4 @@
-# 🚀 Deployment Checklist - Launch TalentInsight
+# 🚀 Deployment Checklist - Launch runbutter
 
 ## Pre-Launch Checklist
 
@@ -33,7 +33,7 @@
 - [ ] Prepare production env vars for Vercel
 
 ### ✅ Domain Setup
-- [ ] Purchase domain (e.g., talentinsight.com)
+- [ ] Purchase domain (e.g., runbutter.com)
 - [ ] Access domain DNS settings
 - [ ] Prepare for wildcard subdomain config
 
@@ -67,7 +67,7 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
-NEXT_PUBLIC_APP_NAME=TalentInsight
+NEXT_PUBLIC_APP_NAME=runbutter
 ```
 
 **Important**: Add variables for all environments (Production, Preview, Development)
@@ -77,11 +77,11 @@ NEXT_PUBLIC_APP_NAME=TalentInsight
 In Vercel Dashboard → Project → Settings → Domains:
 
 1. **Add root domain**:
-   - Enter: `talentinsight.com`
+   - Enter: `runbutter.com`
    - Vercel provides DNS records
 
 2. **Add wildcard subdomain**:
-   - Enter: `*.talentinsight.com`
+   - Enter: `*.runbutter.com`
    - This enables multi-tenant subdomains
 
 3. **Configure DNS** (at your domain provider):
@@ -108,8 +108,8 @@ In Google Cloud Console → APIs & Services → Credentials:
 1. Edit your OAuth 2.0 Client ID
 2. Add production redirect URI:
    ```
-   https://talentinsight.com/api/auth/google/callback
-   https://*.talentinsight.com/api/auth/google/callback
+   https://runbutter.com/api/auth/google/callback
+   https://*.runbutter.com/api/auth/google/callback
    ```
 3. Save changes
 
@@ -139,7 +139,7 @@ In Google Cloud Console → APIs & Services → Credentials:
 ```
 
 This gives you:
-- Demo site: `demo.talentinsight.com`
+- Demo site: `demo.runbutter.com`
 - Example for sales/marketing
 - Testing environment
 

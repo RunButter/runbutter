@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================================
-   HireBTR design system.
+   RunButter design system.
    Components must reference SEMANTIC tokens (bg-surface, text-secondary,
    border-subtle), never literal palette colors (bg-white, text-slate-800).
    That is what keeps one global UI across every module and lets the theme

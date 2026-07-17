@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-lg">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-semibold text-primary">HireBTR</span>
+          <span className="text-sm font-semibold text-primary">RunButter</span>
         </header>
         <div className="flex-1 overflow-y-auto bg-surface-sunken/30">
           {company && requiredFeature ? (

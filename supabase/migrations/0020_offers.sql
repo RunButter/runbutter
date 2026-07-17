@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0020_offers.sql
+-- RunButter Platform Core — 0020_offers.sql
 -- Quote-to-cash: convert an accepted offer into a draft invoice (clones the
 -- offer + its line items, recomputes the total, marks the offer accepted).
 -- Offers themselves are invoices with kind='offer' — the data layer maps the

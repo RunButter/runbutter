@@ -256,7 +256,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
-                  Portal: <span className="font-medium">{formData.subdomain || 'your-company'}.hirebtr.com</span>
+                  Portal: <span className="font-medium">{formData.subdomain || 'your-company'}.runbutter.app</span>
                 </p>
                 {formData.subdomain && subdomainAvailable !== null && (
                   <p className={`mt-1 text-sm ${subdomainAvailable ? 'text-green-600' : 'text-red-600'}`}>

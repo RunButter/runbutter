@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Module 2 — Talent Treasury dataset (additive, non-breaking)
+-- RunButter :: Module 2 — Talent Treasury dataset (additive, non-breaking)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- Provides ONE secure RPC that returns a company's candidates with their

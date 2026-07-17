@@ -1,7 +1,7 @@
-# TalentInsight - Project Structure
+# runbutter - Project Structure
 
 ```
-talent-insight/
+runbutter/
 │
 ├── app/                          # Next.js App Router
 │   ├── layout.tsx               # Root layout
@@ -168,7 +168,7 @@ talent-insight/
 
 ### Candidate Application Flow
 ```
-1. Candidate visits job.company.talentinsight.com/apply/[positionId]
+1. Candidate visits job.company.runbutter.com/apply/[positionId]
 2. Fills application form + uploads CV
 3. Data saved to 'candidates' table
 4. CV uploaded to Supabase Storage

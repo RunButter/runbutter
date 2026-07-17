@@ -122,7 +122,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
             {(ws?.name || 'H')[0].toUpperCase()}
           </div>
         )}
-        <span className="text-sm font-medium text-primary truncate">{ws?.name || 'HireBTR'}</span>
+        <span className="text-sm font-medium text-primary truncate">{ws?.name || 'RunButter'}</span>
         <ChevronsUpDown className="w-3.5 h-3.5 text-tertiary ml-auto shrink-0" />
       </button>
 

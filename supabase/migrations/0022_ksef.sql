@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0022_ksef.sql
+-- RunButter Platform Core — 0022_ksef.sql
 -- KSeF (Poland e-invoicing) groundwork: the seller's own NIP on the workspace,
 -- KSeF reference columns on invoices, and seller/buyer tax_id + address surfaced
 -- in get_invoice_document so an FA(3) XML can be generated. Additive & prod-safe.

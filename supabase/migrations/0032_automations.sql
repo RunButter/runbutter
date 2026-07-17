@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0032_automations.sql
+-- RunButter Platform Core — 0032_automations.sql
 -- Automations engine + open integration layer, workspace-scoped.
 --
 --  • connections       — outgoing webhook targets (BYO URL: Zapier/Make/n8n/Slack)

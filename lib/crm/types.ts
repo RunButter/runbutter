@@ -1,4 +1,4 @@
-// Core relational types for the HireBTR platform (CRM / Business-OS pivot).
+// Core relational types for the RunButter platform (CRM / Business-OS pivot).
 // These mirror the Postgres schema in supabase/migrations/0001_platform_core.sql.
 
 export type ObjectType = 'person' | 'company' | 'asset';

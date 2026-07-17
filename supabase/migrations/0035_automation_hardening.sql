@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0035_automation_hardening.sql
+-- RunButter Platform Core — 0035_automation_hardening.sql
 -- Fixes an automation-recursion hazard and adds the wrapper RPCs the
 -- dispatcher uses for record actions.
 --

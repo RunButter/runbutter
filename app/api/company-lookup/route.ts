@@ -13,7 +13,7 @@ const cleanId = (s: string) => String(s || '').replace(/[^0-9A-Za-z]/g, '').toUp
 async function lookupPL(nip: string) {
   const date = new Date().toISOString().slice(0, 10);
   const res = await fetch(`https://wl-api.mf.gov.pl/api/search/nip/${nip}?date=${date}`, {
-    headers: { accept: 'application/json', 'user-agent': 'HireBTR/1.0 (+https://hirebtr.com)' },
+    headers: { accept: 'application/json', 'user-agent': 'RunButter/1.0 (+https://runbutter.app)' },
   });
   if (!res.ok) {
     let msg = `Polish registry lookup failed (${res.status})`;
@@ -39,7 +39,7 @@ const viesClean = (v: any) => { const s = String(v ?? '').trim(); return !s || s
 
 async function lookupVIES(country: string, number: string) {
   const res = await fetch(`https://ec.europa.eu/taxation_customs/vies/rest-api/ms/${country}/vat/${number}`, {
-    headers: { accept: 'application/json', 'user-agent': 'HireBTR/1.0 (+https://hirebtr.com)' },
+    headers: { accept: 'application/json', 'user-agent': 'RunButter/1.0 (+https://runbutter.app)' },
   });
   if (!res.ok) return { error: `VIES lookup failed (HTTP ${res.status}). Try again shortly.` };
   const j = await res.json();

@@ -1,5 +1,5 @@
-/* HireBTR analytics — cookieless, ~1KB. Usage:
-   <script defer src="https://hirebtr.com/t.js" data-site="YOUR_SITE_ID"></script> */
+/* RunButter analytics — cookieless, ~1KB. Usage:
+   <script defer src="https://runbutter.app/t.js" data-site="YOUR_SITE_ID"></script> */
 (function () {
   var s = document.currentScript;
   if (!s) return;

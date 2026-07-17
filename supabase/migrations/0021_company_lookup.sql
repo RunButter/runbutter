@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0021_company_lookup.sql
+-- RunButter Platform Core — 0021_company_lookup.sql
 -- Company enrichment: organizations gain tax_id / address / country so a tax-ID
 -- lookup (PL NIP via MF White List, EU VAT via VIES) can auto-fill them.
 -- Threads the new fields through the CRUD RPCs (extended from 0019).

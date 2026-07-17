@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0033_automations_v2.sql
+-- RunButter Platform Core — 0033_automations_v2.sql
 -- Automations + integrations, phase 2. Borrows the proven patterns:
 --   • Activepieces-style trigger types — record event, INCOMING WEBHOOK, schedule
 --   • Svix-style webhook delivery — HMAC signing secret, retries, delivery log

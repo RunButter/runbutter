@@ -55,8 +55,8 @@ export default function CookiesPage() {
                         <section className="mt-12 pt-8 border-t text-center">
                             <p className="text-gray-600">
                                 For more info, contact us at:{' '}
-                                <a href="mailto:hello@hirebtr.com" className="text-primary-600 font-semibold hover:underline">
-                                    hello@hirebtr.com
+                                <a href="mailto:hello@runbutter.app" className="text-primary-600 font-semibold hover:underline">
+                                    hello@runbutter.app
                                 </a>
                             </p>
                         </section>

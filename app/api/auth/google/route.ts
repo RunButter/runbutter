@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         }
 
         // Detect the public-facing URL behind proxies like Render
-        const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
+        const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'runbutter.app';
         const protocol = request.headers.get('x-forwarded-proto') || 'https';
         const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
         

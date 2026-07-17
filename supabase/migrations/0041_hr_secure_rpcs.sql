@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR — 0041_hr_secure_rpcs.sql
+-- RunButter — 0041_hr_secure_rpcs.sql
 -- Phase B of the lockdown: the legacy ATS tables still had RLS policies that
 -- resolve the tenant from current_setting('app.current_privy_user_id'), which
 -- ANY holder of the public anon key can set to a victim's (non-secret) Privy

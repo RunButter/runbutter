@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please **do not open a public issue** for security problems. Email
-**hello@hirebtr.com** with the details (steps to reproduce, impact, affected
+**hello@runbutter.app** with the details (steps to reproduce, impact, affected
 endpoint or file). You'll get an acknowledgement within 72 hours and a fix or
 mitigation plan within 14 days for anything that exposes tenant data.
 
@@ -11,7 +11,7 @@ mitigation plan within 14 days for anything that exposes tenant data.
 
 - The application code in this repository (API routes, RPC proxy, automations
   dispatcher, MCP server, SQL functions in `supabase/`).
-- The hosted instance at hirebtr.com.
+- The hosted instance at runbutter.app.
 
 Out of scope: denial-of-service volumetrics, issues requiring a victim's
 device, and vulnerabilities in third-party services themselves (Supabase,

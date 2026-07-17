@@ -56,7 +56,7 @@ export default function AiKeysPage() {
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-start gap-2 text-[13px] text-secondary rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
             <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            <p>Bring your <b>own</b> AI key — you pay your provider directly, HireBTR adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>
+            <p>Bring your <b>own</b> AI key — you pay your provider directly, RunButter adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>
           </div>
 
           {/* Add */}

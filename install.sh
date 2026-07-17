@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# TalentInsight - Automated Installation Script
+# runbutter - Automated Installation Script
 # This script sets up everything you need to run the app locally
 
 set -e  # Exit on error
 
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║                                                            ║"
-echo "║         🚀 TalentInsight - Automated Setup 🚀              ║"
+echo "║         🚀 runbutter - Automated Setup 🚀              ║"
 echo "║                                                            ║"
 echo "║       Multi-Tenant Recruitment Assessment SaaS            ║"
 echo "║                                                            ║"

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Module 1 — Zero-cost resume search (additive, non-breaking)
+-- RunButter :: Module 1 — Zero-cost resume search (additive, non-breaking)
 -- Run this in the Supabase SQL Editor. Safe to re-run (idempotent).
 --
 -- Adds raw resume text + a generated tsvector + GIN index to `candidates`,

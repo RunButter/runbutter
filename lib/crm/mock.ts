@@ -42,7 +42,7 @@ export function mockInvoiceDocument(id: string) {
       ? 'This proposal is valid for 30 days. We look forward to working together.'
       : 'Thank you for your business. Payment is due within 14 days via bank transfer.',
     seller: {
-      name: 'HireBTR Inc.', accent_color: '#6366F1', tax_id: '5260250274', country: 'PL',
+      name: 'RunButter Inc.', accent_color: '#6366F1', tax_id: '5260250274', country: 'PL',
       vat_id: 'PL5260250274', reg_no: 'KRS 0000123456', bdo: '000012345',
       iban: 'PL61 1090 1014 0000 0712 1981 2874', bank_name: 'ACME Bank',
       address: '500 Howard St, San Francisco, CA 94105',

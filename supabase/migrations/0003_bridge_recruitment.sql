@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0003_bridge_recruitment.sql
+-- RunButter Platform Core — 0003_bridge_recruitment.sql
 -- Non-destructive bridge: lift the existing ATS data into the universal tables
 -- WITHOUT touching or dropping anything. Idempotent (safe to re-run).
 -- Depends on 0001 + 0002. Run AFTER them.

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0030_site_management.sql
+-- RunButter Platform Core — 0030_site_management.sql
 -- Remove a tracked website (owner/admin only). site_events cascade-delete via
 -- the FK. Additive & prod-safe. Depends on 0027. Run AFTER it.
 -- ============================================================================

@@ -45,7 +45,7 @@ export const TEMPLATES: Template[] = [
 
 export function webhookUrl(token?: string | null): string {
   if (!token) return '';
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hirebtr.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://runbutter.app';
   return `${origin}/api/hooks/${token}`;
 }
 

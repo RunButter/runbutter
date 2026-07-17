@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0015_finance_epic.sql
+-- RunButter Platform Core — 0015_finance_epic.sql
 -- Finance epic: invoices gain an income/cost DIRECTION and a wired company
 -- (organization) picker, and the analytics treat cost-invoices as money-out.
 -- Redefines the CRUD RPCs from 0010 (adding the new invoice fields) and the

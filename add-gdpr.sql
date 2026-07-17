@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Module 5 — RODO / GDPR compliance (additive, non-breaking)
+-- RunButter :: Module 5 — RODO / GDPR compliance (additive, non-breaking)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- Adds: per-applicant consent fields + an immutable consent ledger, a
@@ -149,7 +149,7 @@ GRANT EXECUTE ON FUNCTION set_retention_days(text, integer)         TO authentic
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
-        PERFORM cron.schedule('hirebtr-anonymize-daily', '30 3 * * *',
+        PERFORM cron.schedule('runbutter-anonymize-daily', '30 3 * * *',
             $cron$ SELECT anonymize_expired_candidates(); $cron$);
     END IF;
 END$$;

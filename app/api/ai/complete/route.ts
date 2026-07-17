@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
   const provider = (secret as any).provider as AIProvider;
   const model = (secret as any).model || defaultModel(provider);
-  const system = 'You are a concise writing assistant inside HireBTR, a business workspace app. ' + (MODES[mode] || MODES.write);
+  const system = 'You are a concise writing assistant inside RunButter, a business workspace app. ' + (MODES[mode] || MODES.write);
   try {
     const out = await callAI(provider, apiKey, model, system, buildPrompt(mode, text, instruction), (secret as any).base_url || undefined);
     return NextResponse.json({ ok: true, text: out, provider, model });

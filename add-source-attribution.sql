@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Module 3 — Source Tracking & Attribution (additive, non-breaking)
+-- RunButter :: Module 3 — Source Tracking & Attribution (additive, non-breaking)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- Adds per-position tracking links (with UTM defaults + click counts), captures

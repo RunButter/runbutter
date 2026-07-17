@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0009_invoice_category.sql
+-- RunButter Platform Core — 0009_invoice_category.sql
 -- Adds a custom (free-text, autocompleted) category to invoices and threads it
 -- through the CRUD + list RPCs. Additive & prod-safe. Depends on 0001–0008.
 -- ============================================================================

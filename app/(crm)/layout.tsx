@@ -21,7 +21,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-md">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-medium text-primary">HireBTR</span>
+          <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
         {children}
       </main>

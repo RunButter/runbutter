@@ -1,7 +1,7 @@
 -- ============================================================================
--- HireBTR Platform Core — 0034_docs_ai.sql
+-- RunButter Platform Core — 0034_docs_ai.sql
 -- Docs module + BYO-AI. Users store their OWN provider keys (Claude/OpenAI/
--- Gemini/OpenRouter) encrypted at rest; HireBTR proxies calls, so there is no
+-- Gemini/OpenRouter) encrypted at rest; RunButter proxies calls, so there is no
 -- platform token cost — the user funds their own AI. The key ciphertext is
 -- written/read only by service-role RPCs (the API routes); user RPCs only ever
 -- see a masked hint.

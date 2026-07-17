@@ -314,7 +314,7 @@ export default function SettingsPage() {
                                                 readOnly
                                             />
                                         </div>
-                                        <p className="mt-1 text-xs text-secondary">Your portal: {formData.subdomain}.hirebtr.com</p>
+                                        <p className="mt-1 text-xs text-secondary">Your portal: {formData.subdomain}.runbutter.app</p>
                                     </div>
                                 </div>
 

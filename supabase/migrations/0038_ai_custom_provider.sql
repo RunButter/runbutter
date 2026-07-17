@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0038_ai_custom_provider.sql
+-- RunButter Platform Core — 0038_ai_custom_provider.sql
 -- "Every model": adds a custom OpenAI-compatible provider to BYO-AI. Users can
 -- point Docs AI at ANY endpoint speaking the OpenAI chat format (Groq, Mistral,
 -- DeepSeek, Together, xAI, Ollama, LM Studio, LiteLLM proxies, …) by storing a

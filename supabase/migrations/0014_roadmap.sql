@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0014_roadmap.sql
+-- RunButter Platform Core — 0014_roadmap.sql
 -- Project roadmap: every project with its issues (incl. due_date) so the
 -- timeline view can lay out a Gantt-lite. Additive & prod-safe.
 -- Depends on 0001–0006 (projects/issues). Run AFTER them.

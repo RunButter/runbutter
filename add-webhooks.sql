@@ -1,9 +1,9 @@
 -- ============================================================================
--- HireBTR :: Outgoing webhooks / integrations (additive, BYO-URL)
+-- RunButter :: Outgoing webhooks / integrations (additive, BYO-URL)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- Each company can register its own webhook URLs (Slack / Discord incoming
--- webhooks, or a generic JSON endpoint for Zapier / Make / n8n). HireBTR POSTs
+-- webhooks, or a generic JSON endpoint for Zapier / Make / n8n). RunButter POSTs
 -- to them on key events — no platform API keys, no cost on our side. The end
 -- user pastes a URL they own; we just deliver JSON to it.
 -- ============================================================================

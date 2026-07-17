@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR — 0042_lock_legacy_tables.sql
+-- RunButter — 0042_lock_legacy_tables.sql
 -- The table-level half of Phase B. Revokes the public/anon/authenticated
 -- roles' direct access to the crown-jewel ATS tables (candidate PII, resumes,
 -- assessment scores, OAuth tokens). After 0041 routed every remaining client

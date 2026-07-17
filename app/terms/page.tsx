@@ -30,14 +30,14 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
                             <p className="text-gray-600 leading-relaxed">
-                                By accessing HireBTR, you agree to these Terms. You must be at least 18 years of age to use this service.
+                                By accessing RunButter, you agree to these Terms. You must be at least 18 years of age to use this service.
                             </p>
                         </section>
 
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">2. AI Service Disclaimer</h2>
                             <p className="text-gray-600 leading-relaxed mb-4">
-                                You acknowledge that HireBTR uses Artificial Intelligence to provide psychometric insights.
+                                You acknowledge that RunButter uses Artificial Intelligence to provide psychometric insights.
                             </p>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">
                                 <li><strong>Accuracy:</strong> AI is probabilistic. We do not guarantee 100% accuracy of personality profiles or candidate &quot;fit&quot; scores.</li>
@@ -48,7 +48,7 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">3. Limitation of Liability</h2>
                             <p className="text-gray-600 leading-relaxed mb-4">
-                                HireBTR provides a tool for recruiters. We are not responsible for:
+                                RunButter provides a tool for recruiters. We are not responsible for:
                             </p>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">
                                 <li>Any hiring or firing decisions made by users.</li>
@@ -67,15 +67,15 @@ export default function TermsPage() {
                         <section className="mb-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">5. Prohibited Use</h2>
                             <p className="text-gray-600 leading-relaxed">
-                                You agree not to use HireBTR to discriminate against candidates based on protected characteristics (race, religion, gender, disability) in violation of local labor laws.
+                                You agree not to use RunButter to discriminate against candidates based on protected characteristics (race, religion, gender, disability) in violation of local labor laws.
                             </p>
                         </section>
 
                         <section className="mt-12 pt-8 border-t text-center">
                             <p className="text-gray-600">
                                 Questions? Email us at:{' '}
-                                <a href="mailto:hello@hirebtr.com" className="text-primary-600 font-semibold hover:underline">
-                                    hello@hirebtr.com
+                                <a href="mailto:hello@runbutter.app" className="text-primary-600 font-semibold hover:underline">
+                                    hello@runbutter.app
                                 </a>
                             </p>
                         </section>
@@ -83,7 +83,7 @@ export default function TermsPage() {
                 </div>
 
                 <div className="mt-8 text-center text-gray-500 text-sm">
-                    © 2026 hirebtr.com. All rights reserved.
+                    © 2026 runbutter.app. All rights reserved.
                 </div>
             </div>
         </div>

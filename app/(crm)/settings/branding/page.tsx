@@ -204,7 +204,7 @@ export default function BrandingPage() {
                       {form.logo_url ? <img src={form.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain" /> : <div className="w-10 h-10 rounded-lg" style={{ background: form.accent_color }} />}
                       <div>
                         <div className="text-[15px] font-semibold text-primary">{displayName}</div>
-                        <div className="text-[11px] text-tertiary whitespace-pre-line">{form.address || 'hirebtr.com'}</div>
+                        <div className="text-[11px] text-tertiary whitespace-pre-line">{form.address || 'runbutter.app'}</div>
                       </div>
                     </div>
                     <div className="text-right">

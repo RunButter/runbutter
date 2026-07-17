@@ -34,11 +34,11 @@ export async function POST(req: Request) {
   if (!isSafeOutboundUrl(conn.url)) return NextResponse.json({ error: 'Blocked: private/unsafe webhook URL' }, { status: 400 });
 
   const body = JSON.stringify({
-    event: 'test', object: 'test', automation: 'Test from HireBTR',
-    record: { id: '00000000-0000-4000-8000-000000000000', name: 'Sample record', amount: 123.45, status: 'sample', email: 'sample@hirebtr.com' },
+    event: 'test', object: 'test', automation: 'Test from RunButter',
+    record: { id: '00000000-0000-4000-8000-000000000000', name: 'Sample record', amount: 123.45, status: 'sample', email: 'sample@runbutter.app' },
   });
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (conn.secret) headers['X-HireBTR-Signature'] = signWebhook(conn.secret, body);
+  if (conn.secret) headers['X-RunButter-Signature'] = signWebhook(conn.secret, body);
 
   let code = 0, ok = false, detail = '';
   try {

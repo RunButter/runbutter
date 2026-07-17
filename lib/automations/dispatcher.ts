@@ -114,7 +114,7 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       }
       const body = JSON.stringify({ event: ev.event, object: ev.object, automation: rule.name, record: ev.payload });
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (secret) headers['X-HireBTR-Signature'] = signWebhook(secret, body);
+      if (secret) headers['X-RunButter-Signature'] = signWebhook(secret, body);
       let code = 0, ok = false, detail = '';
       try { const r = await fetch(url, { method: 'POST', headers, body }); code = r.status; ok = r.ok; detail = `POST ${r.status} · ${label || url.slice(0, 36)}`; }
       catch (e: any) { detail = `POST failed · ${e?.message || 'network'}`; }
@@ -127,10 +127,10 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       if (!key) return { ok: false, detail: 'RESEND_API_KEY not set' };
       const to = tmpl(cfg.to, ev.payload);
       if (!to) return { ok: false, detail: 'No recipient' };
-      const from = process.env.RESEND_FROM || 'HireBTR <notifications@hirebtr.com>';
+      const from = process.env.RESEND_FROM || 'RunButter <notifications@runbutter.app>';
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, subject: tmpl(cfg.subject || 'Notification from HireBTR', ev.payload), html: tmpl(cfg.body || '', ev.payload).replace(/\n/g, '<br>') }),
+        body: JSON.stringify({ from, to, subject: tmpl(cfg.subject || 'Notification from RunButter', ev.payload), html: tmpl(cfg.body || '', ev.payload).replace(/\n/g, '<br>') }),
       });
       return { ok: r.ok, detail: `Email ${r.status} → ${to}` };
     }
@@ -143,7 +143,7 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       let apiKey: string;
       try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }
       catch { return { ok: false, detail: 'Could not decrypt the stored AI key' }; }
-      const system = 'You are an automation step inside HireBTR, a business workspace. Follow the instruction using the JSON record provided. Return only the result text, no preamble.';
+      const system = 'You are an automation step inside RunButter, a business workspace. Follow the instruction using the JSON record provided. Return only the result text, no preamble.';
       const prompt = `${tmpl(cfg.prompt || 'Summarize this record in two sentences.', ev.payload)}\n\nRecord (JSON):\n${JSON.stringify(ev.payload || {}).slice(0, 6000)}`;
       try {
         const out = await callAI((secret as any).provider as AIProvider, apiKey, (secret as any).model || '', system, prompt, (secret as any).base_url || undefined);

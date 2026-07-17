@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
         const event = {
             summary: `Interview: ${candidate.full_name}`,
-            description: `Automated interview scheduled via TalentInsight.\nCandidate: ${candidate.full_name}\nRole: Candidate Assessment Review`,
+            description: `Automated interview scheduled via runbutter.\nCandidate: ${candidate.full_name}\nRole: Candidate Assessment Review`,
             start: startDate.toISOString(),
             end: endDate.toISOString(),
             attendees: [candidate.email],

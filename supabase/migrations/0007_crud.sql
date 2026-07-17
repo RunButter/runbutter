@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0007_crud.sql
+-- RunButter Platform Core — 0007_crud.sql
 -- Generic create / read / update / delete for the platform objects, so records
 -- are editable in-app (like Twenty). Workspace-scoped via the accounts table.
 -- Additive & prod-safe. Depends on 0001–0006.

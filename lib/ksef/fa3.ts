@@ -70,7 +70,7 @@ export function buildFA3(doc: InvoiceDocument): string {
     <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
     <WariantFormularza>3</WariantFormularza>
     <DataWytworzeniaFa>${created}</DataWytworzeniaFa>
-    <SystemInfo>HireBTR</SystemInfo>
+    <SystemInfo>RunButter</SystemInfo>
   </Naglowek>
 ${party('Podmiot1', doc.seller as Party)}
 ${party('Podmiot2', doc.buyer as Party)}

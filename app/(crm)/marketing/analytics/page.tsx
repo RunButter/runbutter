@@ -12,7 +12,7 @@ const PERIODS = [
 ];
 
 function snippetFor(siteId: string) {
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hirebtr.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://runbutter.app';
   return `<script defer src="${origin}/t.js" data-site="${siteId}"></script>`;
 }
 

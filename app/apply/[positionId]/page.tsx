@@ -220,7 +220,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
   const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-white ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500 outline-none transition-shadow';
 
-  // Shared brand header: the company applying to, not HireBTR.
+  // Shared brand header: the company applying to, not RunButter.
   const CompanyMark = ({ big = false }: { big?: boolean }) =>
     positionInfo?.logoUrl ? (
       <div className="flex justify-center">

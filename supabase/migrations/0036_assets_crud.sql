@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0036_assets_crud.sql
+-- RunButter Platform Core — 0036_assets_crud.sql
 -- BUG FIX: assets could not be created/edited. list_records and delete_record
 -- knew about assets, but create_record / get_record / update_record had no
 -- assets branch (and the UI had no form), so "New asset" was impossible in the

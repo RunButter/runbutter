@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0025_share_links.sql
+-- RunButter Platform Core — 0025_share_links.sql
 -- Public share links for invoice/offer documents. Fixes: the email's "view"
 -- link pointed at the login-gated document page, so recipients (no account)
 -- saw the sample document instead of the real one.

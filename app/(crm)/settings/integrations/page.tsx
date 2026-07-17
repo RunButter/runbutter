@@ -27,7 +27,7 @@ export default function IntegrationsPage() {
   const [copied, setCopied] = useState('');
   const [testing, setTesting] = useState('');
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; text: string }>>({});
-  const [origin, setOrigin] = useState('https://hirebtr.com');
+  const [origin, setOrigin] = useState('https://runbutter.app');
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
 
@@ -82,12 +82,12 @@ export default function IntegrationsPage() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto space-y-8">
-          <p className="text-[13px] text-secondary -mt-1">Connect HireBTR to the tools you already use — no per-call cost. Bring your own webhook URL or API key.</p>
+          <p className="text-[13px] text-secondary -mt-1">Connect RunButter to the tools you already use — no per-call cost. Bring your own webhook URL or API key.</p>
 
           {/* Connect cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { name: 'Zapier', body: 'Trigger Zaps from HireBTR (paste a Catch Hook URL below), or let Zapier create records via the API.', tone: 'text-orange-600 bg-orange-50' },
+              { name: 'Zapier', body: 'Trigger Zaps from RunButter (paste a Catch Hook URL below), or let Zapier create records via the API.', tone: 'text-orange-600 bg-orange-50' },
               { name: 'Make', body: 'Use a Custom webhook as a connection, and the HTTP module to push data back in with your API key.', tone: 'text-violet-600 bg-violet-50' },
               { name: 'n8n', body: 'Self-hosted automation. Webhook node in, HTTP Request node out — same URL + key.', tone: 'text-rose-600 bg-rose-50' },
               { name: 'Slack / Discord', body: 'Paste an Incoming Webhook URL as a connection; automations post updates to your channel.', tone: 'text-emerald-600 bg-emerald-50' },
@@ -131,7 +131,7 @@ export default function IntegrationsPage() {
                   </div>
                 ))}
             </div>
-            <p className="text-[11px] text-tertiary mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-surface-hover rounded px-1">X-HireBTR-Signature</code> header (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>).</p>
+            <p className="text-[11px] text-tertiary mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-surface-hover rounded px-1">X-RunButter-Signature</code> header (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>).</p>
           </section>
 
           {/* Recent webhook deliveries */}
@@ -201,7 +201,7 @@ export default function IntegrationsPage() {
               <div className="text-tertiary mt-3 mb-2"># MCP — let Claude / AI agents work in this workspace (.mcp.json)</div>
               <div className="whitespace-pre">{`{
   "mcpServers": {
-    "hirebtr": {
+    "runbutter": {
       "type": "http",
       "url": "${origin}/api/mcp",
       "headers": { "Authorization": "Bearer hb_your_key" }

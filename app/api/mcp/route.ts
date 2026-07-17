@@ -18,8 +18,8 @@ export const dynamic = 'force-dynamic';
  * streams) is optional and answered 405. Stateless — no session ids needed.
  *
  * Client config (e.g. .mcp.json):
- *   { "mcpServers": { "hirebtr": {
- *       "type": "http", "url": "https://hirebtr.com/api/mcp",
+ *   { "mcpServers": { "runbutter": {
+ *       "type": "http", "url": "https://runbutter.app/api/mcp",
  *       "headers": { "Authorization": "Bearer hb_..." } } } }
  */
 
@@ -38,7 +38,7 @@ const OBJECTS: Record<string, string> = {
 };
 
 const TOOLS = [
-  { name: 'list_objects', description: 'List the record types available in this HireBTR workspace and their fields.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'list_objects', description: 'List the record types available in this RunButter workspace and their fields.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_records', description: 'List records of an object type (most recent first).', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) } }, required: ['object'] } },
   { name: 'search_records', description: 'Search records of an object type by a text query (matched across all fields).', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, query: { type: 'string' } }, required: ['object', 'query'] } },
   { name: 'get_record', description: 'Fetch one record by id.', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, id: { type: 'string' } }, required: ['object', 'id'] } },
@@ -126,8 +126,8 @@ export async function POST(req: Request) {
     return rpcResult(id, {
       protocolVersion: params?.protocolVersion || '2025-03-26',
       capabilities: { tools: { listChanged: false } },
-      serverInfo: { name: 'hirebtr', version: '1.0.0' },
-      instructions: 'HireBTR business workspace. Use list_objects to discover record types, then list/search/get/create/update_record. Auth is per-workspace via the API key.',
+      serverInfo: { name: 'runbutter', version: '1.0.0' },
+      instructions: 'RunButter business workspace. Use list_objects to discover record types, then list/search/get/create/update_record. Auth is per-workspace via the API key.',
     });
   }
   if (method === 'ping') return rpcResult(id, {});

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0019_product_images.sql
+-- RunButter Platform Core — 0019_product_images.sql
 -- Product images: products.image_url, threaded through the CRUD RPCs (from 0016)
 -- and into get_invoice_document line items (from 0018) so offers/invoices can
 -- show a thumbnail per product. Uploads reuse the public 'branding' bucket.

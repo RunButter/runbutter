@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0040_lock_rpcs.sql
+-- RunButter Platform Core — 0040_lock_rpcs.sql
 -- THE security lockdown. Every authenticated RPC used to be EXECUTE-able by
 -- the public anon key with a caller-supplied p_privy — so anyone who read the
 -- client code could pass someone else's Privy DID and read that tenant's

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0013_finance_analytics.sql
+-- RunButter Platform Core — 0013_finance_analytics.sql
 -- Finance analytics: money-in (paid invoices) vs money-out (approved/paid
 -- expenses) over a rolling window, with a per-month time series for charting.
 -- Additive & prod-safe. Depends on 0001–0004. Run AFTER them.

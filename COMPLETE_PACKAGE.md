@@ -1,4 +1,4 @@
-# 🎉 TALENTINSIGHT - COMPLETE MVP PACKAGE
+# 🎉 runbutter - COMPLETE MVP PACKAGE
 
 ## WHAT YOU'RE GETTING
 
@@ -9,7 +9,7 @@ A **PRODUCTION-READY** multi-tenant SaaS platform for recruitment assessments. T
 ## 📦 COMPLETE FILE STRUCTURE
 
 ```
-talent-insight/
+runbutter/
 ├── 📱 FRONTEND (Complete & Working)
 │   ├── app/
 │   │   ├── page.tsx                    ✅ Landing page
@@ -55,7 +55,7 @@ talent-insight/
 ## ✨ FEATURES INCLUDED
 
 ### 🏢 MULTI-TENANT ARCHITECTURE
-- [x] Subdomain routing (company.talentinsight.com)
+- [x] Subdomain routing (company.runbutter.com)
 - [x] Complete data isolation (RLS policies)
 - [x] Custom branding per company
 - [x] Independent user management
@@ -279,7 +279,7 @@ TOTAL:           ~$720/month
 
 ### Option A: Automated (Easiest)
 ```bash
-cd talent-insight
+cd runbutter
 chmod +x install.sh
 ./install.sh
 # Follow prompts, then:
@@ -288,7 +288,7 @@ npm run dev
 
 ### Option B: Manual (More Control)
 ```bash
-cd talent-insight
+cd runbutter
 npm install
 cp .env.example .env.local
 # Edit .env.local with your credentials

@@ -53,7 +53,7 @@ export default function ContactPage() {
                     </div>
                     <h1 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Message Received!</h1>
                     <p className="text-gray-600 mb-8 font-medium leading-relaxed">
-                        Thank you for reaching out. A member of the hirebtr.com team will get back to you at <strong>hello@hirebtr.com</strong> within 24 hours.
+                        Thank you for reaching out. A member of the runbutter.app team will get back to you at <strong>hello@runbutter.app</strong> within 24 hours.
                     </p>
                     <Link href="/" className="btn-primary w-full py-4 text-center">
                         Back to Home
@@ -102,8 +102,8 @@ export default function ContactPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-black text-gray-900 uppercase text-xs tracking-widest mb-1">Email Us Directly</h3>
-                                    <a href="mailto:hello@hirebtr.com" className="text-lg font-bold text-primary-600 hover:underline">
-                                        hello@hirebtr.com
+                                    <a href="mailto:hello@runbutter.app" className="text-lg font-bold text-primary-600 hover:underline">
+                                        hello@runbutter.app
                                     </a>
                                 </div>
                             </div>

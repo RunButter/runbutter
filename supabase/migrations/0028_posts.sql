@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0028_posts.sql
+-- RunButter Platform Core — 0028_posts.sql
 -- Social post studio (PreFeed port): pixel-accurate platform previews with
 -- Figma-style pinned comments and a tokenized client-review link (no account
 -- needed to review — same share-token model as invoice/offer documents).

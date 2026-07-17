@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0004_crm_finance.sql
+-- RunButter Platform Core — 0004_crm_finance.sql
 -- Sales/CRM organizations + Finance (invoices, expenses). Additive & prod-safe.
 -- Depends on 0001–0003. Run AFTER them.
 -- ============================================================================

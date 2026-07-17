@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0024_company_identity.sql
+-- RunButter Platform Core — 0024_company_identity.sql
 -- Seller company identity for invoices/KSeF: country + the identifiers that
 -- differ by country (VAT id, registry no, BDO) + bank details. tax_id (NIP)
 -- already exists (0022). Threaded through the branding RPCs. Additive & prod-safe.

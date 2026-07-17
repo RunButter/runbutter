@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0018_quoting.sql
+-- RunButter Platform Core — 0018_quoting.sql
 -- Real quoting: per-line discount % and tax/VAT % on invoice/offer line items,
 -- with Subtotal / Discount / VAT / Total computed in get_invoice_document and
 -- kept in sync on invoices.amount (grand total incl. VAT). Additive & prod-safe.

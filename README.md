@@ -1,10 +1,10 @@
-# HireBTR — the open company OS
+# RunButter — the open company OS
 
 One relational workspace for the whole company: **Sales · Finance · Marketing · Projects · HR**, plus Docs, Automations, and an open integration layer (REST, webhooks, MCP). Built to run cheaply: Postgres does the heavy lifting, and there are **no platform LLM costs** — AI features run on each workspace's own API keys.
 
 ```bash
-git clone https://github.com/CasperCrypto/hirebtr.git
-cd hirebtr && npm install
+git clone https://github.com/runbutter/runbutter.git
+cd runbutter && npm install
 cp .env.example .env.local   # fill in Supabase + Privy
 npm run dev
 ```
@@ -42,7 +42,7 @@ Next.js 14 (App Router) · React · Tailwind · Supabase (Postgres) · [Privy](h
 ## Connect AI agents (MCP)
 
 ```json
-{ "mcpServers": { "hirebtr": {
+{ "mcpServers": { "runbutter": {
     "type": "http", "url": "https://your-domain.com/api/mcp",
     "headers": { "Authorization": "Bearer hb_..." } } } }
 ```

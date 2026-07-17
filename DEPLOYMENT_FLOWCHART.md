@@ -1,4 +1,4 @@
-# 🎯 TALENTINSIGHT - DEPLOYMENT FLOWCHART
+# 🎯 runbutter - DEPLOYMENT FLOWCHART
 
 ## COMPLETE LAUNCH PROCESS (30-45 Minutes)
 
@@ -17,7 +17,7 @@
 │  ┌──────────────────────────────────────────────┐                │
 │  │ • Go to supabase.com                         │                │
 │  │ • Click "New Project"                        │                │
-│  │ • Name: TalentInsight                        │                │
+│  │ • Name: runbutter                        │                │
 │  │ • Choose region (closest to users)           │                │
 │  │ • Set database password (SAVE THIS!)         │                │
 │  │ • Wait 2-3 minutes                           │                │
@@ -61,7 +61,7 @@
 │  ┌──────────────────────────────────────────────┐                │
 │  │ • Go to console.cloud.google.com             │                │
 │  │ • Click "New Project"                        │                │
-│  │ • Name: TalentInsight                        │                │
+│  │ • Name: runbutter                        │                │
 │  │ • Wait ~30 seconds                           │                │
 │  └──────────────────────────────────────────────┘                │
 │                         │                                         │
@@ -100,7 +100,7 @@
 │                                                                   │
 │  Step 3.1: Install Dependencies                                  │
 │  ┌──────────────────────────────────────────────┐                │
-│  │ $ cd talent-insight                          │                │
+│  │ $ cd runbutter                          │                │
 │  │ $ npm install                                │                │
 │  │ (Wait 2-3 minutes)                           │                │
 │  └──────────────────────────────────────────────┘                │
@@ -242,7 +242,7 @@ Required Variables:
 │ GOOGLE_CLIENT_SECRET                        │ ← From Google Cloud Console
 │ GOOGLE_REDIRECT_URI                         │ ← Your domain + /api/auth/google/callback
 │ NEXT_PUBLIC_APP_URL                         │ ← Your Vercel URL or custom domain
-│ NEXT_PUBLIC_APP_NAME                        │ ← TalentInsight (or your name)
+│ NEXT_PUBLIC_APP_NAME                        │ ← runbutter (or your name)
 └─────────────────────────────────────────────┘
 ```
 
@@ -252,7 +252,7 @@ Required Variables:
 
 ```bash
 # 1. Install
-cd talent-insight
+cd runbutter
 npm install
 
 # 2. Configure

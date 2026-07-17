@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Custom email templates + candidate messaging (additive)
+-- RunButter :: Custom email templates + candidate messaging (additive)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- Lets recruiters create reusable, editable email templates (invite, decline,

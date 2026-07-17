@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0031_transactions.sql
+-- RunButter Platform Core — 0031_transactions.sql
 -- Finance › Transactions: a Midday-style bank cash ledger. Bank accounts +
 -- signed transactions (money in/out), categorization, VAT/tags, and rule-based
 -- reconciliation ("Magic Inbox"-lite) matching transactions to invoices/expenses

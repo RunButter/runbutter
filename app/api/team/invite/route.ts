@@ -66,7 +66,7 @@ export async function POST(req: Request) {
         // 5. Send Invite Email via Resend
         if (process.env.RESEND_API_KEY) {
             await resend.emails.send({
-                from: 'HireBtr <no-reply@hirebtr.com>',
+                from: 'HireBtr <no-reply@runbutter.app>',
                 to: email,
                 subject: `You've been invited to join ${company?.name} on HireBtr`,
                 html: `
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
                         <p>You have been invited to collaborate with your team at <b>${company?.name}</b>.</p>
                         <p>Your assigned role is: <b>${role.toUpperCase()}</b></p>
                         <br/>
-                        <a href="https://hirebtr.com/auth/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Accept Invitation & Setup Account</a>
+                        <a href="https://runbutter.app/auth/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Accept Invitation & Setup Account</a>
                         <p style="margin-top: 20px; color: #666; font-size: 12px;">Ensure you sign up using this exact email address (${email}) so your portal automatically links.</p>
                     </div>
                 `

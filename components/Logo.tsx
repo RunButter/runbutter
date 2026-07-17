@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 /**
- * hirebtr.com Logo Component
+ * runbutter.app Logo Component
  * Renders the custom pixelated arrow icon and brand text.
  */
 const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = false, mono = false }) => {
@@ -44,7 +44,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
 
             {!iconOnly && (
                 <span className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-primary'}`}>
-                    hirebtr<span className={mono ? 'text-tertiary' : 'text-accent'}>.com</span>
+                    runbutter<span className={mono ? 'text-tertiary' : 'text-accent'}>.app</span>
                 </span>
             )}
         </div>

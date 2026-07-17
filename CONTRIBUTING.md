@@ -1,4 +1,4 @@
-# Contributing to HireBTR
+# Contributing to RunButter
 
 Thanks for helping! A few ground rules keep the codebase healthy:
 

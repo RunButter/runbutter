@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0005_auto_provision_workspace.sql
+-- RunButter Platform Core — 0005_auto_provision_workspace.sql
 -- Make the platform work for NEW customers automatically. The 0003 bridge was a
 -- one-time backfill; these triggers keep the platform in sync going forward:
 --   new tenant company  -> workspace (+ default pipelines)

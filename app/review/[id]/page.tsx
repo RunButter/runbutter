@@ -109,7 +109,7 @@ function ReviewInner() {
               </div>
             ))}
           </div>
-          <p className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400 text-center">Powered by hirebtr.com</p>
+          <p className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400 text-center">Powered by runbutter.app</p>
         </aside>
       </div>
     </div>

@@ -156,7 +156,7 @@ export default function DocumentBuilder() {
               {doc.seller?.logo_url ? <img src={doc.seller.logo_url} alt="" className="w-11 h-11 rounded-lg object-contain" /> : <div className="w-11 h-11 rounded-lg" style={{ background: accent }} />}
               <div>
                 <div className="text-lg font-black tracking-tight">{doc.seller?.name || 'Your company'}</div>
-                <div className="text-[12px] text-slate-400 whitespace-pre-line">{doc.seller?.address || 'hirebtr.com'}</div>
+                <div className="text-[12px] text-slate-400 whitespace-pre-line">{doc.seller?.address || 'runbutter.app'}</div>
               </div>
             </div>
             <div className="text-right">

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0002_pipeline_templates_and_rpcs.sql
+-- RunButter Platform Core — 0002_pipeline_templates_and_rpcs.sql
 -- Default pipeline templates (Sales / Recruitment / HRIS) + core board RPCs.
 -- Depends on 0001_platform_core.sql.
 -- ============================================================================

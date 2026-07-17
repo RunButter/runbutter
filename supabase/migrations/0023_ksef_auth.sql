@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0023_ksef_auth.sql
+-- RunButter Platform Core — 0023_ksef_auth.sql
 -- Per-tenant KSeF credentials + session cache. One row per workspace: the NIP
 -- and the KSeF token stored as AES-256-GCM ciphertext (cipher + iv + auth tag,
 -- all base64). The AES master key lives ONLY in the app env (KSEF_MASTER_KEY),

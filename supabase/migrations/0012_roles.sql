@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0012_roles.sql
+-- RunButter Platform Core — 0012_roles.sql
 -- Roles & permissions per workspace member (owner | admin | member).
 -- - owner/admin: full access incl. delete + manage members
 -- - member: create/edit, but cannot delete records or manage members

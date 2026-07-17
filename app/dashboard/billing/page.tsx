@@ -105,7 +105,7 @@ export default function BillingPage() {
             buttonText: 'Contact Sales',
             highlight: false,
             tier: 'enterprise',
-            link: '/contact' // Professional contact form at hello@hirebtr.com
+            link: '/contact' // Professional contact form at hello@runbutter.app
         }
     ];
 

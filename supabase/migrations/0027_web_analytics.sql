@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0027_web_analytics.sql
+-- RunButter Platform Core — 0027_web_analytics.sql
 -- First-party web analytics (Plausible-style, cookieless). A workspace adds a
 -- site → embeds a one-line snippet → pageviews land in site_events via /api/t.
 -- Visitors are a daily-rotating hash (no cookies, no PII stored). Dedicated

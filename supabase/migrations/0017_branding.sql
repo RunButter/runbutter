@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0017_branding.sql
+-- RunButter Platform Core — 0017_branding.sql
 -- Workspace branding for documents: logo, legal name, address, accent colour,
 -- and an invoice footer. Surfaced on the invoice/offer PDF + email. Adds a
 -- public 'branding' storage bucket for logo uploads. Additive & prod-safe.

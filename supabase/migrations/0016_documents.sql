@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0016_documents.sql
+-- RunButter Platform Core — 0016_documents.sql
 -- Invoice/offer DOCUMENTS: product/service line items + a kind (invoice|offer)
 -- so the same record can be billed or quoted, and a branded PDF can be rendered.
 -- Adds invoice_items, invoices.kind, get_invoice_document + save_invoice_items,

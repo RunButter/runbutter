@@ -4,7 +4,7 @@ import { handleOAuthCallback } from '@/lib/google-calendar';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'hirebtr.com';
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'runbutter.app';
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const baseUrl = `${protocol}://${host}`;
 

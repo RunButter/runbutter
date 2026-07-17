@@ -1,4 +1,4 @@
-# 🚀 COMPLETE LAUNCH GUIDE - TalentInsight MVP
+# 🚀 COMPLETE LAUNCH GUIDE - runbutter MVP
 
 ## WHAT YOU HAVE: FULLY FUNCTIONAL SAAS
 
@@ -23,7 +23,7 @@
 1. Go to [supabase.com](https://supabase.com)
 2. Click "New Project"
 3. Fill in:
-   - **Name**: TalentInsight
+   - **Name**: runbutter
    - **Database Password**: (save this!)
    - **Region**: Choose closest to your users
 4. Click "Create new project"
@@ -88,7 +88,7 @@
 1. Go to [console.cloud.google.com](https://console.cloud.google.com)
 2. Click project dropdown (top left)
 3. Click **"New Project"**
-4. Name: **TalentInsight**
+4. Name: **runbutter**
 5. Click **"Create"**
 6. Wait for project to be created (~30 seconds)
 
@@ -105,7 +105,7 @@
 2. Select **"External"**
 3. Click **"Create"**
 4. Fill in:
-   - **App name**: TalentInsight
+   - **App name**: runbutter
    - **User support email**: your-email@gmail.com
    - **Developer contact**: your-email@gmail.com
 5. Click **"Save and Continue"**
@@ -126,7 +126,7 @@
 2. Click **"+ Create Credentials"** → **"OAuth client ID"**
 3. Choose **"Web application"**
 4. Fill in:
-   - **Name**: TalentInsight Web
+   - **Name**: runbutter Web
    - **Authorized redirect URIs**: Add BOTH:
      - `http://localhost:3000/api/auth/google/callback`
      - `https://YOUR-DOMAIN.vercel.app/api/auth/google/callback`
@@ -141,17 +141,17 @@
 
 #### 3.1 Push Code to GitHub
 ```bash
-# In your terminal, navigate to talent-insight folder
-cd talent-insight
+# In your terminal, navigate to runbutter folder
+cd runbutter
 
 # Initialize git
 git init
 git add .
-git commit -m "Initial commit - TalentInsight MVP"
+git commit -m "Initial commit - runbutter MVP"
 
 # Create GitHub repo (or use GitHub Desktop)
 # Then push:
-git remote add origin https://github.com/YOUR-USERNAME/talent-insight.git
+git remote add origin https://github.com/YOUR-USERNAME/runbutter.git
 git branch -M main
 git push -u origin main
 ```
@@ -188,7 +188,7 @@ NEXT_PUBLIC_APP_URL
 Value: https://YOUR-PROJECT.vercel.app
 
 NEXT_PUBLIC_APP_NAME
-Value: TalentInsight
+Value: runbutter
 ```
 
 5. Click **"Deploy"**
@@ -197,7 +197,7 @@ Value: TalentInsight
 
 #### 3.4 Get Your Vercel URL
 1. Click **"Continue to Dashboard"**
-2. Your app is live at: `https://talent-insight-xxxx.vercel.app`
+2. Your app is live at: `https://runbutter-xxxx.vercel.app`
 3. Click the URL to test!
 
 ---
@@ -206,7 +206,7 @@ Value: TalentInsight
 
 #### 4.1 Add Domain to Vercel
 1. In Vercel dashboard → **Settings** → **Domains**
-2. Enter your domain: `talentinsight.com`
+2. Enter your domain: `runbutter.com`
 3. Click **"Add"**
 4. Vercel will show DNS records
 
@@ -242,15 +242,15 @@ TTL: 3600
 2. **APIs & Services** → **Credentials**
 3. Click your OAuth client
 4. Add to **Authorized redirect URIs**:
-   - `https://talentinsight.com/api/auth/google/callback`
-   - `https://*.talentinsight.com/api/auth/google/callback`
+   - `https://runbutter.com/api/auth/google/callback`
+   - `https://*.runbutter.com/api/auth/google/callback`
 5. Click **"Save"**
 
 #### 4.4 Update Vercel Environment Variables
 1. In Vercel → **Settings** → **Environment Variables**
 2. Update these:
-   - `GOOGLE_REDIRECT_URI`: `https://talentinsight.com/api/auth/google/callback`
-   - `NEXT_PUBLIC_APP_URL`: `https://talentinsight.com`
+   - `GOOGLE_REDIRECT_URI`: `https://runbutter.com/api/auth/google/callback`
+   - `NEXT_PUBLIC_APP_URL`: `https://runbutter.com`
 3. Click **"Deployments"** → **"Redeploy"** (with "Use existing Build Cache" unchecked)
 
 ---
@@ -488,7 +488,7 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=
 NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_APP_NAME=TalentInsight
+NEXT_PUBLIC_APP_NAME=runbutter
 ```
 
 ### Common Commands:

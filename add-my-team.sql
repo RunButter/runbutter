@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR :: Module 4 — "My Team" post-hire workspace (additive, non-breaking)
+-- RunButter :: Module 4 — "My Team" post-hire workspace (additive, non-breaking)
 -- Run in the Supabase SQL Editor. Safe to re-run.
 --
 -- "My Team" = candidates with status = 'hired'. No separate employees table —

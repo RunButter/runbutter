@@ -22,9 +22,9 @@ export async function POST(req: Request) {
         if (process.env.RESEND_API_KEY) {
             const resend = new Resend(process.env.RESEND_API_KEY);
             const { data, error: emailError } = await resend.emails.send({
-                // User only has hello@hirebtr.com
-                from: 'hirebtr.com <hello@hirebtr.com>',
-                to: ['hello@hirebtr.com'],
+                // User only has hello@runbutter.app
+                from: 'runbutter.app <hello@runbutter.app>',
+                to: ['hello@runbutter.app'],
                 subject: `[Contact Form] ${subject || 'New Inquiry from ' + name}`,
                 replyTo: email,
                 html: `

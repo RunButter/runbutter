@@ -1,5 +1,5 @@
 -- ============================================================================
--- HireBTR Platform Core — 0001_platform_core.sql
+-- RunButter Platform Core — 0001_platform_core.sql
 -- Universal relational foundation for the CRM / Business-OS pivot.
 --
 -- Run on a BRANCH / staging Supabase DB (NOT prod live). Deny-by-default RLS;
