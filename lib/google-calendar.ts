@@ -67,57 +67,57 @@ export async function handleOAuthCallback(code: string, state: string, redirectU
   return tokens;
 }
 
+// Resolve a Privy user id → an authenticated Calendar client. Central because
+// the token is keyed by the INTERNAL company_users.id, not the Privy id — the
+// update/cancel paths used to query it wrong (by Privy id) and silently no-op.
+// Returns null when the user has no Google integration connected.
+async function getCalendarClient(userId: string) {
+  const supabase = createAdminClient();
+  const oauth2Client = getOAuth2Client();
+
+  const { data: userData } = await supabase
+    .from('company_users')
+    .select('id')
+    .eq('privy_user_id', userId)
+    .single();
+  if (!userData) return null;
+
+  const { data: tokenData } = await supabase
+    .from('integration_tokens')
+    .select('*')
+    .eq('user_id', userData.id)
+    .eq('provider', 'google')
+    .single();
+  if (!tokenData) return null;
+
+  if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
+    oauth2Client.setCredentials({ refresh_token: tokenData.refresh_token });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    await supabase
+      .from('integration_tokens')
+      .update({
+        access_token: credentials.access_token!,
+        expires_at: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+      })
+      .eq('id', tokenData.id);
+    oauth2Client.setCredentials(credentials);
+  } else {
+    oauth2Client.setCredentials({
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token,
+    });
+  }
+
+  return google.calendar({ version: 'v3', auth: oauth2Client });
+}
+
 export async function createCalendarEvent(
   userId: string,
   event: CalendarEvent
 ): Promise<{ eventId: string; meetLink?: string } | null> {
   try {
-    const supabase = createAdminClient();
-    const oauth2Client = getOAuth2Client();
-
-    // Resolve internal ID from Privy ID
-    const { data: userData } = await supabase
-        .from('company_users')
-        .select('id')
-        .eq('privy_user_id', userId)
-        .single();
-    
-    if (!userData) throw new Error('User not found');
-
-    const { data: tokenData } = await supabase
-      .from('integration_tokens')
-      .select('*')
-      .eq('user_id', userData.id)
-      .eq('provider', 'google')
-      .single();
-
-    if (!tokenData) {
-      throw new Error('No Google integration found');
-    }
-
-    if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-      oauth2Client.setCredentials({ refresh_token: tokenData.refresh_token });
-      const { credentials } = await oauth2Client.refreshAccessToken();
-
-      await supabase
-        .from('integration_tokens')
-        .update({
-          access_token: credentials.access_token!,
-          expires_at: credentials.expiry_date
-            ? new Date(credentials.expiry_date).toISOString()
-            : null,
-        })
-        .eq('id', tokenData.id);
-
-      oauth2Client.setCredentials(credentials);
-    } else {
-      oauth2Client.setCredentials({
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-      });
-    }
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const calendar = await getCalendarClient(userId);
+    if (!calendar) throw new Error('No Google integration found');
 
     const eventPayload: Record<string, unknown> = {
       summary: event.summary,
@@ -166,24 +166,8 @@ export async function updateCalendarEvent(
   updates: Partial<CalendarEvent>
 ): Promise<boolean> {
   try {
-    const supabase = createAdminClient();
-    const oauth2Client = getOAuth2Client();
-
-    const { data: tokenData } = await supabase
-      .from('integration_tokens')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('provider', 'google')
-      .single();
-
-    if (!tokenData) return false;
-
-    oauth2Client.setCredentials({
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-    });
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const calendar = await getCalendarClient(userId);
+    if (!calendar) return false;
 
     const eventPayload: Record<string, unknown> = {};
     if (updates.summary) eventPayload.summary = updates.summary;
@@ -210,24 +194,8 @@ export async function updateCalendarEvent(
 
 export async function cancelCalendarEvent(userId: string, eventId: string): Promise<boolean> {
   try {
-    const supabase = createAdminClient();
-    const oauth2Client = getOAuth2Client();
-
-    const { data: tokenData } = await supabase
-      .from('integration_tokens')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('provider', 'google')
-      .single();
-
-    if (!tokenData) return false;
-
-    oauth2Client.setCredentials({
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-    });
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const calendar = await getCalendarClient(userId);
+    if (!calendar) return false;
 
     await calendar.events.delete({
       calendarId: 'primary',
@@ -244,24 +212,8 @@ export async function cancelCalendarEvent(userId: string, eventId: string): Prom
 
 export async function getUpcomingInterviews(userId: string, days = 7) {
   try {
-    const supabase = createAdminClient();
-    const oauth2Client = getOAuth2Client();
-
-    const { data: tokenData } = await supabase
-      .from('integration_tokens')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('provider', 'google')
-      .single();
-
-    if (!tokenData) return [];
-
-    oauth2Client.setCredentials({
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-    });
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const calendar = await getCalendarClient(userId);
+    if (!calendar) return [];
 
     const now = new Date();
     const future = new Date();

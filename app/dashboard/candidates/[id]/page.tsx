@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
+import { scheduleInterview } from '@/lib/hr/manage';
 import {
     User, Mail, Phone, Linkedin, Calendar, Briefcase,
     FileText, CheckCircle, Clock, AlertCircle, Loader2, ArrowLeft,
@@ -237,28 +238,13 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
         setIsScheduling(true);
         try {
-            const res = await fetch('/api/interviews/schedule', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    candidateId: params.id,
-                    privyUserId: user?.id,
-                    startTime: new Date(scheduleTime).toISOString(),
-                    durationMinutes: 30
-                })
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                if (data.error === 'Scheduling requires a Pro plan') {
-                    notify('Locked Feature: Please upgrade your account to Premium to schedule interviews automatically.');
-                } else {
-                    throw new Error(data.error || 'Failed to schedule interview. Ensure Google Calendar is integrated.');
-                }
-                return;
-            }
-
-            notify('Interview successfully scheduled via Google Calendar!');
+            const r = await scheduleInterview(params.id as string, new Date(scheduleTime).toISOString(), 30, '');
+            if (r.error) { notify(r.error); return; }
+            notify(
+                r.meet && r.emailed ? 'Interview scheduled — a Google Meet link was created and emailed to the candidate.'
+                : r.emailed ? 'Interview scheduled — the candidate has been emailed. Connect Google Calendar in Settings to include a Meet link.'
+                : 'Interview scheduled. It now shows on the Interviews page.'
+            );
             setShowScheduleModal(false);
             loadCandidateData();
         } catch (error: any) {

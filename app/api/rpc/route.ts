@@ -53,9 +53,10 @@ const ALLOWED = new Set([
   // HR crown-jewel table access (0041) — recruiter side, verified proxy only
   'hr_overview_data', 'hr_analytics_data', 'hr_candidate_activity',
   'hr_update_candidate_status', 'hr_seed_demo_result', 'hr_google_connected',
-  // HR add/delete management (0044)
-  'hr_list_interviews', 'hr_schedule_interview', 'hr_cancel_interview',
-  'hr_create_candidate', 'hr_delete_candidate', 'hr_list_positions_min',
+  // HR management: browser-reachable reads + candidate add/delete (0044).
+  // Interview schedule/edit/cancel run through /api/hr/interviews (0045), not
+  // here, because they orchestrate Google Meet + the candidate email server-side.
+  'hr_list_interviews', 'hr_create_candidate', 'hr_delete_candidate', 'hr_list_positions_min',
   // Agents (0043)
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
 ]);
