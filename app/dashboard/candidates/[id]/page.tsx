@@ -242,7 +242,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             if (r.error) { notify(r.error); return; }
             notify(
                 r.meet && r.emailed ? 'Interview scheduled — a Google Meet link was created and emailed to the candidate.'
-                : r.emailed ? 'Interview scheduled — the candidate has been emailed. Connect Google Calendar in Settings to include a Meet link.'
+                : r.emailed ? 'Interview scheduled — the candidate has been emailed. Connect Google Calendar in Automate → Integrations to include a Meet link.'
                 : 'Interview scheduled. It now shows on the Interviews page.'
             );
             setShowScheduleModal(false);

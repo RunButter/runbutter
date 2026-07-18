@@ -14,32 +14,32 @@ export async function GET(request: Request) {
         const state = searchParams.get('state'); // Contains injected { userId, companyId }
         const errorParam = searchParams.get('error');
 
-        // Target redirect destination
-        const settingsUrl = new URL('/dashboard/settings', baseUrl);
+        // Land back on the Integrations page (Automate → Integrations in the nav).
+        const settingsUrl = new URL('/settings/integrations', baseUrl);
 
         if (errorParam) {
             console.error('Google OAuth Error from callback:', errorParam);
-            settingsUrl.searchParams.set('error', 'google_auth_failed');
+            settingsUrl.searchParams.set('google', 'error');
             return NextResponse.redirect(settingsUrl);
         }
 
         if (!code || !state) {
-            settingsUrl.searchParams.set('error', 'missing_oauth_params');
+            settingsUrl.searchParams.set('google', 'error');
             return NextResponse.redirect(settingsUrl);
         }
 
         // Process the token exchange and save to database
         const redirectUri = `${baseUrl}/api/auth/google/callback`;
-        
+
         await handleOAuthCallback(code, state, redirectUri);
 
-        // Success redirect back to Settings page
-        settingsUrl.searchParams.set('success', 'google_connected');
+        // Success redirect back to Integrations
+        settingsUrl.searchParams.set('google', 'connected');
         return NextResponse.redirect(settingsUrl);
     } catch (error: any) {
         console.error('Google Callback Route Error:', error);
-        const fallbackUrl = new URL('/dashboard/settings', baseUrl);
-        fallbackUrl.searchParams.set('error', 'google_auth_exception');
+        const fallbackUrl = new URL('/settings/integrations', baseUrl);
+        fallbackUrl.searchParams.set('google', 'error');
         return NextResponse.redirect(fallbackUrl);
     }
 }

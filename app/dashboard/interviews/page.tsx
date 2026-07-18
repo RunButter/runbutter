@@ -74,14 +74,14 @@ export default function InterviewsPage() {
             <p className="text-[13px] text-secondary">
               {googleReady
                 ? 'Scheduling creates a Google Meet link and emails it to the candidate.'
-                : 'Scheduling emails the candidate. Connect Google Calendar in Settings to auto-add a Meet link.'}
+                : 'Scheduling emails the candidate. Connect Google Calendar (Automate → Integrations) to auto-add a Meet link.'}
             </p>
           </div>
 
           {!googleReady && (
-            <Link href="/dashboard/settings" className="mb-4 flex items-center gap-2 rounded-lg border border-subtle bg-surface-sunken px-3 py-2 text-[12px] text-secondary hover:border-strong">
+            <Link href="/settings/integrations" className="mb-4 flex items-center gap-2 rounded-lg border border-subtle bg-surface-sunken px-3 py-2 text-[12px] text-secondary hover:border-strong">
               <Info className="w-3.5 h-3.5 text-accent shrink-0" />
-              Connect Google Calendar to generate Meet links and calendar invites automatically.
+              Connect Google Calendar (Automate → Integrations) to generate Meet links and calendar invites automatically.
             </Link>
           )}
 
@@ -222,7 +222,7 @@ function InterviewModal({
             <Info className="w-3.5 h-3.5 shrink-0 mt-px text-accent" />
             {googleReady
               ? `A Google Meet link and calendar invite will be ${isEdit ? 'updated' : 'created'} and the candidate emailed.`
-              : 'The candidate will be emailed. Connect Google Calendar in Settings for an automatic Meet link.'}
+              : 'The candidate will be emailed. Connect Google Calendar in Automate → Integrations for an automatic Meet link.'}
           </p>
         </div>
         <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle">

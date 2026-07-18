@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send } from 'lucide-react';
+import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send, Calendar, CheckCircle } from 'lucide-react';
 import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
+import { rpc } from '@/lib/rpc';
 import { useDialog } from '@/components/ui/Dialog';
 
 const KINDS = ['generic', 'slack', 'discord', 'zapier', 'make', 'n8n'];
@@ -30,8 +31,21 @@ export default function IntegrationsPage() {
   const [testing, setTesting] = useState('');
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; text: string }>>({});
   const [origin, setOrigin] = useState('https://runbutter.app');
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleMsg, setGoogleMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
+
+  // Native Google Calendar connection status + the post-OAuth banner.
+  useEffect(() => {
+    if (!privy) return;
+    rpc('hr_google_connected', { p_privy: privy }).then(({ data }) => setGoogleConnected(data === true));
+    const p = new URLSearchParams(window.location.search).get('google');
+    if (p === 'connected') { setGoogleConnected(true); setGoogleMsg({ ok: true, text: 'Google Calendar connected — scheduling an interview now creates a Meet link and emails it to the candidate.' }); }
+    else if (p === 'nocompany') setGoogleMsg({ ok: false, text: 'No HR workspace is linked to your account, so the calendar can’t be connected here.' });
+    else if (p === 'error') setGoogleMsg({ ok: false, text: 'Couldn’t connect Google Calendar. Check the Google API keys on the server and try again.' });
+    if (p) window.history.replaceState({}, '', '/settings/integrations');
+  }, [privy]);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -85,6 +99,31 @@ export default function IntegrationsPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto space-y-8">
           <p className="text-[13px] text-secondary -mt-1">Connect RunButter to the tools you already use — no per-call cost. Bring your own webhook URL or API key.</p>
+
+          {/* Native integrations (built-in, OAuth) */}
+          <section>
+            <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Calendar className="w-4 h-4 text-tertiary" /> Native integrations</h2>
+            {googleMsg && (
+              <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] ring-1 ${googleMsg.ok ? 'bg-success/10 text-success ring-success/30' : 'bg-danger/10 text-danger ring-danger/30'}`}>
+                {googleMsg.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
+                <span>{googleMsg.text}</span>
+              </div>
+            )}
+            <div className="rounded-xl bg-surface ring-1 ring-subtle p-4 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><Calendar className="w-5 h-5" /></div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[13px] font-semibold text-primary">Google Calendar</h3>
+                <p className="text-[12px] text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
+              </div>
+              {googleConnected ? (
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success shrink-0"><CheckCircle className="w-4 h-4" /> Connected</span>
+              ) : (
+                <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
+                  <Calendar className="w-3.5 h-3.5" /> Connect
+                </a>
+              )}
+            </div>
+          </section>
 
           {/* Connect cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
