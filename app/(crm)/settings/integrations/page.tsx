@@ -7,11 +7,13 @@ import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
+import { useDialog } from '@/components/ui/Dialog';
 
 const KINDS = ['generic', 'slack', 'discord', 'zapier', 'make', 'n8n'];
 const fmtDate = (s: string | null) => (s ? new Date(s).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
 export default function IntegrationsPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const canEdit = !!privy;
@@ -44,10 +46,10 @@ export default function IntegrationsPage() {
   const saveConn = async () => {
     if (!privy || !editConn?.url) return;
     const res = await saveConnection(privy, editConn.id || null, { label: editConn.label || '', kind: editConn.kind || 'generic', url: editConn.url, is_active: editConn.is_active ?? true });
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     setEditConn(null); reload();
   };
-  const delConn = async (c: Connection) => { if (!privy || !confirm('Delete this connection?')) return; await deleteConnection(privy, c.id); reload(); };
+  const delConn = async (c: Connection) => { if (!privy || !await confirmDialog('Delete this connection?')) return; await deleteConnection(privy, c.id); reload(); };
 
   // Fire a signed sample payload — what Zapier/Make/n8n wait for during setup.
   const testConn = async (c: Connection) => {
@@ -66,10 +68,10 @@ export default function IntegrationsPage() {
   const makeKey = async () => {
     if (!privy) return;
     const res = await createApiKey(privy, newKeyName || 'API key');
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     setFreshKey(res.key || null); setNewKeyName(''); reload();
   };
-  const revoke = async (k: ApiKey) => { if (!privy || !confirm('Revoke this key? Apps using it will stop working.')) return; await revokeApiKey(privy, k.id); reload(); };
+  const revoke = async (k: ApiKey) => { if (!privy || !await confirmDialog('Revoke this key? Apps using it will stop working.')) return; await revokeApiKey(privy, k.id); reload(); };
 
   const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none';
 

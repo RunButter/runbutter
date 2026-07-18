@@ -20,8 +20,10 @@ import {
 import Link from 'next/link';
 import LogoContainer from '@/components/LogoContainer';
 import { rpc } from '@/lib/rpc';
+import { useDialog } from '@/components/ui/Dialog';
 
 export default function SettingsPage() {
+  const { confirm: confirmDialog } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -208,7 +210,7 @@ export default function SettingsPage() {
     };
 
     const removeWebhook = async (id: string) => {
-        if (!user || !confirm('Remove this integration?')) return;
+        if (!user || !await confirmDialog('Remove this integration?')) return;
         try {
             const { error } = await rpc('delete_webhook_endpoint', { p_privy_user_id: user.id, p_id: id });
             if (error) throw error;

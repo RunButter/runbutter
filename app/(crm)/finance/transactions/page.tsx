@@ -15,6 +15,7 @@ import {
 } from '@/lib/crm/data';
 import { toCSV, downloadCSV, parseCSV, autoMatch } from '@/lib/crm/csv';
 import RecordForm from '@/components/crm/RecordForm';
+import { useDialog } from '@/components/ui/Dialog';
 
 const PERIODS = [{ label: '1M', months: 1 }, { label: '3M', months: 3 }, { label: '6M', months: 6 }, { label: '12M', months: 12 }];
 const OBJ = OBJECTS.transactions;
@@ -33,6 +34,7 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export default function TransactionsPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const canEdit = !!privy;
@@ -91,17 +93,17 @@ export default function TransactionsPage() {
   const bulk = async (patch: Record<string, any>) => {
     if (!privy || selected.size === 0) return;
     const res = await bulkUpdateTransactions(privy, [...selected], patch);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     setSelected(new Set()); reload(); reloadAccounts();
   };
 
   const bulkDelete = async () => {
     if (!privy || selected.size === 0) return;
-    if (!confirm(`Delete ${selected.size} transaction${selected.size === 1 ? '' : 's'}? This can’t be undone.`)) return;
+    if (!await confirmDialog(`Delete ${selected.size} transaction${selected.size === 1 ? '' : 's'}? This can’t be undone.`)) return;
     const results = await Promise.all([...selected].map((id) => deleteRecord(privy, 'transactions', id)));
     setSelected(new Set()); reload(); reloadAccounts();
     const failed = results.filter((r) => r.error);
-    if (failed.length) alert(failed[0].error?.includes('FORBIDDEN') ? 'Deleting requires an owner/admin role.' : `${failed.length} could not be deleted.`);
+    if (failed.length) notify(failed[0].error?.includes('FORBIDDEN') ? 'Deleting requires an owner/admin role.' : `${failed.length} could not be deleted.`);
   };
 
   // New transaction: create via the generic form, then attach the active account.
@@ -322,6 +324,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
   txn: LedgerTxn; privy: string | null; canEdit: boolean; categorySuggestions: string[];
   onClose: () => void; onChanged: () => void;
 }) {
+  const { notify } = useDialog();
   const [suggestions, setSuggestions] = useState<MatchSuggestion[] | null>(null);
   const [busy, setBusy] = useState('');
   const [cat, setCat] = useState(txn.category || '');
@@ -338,7 +341,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
     setBusy(targetId);
     const res = await reconcileTransaction(privy, txn.id, kind, targetId);
     setBusy('');
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     onChanged();
   };
   const unmatch = async () => {
@@ -346,7 +349,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
     setBusy('unmatch');
     const res = await reconcileTransaction(privy, txn.id, 'none');
     setBusy('');
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     onChanged();
   };
   const saveEdits = async () => {
@@ -354,7 +357,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
     setBusy('save');
     const res = await updateRecord(privy, 'transactions', txn.id, { category: cat, status });
     setBusy('');
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     onChanged();
   };
 

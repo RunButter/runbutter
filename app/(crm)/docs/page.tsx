@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { FileText, Plus, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { loadDocs, saveDoc, deleteDoc, type DocMeta } from '@/lib/crm/docs';
+import { useDialog } from '@/components/ui/Dialog';
 
 const fmt = (s: string) => new Date(s).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' });
 
 export default function DocsPage() {
+  const { confirm: confirmDialog } = useDialog();
   const router = useRouter();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
@@ -34,7 +36,7 @@ export default function DocsPage() {
   };
   const remove = async (e: React.MouseEvent, d: DocMeta) => {
     e.stopPropagation();
-    if (!privy || !confirm(`Delete "${d.title}"?`)) return;
+    if (!privy || !await confirmDialog(`Delete "${d.title}"?`)) return;
     await deleteDoc(privy, d.id); reload();
   };
 

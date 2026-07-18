@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 import { getWorkspace, loadBranding, loadNavActivity, type WorkspaceContext } from '@/lib/crm/data';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
@@ -168,14 +169,15 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
         ) : (
           <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center shrink-0">{(ws?.name || 'R')[0].toUpperCase()}</div>
         )}
-        <div className="text-xs leading-tight min-w-0">
+        <div className="text-xs leading-tight min-w-0 flex-1">
           <div className="font-medium text-primary truncate">{ws?.name || 'Workspace'}</div>
           <div className="text-tertiary capitalize">{ws?.role || 'Member'}</div>
         </div>
+        <ThemeToggle />
         <button
           aria-label="Sign out"
           onClick={async () => { await logout(); router.push('/auth/login'); }}
-          className="ml-auto p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-surface-hover transition-colors"
+          className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-surface-hover transition-colors"
         >
           <LogOut className="w-4 h-4" />
         </button>

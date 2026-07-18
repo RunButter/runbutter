@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { X, Loader2, Trash2, Upload, Search } from 'lucide-react';
 import type { ObjectDef, FormField } from '@/lib/crm/types';
 import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm/data';
-import { supabase } from '@/lib/supabase';
+import { uploadImage } from '@/lib/crm/upload';
 import SearchSelect from './SearchSelect';
+import { useDialog } from '@/components/ui/Dialog';
 
 interface Props {
   object: ObjectDef;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function RecordForm({ object, privyUserId, recordId, initial, suggestions, onClose, onSaved }: Props) {
+  const { confirm: confirmDialog } = useDialog();
   const fields = object.form || [];
   const [values, setValues] = useState<Record<string, any>>(() => {
     const v: Record<string, any> = {};
@@ -59,15 +61,13 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
     setLookupBusy(false);
   };
 
-  // Upload an image to the public 'branding' bucket and store its URL on the field.
-  const uploadImage = async (f: FormField, file: File) => {
+  // Upload via the server route (service role + auto-created bucket).
+  const uploadFieldImage = async (f: FormField, file: File) => {
+    if (!privyUserId) { setError('Sign in to upload images.'); return; }
     setUploading(f.key); setError('');
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    const path = `${object.slug}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('branding').upload(path, file, { upsert: true, cacheControl: '3600' });
-    if (upErr) { setError(`Upload failed: ${upErr.message}. Run migration 0017 to create the 'branding' bucket.`); setUploading(null); return; }
-    const { data } = supabase.storage.from('branding').getPublicUrl(path);
-    set(f.key, data.publicUrl);
+    const { url, error: upErr } = await uploadImage(privyUserId, null, file, object.slug);
+    if (upErr) { setError(upErr); setUploading(null); return; }
+    set(f.key, url!);
     setUploading(null);
   };
 
@@ -98,7 +98,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   };
 
   const remove = async () => {
-    if (!privyUserId || !recordId || !confirm(`Delete this ${object.singular.toLowerCase()}?`)) return;
+    if (!privyUserId || !recordId || !await confirmDialog(`Delete this ${object.singular.toLowerCase()}?`)) return;
     setSaving(true);
     const res = await deleteRecord(privyUserId, object.slug, recordId);
     setSaving(false);
@@ -134,7 +134,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                       : <div className="w-12 h-12 rounded-md bg-surface-hover ring-1 ring-subtle" />}
                     <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
                       {uploading === f.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadImage(f, file); }} />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadFieldImage(f, file); }} />
                     </label>
                     {values[f.key] && <button type="button" onClick={() => set(f.key, '')} className="text-[12px] text-tertiary hover:text-rose-600">Remove</button>}
                   </div>

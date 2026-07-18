@@ -156,50 +156,50 @@ export default function RegisterPage() {
 
   if (step === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Checking authentication...</p>
-          <p className="text-xs text-gray-400 mt-2">{debug}</p>
+          <Loader2 className="w-8 h-8 animate-spin text-accent mx-auto mb-3" />
+          <p className="text-sm text-secondary">Checking authentication...</p>
+          <p className="text-xs text-tertiary mt-2">{debug}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-6">
       <div className="max-w-md w-full">
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-8">
             <Logo />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Create Your Account</h1>
-          <p className="text-gray-600">Start hiring smarter in minutes</p>
+          <h1 className="text-2xl font-medium text-primary mb-2">Create Your Account</h1>
+          <p className="text-secondary">Start hiring smarter in minutes</p>
         </div>
 
         <div className="mb-6 flex items-center justify-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-indigo-600 text-white' : 'bg-green-500 text-white'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-accent text-white' : 'bg-green-500 text-white'}`}>
             {step === 'auth' ? '1' : '✓'}
           </div>
-          <div className={`w-16 h-1 ${step === 'company' ? 'bg-indigo-600' : 'bg-gray-200'}`} />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'company' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'}`}>2</div>
+          <div className={`w-16 h-1 ${step === 'company' ? 'bg-accent' : 'bg-strong'}`} />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'company' ? 'bg-accent text-white' : 'bg-surface-hover text-secondary'}`}>2</div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-surface rounded-lg border border-subtle p-8">
           {/* Debug info (Hidden in UI) */}
 
           {error && (
-            <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
+            <div className="mb-5 p-4 bg-danger/10 border border-danger/30 rounded-lg text-danger text-sm">{error}</div>
           )}
 
           {step === 'auth' && (
             <div className="space-y-4">
-              <p className="text-sm text-gray-500 text-center mb-6">Create your account to get started</p>
+              <p className="text-sm text-secondary text-center mb-6">Create your account to get started</p>
 
               <button
                 onClick={handleSignIn}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition font-medium text-gray-700"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-subtle rounded-lg hover:border-strong hover:bg-surface-hover transition font-medium text-secondary"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -212,11 +212,11 @@ export default function RegisterPage() {
 
               <button
                 onClick={handleSignIn}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-white rounded-lg transition font-medium"
               >
                 Continue with Email
               </button>
-              <p className="text-center text-xs text-gray-400">Powered by Privy</p>
+              <p className="text-center text-xs text-tertiary">Powered by Privy</p>
             </div>
           )}
 
@@ -227,12 +227,12 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                <label className="block text-sm font-medium text-secondary mb-2">Company Name</label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                     placeholder="Acme Corporation"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
@@ -242,12 +242,12 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subdomain</label>
+                <label className="block text-sm font-medium text-secondary mb-2">Subdomain</label>
                 <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                     placeholder="acme"
                     value={formData.subdomain}
                     onChange={(e) => handleSubdomainChange(e.target.value)}
@@ -255,11 +255,11 @@ export default function RegisterPage() {
                     minLength={3}
                   />
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-secondary">
                   Portal: <span className="font-medium">{formData.subdomain || 'your-company'}.runbutter.app</span>
                 </p>
                 {formData.subdomain && subdomainAvailable !== null && (
-                  <p className={`mt-1 text-sm ${subdomainAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`mt-1 text-sm ${subdomainAvailable ? 'text-green-600' : 'text-danger'}`}>
                     {subdomainAvailable ? '✓ Available' : '✗ Already taken'}
                   </p>
                 )}
@@ -268,7 +268,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={submitting || !subdomainAvailable}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating...</> : 'Launch My Dashboard →'}
               </button>
@@ -276,7 +276,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={logout}
-                className="w-full text-sm text-gray-400 hover:text-gray-600 transition"
+                className="w-full text-sm text-tertiary hover:text-secondary transition"
               >
                 Use a different account
               </button>
@@ -284,9 +284,9 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-secondary mt-6">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-semibold">Sign in</Link>
+          <Link href="/auth/login" className="text-accent hover:text-accent font-semibold">Sign in</Link>
         </p>
       </div>
     </div>

@@ -5,8 +5,10 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Sparkles, Loader2, Plus, Trash2, Check, Star, ShieldCheck } from 'lucide-react';
 import { loadAiProviders, saveAiKey, setAiProviderMeta, deleteAiProvider, type AiProviderRow } from '@/lib/crm/docs';
 import { PROVIDERS, providerLabel } from '@/lib/ai/providers';
+import { useDialog } from '@/components/ui/Dialog';
 
 export default function AiKeysPage() {
+  const { confirm: confirmDialog } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const canEdit = !!privy;
@@ -41,7 +43,7 @@ export default function AiKeysPage() {
   };
   const makeDefault = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { is_default: true }); reload(); } };
   const toggle = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { enabled: !r.enabled }); reload(); } };
-  const remove = async (r: AiProviderRow) => { if (privy && confirm(`Remove your ${providerLabel(r.provider)} key?`)) { await deleteAiProvider(privy, r.id); reload(); } };
+  const remove = async (r: AiProviderRow) => { if (privy && await confirmDialog(`Remove your ${providerLabel(r.provider)} key?`)) { await deleteAiProvider(privy, r.id); reload(); } };
 
   const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none';
 

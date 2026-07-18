@@ -8,6 +8,7 @@ import { Plus, Trash2, Loader2, Save, X } from 'lucide-react';
 import { TEMPLATE_VARS } from '@/lib/render-template';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { rpc } from '@/lib/rpc';
+import { useDialog } from '@/components/ui/Dialog';
 
 const CATEGORIES = ['invite', 'decline', 'offer', 'reminder', 'custom'];
 const CAT_STYLE: Record<string, string> = {
@@ -21,6 +22,7 @@ const CAT_STYLE: Record<string, string> = {
 const blank = { id: null as string | null, name: '', subject: '', body: '', category: 'custom' };
 
 export default function TemplatesPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -56,17 +58,17 @@ export default function TemplatesPage() {
             if (error) throw error;
             setEditing(null);
             await load(user.id);
-        } catch (e: any) { alert(e?.message || 'Save failed'); }
+        } catch (e: any) { notify(e?.message || 'Save failed'); }
         finally { setSaving(false); }
     };
 
     const remove = async (id: string) => {
-        if (!user || !confirm('Delete this template?')) return;
+        if (!user || !await confirmDialog('Delete this template?')) return;
         try {
             const { error } = await rpc('delete_message_template', { p_privy_user_id: user.id, p_id: id });
             if (error) throw error;
             await load(user.id);
-        } catch (e: any) { alert(e?.message || 'Delete failed'); }
+        } catch (e: any) { notify(e?.message || 'Delete failed'); }
     };
 
     if (!ready || loading) {

@@ -31,29 +31,29 @@ export default function LoginPage() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-6">
       <div className="max-w-md w-full">
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-8">
             <Logo />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <h1 className="text-2xl font-medium text-primary mb-2">Welcome Back</h1>
+          <p className="text-secondary">Sign in to your account</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-surface rounded-lg border border-subtle p-8">
 
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition font-medium text-gray-700 mb-4"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-subtle rounded-lg hover:border-strong hover:bg-surface-hover transition font-medium text-secondary mb-4"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -66,19 +66,19 @@ export default function LoginPage() {
 
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition font-medium"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-white rounded-lg transition font-medium"
           >
             Continue with Email
           </button>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
+          <p className="text-center text-xs text-tertiary mt-4">
             Powered by Privy — secure, passwordless login
           </p>
         </div>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-secondary mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+          <Link href="/auth/register" className="text-accent hover:text-accent font-semibold">
             Sign up for free
           </Link>
         </p>

@@ -7,8 +7,10 @@ import { supabase } from '@/lib/supabase';
 import { Users, UserPlus, Shield, Loader2, Mail, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import Paywall from '@/components/Paywall';
 import Link from 'next/link';
+import { useDialog } from '@/components/ui/Dialog';
 
 export default function TeamPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ export default function TeamPage() {
     };
 
     const handleRemoveMember = async (memberId: string) => {
-        if (!confirm('Are you sure you want to remove this team member?')) return;
+        if (!await confirmDialog('Are you sure you want to remove this team member?')) return;
         
         try {
             const { error } = await supabase
@@ -109,7 +111,7 @@ export default function TeamPage() {
             if (error) throw error;
             loadTeam();
         } catch (error: any) {
-            alert(error.message);
+            notify(error.message);
         }
     };
 

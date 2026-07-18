@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { ArrowLeft, Check, Copy, Link2, Loader2, Lock, Upload, MessageCircle, CheckCircle2, Circle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { uploadImage } from '@/lib/crm/upload';
 import {
   loadPost, savePost, addPostComment, setPostCommentResolved,
   type PostDetail, type PostPlatform,
@@ -26,6 +26,7 @@ export default function PostStudio() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [copied, setCopied] = useState(false);
 
   const reload = useCallback(() => {
@@ -48,17 +49,11 @@ export default function PostStudio() {
     if (!post.live && res.id) router.replace(`/marketing/posts/${res.id}`); else reload();
   };
 
-  const uploadImage = async (file: File) => {
-    setUploading(true);
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    const path = `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from('branding').upload(path, file, { upsert: true, cacheControl: '3600' });
-    if (!error) {
-      const { data } = supabase.storage.from('branding').getPublicUrl(path);
-      set({ image_url: data.publicUrl });
-    } else {
-      alert(`Upload failed: ${error.message}. Run migration 0017 (branding bucket) first.`);
-    }
+  const uploadPostImage = async (file: File) => {
+    if (!privy) { setUploadError('Sign in to upload images.'); return; }
+    setUploading(true); setUploadError('');
+    const { url, error } = await uploadImage(privy, null, file, 'posts');
+    if (error) setUploadError(error); else set({ image_url: url! });
     setUploading(false);
   };
 
@@ -167,10 +162,11 @@ export default function PostStudio() {
                 {post.image_url && <img src={post.image_url} alt="" className="w-9 h-9 rounded-md object-cover ring-1 ring-subtle" />}
                 <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
                   {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} disabled={!privy || uploading} />
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPostImage(f); }} disabled={!privy || uploading} />
                 </label>
                 {post.image_url && <button onClick={() => set({ image_url: null })} className="text-[12px] text-tertiary hover:text-rose-600">Remove</button>}
               </div>
+              {uploadError && <p className="mt-1.5 text-[12px] text-danger">{uploadError}</p>}
             </div>
           </div>
 

@@ -7,8 +7,10 @@ import { supabase } from '@/lib/supabase';
 import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
+import { useDialog } from '@/components/ui/Dialog';
 
 export default function PositionsPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ export default function PositionsPage() {
     };
 
     const handleDeletePosition = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this position? All associated candidates and assessments will be removed.')) return;
+        if (!await confirmDialog('Are you sure you want to delete this position? All associated candidates and assessments will be removed.')) return;
 
         try {
             const { error } = await supabase
@@ -68,7 +70,7 @@ export default function PositionsPage() {
             setPositions(positions.filter(p => p.id !== id));
         } catch (error) {
             console.error('Error deleting position:', error);
-            alert('Failed to delete position');
+            notify('Failed to delete position');
         }
     };
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Trash2, Download, X, Loader2 } from 'lucide-react';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 import Badge, { toneFor } from '@/components/ui/Badge';
+import { useDialog } from '@/components/ui/Dialog';
 
 function initials(s: string) {
   return (s || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -53,6 +54,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
   onDeleteSelected?: (ids: string[]) => Promise<void>;
   onExportSelected?: (rows: any[]) => void;
 }) {
+  const { confirm: confirmDialog } = useDialog();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const headRef = useRef<HTMLInputElement>(null);
@@ -79,7 +81,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
 
   const doDelete = async () => {
     if (!onDeleteSelected) return;
-    if (!confirm(`Delete ${selected.size} ${selected.size === 1 ? object.singular.toLowerCase() : object.plural.toLowerCase()}? This can’t be undone.`)) return;
+    if (!await confirmDialog(`Delete ${selected.size} ${selected.size === 1 ? object.singular.toLowerCase() : object.plural.toLowerCase()}? This can’t be undone.`)) return;
     setBusy(true);
     await onDeleteSelected([...selected]);
     setBusy(false);

@@ -8,6 +8,7 @@ import {
   loadAutomations, saveAutomation, setAutomationEnabled, deleteAutomation, loadAutomationRuns, loadConnections, webhookUrl, TEMPLATES,
   type Automation, type AutomationRun, type Connection, type Condition, type Action, type TriggerType,
 } from '@/lib/crm/automations';
+import { useDialog } from '@/components/ui/Dialog';
 
 const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
 const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
@@ -42,6 +43,7 @@ const forEditing = (a: Automation): Automation => {
 const fmtWhen = (s: string) => new Date(s).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 export default function AutomationsPage() {
+  const { confirm: confirmDialog } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const canEdit = !!privy;
@@ -68,7 +70,7 @@ export default function AutomationsPage() {
     await setAutomationEnabled(privy, a.id, !a.enabled);
   };
   const remove = async (a: Automation) => {
-    if (!privy || !confirm(`Delete "${a.name || 'this automation'}"?`)) return;
+    if (!privy || !await confirmDialog(`Delete "${a.name || 'this automation'}"?`)) return;
     await deleteAutomation(privy, a.id); reload();
   };
   const fromTemplate = (t: Partial<Automation>) => setEditing(forEditing({ ...blank(), ...t } as Automation));

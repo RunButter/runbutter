@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, RefreshCw, Smartphone, CheckCircle2, Settings2, Trash2, X } from 'lucide-react';
 import { loadSites, createSite, deleteSite, loadSiteStats, type Site, type SiteStats } from '@/lib/crm/data';
+import { useDialog } from '@/components/ui/Dialog';
 
 const PERIODS = [
   { label: '7D', days: 7 },
@@ -17,6 +18,7 @@ function snippetFor(siteId: string) {
 }
 
 export default function WebAnalytics() {
+  const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
 
@@ -77,11 +79,11 @@ export default function WebAnalytics() {
 
   const removeSite = async (s: Site) => {
     if (!privy) return;
-    if (!confirm(`Remove ${s.domain}? This deletes all its collected analytics — this can't be undone.`)) return;
+    if (!await confirmDialog(`Remove ${s.domain}? This deletes all its collected analytics — this can't be undone.`)) return;
     setRemovingId(s.id);
     const res = await deleteSite(privy, s.id);
     setRemovingId(null);
-    if (res.error) { alert(res.error.includes('FORBIDDEN') ? 'Only an owner/admin can remove a website.' : res.error); return; }
+    if (res.error) { notify(res.error.includes('FORBIDDEN') ? 'Only an owner/admin can remove a website.' : res.error); return; }
     await refreshSites();
   };
 

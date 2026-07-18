@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Loader2, Upload, Check } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
+import { uploadImage } from '@/lib/crm/upload';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
@@ -74,13 +74,11 @@ export default function BrandingPage() {
   const onLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !wsId) return;
+    if (!privy) { setError('Sign in to upload a logo.'); return; }
     setUploading(true); setError('');
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    const path = `${wsId}/logo-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('branding').upload(path, file, { upsert: true, cacheControl: '3600' });
-    if (upErr) { setError(`Upload failed: ${upErr.message}. Run migration 0017 to create the 'branding' bucket.`); setUploading(false); return; }
-    const { data } = supabase.storage.from('branding').getPublicUrl(path);
-    set({ logo_url: data.publicUrl });
+    const { url, error: upErr } = await uploadImage(privy, wsId, file, 'logo');
+    if (upErr) { setError(upErr); setUploading(false); return; }
+    set({ logo_url: url! });
     setUploading(false);
   };
 

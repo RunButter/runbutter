@@ -12,7 +12,7 @@ import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Reveal from '@/components/landing/Reveal';
-import ThemeToggle from '@/components/landing/ThemeToggle';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
 
 const REPO_URL = 'https://github.com/RunButter/runbutter';

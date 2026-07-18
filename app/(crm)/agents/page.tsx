@@ -11,6 +11,7 @@ import {
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { useDialog } from '@/components/ui/Dialog';
 
 const BLANK: Partial<Agent> = {
   name: '', role: '', instructions: '', model: '',
@@ -18,6 +19,7 @@ const BLANK: Partial<Agent> = {
 };
 
 export default function AgentsPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const [ws, setWs] = useState<WorkspaceContext | null>(null);
@@ -97,7 +99,7 @@ export default function AgentsPage() {
                     <input type="checkbox" checked={a.enabled} onChange={(e) => ws && privy && setAgentEnabled(privy, ws.id, a.id, e.target.checked).then(refresh)} className="rounded border-strong accent-accent" />
                     enabled
                   </label>
-                  <Button size="sm" variant="ghost" onClick={() => { if (ws && privy && confirm(`Delete agent "${a.name}"?`)) deleteAgent(privy, ws.id, a.id).then(refresh); }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
+                  <Button size="sm" variant="ghost" onClick={async () => { if (ws && privy && await confirmDialog(`Delete agent "${a.name}"?`)) deleteAgent(privy, ws.id, a.id).then(refresh); }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
                 </div>
               </div>
             ))}
@@ -134,13 +136,14 @@ export default function AgentsPage() {
 
 // ── Run history row (expandable) ──────────────────────────────────────────────
 function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceContext | null; privy: string | null; onChange: () => void }) {
+  const { notify } = useDialog();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const tone = run.status === 'done' ? 'success' : run.status === 'error' ? 'danger' : run.status === 'awaiting_approval' ? 'warning' : 'neutral';
   const approve = async () => {
     if (!ws || !privy) return;
     setBusy(true);
-    try { await approveRun(privy, ws.id, run.id); onChange(); } catch (e: any) { alert(e.message); } finally { setBusy(false); }
+    try { await approveRun(privy, ws.id, run.id); onChange(); } catch (e: any) { notify(e.message); } finally { setBusy(false); }
   };
   return (
     <div className="bg-surface">
