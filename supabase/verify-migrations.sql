@@ -37,7 +37,8 @@ with checks(ord, step, probe, ok) as (
   (40, '0040 lock rpcs',          'anon can no longer execute list_records', (select coalesce(bool_and(not has_function_privilege('anon', p.oid, 'execute')), false) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('list_records','get_ai_secret'))),
   (41, '0041 hr secure rpcs',     'apply_to_position + hr_overview_data exist', ((select exists(select 1 from pg_proc where proname='apply_to_position')) and (select exists(select 1 from pg_proc where proname='hr_overview_data')))),
   (42, '0042 lock legacy tables', 'anon can no longer SELECT candidates', (not has_table_privilege('anon', 'public.candidates', 'select'))),
-  (43, '0043 agents',             'agents + agent_runs + get_agents RPC', ((to_regclass('public.agents') is not null) and (to_regclass('public.agent_runs') is not null) and (select exists(select 1 from pg_proc where proname='get_agents'))))
+  (43, '0043 agents',             'agents + agent_runs + get_agents RPC', ((to_regclass('public.agents') is not null) and (to_regclass('public.agent_runs') is not null) and (select exists(select 1 from pg_proc where proname='get_agents')))),
+  (44, '0044 hr manage',          'interview + candidate management RPCs', ((select exists(select 1 from pg_proc where proname='hr_schedule_interview')) and (select exists(select 1 from pg_proc where proname='hr_create_candidate'))))
 )
 select step, probe, case when ok then '✅ applied' else '❌ MISSING — run this migration' end as status
 from checks order by ord;

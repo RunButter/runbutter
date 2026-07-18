@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
-import { Search, Mail, ExternalLink, Loader2 } from 'lucide-react';
+import { Search, Mail, ExternalLink, Loader2, Plus, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
+import Button from '@/components/ui/Button';
+import { useDialog } from '@/components/ui/Dialog';
 import { hrStatus } from '@/lib/hr/overview';
+import { createCandidate, deleteCandidate, listPositionsMin, type PositionMin } from '@/lib/hr/manage';
 import { rpc } from '@/lib/rpc';
 
 function StatusPill({ status }: { status: string }) {
@@ -22,12 +25,23 @@ function ScoreDot({ score }: { score?: number | null }) {
 
 export default function CandidatesPage() {
     const router = useRouter();
+    const { confirm: confirmDialog, notify } = useDialog();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
     const [candidates, setCandidates] = useState<any[]>([]);
+    const [adding, setAdding] = useState(false);
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+
+    const removeCandidate = async (e: React.MouseEvent, can: any) => {
+        e.stopPropagation();
+        if (!user) return;
+        if (!(await confirmDialog({ title: `Delete ${can.full_name}?`, body: 'This removes the candidate and all their assessments and interviews. This cannot be undone.', danger: true }))) return;
+        const { error } = await deleteCandidate(user.id, can.id);
+        if (error) { notify(error); return; }
+        setCandidates((cs) => cs.filter((c) => c.id !== can.id));
+    };
     // Auth gate only — data loading is handled by the debounced effect below.
     useEffect(() => {
         if (ready && !authenticated) {
@@ -92,9 +106,12 @@ export default function CandidatesPage() {
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder='Search resumes — react node -junior  or  "node.js"'
-                        className="h-8 w-[22rem] max-w-[52vw] pl-8 pr-8 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                     {searching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent animate-spin" />}
                 </div>
+                <Button size="sm" variant="primary" onClick={() => setAdding(true)} disabled={!user}>
+                    <Plus className="w-3.5 h-3.5" /> New candidate
+                </Button>
             </PageHeader>
 
             {/* Search-syntax hint */}
@@ -113,7 +130,10 @@ export default function CandidatesPage() {
                                     <div className="font-semibold text-primary truncate">{can.full_name}</div>
                                     <div className="flex items-center gap-1 text-[12px] text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{can.email}</span></div>
                                 </div>
-                                <StatusPill status={can.status} />
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <StatusPill status={can.status} />
+                                    <button onClick={(e) => { e.preventDefault(); removeCandidate(e, can); }} aria-label="Delete candidate" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-3.5 h-3.5" /></button>
+                                </div>
                             </div>
                             <div className="mt-3 flex items-center justify-between gap-3">
                                 <span className="text-[13px] text-secondary truncate">{can.position?.title || '—'}</span>
@@ -160,8 +180,11 @@ export default function CandidatesPage() {
                                         </td>
                                         <td className="px-4 h-[56px] border-b border-subtle text-secondary tabular-nums">{can.applied_at ? new Date(can.applied_at).toLocaleDateString() : '—'}</td>
                                         <td className="px-4 h-[56px] border-b border-subtle"><StatusPill status={can.status} /></td>
-                                        <td className="px-4 h-[56px] border-b border-subtle text-right">
-                                            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-tertiary group-hover:text-accent transition-colors">View <ExternalLink className="w-3 h-3" /></span>
+                                        <td className="px-4 h-[56px] border-b border-subtle text-right" onClick={(e) => e.stopPropagation()}>
+                                            <div className="inline-flex items-center gap-1">
+                                                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-tertiary group-hover:text-accent transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/candidates/${can.id}`)}>View <ExternalLink className="w-3 h-3" /></span>
+                                                <button onClick={(e) => removeCandidate(e, can)} aria-label="Delete candidate" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -173,6 +196,64 @@ export default function CandidatesPage() {
                     </table>
                 </div>
             </div>
+
+            {adding && user && (
+                <AddCandidateModal privy={user.id} onClose={() => setAdding(false)}
+                    onAdded={() => { setAdding(false); if (user) loadCandidates(user.id, searchTerm.trim()); }} />
+            )}
         </>
+    );
+}
+
+function AddCandidateModal({ privy, onClose, onAdded }: { privy: string; onClose: () => void; onAdded: () => void }) {
+    const { notify } = useDialog();
+    const [positions, setPositions] = useState<PositionMin[]>([]);
+    const [form, setForm] = useState({ full_name: '', email: '', phone: '', linkedin: '', position_id: '' });
+    const [busy, setBusy] = useState(false);
+    const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+    useEffect(() => { listPositionsMin(privy).then(setPositions); }, [privy]);
+
+    const submit = async () => {
+        if (!form.full_name.trim() || !form.email.trim()) return;
+        setBusy(true);
+        const { error } = await createCandidate(privy, form.full_name, form.email, form.phone, form.linkedin, form.position_id || null);
+        setBusy(false);
+        if (error) { notify(error); return; }
+        onAdded();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+            <div className="bg-surface border border-subtle rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+                <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
+                    <h3 className="text-sm font-medium text-primary">New candidate</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+                </div>
+                <div className="p-4 space-y-3">
+                    <label className="block"><span className="block text-xs font-medium text-secondary mb-1">Full name <span className="text-danger">*</span></span>
+                        <input value={form.full_name} onChange={(e) => set('full_name', e.target.value)} className="input-field" placeholder="Anna Kowalski" /></label>
+                    <label className="block"><span className="block text-xs font-medium text-secondary mb-1">Email <span className="text-danger">*</span></span>
+                        <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className="input-field" placeholder="anna@example.com" /></label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <label className="block"><span className="block text-xs font-medium text-secondary mb-1">Phone</span>
+                            <input value={form.phone} onChange={(e) => set('phone', e.target.value)} className="input-field" /></label>
+                        <label className="block"><span className="block text-xs font-medium text-secondary mb-1">LinkedIn</span>
+                            <input value={form.linkedin} onChange={(e) => set('linkedin', e.target.value)} className="input-field" placeholder="URL" /></label>
+                    </div>
+                    <label className="block"><span className="block text-xs font-medium text-secondary mb-1">Position <span className="text-tertiary">(optional)</span></span>
+                        <select value={form.position_id} onChange={(e) => set('position_id', e.target.value)} className="input-field">
+                            <option value="">No position</option>
+                            {positions.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+                        </select></label>
+                </div>
+                <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle">
+                    <Button variant="ghost" onClick={onClose}>Cancel</Button>
+                    <Button variant="primary" disabled={busy || !form.full_name.trim() || !form.email.trim()} onClick={submit}>
+                        {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add candidate
+                    </Button>
+                </div>
+            </div>
+        </div>
     );
 }
