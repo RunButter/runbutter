@@ -42,7 +42,6 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const [candidate, setCandidate] = useState<any>(null);
     const [activity, setActivity] = useState<any[]>([]);
     const [results, setResults] = useState<any>(null);
-    const [debugInfo, setDebugInfo] = useState<any>(null);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleTime, setScheduleTime] = useState('');
     const [isScheduling, setIsScheduling] = useState(false);
@@ -89,15 +88,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 p_privy_user_id: user.id
             });
 
-            if (error) {
-                setDebugInfo((prev: any) => ({ ...prev, rpcError: error }));
-                throw error;
-            }
-
-            if (!data) {
-                setDebugInfo((prev: any) => ({ ...prev, rpcData: 'NULL' }));
-                throw new Error('Candidate not found');
-            }
+            if (error) throw error;
+            if (!data) throw new Error('Candidate not found');
 
             const can = data;
             setCandidate({
