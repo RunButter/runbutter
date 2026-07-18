@@ -73,13 +73,13 @@ export default function IntegrationsPage() {
   };
   const revoke = async (k: ApiKey) => { if (!privy || !await confirmDialog('Revoke this key? Apps using it will stop working.')) return; await revokeApiKey(privy, k.id); reload(); };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Plug className="w-4 h-4 text-accent" /> Integrations</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -90,11 +90,11 @@ export default function IntegrationsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
               { name: 'Zapier', body: 'Trigger Zaps from RunButter (paste a Catch Hook URL below), or let Zapier create records via the API.', tone: 'text-orange-600 bg-orange-50' },
-              { name: 'Make', body: 'Use a Custom webhook as a connection, and the HTTP module to push data back in with your API key.', tone: 'text-violet-600 bg-violet-50' },
-              { name: 'n8n', body: 'Self-hosted automation. Webhook node in, HTTP Request node out — same URL + key.', tone: 'text-rose-600 bg-rose-50' },
-              { name: 'Slack / Discord', body: 'Paste an Incoming Webhook URL as a connection; automations post updates to your channel.', tone: 'text-emerald-600 bg-emerald-50' },
+              { name: 'Make', body: 'Use a Custom webhook as a connection, and the HTTP module to push data back in with your API key.', tone: 'text-accent bg-accent/10' },
+              { name: 'n8n', body: 'Self-hosted automation. Webhook node in, HTTP Request node out — same URL + key.', tone: 'text-danger bg-danger/10' },
+              { name: 'Slack / Discord', body: 'Paste an Incoming Webhook URL as a connection; automations post updates to your channel.', tone: 'text-success bg-success/10' },
               { name: 'REST API', body: 'Any script or backend: create + read records with a bearer API key. See endpoints below.', tone: 'text-accent bg-accent/10' },
-              { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-amber-600 bg-amber-50' },
+              { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-warning bg-warning/10' },
             ].map((c) => (
               <div key={c.name} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
                 <div className={`inline-flex text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
@@ -115,13 +115,13 @@ export default function IntegrationsPage() {
                 : connections.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
                 : connections.map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0">
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ring-1 capitalize ${c.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-200/60' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ring-1 capitalize ${c.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold text-primary truncate">{c.label || 'Webhook'}</div>
                       <div className="text-[11px] text-tertiary font-mono truncate">{c.url}</div>
                     </div>
                     {testResult[c.id] && (
-                      <span className={`text-[11px] font-semibold shrink-0 ${testResult[c.id].ok ? 'text-emerald-600' : 'text-rose-600'}`}>{testResult[c.id].text}</span>
+                      <span className={`text-[11px] font-semibold shrink-0 ${testResult[c.id].ok ? 'text-success' : 'text-danger'}`}>{testResult[c.id].text}</span>
                     )}
                     <button onClick={() => testConn(c)} disabled={!canEdit || testing === c.id} title="Send a signed sample payload"
                       className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1 disabled:opacity-40">
@@ -129,7 +129,7 @@ export default function IntegrationsPage() {
                     </button>
                     {c.secret && <button onClick={() => copy(c.secret!, 'sec' + c.id)} title="Copy signing secret" className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1">{copied === 'sec' + c.id ? <Check className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />} Secret</button>}
                     <button onClick={() => setEditConn(c)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Edit</button>
-                    <button onClick={() => delConn(c)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => delConn(c)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
             </div>
@@ -143,7 +143,7 @@ export default function IntegrationsPage() {
               <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
                 {deliveries.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-[12px]">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'ok' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'ok' ? 'bg-success' : 'bg-danger'}`} />
                     <span className="font-mono text-secondary truncate flex-1">{d.url}</span>
                     <span className="text-tertiary shrink-0">{d.detail}</span>
                   </div>
@@ -160,11 +160,11 @@ export default function IntegrationsPage() {
             </div>
 
             {freshKey && (
-              <div className="rounded-xl ring-1 ring-emerald-200/70 bg-emerald-50/60 p-4 mb-3">
-                <div className="text-[12px] font-semibold text-emerald-800 mb-1.5">Copy your key now — it won’t be shown again.</div>
+              <div className="rounded-xl ring-1 ring-success/30 bg-success/10 p-4 mb-3">
+                <div className="text-[12px] font-semibold text-success mb-1.5">Copy your key now — it won’t be shown again.</div>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-[12px] font-mono text-primary bg-surface ring-1 ring-subtle rounded-md px-2.5 py-1.5 truncate">{freshKey}</code>
-                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-[12px] font-semibold text-white bg-slate-900 hover:bg-slate-800 inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
+                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-[12px] font-semibold text-white bg-inverse hover:bg-inverse inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
                   <button onClick={() => setFreshKey(null)} className="p-1.5 rounded-md text-tertiary hover:bg-surface"><X className="w-4 h-4" /></button>
                 </div>
               </div>
@@ -181,17 +181,17 @@ export default function IntegrationsPage() {
                   <div key={k.id} className={`flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0 ${k.revoked ? 'opacity-50' : ''}`}>
                     <KeyRound className="w-4 h-4 text-tertiary shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-primary truncate">{k.name} {k.revoked && <span className="text-[11px] text-rose-500 font-medium">· revoked</span>}</div>
+                      <div className="text-[13px] font-semibold text-primary truncate">{k.name} {k.revoked && <span className="text-[11px] text-danger font-medium">· revoked</span>}</div>
                       <div className="text-[11px] text-tertiary font-mono">{k.prefix}••••••••</div>
                     </div>
                     <span className="text-[11px] text-tertiary tabular-nums hidden sm:block">last used {fmtDate(k.last_used_at)}</span>
-                    {!k.revoked && <button onClick={() => revoke(k)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1.5 disabled:opacity-40"><Ban className="w-3.5 h-3.5" /> Revoke</button>}
+                    {!k.revoked && <button onClick={() => revoke(k)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40"><Ban className="w-3.5 h-3.5" /> Revoke</button>}
                   </div>
                 ))}
             </div>
 
             {/* API reference */}
-            <div className="mt-3 rounded-xl bg-slate-950 text-slate-200 p-4 font-mono text-[12px] overflow-x-auto">
+            <div className="mt-3 rounded-xl bg-inverse text-inverse-fg p-4 font-mono text-[12px] overflow-x-auto">
               <div className="text-tertiary mb-2"># Create a record</div>
               <div className="whitespace-pre">{`curl -X POST ${origin}/api/v1/records \\
   -H "Authorization: Bearer hb_your_key" \\
@@ -218,7 +218,7 @@ export default function IntegrationsPage() {
       {/* Connection editor */}
       {editConn && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setEditConn(null)}>
-          <div className="w-full max-w-md bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
             <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
               <h3 className="text-sm font-semibold text-primary">{editConn.id ? 'Edit connection' : 'New connection'}</h3>
               <button onClick={() => setEditConn(null)} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>

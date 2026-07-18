@@ -8,7 +8,7 @@ import { getWorkspace, getMembers, setMemberRole, type WorkspaceContext } from '
 const ROLES = ['owner', 'admin', 'member'];
 const ROLE_TONE: Record<string, string> = {
   owner: 'bg-accent/10 text-accent ring-accent/20',
-  admin: 'bg-violet-50 text-violet-700 ring-violet-200/60',
+  admin: 'bg-accent/10 text-accent ring-accent/30',
   member: 'bg-surface-hover text-secondary ring-subtle',
 };
 
@@ -58,7 +58,7 @@ export default function MembersPage() {
         ) : (
           <div className="max-w-2xl">
             {!canManage && <p className="mb-3 text-[12px] text-tertiary flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Only owners and admins can change roles.</p>}
-            {error && <p className="mb-3 text-[12px] text-rose-600">{error}</p>}
+            {error && <p className="mb-3 text-[12px] text-danger">{error}</p>}
             <div className="rounded-xl ring-1 ring-subtle bg-surface divide-y divide-subtle">
               {members.map((m) => (
                 <div key={m.id} className="flex items-center gap-3 px-4 py-3">
@@ -72,7 +72,7 @@ export default function MembersPage() {
                   <div className="ml-auto">
                     {canManage ? (
                       <select value={m.role} onChange={(e) => changeRole(m.id, e.target.value)}
-                        className="h-8 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none capitalize">
+                        className="h-8 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none capitalize">
                         {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                       </select>
                     ) : (

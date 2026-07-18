@@ -93,17 +93,17 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
     };
 
     const tagColor = (tag: string) =>
-        tag === 'Aligned' ? 'bg-green-100 text-green-700'
-            : tag === 'Complementary' ? 'bg-blue-100 text-blue-700'
-                : 'bg-amber-100 text-amber-700';
+        tag === 'Aligned' ? 'bg-success/10 text-success'
+            : tag === 'Complementary' ? 'bg-accent/10 text-accent'
+                : 'bg-warning/10 text-warning';
 
     const isHigher = analysis ? analysis.biggest.delta > 0 : false;
-    const synergyColor = analysis && analysis.synergy >= 66 ? 'text-green-600'
-        : analysis && analysis.synergy >= 40 ? 'text-amber-500' : 'text-rose-500';
+    const synergyColor = analysis && analysis.synergy >= 66 ? 'text-success'
+        : analysis && analysis.synergy >= 40 ? 'text-warning' : 'text-danger';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-surface rounded-2xl shadow-popover w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-subtle">
                     <div>
                         <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
@@ -126,7 +126,7 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
                             <div className="mb-5">
                                 <label className="block text-xs font-semibold text-secondary mb-1">Mock-insert into team</label>
                                 <select value={teamKey} onChange={(e) => setTeamKey(e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-subtle rounded-lg bg-surface focus:ring-2 focus:ring-primary-500 outline-none">
+                                    className="w-full px-3 py-2 text-sm border border-subtle rounded-lg bg-surface focus:ring-2 focus:ring-accent/30 outline-none">
                                     {teams.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
                                 </select>
                             </div>

@@ -38,13 +38,17 @@ export const metadata: Metadata = {
 // Honors a saved choice (hb-theme), else the OS preference.
 const NO_FLASH = `(function(){try{var t=localStorage.getItem('hb-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();`;
 
+// Font vars live on <body>, NOT <html>: the no-flash script adds the `dark`
+// class to <html>, and if React also manages that element's className it
+// reconciles on hydration and strips `dark` — a saved dark preference then
+// rendered light. Keeping <html> free of React-owned attributes avoids that.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
       </head>
-      <body className="font-sans" suppressHydrationWarning>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -235,35 +235,35 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} width="130px" height="36px" className="h-9 w-auto" />
         ) : (
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-black text-sm">
+                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-semibold text-sm">
                     {companyInfo?.name?.charAt(0) || 'C'}
                 </div>
-                <span className="font-bold text-slate-800 text-[15px]">{companyInfo?.name}</span>
+                <span className="font-medium text-primary text-[15px]">{companyInfo?.name}</span>
             </div>
         );
 
     if (loading) {
         return (
-            <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
+            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-tertiary animate-spin" />
             </div>
         );
     }
 
     if (currentStep === 3) {
         return (
-            <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-8 text-center">
+            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-8 text-center">
                     <div className="flex justify-center mb-6"><CompanyMark /></div>
-                    <div className="w-14 h-14 bg-emerald-50 ring-1 ring-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-5">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                    <div className="w-14 h-14 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-5">
+                        <CheckCircle2 className="w-8 h-8 text-success" />
                     </div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900 mb-2">Assessment complete</h1>
-                    <p className="text-[15px] text-slate-500">
+                    <h1 className="text-2xl font-semibold tracking-tight text-primary mb-2">Assessment complete</h1>
+                    <p className="text-[15px] text-secondary">
                         Your answers were sent to the recruitment team at {companyInfo?.name || 'the company'}.
                         They will review your profile and contact you about next steps.
                     </p>
-                    <p className="mt-6 text-[13px] text-slate-400">You can safely close this tab.</p>
+                    <p className="mt-6 text-[13px] text-tertiary">You can safely close this tab.</p>
                 </div>
             </div>
         );
@@ -273,17 +273,17 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const personalityDone = qIndex >= personalityQs.length;
 
     return (
-        <div className="min-h-[100dvh] bg-slate-50 flex flex-col">
+        <div className="min-h-[100dvh] bg-surface-sunken flex flex-col">
             {/* Header: company + real per-question progress */}
-            <header className="bg-white/90 backdrop-blur border-b border-slate-200/70 sticky top-0 z-10">
+            <header className="bg-surface/$1 backdrop-blur border-b border-subtle sticky top-0 z-10">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
                     <CompanyMark />
                     <div className="flex items-center gap-3 min-w-0">
                         {currentStep > 0 && (
-                            <span className="text-[12px] font-semibold text-slate-500 tabular-nums whitespace-nowrap">{answeredCount} / {totalQs}</span>
+                            <span className="text-[12px] font-semibold text-secondary tabular-nums whitespace-nowrap">{answeredCount} / {totalQs}</span>
                         )}
-                        <div className="h-1.5 w-24 sm:w-36 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary-600 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                        <div className="h-1.5 w-24 sm:w-36 bg-surface-hover rounded-full overflow-hidden">
+                            <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                         </div>
                     </div>
                 </div>
@@ -291,14 +291,14 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 {currentStep === 0 && (
-                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
-                        <div className="w-11 h-11 rounded-xl bg-primary-50 ring-1 ring-primary-100 flex items-center justify-center mb-5">
-                            <Target className="w-5 h-5 text-primary-600" />
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8">
+                        <div className="w-11 h-11 rounded-xl bg-accent/10 ring-1 ring-accent/30 flex items-center justify-center mb-5">
+                            <Target className="w-5 h-5 text-accent" />
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mb-3">
+                        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-primary mb-3">
                             Work style & personality
                         </h1>
-                        <p className="text-[15px] text-slate-500 leading-relaxed mb-7">
+                        <p className="text-[15px] text-secondary leading-relaxed mb-7">
                             {candidate?.full_name ? `Hi ${String(candidate.full_name).split(' ')[0]} — this` : 'This'} short questionnaire
                             helps {companyInfo?.name || 'the team'} understand how you work, collaborate, and solve problems.
                             There are no right or wrong answers. Just be yourself.
@@ -310,17 +310,17 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                 { icon: BarChart3, label: 'Questions', value: `${totalQs} in total` },
                                 { icon: Brain, label: 'Format', value: 'One at a time' },
                             ].map((c) => (
-                                <div key={c.label} className="rounded-xl bg-slate-50 ring-1 ring-slate-200/60 p-3.5">
-                                    <c.icon className="w-4 h-4 text-primary-600 mb-1.5" />
-                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{c.label}</div>
-                                    <div className="text-[13px] font-bold text-slate-700">{c.value}</div>
+                                <div key={c.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3.5">
+                                    <c.icon className="w-4 h-4 text-accent mb-1.5" />
+                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</div>
+                                    <div className="text-[13px] font-medium text-secondary">{c.value}</div>
                                 </div>
                             ))}
                         </div>
 
                         <button
                             onClick={() => { setCurrentStep(1); setQIndex(0); }}
-                            className="w-full h-12 rounded-xl bg-primary-600 text-white text-[15px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 active:scale-[0.99] transition"
+                            className="w-full h-12 rounded-xl bg-accent text-white text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition"
                         >
                             Start <ArrowRight className="w-4 h-4" />
                         </button>
@@ -328,9 +328,9 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 1 && !personalityDone && activeQ && (
-                    <div key={activeQ.id} className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="text-[12px] font-semibold text-slate-400 mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
-                        <p className="text-lg sm:text-xl font-bold text-slate-900 leading-snug mb-6">{activeQ.text}</p>
+                    <div key={activeQ.id} className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="text-[12px] font-semibold text-tertiary mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
+                        <p className="text-lg sm:text-xl font-medium text-primary leading-snug mb-6">{activeQ.text}</p>
 
                         <div className="space-y-2">
                             {activeQ.options.map((opt: string) => {
@@ -340,11 +340,11 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                         key={opt}
                                         onClick={() => answerAndAdvance(activeQ.id, opt)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ring-1 text-left text-[15px] font-medium transition-all ${selected
-                                            ? 'ring-primary-600 bg-primary-50 text-primary-900'
-                                            : 'ring-slate-200 text-slate-600 hover:ring-primary-300 hover:bg-slate-50'
+                                            ? 'ring-accent/30 bg-accent/10 text-accent'
+                                            : 'ring-subtle text-secondary hover:ring-accent/30 hover:bg-surface-sunken'
                                             }`}
                                     >
-                                        <span className={`w-5 h-5 rounded-full ring-1 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-primary-600 ring-primary-600' : 'ring-slate-300 bg-white'}`}>
+                                        <span className={`w-5 h-5 rounded-full ring-1 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-accent ring-accent/30' : 'ring-strong bg-surface'}`}>
                                             {selected && <Check className="w-3 h-3 text-white" />}
                                         </span>
                                         {opt}
@@ -356,13 +356,13 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <div className="mt-7 flex items-center justify-between">
                             <button
                                 onClick={() => (qIndex === 0 ? setCurrentStep(0) : setQIndex(qIndex - 1))}
-                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-tertiary hover:text-secondary transition-colors"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" /> Back
                             </button>
                             {answers[activeQ.id] !== undefined && (
                                 <button onClick={() => setQIndex(qIndex + 1)}
-                                    className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary-600 hover:text-primary-700 transition-colors">
+                                    className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent hover:text-accent transition-colors">
                                     Next <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             )}
@@ -371,27 +371,27 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 1 && personalityDone && (
-                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="w-12 h-12 bg-emerald-50 ring-1 ring-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Check className="w-6 h-6 text-emerald-600" />
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="w-12 h-12 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Check className="w-6 h-6 text-success" />
                         </div>
-                        <h2 className="text-xl font-black tracking-tight text-slate-900 mb-2">
+                        <h2 className="text-xl font-semibold tracking-tight text-primary mb-2">
                             {screeningQs.length > 0 ? 'Section complete' : 'All questions answered'}
                         </h2>
-                        <p className="text-[14px] text-slate-500 mb-7">
+                        <p className="text-[14px] text-secondary mb-7">
                             {screeningQs.length > 0
                                 ? `${screeningQs.length} short question${screeningQs.length > 1 ? 's' : ''} from ${companyInfo?.name || 'the company'} left.`
                                 : 'Review is done in one click. Good luck!'}
                         </p>
                         <div className="flex items-center justify-center gap-3">
                             <button onClick={() => setQIndex(personalityQs.length - 1)}
-                                className="h-11 px-5 rounded-xl ring-1 ring-slate-200 text-slate-600 text-[14px] font-semibold hover:bg-slate-50 transition-colors">
+                                className="h-11 px-5 rounded-xl ring-1 ring-subtle text-secondary text-[14px] font-semibold hover:bg-surface-sunken transition-colors">
                                 Back
                             </button>
                             <button
                                 onClick={() => (screeningQs.length > 0 ? setCurrentStep(2) : handleComplete())}
                                 disabled={submitting}
-                                className="h-11 px-6 rounded-xl bg-primary-600 text-white text-[14px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition disabled:opacity-60"
+                                className="h-11 px-6 rounded-xl bg-accent text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-60"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                     <>{screeningQs.length > 0 ? 'Continue' : 'Finish & submit'} <ArrowRight className="w-4 h-4" /></>
@@ -402,16 +402,16 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 2 && (
-                    <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <h2 className="text-xl font-black tracking-tight text-slate-900 mb-1.5">A few questions from {companyInfo?.name || 'the company'}</h2>
-                        <p className="text-[13px] text-slate-400 mb-8">Specific to this role.</p>
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <h2 className="text-xl font-semibold tracking-tight text-primary mb-1.5">A few questions from {companyInfo?.name || 'the company'}</h2>
+                        <p className="text-[13px] text-tertiary mb-8">Specific to this role.</p>
 
                         <div className="space-y-9 mb-9">
                             {screeningQs.map((q: any, idx: number) => (
                                 <div key={q.id}>
-                                    <p className="text-[15px] font-bold text-slate-900 leading-snug mb-3.5">
-                                        <span className="text-slate-300 tabular-nums mr-1.5">{idx + 1}.</span>{q.text}
-                                        {q.type !== 'choice' && <span className="ml-2 text-[11px] font-medium text-slate-400">(optional)</span>}
+                                    <p className="text-[15px] font-medium text-primary leading-snug mb-3.5">
+                                        <span className="text-tertiary tabular-nums mr-1.5">{idx + 1}.</span>{q.text}
+                                        {q.type !== 'choice' && <span className="ml-2 text-[11px] font-medium text-tertiary">(optional)</span>}
                                     </p>
 
                                     {q.type === 'choice' ? (
@@ -423,8 +423,8 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                                         key={opt}
                                                         onClick={() => handleAnswer(q.id, opt)}
                                                         className={`px-4 py-3 rounded-xl ring-1 text-left text-[14px] font-medium transition-all ${selected
-                                                            ? 'ring-primary-600 bg-primary-50 text-primary-900'
-                                                            : 'ring-slate-200 text-slate-600 hover:ring-primary-300 hover:bg-slate-50'
+                                                            ? 'ring-accent/30 bg-accent/10 text-accent'
+                                                            : 'ring-subtle text-secondary hover:ring-accent/30 hover:bg-surface-sunken'
                                                             }`}
                                                     >
                                                         {opt}
@@ -434,7 +434,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                         </div>
                                     ) : (
                                         <textarea
-                                            className="w-full p-3.5 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-shadow min-h-[110px] text-[14px] text-slate-700 placeholder:text-slate-400"
+                                            className="w-full p-3.5 rounded-xl ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none transition-shadow min-h-[110px] text-[14px] text-secondary placeholder:text-tertiary"
                                             placeholder="Type your answer…"
                                             value={answers[q.id] || ''}
                                             onChange={(e) => handleAnswer(q.id, e.target.value)}
@@ -444,19 +444,19 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             ))}
                         </div>
 
-                        <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <div className="flex items-center justify-between pt-6 border-t border-subtle">
                             <button
                                 onClick={() => { setCurrentStep(1); setQIndex(personalityQs.length); }}
-                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-tertiary hover:text-secondary transition-colors"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" /> Back
                             </button>
                             <div className="flex items-center gap-3">
-                                {!screeningMcqsAnswered && <span className="text-[12px] text-slate-400 hidden sm:block">Answer the multiple-choice questions to finish</span>}
+                                {!screeningMcqsAnswered && <span className="text-[12px] text-tertiary hidden sm:block">Answer the multiple-choice questions to finish</span>}
                                 <button
                                     onClick={handleComplete}
                                     disabled={submitting || !screeningMcqsAnswered}
-                                    className="h-11 px-6 rounded-xl bg-primary-600 text-white text-[14px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition disabled:opacity-50"
+                                    className="h-11 px-6 rounded-xl bg-accent text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-50"
                                 >
                                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (<>Finish & submit <CheckCircle2 className="w-4 h-4" /></>)}
                                 </button>

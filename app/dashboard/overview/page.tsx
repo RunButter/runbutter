@@ -19,10 +19,10 @@ const fmtDate = (s?: string | null) => {
 const QUICK = [
   { label: 'Hiring pipeline', desc: 'Drag-and-drop stages', icon: Columns3, href: '/dashboard/pipeline', tone: 'text-accent' },
   { label: 'Candidates', desc: 'Browse all applicants', icon: Users, href: '/dashboard/candidates', tone: 'text-cyan-600' },
-  { label: 'Positions', desc: 'Create & manage roles', icon: Briefcase, href: '/dashboard/positions', tone: 'text-violet-600' },
+  { label: 'Positions', desc: 'Create & manage roles', icon: Briefcase, href: '/dashboard/positions', tone: 'text-accent' },
   { label: 'Interviews', desc: 'Schedule & track', icon: Calendar, href: '/dashboard/interviews', tone: 'text-orange-600' },
-  { label: 'Talent Treasury', desc: 'Explore your talent pool', icon: Sparkles, href: '/dashboard/treasury', tone: 'text-amber-600' },
-  { label: 'Email templates', desc: 'Reusable candidate emails', icon: Mail, href: '/dashboard/templates', tone: 'text-emerald-600' },
+  { label: 'Talent Treasury', desc: 'Explore your talent pool', icon: Sparkles, href: '/dashboard/treasury', tone: 'text-warning' },
+  { label: 'Email templates', desc: 'Reusable candidate emails', icon: Mail, href: '/dashboard/templates', tone: 'text-success' },
 ];
 
 export default function HrOverviewPage() {
@@ -35,11 +35,11 @@ export default function HrOverviewPage() {
   const s = hr?.stats;
   const kpis = [
     { label: 'Candidates', value: s?.totalCandidates, icon: Users, tone: 'text-cyan-600' },
-    { label: 'Open roles', value: s?.activePositions, icon: Briefcase, tone: 'text-violet-600' },
-    { label: 'Assessed', value: s?.assessmentsCompleted, icon: CheckCircle2, tone: 'text-emerald-600' },
+    { label: 'Open roles', value: s?.activePositions, icon: Briefcase, tone: 'text-accent' },
+    { label: 'Assessed', value: s?.assessmentsCompleted, icon: CheckCircle2, tone: 'text-success' },
     { label: 'Interviews', value: s?.upcomingInterviews, icon: Calendar, tone: 'text-orange-600' },
     { label: 'New (7d)', value: s?.newApplications, icon: TrendingUp, tone: 'text-accent' },
-    { label: 'Pending', value: s?.pendingReview, icon: Clock, tone: 'text-amber-600' },
+    { label: 'Pending', value: s?.pendingReview, icon: Clock, tone: 'text-warning' },
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function HrOverviewPage() {
         {/* Title */}
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold text-primary tracking-tight">Recruiting</h1>
-          <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
+          <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
           {hr?.company?.plan && <span className="text-[11px] font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">{hr.company.plan} plan</span>}
           <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm transition-colors">
             <Plus className="w-3.5 h-3.5" /> New position

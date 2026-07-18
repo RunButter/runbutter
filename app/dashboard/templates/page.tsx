@@ -13,9 +13,9 @@ import { useDialog } from '@/components/ui/Dialog';
 const CATEGORIES = ['invite', 'decline', 'offer', 'reminder', 'custom'];
 const CAT_STYLE: Record<string, string> = {
     invite: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
-    decline: 'bg-rose-50 text-rose-700 ring-rose-200/60',
-    offer: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-    reminder: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+    decline: 'bg-danger/10 text-danger ring-danger/30',
+    offer: 'bg-success/10 text-success ring-success/30',
+    reminder: 'bg-warning/10 text-warning ring-warning/30',
     custom: 'bg-surface-hover text-secondary ring-subtle',
 };
 
@@ -101,7 +101,7 @@ export default function TemplatesPage() {
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button onClick={() => setEditing({ id: t.id, name: t.name, subject: t.subject, body: t.body, category: t.category })}
                                         className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
-                                    <button onClick={() => remove(t.id)} className="p-1.5 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50"><Trash2 className="w-4 h-4" /></button>
+                                    <button onClick={() => remove(t.id)} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))}
@@ -115,7 +115,7 @@ export default function TemplatesPage() {
             {/* Editor modal */}
             {editing && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setEditing(null)}>
-                    <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
                         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
                             <h3 className="text-sm font-semibold text-primary">{editing.id ? 'Edit template' : 'New template'}</h3>
                             <button onClick={() => setEditing(null)} className="p-1.5 rounded-md hover:bg-surface-hover text-tertiary"><X className="w-4 h-4" /></button>
@@ -125,12 +125,12 @@ export default function TemplatesPage() {
                                 <label className="block">
                                     <span className="block text-[12px] font-semibold text-secondary mb-1">Name</span>
                                     <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                                        className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" placeholder="Interview invitation" />
+                                        className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" placeholder="Interview invitation" />
                                 </label>
                                 <label className="block">
                                     <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
                                     <select value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-                                        className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 capitalize">
+                                        className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 capitalize">
                                         {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                                     </select>
                                 </label>
@@ -138,12 +138,12 @@ export default function TemplatesPage() {
                             <label className="block">
                                 <span className="block text-[12px] font-semibold text-secondary mb-1">Subject</span>
                                 <input value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })}
-                                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" />
+                                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
                             </label>
                             <label className="block">
                                 <span className="block text-[12px] font-semibold text-secondary mb-1">Body</span>
                                 <textarea value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} rows={9}
-                                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 font-mono" />
+                                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 font-mono" />
                             </label>
                             <p className="text-[11px] text-tertiary">
                                 Variables: {TEMPLATE_VARS.map((v) => <code key={v} className="mx-1 px-1 bg-surface-hover rounded">{`{{${v}}}`}</code>)}

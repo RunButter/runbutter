@@ -82,7 +82,7 @@ export default function InterviewsPage() {
                                         </div>
                                     </div>
                                     <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded-md ring-1 ring-primary-100">{iv.type}</span>
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded-md ring-1 ring-accent/30">{iv.type}</span>
                                         <span className="text-[10px] text-tertiary inline-flex items-center gap-1"><Video className="w-3 h-3" /> Google Meet</span>
                                     </div>
                                     <ChevronRight className="w-5 h-5 text-tertiary group-hover:text-secondary transition-colors shrink-0" />

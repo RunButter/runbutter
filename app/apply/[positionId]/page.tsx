@@ -218,7 +218,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     }
   };
 
-  const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-white ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-primary-500 outline-none transition-shadow';
+  const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-surface ring-1 ring-subtle placeholder:text-tertiary focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
 
   // Shared brand header: the company applying to, not RunButter.
   const CompanyMark = ({ big = false }: { big?: boolean }) =>
@@ -229,44 +229,44 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     ) : (
       <div className="flex justify-center">
         <div className="inline-flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-black text-lg">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white font-semibold text-lg">
             {positionInfo?.companyName?.charAt(0) || 'C'}
           </div>
-          <span className="text-lg font-bold text-slate-800">{positionInfo?.companyName || ''}</span>
+          <span className="text-lg font-medium text-primary">{positionInfo?.companyName || ''}</span>
         </div>
       </div>
     );
 
   if (success) {
     return (
-      <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
         <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-8 text-center">
+          <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-8 text-center">
             <div className="mb-6"><CompanyMark /></div>
-            <div className="w-14 h-14 bg-emerald-50 ring-1 ring-emerald-200/60 rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            <div className="w-14 h-14 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle2 className="w-8 h-8 text-success" />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 mb-2">Application submitted</h1>
-            <p className="text-[15px] text-slate-500 mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight text-primary mb-2">Application submitted</h1>
+            <p className="text-[15px] text-secondary mb-6">
               Thanks for applying. We received your details and CV.
             </p>
 
-            <div className="rounded-xl bg-primary-50/70 ring-1 ring-primary-100 p-5 mb-5 text-left">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-primary-700 mb-1">One more step</div>
-              <h3 className="font-bold text-slate-900 mb-1">Take the assessment</h3>
-              <p className="text-[13px] text-slate-600 mb-4">
+            <div className="rounded-xl bg-accent/10 ring-1 ring-accent/30 p-5 mb-5 text-left">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-accent mb-1">One more step</div>
+              <h3 className="font-medium text-primary mb-1">Take the assessment</h3>
+              <p className="text-[13px] text-secondary mb-4">
                 A 10-15 minute work-style questionnaire completes your application. No right or wrong answers.
               </p>
               <Link
                 href={`/apply/${params.positionId}/assessment?candidateId=${candidateId}&token=${accessToken}`}
-                className="w-full h-11 rounded-xl bg-primary-600 text-white font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors"
+                className="w-full h-11 rounded-xl bg-accent text-white font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors"
               >
                 Start assessment <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
-            <p className="text-[12px] text-slate-400">
-              This link was also emailed to <strong className="text-slate-600">{formData.email}</strong>
+            <p className="text-[12px] text-tertiary">
+              This link was also emailed to <strong className="text-secondary">{formData.email}</strong>
             </p>
           </div>
         </div>
@@ -275,21 +275,21 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 py-10 px-4 sm:px-6">
+    <div className="min-h-[100dvh] bg-surface-sunken py-10 px-4 sm:px-6">
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-8">
           <div className="mb-6"><CompanyMark big /></div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-primary">
             {positionInfo?.title || 'Apply'}
           </h1>
           {positionInfo?.companyName && (
-            <p className="mt-1.5 text-[15px] text-slate-500">Application for {positionInfo.companyName}</p>
+            <p className="mt-1.5 text-[15px] text-secondary">Application for {positionInfo.companyName}</p>
           )}
         </div>
 
-        <div className="bg-white rounded-2xl ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
+        <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8">
           {error && (
-            <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 ring-1 ring-rose-200/70 text-rose-700 text-[14px]">
+            <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-danger/10 ring-1 ring-danger/30 text-danger text-[14px]">
               <X className="w-4 h-4 mt-0.5 shrink-0" /> {error}
             </div>
           )}
@@ -297,57 +297,57 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="block sm:col-span-2">
-                <span className="block text-[13px] font-semibold text-slate-700 mb-1.5">Full name <span className="text-rose-500">*</span></span>
+                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Full name <span className="text-danger">*</span></span>
                 <input type="text" className={inputCls} placeholder="Ada Nowak"
                   value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
               </label>
               <label className="block sm:col-span-2">
-                <span className="block text-[13px] font-semibold text-slate-700 mb-1.5">Email <span className="text-rose-500">*</span></span>
+                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Email <span className="text-danger">*</span></span>
                 <input type="email" className={inputCls} placeholder="ada@example.com"
                   value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
               </label>
               <label className="block">
-                <span className="block text-[13px] font-semibold text-slate-700 mb-1.5">Phone</span>
+                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Phone</span>
                 <input type="tel" className={inputCls} placeholder="+48 600 000 000"
                   value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
               </label>
               <label className="block">
-                <span className="block text-[13px] font-semibold text-slate-700 mb-1.5">LinkedIn</span>
+                <span className="block text-[13px] font-semibold text-secondary mb-1.5">LinkedIn</span>
                 <input type="url" className={inputCls} placeholder="linkedin.com/in/ada"
                   value={formData.linkedinUrl} onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })} />
               </label>
             </div>
 
             <div>
-              <span className="block text-[13px] font-semibold text-slate-700 mb-1.5">CV / Resume <span className="text-rose-500">*</span></span>
+              <span className="block text-[13px] font-semibold text-secondary mb-1.5">CV / Resume <span className="text-danger">*</span></span>
               <div
                 {...getRootProps()}
                 className={`rounded-xl ring-1 ring-dashed p-7 text-center cursor-pointer transition-colors ${isDragActive
-                  ? 'ring-primary-500 bg-primary-50/60'
+                  ? 'ring-accent/30 bg-accent/10'
                   : cvFile
-                    ? 'ring-emerald-400 bg-emerald-50/60'
-                    : 'ring-slate-300 hover:ring-primary-400 hover:bg-slate-50'
+                    ? 'ring-success/30 bg-success/10'
+                    : 'ring-strong hover:ring-accent/30 hover:bg-surface-sunken'
                   }`}
               >
                 <input {...getInputProps()} />
 
                 {cvFile ? (
                   <div className="flex items-center justify-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white ring-1 ring-emerald-200 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-emerald-600" />
+                    <div className="w-10 h-10 rounded-lg bg-surface ring-1 ring-success/30 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-success" />
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-slate-800 text-[14px]">{cvFile.name}</p>
-                      <p className="text-[12px] text-slate-500">{(cvFile.size / 1024 / 1024).toFixed(2)} MB · click to replace</p>
+                      <p className="font-semibold text-primary text-[14px]">{cvFile.name}</p>
+                      <p className="text-[12px] text-secondary">{(cvFile.size / 1024 / 1024).toFixed(2)} MB · click to replace</p>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2.5" />
-                    <p className="text-[14px] font-semibold text-slate-700">
+                    <Upload className="w-8 h-8 text-tertiary mx-auto mb-2.5" />
+                    <p className="text-[14px] font-semibold text-secondary">
                       {isDragActive ? 'Drop your file here' : 'Drag & drop your CV, or click to browse'}
                     </p>
-                    <p className="text-[12px] text-slate-400 mt-1">PDF, DOC or DOCX · max 5 MB</p>
+                    <p className="text-[12px] text-tertiary mt-1">PDF, DOC or DOCX · max 5 MB</p>
                   </div>
                 )}
               </div>
@@ -355,12 +355,12 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl bg-primary-600 text-white text-[15px] font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-700 active:scale-[0.99] transition disabled:opacity-60"
+              className="w-full h-12 rounded-xl bg-accent text-white text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition disabled:opacity-60"
               disabled={loading}
             >
               {loading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>) : (<>Submit application <ArrowRight className="w-4 h-4" /></>)}
             </button>
-            <p className="text-center text-[12px] text-slate-400">Takes under a minute. The assessment comes after.</p>
+            <p className="text-center text-[12px] text-tertiary">Takes under a minute. The assessment comes after.</p>
           </form>
         </div>
       </div>

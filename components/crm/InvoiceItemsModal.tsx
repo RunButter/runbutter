@@ -81,7 +81,7 @@ export default function InvoiceItemsModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-3xl max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-3xl max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-sm font-semibold text-primary">Line items</h2>
           <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
@@ -114,24 +114,24 @@ export default function InvoiceItemsModal({
                   <div className="flex items-center gap-2 min-w-0">
                     {r.image && <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-subtle shrink-0" />}
                     <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Description"
-                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500" />
+                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
                   </div>
                   <input type="number" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.unit_price} onChange={(e) => setRow(i, { unit_price: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.discount_pct} onChange={(e) => setRow(i, { discount_pct: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.tax_rate} onChange={(e) => setRow(i, { tax_rate: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 tabular-nums" />
+                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <div className="text-[13px] text-right tabular-nums font-semibold text-secondary">{money(amount)}</div>
-                  <button onClick={() => removeRow(i)} aria-label="Remove" className="p-1 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => removeRow(i)} aria-label="Remove" className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               );
             })}
           </div>
 
-          {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}
+          {error && <p className="mt-3 text-[12px] text-danger">{error}</p>}
           </>)}
         </div>
 

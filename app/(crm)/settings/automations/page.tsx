@@ -78,9 +78,9 @@ export default function AutomationsPage() {
   return (
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" /> Automations</h1>
+        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Automations</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {([['board', Workflow, 'Board'], ['list', List, 'List']] as const).map(([v, Icon, label]) => (
@@ -143,7 +143,7 @@ export default function AutomationsPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       {(a.actions || []).slice(0, 3).map((ac, i) => { const I = actionIcon(ac.type); return <I key={i} className="w-3.5 h-3.5 text-tertiary" />; })}
                       <button onClick={() => setEditing(forEditing(a))} disabled={!canEdit} className="ml-1 h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Edit</button>
-                      <button onClick={() => remove(a)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => remove(a)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                   {view === 'board' && <AutomationFlow automation={a} onEdit={canEdit ? () => setEditing(forEditing(a)) : undefined} />}
@@ -160,7 +160,7 @@ export default function AutomationsPage() {
               {runs.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No runs yet.</div>
                 : runs.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 px-4 h-11 border-b border-subtle last:border-0 text-[12px]">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.status === 'ok' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.status === 'ok' ? 'bg-success' : 'bg-danger'}`} />
                     <span className="font-semibold text-secondary truncate">{r.automation_name || '—'}</span>
                     <span className="text-tertiary truncate">{r.detail}</span>
                     <span className="ml-auto text-tertiary tabular-nums shrink-0">{fmtWhen(r.created_at)}</span>
@@ -213,11 +213,11 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
     onSaved();
   };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
           <input autoFocus value={a.name} onChange={(e) => set({ name: e.target.value })} placeholder="Automation name" className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary" />
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
@@ -225,14 +225,14 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="relative pl-7">
-            <div className="absolute left-[11px] top-3 bottom-3 w-px bg-slate-200" />
+            <div className="absolute left-[11px] top-3 bottom-3 w-px bg-strong" />
 
             {/* Trigger step */}
-            <Step badge="1" label="Trigger" tone="bg-amber-500">
+            <Step badge="1" label="Trigger" tone="bg-warning">
               <div className="grid grid-cols-3 gap-1.5 mb-3">
                 {TRIGGERS.map((t) => (
                   <button key={t.v} onClick={() => set({ trigger_type: t.v })}
-                    className={`flex flex-col items-center gap-1 rounded-lg px-1.5 py-2 text-[11px] font-semibold ring-1 transition-colors ${a.trigger_type === t.v ? 'bg-accent/10 ring-primary-300 text-accent' : 'ring-subtle text-secondary hover:bg-surface-sunken'}`}>
+                    className={`flex flex-col items-center gap-1 rounded-lg px-1.5 py-2 text-[11px] font-semibold ring-1 transition-colors ${a.trigger_type === t.v ? 'bg-accent/10 ring-accent/30 text-accent' : 'ring-subtle text-secondary hover:bg-surface-sunken'}`}>
                     <t.icon className="w-4 h-4" /> {t.l}
                   </button>
                 ))}
@@ -250,7 +250,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                       <input value={c.field} onChange={(e) => setCond(i, { field: e.target.value })} placeholder="field" className={inputCls + ' flex-1'} />
                       <select value={c.op} onChange={(e) => setCond(i, { op: e.target.value })} className={inputCls + ' w-24 shrink-0'}>{OPS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}</select>
                       {!['empty', 'not_empty'].includes(c.op) && <input value={c.value} onChange={(e) => setCond(i, { value: e.target.value })} placeholder="value" className={inputCls + ' w-20 shrink-0'} />}
-                      <button onClick={() => set({ conditions: a.conditions.filter((_, k) => k !== i) })} className="p-1 rounded text-tertiary hover:text-rose-600"><X className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set({ conditions: a.conditions.filter((_, k) => k !== i) })} className="p-1 rounded text-tertiary hover:text-danger"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                   <button onClick={() => set({ conditions: [...a.conditions, { field: '', op: 'eq', value: '' }] })} className="text-[12px] font-semibold text-accent hover:text-accent">+ Add filter</button>
@@ -259,7 +259,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
               {a.trigger_type === 'webhook' && (
                 <div className="space-y-2">
                   <p className="text-[12px] text-secondary">Any tool can POST JSON to this automation’s URL to trigger it. Reference fields in actions with <code className="bg-surface-hover rounded px-1">{'{{field}}'}</code>.</p>
-                  {a.webhook_token ? <WebhookUrl token={a.webhook_token} /> : <p className="text-[12px] text-amber-600 bg-amber-50 rounded-md px-2.5 py-1.5 ring-1 ring-amber-200/50">A unique URL is generated when you save.</p>}
+                  {a.webhook_token ? <WebhookUrl token={a.webhook_token} /> : <p className="text-[12px] text-warning bg-warning/10 rounded-md px-2.5 py-1.5 ring-1 ring-warning/30">A unique URL is generated when you save.</p>}
                 </div>
               )}
               {a.trigger_type === 'schedule' && (
@@ -277,13 +277,13 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
               <Step key={i} badge={String(i + 2)} label={`Action ${i + 1}`} tone="bg-accent">
                 <div className="flex items-center gap-2 mb-2">
                   <select value={ac.type} onChange={(e) => setAction(i, { type: e.target.value, config: {} })} className={inputCls + ' flex-1'}>{ACTION_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}</select>
-                  <button onClick={() => set({ actions: a.actions.filter((_, k) => k !== i) })} className="p-1.5 rounded-md text-tertiary hover:text-rose-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => set({ actions: a.actions.filter((_, k) => k !== i) })} className="p-1.5 rounded-md text-tertiary hover:text-danger"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
                 {ac.type === 'ask_ai' && (
                   <div className="space-y-1.5">
                     <textarea value={ac.config.prompt || ''} onChange={(e) => setCfg(i, { prompt: e.target.value })} rows={3}
                       placeholder="Write a two-sentence brief on {{first_name}} {{last_name}} for the team"
-                      className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                      className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                     <p className="text-[11px] text-tertiary">Runs on your workspace AI key (Settings → AI keys). The answer becomes <code className="bg-surface-hover rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
                   </div>
                 )}
@@ -297,27 +297,27 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                   <div className="space-y-2">
                     <input value={ac.config.to || ''} onChange={(e) => setCfg(i, { to: e.target.value })} placeholder="to ({{email}})" className={inputCls} />
                     <input value={ac.config.subject || ''} onChange={(e) => setCfg(i, { subject: e.target.value })} placeholder="Subject" className={inputCls} />
-                    <textarea value={ac.config.body || ''} onChange={(e) => setCfg(i, { body: e.target.value })} rows={3} placeholder="Body — use {{field}}" className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                    <textarea value={ac.config.body || ''} onChange={(e) => setCfg(i, { body: e.target.value })} rows={3} placeholder="Body — use {{field}}" className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                   </div>
                 )}
                 {ac.type === 'create_record' && (
                   <div className="space-y-2">
                     <select value={ac.config.object || 'invoices'} onChange={(e) => setCfg(i, { object: e.target.value })} className={inputCls + ' capitalize'}>{OBJECTS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
-                    <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={3} placeholder='{"number":"INV-{{id}}"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                    <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={3} placeholder='{"number":"INV-{{id}}"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                   </div>
                 )}
                 {ac.type === 'update_record' && (
-                  <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={2} placeholder='{"status":"paid"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={2} placeholder='{"status":"paid"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 )}
               </Step>
             ))}
 
             <div className="relative">
               <span className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-surface ring-2 ring-strong" />
-              <button onClick={() => set({ actions: [...a.actions, { type: 'send_webhook', config: {} }] })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[12px] font-semibold text-accent ring-1 ring-dashed ring-primary-300 bg-accent/10 hover:bg-accent/10"><Plus className="w-3.5 h-3.5" /> Add action</button>
+              <button onClick={() => set({ actions: [...a.actions, { type: 'send_webhook', config: {} }] })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[12px] font-semibold text-accent ring-1 ring-dashed ring-accent/30 bg-accent/10 hover:bg-accent/10"><Plus className="w-3.5 h-3.5" /> Add action</button>
             </div>
           </div>
-          {error && <p className="mt-3 text-[12px] text-rose-600">{error}</p>}
+          {error && <p className="mt-3 text-[12px] text-danger">{error}</p>}
         </div>
 
         <div className="shrink-0 flex items-center justify-between gap-2 p-3 border-t border-subtle">

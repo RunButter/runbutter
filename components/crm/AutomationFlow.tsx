@@ -34,7 +34,7 @@ function Node({ icon: Icon, title, sub, tone, ring, onClick }: {
 function Edge() {
   return (
     <div className="shrink-0 flex items-center text-tertiary" aria-hidden="true">
-      <span className="w-5 sm:w-8 h-px bg-slate-300" />
+      <span className="w-5 sm:w-8 h-px bg-strong" />
       <ChevronRight className="w-3.5 h-3.5 -ml-1.5" />
     </div>
   );
@@ -50,7 +50,7 @@ export default function AutomationFlow({ automation: a, onEdit }: { automation: 
   return (
     <div className="mt-3 rounded-xl ring-1 ring-subtle bg-surface-sunken/80 [background-image:radial-gradient(#d3dce6_1px,transparent_1px)] [background-size:14px_14px] p-3.5 overflow-x-auto">
       <div className="flex items-center min-w-max">
-        <Node icon={trigger.icon} title={trigger.title} sub={trigger.sub} tone="bg-amber-50 text-amber-600" ring="ring-amber-200/70" onClick={onEdit} />
+        <Node icon={trigger.icon} title={trigger.title} sub={trigger.sub} tone="bg-warning/10 text-warning" ring="ring-warning/30" onClick={onEdit} />
         {a.conditions.length > 0 && (
           <>
             <Edge />
@@ -68,7 +68,7 @@ export default function AutomationFlow({ automation: a, onEdit }: { automation: 
           return (
             <span key={i} className="flex items-center">
               <Edge />
-              <Node icon={m.icon} title={m.label} sub={sub} tone="bg-accent/10 text-accent" ring="ring-primary-200/70" onClick={onEdit} />
+              <Node icon={m.icon} title={m.label} sub={sub} tone="bg-accent/10 text-accent" ring="ring-accent/30" onClick={onEdit} />
             </span>
           );
         })}

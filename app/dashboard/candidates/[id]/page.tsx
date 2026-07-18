@@ -375,7 +375,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         return (
             <div className="min-h-screen bg-surface-sunken flex items-center justify-center flex-col gap-6 p-6 text-center">
                 <div className="flex flex-col items-center">
-                    <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                    <AlertCircle className="w-16 h-16 text-danger mb-4" />
                     <h2 className="text-2xl font-semibold text-primary">Candidate not found</h2>
                     <p className="text-secondary mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them.</p>
                 </div>
@@ -403,7 +403,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     </div>
                     <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
                         <select
-                            className="input-field py-2 text-sm border-subtle rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 col-span-2 sm:col-span-1 sm:w-auto"
+                            className="input-field py-2 text-sm border-subtle rounded-lg shadow-sm focus:ring-accent/30 focus:border-accent/30 col-span-2 sm:col-span-1 sm:w-auto"
                             value={candidate.status}
                             onChange={(e) => updateStatus(e.target.value)}
                         >
@@ -438,7 +438,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
-                    <section className="bg-surface rounded-3xl shadow-2xl border border-subtle overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <section className="bg-surface rounded-3xl shadow-popover border border-subtle overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
                         <div className="bg-surface p-8 border-b border-subtle">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
@@ -463,9 +463,9 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                         <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
-                                { label: 'Overall Match', value: results.overall_score, color: 'bg-green-50 text-green-600 border-green-100' },
-                                { label: 'Cognitive Score', value: results.cognitive_score, color: 'bg-blue-50 text-blue-600 border-blue-100' },
-                                { label: 'Personality Fit', value: results.personality_score, color: 'bg-purple-50 text-purple-600 border-purple-100' },
+                                { label: 'Overall Match', value: results.overall_score, color: 'bg-success/10 text-success border-success/30' },
+                                { label: 'Cognitive Score', value: results.cognitive_score, color: 'bg-accent/10 text-accent border-accent/30' },
+                                { label: 'Personality Fit', value: results.personality_score, color: 'bg-accent/10 text-accent border-accent/30' },
                                 { label: 'Work Style', value: results.work_style_score, color: 'bg-orange-50 text-orange-600 border-orange-100' }
                             ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className={`${stat.color} p-6 rounded-2xl border text-left`}>
@@ -484,7 +484,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </div>
                                     <div className="absolute bottom-8 flex gap-6 text-[10px] font-semibold uppercase tracking-widest text-tertiary">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-primary-500 opacity-20 border border-primary-500" />
+                                            <div className="w-3 h-3 rounded-full bg-primary-500 opacity-20 border border-accent/30" />
                                             Candidate Profile
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -533,10 +533,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                                 <Target className="w-4 h-4" />
                                                 Neuro-Profile Analysis
                                             </h4>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-blue-100 text-blue-700' :
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
                                                 candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-orange-100 text-orange-700' :
-                                                    candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-purple-100 text-purple-700' :
-                                                        'bg-emerald-100 text-emerald-700'
+                                                    candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-accent/10 text-accent' :
+                                                        'bg-success/10 text-success'
                                                 }`}>
                                                 {candidate?.position?.neuro_profile?.replace('-', ' ') || 'HARD TECH'}
                                             </span>
@@ -558,8 +558,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                                         <div className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Question {idx + 1}</div>
                                                         <p className="text-sm font-semibold text-primary mb-3">{sa.question}</p>
                                                         <div className="flex items-center justify-between">
-                                                            <div className={`text-sm px-3 py-1 rounded-lg font-medium ${sa.is_correct === true ? 'bg-green-100 text-green-700 border border-green-200' :
-                                                                sa.is_correct === false ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                                                            <div className={`text-sm px-3 py-1 rounded-lg font-medium ${sa.is_correct === true ? 'bg-success/10 text-success border border-success/30' :
+                                                                sa.is_correct === false ? 'bg-danger/10 text-danger border border-danger/30' :
                                                                     'bg-surface text-secondary border border-subtle'
                                                                 }`}>
                                                                 {sa.answer}
@@ -612,11 +612,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
-                                        <Mail className="w-5 h-5 text-primary-500" />
+                                        <Mail className="w-5 h-5 text-accent" />
                                         <span className="font-medium truncate">{candidate.email}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
-                                        <Phone className="w-5 h-5 text-primary-500" />
+                                        <Phone className="w-5 h-5 text-accent" />
                                         <span className="font-medium">{candidate.phone || 'N/A'}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
@@ -669,7 +669,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     <div className="flex-1 flex flex-col">
                                         <div className="p-4 bg-surface-sunken/50 border-b flex justify-between items-center">
                                             <p className="text-xs font-semibold text-secondary uppercase tracking-widest">Interactive Preview</p>
-                                            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold uppercase">Secure Viewer</span>
+                                            <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-semibold uppercase">Secure Viewer</span>
                                         </div>
                                         <iframe
                                             src={`${candidate.cv_url}#toolbar=0`}
@@ -702,22 +702,22 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             </h3>
                             <div className="space-y-4">
                                 {candidate.status === 'hired' ? (
-                                    <div className="p-4 rounded-xl bg-green-50 border border-green-100 flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                            <CheckCircle className="w-6 h-6 text-green-600" />
+                                    <div className="p-4 rounded-xl bg-success/10 border border-success/30 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center">
+                                            <CheckCircle className="w-6 h-6 text-success" />
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-green-800">Candidate Hired</div>
-                                            <div className="text-xs text-green-600">Successfully matched with role</div>
+                                            <div className="font-semibold text-success">Candidate Hired</div>
+                                            <div className="text-xs text-success">Successfully matched with role</div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="p-4 rounded-xl bg-accent/10 border border-primary-100 flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                                    <div className="p-4 rounded-xl bg-accent/10 border border-accent/30 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
                                             <Clock className="w-6 h-6 text-accent" />
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-primary-800 capitalize">{candidate.status.replace('_', ' ')}</div>
+                                            <div className="font-semibold text-accent capitalize">{candidate.status.replace('_', ' ')}</div>
                                             <div className="text-xs text-accent">Pending next action</div>
                                         </div>
                                     </div>
@@ -734,7 +734,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-hover">
                                 {activity.map((act) => (
                                     <div key={act.id} className="relative pl-8 group">
-                                        <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface border-2 border-primary-500 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-sm">
+                                        <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface border-2 border-accent/30 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-sm">
                                             <div className="w-2 h-2 rounded-full bg-primary-500" />
                                         </div>
                                         <div>
@@ -780,7 +780,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             {/* Schedule Modal */}
             {showScheduleModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface rounded-2xl shadow-popover w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
                         <h3 className="text-xl font-semibold text-primary mb-2">Schedule Interview</h3>
                         <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
 

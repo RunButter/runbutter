@@ -65,14 +65,14 @@ export default function PlansPage() {
 
                 return (
                   <div key={key}
-                    className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-primary-600 shadow-lg' : 'ring-1 ring-subtle'}`}>
+                    className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-accent/30 shadow-lg' : 'ring-1 ring-subtle'}`}>
                     {popular && (
                       <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-white bg-accent rounded-full px-2 py-0.5">
                         <Sparkles className="w-3 h-3" /> Popular
                       </div>
                     )}
                     {isCurrent && (
-                      <div className="absolute -top-2.5 right-5 text-[10px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5">Current</div>
+                      <div className="absolute -top-2.5 right-5 text-[10px] font-semibold uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
                     )}
 
                     <h3 className="font-semibold text-primary">{p.name}</h3>
@@ -92,15 +92,15 @@ export default function PlansPage() {
                     {/* Feature deltas */}
                     <ul className="space-y-1.5 mb-5 flex-grow">
                       {idx === 0 ? (
-                        <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />Sales · Finance · Projects · HR core</li>
+                        <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Sales · Finance · Projects · HR core</li>
                       ) : (
                         <>
                           <li className="text-[11px] font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
                           {newFeats.length === 0 && key === 'enterprise' && (
-                            <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />Unlimited everything</li>
+                            <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Unlimited everything</li>
                           )}
                           {newFeats.map((f) => (
-                            <li key={f} className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />{FEATURE_LABELS[f]}</li>
+                            <li key={f} className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />{FEATURE_LABELS[f]}</li>
                           ))}
                         </>
                       )}
@@ -110,7 +110,7 @@ export default function PlansPage() {
                     {isCurrent ? (
                       <button disabled className="h-10 rounded-xl text-[13px] font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
                     ) : key === 'enterprise' ? (
-                      <Link href="/contact" className="h-10 rounded-xl text-[13px] font-semibold text-center inline-flex items-center justify-center bg-slate-900 text-white hover:bg-slate-800 transition">Contact sales</Link>
+                      <Link href="/contact" className="h-10 rounded-xl text-[13px] font-semibold text-center inline-flex items-center justify-center bg-inverse text-white hover:bg-inverse transition">Contact sales</Link>
                     ) : isUpgrade && PRICE_IDS[key] ? (
                       <div className="[&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-[13px]">
                         <CheckoutButton

@@ -8,15 +8,15 @@ import { loadPosts, savePost, type PostListItem } from '@/lib/crm/data';
 
 const PLATFORM_CHIP: Record<string, string> = {
   instagram: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/60',
-  facebook: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  facebook: 'bg-accent/10 text-accent ring-accent/30',
   x: 'bg-surface-hover text-secondary ring-subtle',
   linkedin: 'bg-sky-50 text-sky-700 ring-sky-200/60',
 };
 const STATUS_CHIP: Record<string, string> = {
   draft: 'bg-surface-hover text-secondary ring-subtle',
-  in_review: 'bg-amber-50 text-amber-700 ring-amber-200/60',
-  approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-  published: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  in_review: 'bg-warning/10 text-warning ring-warning/30',
+  approved: 'bg-success/10 text-success ring-success/30',
+  published: 'bg-accent/10 text-accent ring-accent/30',
 };
 
 export default function PostsPage() {
@@ -48,7 +48,7 @@ export default function PostsPage() {
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Posts</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <span className="text-[12px] text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
         <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
           className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">

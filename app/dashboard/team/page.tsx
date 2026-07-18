@@ -138,7 +138,7 @@ export default function TeamPage() {
 
             <main className="max-w-5xl mx-auto px-6 py-8">
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 border ${message.type === 'error' ? 'bg-danger/10 text-danger border-danger/30' : 'bg-success/10 text-success border-success/30'}`}>
                         {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
                         {message.text}
                     </div>
@@ -160,7 +160,7 @@ export default function TeamPage() {
                                     <tr key={member.id} className="hover:bg-surface-sunken transition">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-accent font-semibold uppercase">
+                                                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold uppercase">
                                                     {member.full_name?.charAt(0) || '?'}
                                                 </div>
                                                 <div>
@@ -171,7 +171,7 @@ export default function TeamPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                                                member.role === 'owner' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                member.role === 'owner' ? 'bg-accent/10 text-accent border-accent/30' :
                                                 member.role === 'admin' ? 'bg-accent/10 text-accent border-accent/20' :
                                                 'bg-surface-hover text-secondary border-subtle'
                                             }`}>
@@ -180,11 +180,11 @@ export default function TeamPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             {member.privy_user_id ? (
-                                                <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
+                                                <span className="flex items-center gap-1.5 text-sm text-success font-medium">
                                                     <CheckCircle className="w-4 h-4" /> Active
                                                 </span>
                                             ) : (
-                                                <span className="flex items-center gap-1.5 text-sm text-amber-500 font-medium">
+                                                <span className="flex items-center gap-1.5 text-sm text-warning font-medium">
                                                     <Mail className="w-4 h-4" /> Invited
                                                 </span>
                                             )}
@@ -193,7 +193,7 @@ export default function TeamPage() {
                                             {isAdmin && member.role !== 'owner' && (
                                                 <button 
                                                     onClick={() => handleRemoveMember(member.id)}
-                                                    className="p-2 text-tertiary hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    className="p-2 text-tertiary hover:text-danger hover:bg-danger/10 rounded-lg transition"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -210,7 +210,7 @@ export default function TeamPage() {
             {/* Invite Modal */}
             {showInviteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface rounded-2xl shadow-popover w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
                         <h3 className="text-xl font-semibold text-primary mb-2 flex items-center gap-2">
                             <UserPlus className="w-5 h-5 text-accent" />
                             Invite Team Member

@@ -100,7 +100,7 @@ export default function WebAnalytics() {
 
   const cards = stats ? [
     { label: 'Pageviews', value: stats.pageviews.toLocaleString(), sub: `~${avgDay}/day`, icon: Eye, tone: 'text-primary' },
-    { label: 'Unique visitors', value: stats.visitors.toLocaleString(), sub: 'daily-rotating, cookieless', icon: Users, tone: 'text-emerald-600' },
+    { label: 'Unique visitors', value: stats.visitors.toLocaleString(), sub: 'daily-rotating, cookieless', icon: Users, tone: 'text-success' },
     { label: 'Live now', value: String(stats.live), sub: 'last 5 minutes', icon: Activity, tone: 'text-fuchsia-600' },
     { label: 'Mobile share', value: deviceTotal ? `${mobilePct}%` : '—', sub: deviceTotal ? `${(stats.desktop).toLocaleString()} desktop · ${(stats.mobile).toLocaleString()} mobile` : 'needs migration 0029', icon: Smartphone, tone: 'text-sky-600' },
   ] : [];
@@ -111,10 +111,10 @@ export default function WebAnalytics() {
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Web analytics</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         {sites.length > 1 && (
           <select value={siteId || ''} onChange={(e) => { setSiteId(e.target.value); setJustAdded(null); }}
-            className="h-7 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500">
+            className="h-7 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30">
             {sites.map((s) => <option key={s.id} value={s.id}>{s.domain}</option>)}
           </select>
         )}
@@ -154,9 +154,9 @@ export default function WebAnalytics() {
           <div className="max-w-5xl space-y-6">
             {/* Add-site / snippet card */}
             {showCard && (
-              <div className={`rounded-xl bg-surface p-5 ${justAdded ? 'ring-2 ring-emerald-400/60' : 'ring-1 ring-subtle'}`}>
+              <div className={`rounded-xl bg-surface p-5 ${justAdded ? 'ring-2 ring-success/30' : 'ring-1 ring-subtle'}`}>
                 {justAdded ? (
-                  <div className="flex items-center gap-2 mb-1"><CheckCircle2 className="w-4 h-4 text-emerald-500" /><h2 className="text-sm font-semibold text-primary">{justAdded} added — one step left</h2></div>
+                  <div className="flex items-center gap-2 mb-1"><CheckCircle2 className="w-4 h-4 text-success" /><h2 className="text-sm font-semibold text-primary">{justAdded} added — one step left</h2></div>
                 ) : (
                   <div className="flex items-center gap-2 mb-1"><Globe className="w-4 h-4 text-accent" /><h2 className="text-sm font-semibold text-primary">Track a website</h2></div>
                 )}
@@ -169,23 +169,23 @@ export default function WebAnalytics() {
                   <div className="flex items-center gap-2 mb-4">
                     <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="yourcompany.com"
                       onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                      className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                      className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                     <button onClick={addSite} disabled={busy || !privy} title={!privy ? 'Sign in to add' : ''}
                       className="h-9 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                       {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add
                     </button>
-                    {error && <span className="text-[12px] text-rose-600">{error}</span>}
+                    {error && <span className="text-[12px] text-danger">{error}</span>}
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 text-[12px] bg-slate-900 text-slate-100 rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippetFor(siteId || 'YOUR_SITE_ID')}</code>
+                  <code className="flex-1 text-[12px] bg-inverse text-slate-100 rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippetFor(siteId || 'YOUR_SITE_ID')}</code>
                   <button onClick={copySnippet} className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy'}
+                    {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
                 {justAdded && (
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[12px] text-amber-600 inline-flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Waiting for the first pageview — this updates automatically.</span>
+                    <span className="text-[12px] text-warning inline-flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Waiting for the first pageview — this updates automatically.</span>
                     <button onClick={() => { setJustAdded(null); setSnippetOpen(false); }}
                       className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Done</button>
                   </div>
@@ -195,9 +195,9 @@ export default function WebAnalytics() {
 
             {/* Waiting-for-data banner (site installed but silent) */}
             {waiting && !showCard && (
-              <div className="rounded-xl bg-amber-50 ring-1 ring-amber-200/70 px-4 py-3 flex items-center gap-2.5">
-                <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
-                <p className="text-[13px] text-amber-700">No pageviews yet for <b>{site?.domain}</b> — install the snippet (button above) and visit your site. This page refreshes automatically.</p>
+              <div className="rounded-xl bg-warning/10 ring-1 ring-warning/30 px-4 py-3 flex items-center gap-2.5">
+                <Loader2 className="w-4 h-4 text-warning animate-spin" />
+                <p className="text-[13px] text-warning">No pageviews yet for <b>{site?.domain}</b> — install the snippet (button above) and visit your site. This page refreshes automatically.</p>
               </div>
             )}
 
@@ -213,7 +213,7 @@ export default function WebAnalytics() {
                   <div className="text-[11px] font-medium text-tertiary truncate">{c.sub}</div>
                   {c.label === 'Mobile share' && deviceTotal > 0 && (
                     <div className="mt-2 h-1.5 rounded-full bg-surface-hover overflow-hidden flex">
-                      <div className="h-full bg-slate-400" style={{ width: `${100 - mobilePct}%` }} />
+                      <div className="h-full bg-strong" style={{ width: `${100 - mobilePct}%` }} />
                       <div className="h-full bg-sky-400" style={{ width: `${mobilePct}%` }} />
                     </div>
                   )}
@@ -272,7 +272,7 @@ export default function WebAnalytics() {
       {/* Manage websites */}
       {managing && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setManaging(false)}>
-          <div className="w-full max-w-md flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
             <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
               <h2 className="text-sm font-semibold text-primary">Websites</h2>
               <button onClick={() => setManaging(false)} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
@@ -289,7 +289,7 @@ export default function WebAnalytics() {
                   <button onClick={() => { setSiteId(s.id); setSnippetOpen(true); setManaging(false); }}
                     className="h-7 px-2 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Snippet</button>
                   <button onClick={() => removeSite(s)} disabled={removingId === s.id} aria-label="Remove"
-                    className="p-1.5 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50 disabled:opacity-40">
+                    className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40">
                     {removingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   </button>
                 </div>
@@ -298,13 +298,13 @@ export default function WebAnalytics() {
             <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">
               <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="add another domain…"
                 onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
                 className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add
               </button>
             </div>
-            {error && <p className="px-4 pb-3 text-[12px] text-rose-600">{error}</p>}
+            {error && <p className="px-4 pb-3 text-[12px] text-danger">{error}</p>}
           </div>
         </div>
       )}

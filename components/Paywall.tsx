@@ -22,13 +22,13 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
 
             {/* Lock Overlay */}
             <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
-                <div className="bg-white/80 backdrop-blur-xl border border-white p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center transform transition-all duration-500 scale-100 group-hover:scale-[1.02]">
+                <div className="bg-white/80 backdrop-blur-xl border border-white p-10 rounded-3xl shadow-popover max-w-lg w-full text-center transform transition-all duration-500 scale-100 group-hover:scale-[1.02]">
                     <div className="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-primary-100">
-                        <Lock className="w-10 h-10 text-primary-600 animate-pulse" />
+                        <Lock className="w-10 h-10 text-accent animate-pulse" />
                     </div>
 
-                    <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight italic uppercase">Premium Feature</h2>
-                    <p className="text-gray-600 mb-8 font-medium leading-relaxed uppercase text-xs tracking-widest">
+                    <h2 className="text-3xl font-semibold text-primary mb-3 tracking-tight italic uppercase">Premium Feature</h2>
+                    <p className="text-secondary mb-8 font-medium leading-relaxed uppercase text-xs tracking-widest">
                         {featureName} is only available on Professional and Enterprise plans.
                     </p>
 
@@ -41,7 +41,7 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
                             Upgrade to Unlock
                             <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                         </Link>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                        <p className="text-[10px] text-tertiary font-medium uppercase tracking-tighter">
                             Instant activation • Billed annually or monthly
                         </p>
                     </div>

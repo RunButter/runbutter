@@ -25,7 +25,7 @@ export default function RoadmapPage() {
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Roadmap</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
         <div className="ml-auto hidden sm:flex items-center gap-3 text-[11px] font-semibold">

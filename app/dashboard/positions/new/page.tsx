@@ -162,7 +162,7 @@ export default function NewPositionPage() {
             <main className="max-w-3xl mx-auto px-6 py-8">
                 <div className="bg-surface rounded-2xl shadow-sm border border-subtle p-8">
                     {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                        <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg text-danger text-sm">
                             {error}
                         </div>
                     )}
@@ -240,10 +240,10 @@ export default function NewPositionPage() {
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {[
-                                    { id: 'hard-tech', label: 'HARD-TECH', focus: 'Focus: C / O', color: 'border-blue-200 bg-blue-50 text-blue-700' },
+                                    { id: 'hard-tech', label: 'HARD-TECH', focus: 'Focus: C / O', color: 'border-accent/30 bg-accent/10 text-accent' },
                                     { id: 'aggressive-sales', label: 'AGGRESSIVE-SALES', focus: 'Focus: E / A-', color: 'border-orange-200 bg-orange-50 text-orange-700' },
-                                    { id: 'creative-chaos', label: 'CREATIVE-CHAOS', focus: 'Focus: O / N', color: 'border-purple-200 bg-purple-50 text-purple-700' },
-                                    { id: 'operations-monk', label: 'OPERATIONS-MONK', focus: 'Focus: C / N-', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' }
+                                    { id: 'creative-chaos', label: 'CREATIVE-CHAOS', focus: 'Focus: O / N', color: 'border-accent/30 bg-accent/10 text-accent' },
+                                    { id: 'operations-monk', label: 'OPERATIONS-MONK', focus: 'Focus: C / N-', color: 'border-success/30 bg-success/10 text-success' }
                                 ].map((profile) => (
                                     <button
                                         key={profile.id}
@@ -285,7 +285,7 @@ export default function NewPositionPage() {
                                         <button
                                             type="button"
                                             onClick={() => removeMCQ(qIndex)}
-                                            className="absolute top-4 right-4 text-tertiary hover:text-red-500"
+                                            className="absolute top-4 right-4 text-tertiary hover:text-danger"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -305,7 +305,7 @@ export default function NewPositionPage() {
                                                     <div key={oIndex} className="relative">
                                                         <input
                                                             type="text"
-                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-green-500 bg-green-50' : 'border-subtle focus:border-indigo-500'}`}
+                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-success/30 bg-success/10' : 'border-subtle focus:border-accent/30'}`}
                                                             placeholder={`Option ${oIndex + 1}`}
                                                             value={opt}
                                                             onChange={e => updateMCQOption(qIndex, oIndex, e.target.value)}
@@ -313,7 +313,7 @@ export default function NewPositionPage() {
                                                         <button
                                                             type="button"
                                                             onClick={() => updateMCQ(qIndex, 'correctIndex', oIndex)}
-                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-green-600 bg-surface shadow-sm' : 'text-tertiary hover:text-secondary'}`}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition ${q.correctIndex === oIndex ? 'text-success bg-surface shadow-sm' : 'text-tertiary hover:text-secondary'}`}
                                                             title="Mark as expected answer"
                                                         >
                                                             <CheckCircle className="w-4 h-4" />
@@ -329,7 +329,7 @@ export default function NewPositionPage() {
                                     <button
                                         type="button"
                                         onClick={addMCQ}
-                                        className="w-full py-3 border-2 border-dashed border-subtle rounded-xl text-sm font-medium text-secondary hover:border-indigo-300 hover:text-accent transition flex items-center justify-center gap-2"
+                                        className="w-full py-3 border-2 border-dashed border-subtle rounded-xl text-sm font-medium text-secondary hover:border-accent/30 hover:text-accent transition flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Add Multi-Choice Question

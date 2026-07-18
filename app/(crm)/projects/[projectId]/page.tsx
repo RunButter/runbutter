@@ -10,10 +10,10 @@ import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 
 const STATUS_TONE: Record<string, string> = {
-  active: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-  paused: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  active: 'bg-success/10 text-success ring-success/30',
+  paused: 'bg-warning/10 text-warning ring-warning/30',
   completed: 'bg-surface-hover text-secondary ring-subtle',
-  cancelled: 'bg-rose-50 text-rose-700 ring-rose-200/60',
+  cancelled: 'bg-danger/10 text-danger ring-danger/30',
 };
 
 export default function ProjectDashboard() {
@@ -44,8 +44,8 @@ export default function ProjectDashboard() {
 
   const stats = [
     { label: 'Issues', value: total, icon: Circle, tone: 'text-tertiary' },
-    { label: 'In progress', value: inProgress, icon: Clock, tone: 'text-violet-500' },
-    { label: 'Done', value: done, icon: CheckCircle2, tone: 'text-emerald-500' },
+    { label: 'In progress', value: inProgress, icon: Clock, tone: 'text-accent' },
+    { label: 'Done', value: done, icon: CheckCircle2, tone: 'text-success' },
     { label: 'Complete', value: `${pct}%`, icon: CheckCircle2, tone: 'text-accent' },
   ];
 
@@ -57,7 +57,7 @@ export default function ProjectDashboard() {
           <h1 className="text-sm font-semibold text-primary">{project?.name || 'Project'}</h1>
           {project?.identifier && <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
           {project?.status && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
-          <span className={`ml-1 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+          <span className={`ml-1 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
           <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
         </div>
       </header>

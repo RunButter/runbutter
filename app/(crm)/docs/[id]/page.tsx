@@ -108,18 +108,18 @@ export default function DocEditor() {
         {AI_ACTIONS.map((a) => (
           <button key={a.mode} onClick={() => ai(a.mode)} disabled={!canEdit || !!aiBusy}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-sunken disabled:opacity-40">
-            {aiBusy === a.mode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <a.icon className="w-3.5 h-3.5 text-primary-500" />} {a.label}
+            {aiBusy === a.mode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <a.icon className="w-3.5 h-3.5 text-accent" />} {a.label}
           </button>
         ))}
         <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
           <input value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && prompt.trim()) ai('write', prompt.trim()); }}
             placeholder="Write with AI — e.g. “draft an offer letter for a Senior Engineer”" disabled={!canEdit || !!aiBusy}
-            className="flex-1 h-7 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none disabled:opacity-50" />
+            className="flex-1 h-7 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none disabled:opacity-50" />
           <button onClick={() => prompt.trim() && ai('write', prompt.trim())} disabled={!canEdit || !!aiBusy || !prompt.trim()} className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40">{aiBusy === 'write' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />} Write</button>
         </div>
       </div>
       {aiError && (
-        <div className="shrink-0 px-4 py-1.5 text-[12px] text-rose-600 bg-rose-50 border-b border-rose-100">
+        <div className="shrink-0 px-4 py-1.5 text-[12px] text-danger bg-danger/10 border-b border-danger/30">
           {aiError} {/no ai provider|settings/i.test(aiError) && <Link href="/settings/ai" className="font-semibold underline">Add a key →</Link>}
         </div>
       )}

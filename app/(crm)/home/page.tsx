@@ -59,25 +59,25 @@ export default function WorkspaceHome() {
   const net = fin?.net ?? 0;
 
   const kpis = [
-    { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-rose-600' : 'text-emerald-600', href: '/finance/transactions' },
-    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-emerald-600' : 'text-rose-600', href: '/finance/overview' },
+    { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-danger' : 'text-success', href: '/finance/transactions' },
+    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview' },
     { label: 'Open pipeline', value: money(pipelineValue), sub: `${openDeals.length} active deal${openDeals.length === 1 ? '' : 's'}`, icon: Target, tone: 'text-accent', href: '/pipelines/sales/board' },
     { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-cyan-600', href: '/dashboard/overview' },
   ];
 
   const pillars = [
     { label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board', tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview', tone: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview', tone: 'text-success', bg: 'bg-success/10' },
     { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
     { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview', tone: 'text-cyan-600', bg: 'bg-cyan-50' },
-    { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board', tone: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board', tone: 'text-accent', bg: 'bg-accent/10' },
   ];
 
   return (
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Home</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -111,8 +111,8 @@ export default function WorkspaceHome() {
                   <p className="text-[12px] text-tertiary">Revenue vs costs · last 12 months</p>
                 </div>
                 <div className="flex items-center gap-4 text-[11px] font-semibold">
-                  <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Revenue</span>
-                  <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-slate-400" /> Costs</span>
+                  <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-success" /> Revenue</span>
+                  <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-strong" /> Costs</span>
                 </div>
               </div>
               {loading || !fin ? (
@@ -186,7 +186,7 @@ export default function WorkspaceHome() {
             {/* Recent transactions */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-emerald-500" /> Recent transactions</h3>
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
@@ -198,7 +198,7 @@ export default function WorkspaceHome() {
                       <div className="text-[13px] font-semibold text-primary truncate">{t.description || '—'}</div>
                       <div className="text-[11px] text-tertiary">{fmtDate(t.txn_date)}{t.category ? ` · ${t.category}` : ''}</div>
                     </div>
-                    <span className={`shrink-0 text-[13px] font-semibold tabular-nums ${t.amount < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{money(t.amount)}</span>
+                    <span className={`shrink-0 text-[13px] font-semibold tabular-nums ${t.amount < 0 ? 'text-danger' : 'text-success'}`}>{money(t.amount)}</span>
                   </div>
                 ))}
               </div>

@@ -28,8 +28,8 @@ const fmtDate = (s?: string | null) => {
 };
 
 const STATUS_PILL: Record<string, string> = {
-  posted: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
-  pending: 'bg-amber-50 text-amber-700 ring-amber-200/60',
+  posted: 'bg-success/10 text-success ring-success/30',
+  pending: 'bg-warning/10 text-warning ring-warning/30',
   excluded: 'bg-surface-hover text-tertiary ring-subtle',
 };
 
@@ -120,12 +120,12 @@ export default function TransactionsPage() {
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Transactions</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
-              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
           </div>
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {PERIODS.map((p) => (
@@ -153,7 +153,7 @@ export default function TransactionsPage() {
           <button key={a.id} onClick={() => setAccount(a.id)}
             className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === a.id ? 'bg-surface ring-strong shadow-sm' : 'ring-subtle hover:bg-surface-sunken'}`}>
             <div className="text-[12px] font-semibold text-primary leading-tight flex items-center gap-1.5"><Landmark className="w-3 h-3 text-tertiary" /> {a.name}</div>
-            <div className={`text-[11px] tabular-nums leading-tight ${a.balance < 0 ? 'text-rose-600' : 'text-secondary'}`}>{money(a.balance)}</div>
+            <div className={`text-[11px] tabular-nums leading-tight ${a.balance < 0 ? 'text-danger' : 'text-secondary'}`}>{money(a.balance)}</div>
           </button>
         ))}
         <button onClick={() => setAddingAccount(true)} disabled={!canEdit}
@@ -163,10 +163,10 @@ export default function TransactionsPage() {
       {/* Summary cards */}
       <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3 px-4 py-3">
         {[
-          { label: 'Money in', value: money(summary.inflow), tone: 'text-emerald-600', icon: ArrowUpRight },
-          { label: 'Money out', value: money(summary.outflow), tone: 'text-rose-600', icon: ArrowDownRight },
-          { label: 'Net', value: money(summary.net), tone: summary.net >= 0 ? 'text-emerald-600' : 'text-rose-600', icon: ArrowLeftRightGlyph },
-          { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-amber-600' : 'text-tertiary', icon: Link2 },
+          { label: 'Money in', value: money(summary.inflow), tone: 'text-success', icon: ArrowUpRight },
+          { label: 'Money out', value: money(summary.outflow), tone: 'text-danger', icon: ArrowDownRight },
+          { label: 'Net', value: money(summary.net), tone: summary.net >= 0 ? 'text-success' : 'text-danger', icon: ArrowLeftRightGlyph },
+          { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-warning' : 'text-tertiary', icon: Link2 },
         ].map((c) => (
           <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-3.5">
             <div className="flex items-center justify-between">
@@ -222,7 +222,7 @@ export default function TransactionsPage() {
                           ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent"><Link2 className="w-3 h-3" /> {r.match}</span>
                           : <span className="text-[11px] text-tertiary">—</span>}
                       </td>
-                      <td className={`px-3 h-[44px] border-b border-subtle text-right tabular-nums font-semibold ${r.amount < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{money(r.amount)}</td>
+                      <td className={`px-3 h-[44px] border-b border-subtle text-right tabular-nums font-semibold ${r.amount < 0 ? 'text-danger' : 'text-success'}`}>{money(r.amount)}</td>
                     </tr>
                   );
                 })}
@@ -364,7 +364,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
   const out = txn.amount < 0;
   return (
     <div className="fixed inset-0 z-[60] flex justify-end bg-black/40" onClick={onClose}>
-      <div className="w-full max-w-sm h-full bg-surface shadow-2xl ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm h-full bg-surface shadow-popover ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-sm font-semibold text-primary">Transaction</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
@@ -373,7 +373,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           <div>
             <div className="text-[15px] font-semibold text-primary">{txn.description || '—'}</div>
-            <div className={`text-2xl font-semibold tabular-nums ${out ? 'text-rose-600' : 'text-emerald-600'}`}>{money(txn.amount)}</div>
+            <div className={`text-2xl font-semibold tabular-nums ${out ? 'text-danger' : 'text-success'}`}>{money(txn.amount)}</div>
             <div className="text-[12px] text-tertiary mt-0.5">{fmtDate(txn.txn_date)} · {txn.account || 'No account'} · {txn.method.replace(/_/g, ' ')}</div>
           </div>
 
@@ -382,13 +382,13 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
                 <input list="drawer-cats" value={cat} onChange={(e) => setCat(e.target.value)} placeholder="Uncategorized"
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 <datalist id="drawer-cats">{categorySuggestions.map((c) => <option key={c} value={c} />)}</datalist>
               </label>
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Status</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none capitalize">
+                  className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none capitalize">
                   {['posted', 'pending', 'excluded'].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </label>
@@ -397,7 +397,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
               </button>
             </div>
           ) : (
-            <p className="text-[12px] text-amber-600 bg-amber-50 rounded-lg px-3 py-2 ring-1 ring-amber-200/50">Sign in to categorize and reconcile.</p>
+            <p className="text-[12px] text-warning bg-warning/10 rounded-lg px-3 py-2 ring-1 ring-warning/30">Sign in to categorize and reconcile.</p>
           )}
 
           {/* Reconciliation */}
@@ -406,7 +406,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
               <Sparkles className="w-3.5 h-3.5" /> Reconciliation
             </div>
             {txn.match ? (
-              <div className="rounded-lg ring-1 ring-primary-200/60 bg-accent/10 p-3">
+              <div className="rounded-lg ring-1 ring-accent/30 bg-accent/10 p-3">
                 <div className="flex items-center gap-1.5 text-[13px] font-semibold text-accent"><Link2 className="w-3.5 h-3.5" /> {txn.match}</div>
                 <p className="text-[12px] text-secondary mt-1">Linked and marked paid.</p>
                 {canEdit && <button onClick={unmatch} disabled={busy === 'unmatch'} className="mt-2 h-7 px-2.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface inline-flex items-center gap-1.5 disabled:opacity-50">{busy === 'unmatch' && <Loader2 className="w-3 h-3 animate-spin" />} Unmatch</button>}
@@ -462,23 +462,23 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-sm font-semibold text-primary">New bank account</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Name *</span>
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
+            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Currency</span>
-              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none uppercase" /></label>
+              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none uppercase" /></label>
             <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Opening balance</span>
-              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
+              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
           </div>
           <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Institution</span>
-            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" /></label>
-          {error && <p className="text-[12px] text-rose-600">{error}</p>}
+            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
+          {error && <p className="text-[12px] text-danger">{error}</p>}
         </div>
         <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
           <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
@@ -553,7 +553,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
 
   const sel = (key: string) => (
     <select value={map[key] ?? -1} onChange={(e) => setMap((m) => ({ ...m, [key]: Number(e.target.value) }))}
-      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
+      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
       <option value={-1}>— skip —</option>
       {headers.map((h, i) => <option key={i} value={i}>{h}</option>)}
     </select>
@@ -561,7 +561,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-2xl animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-sm font-semibold text-primary flex items-center gap-2">
             {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
@@ -574,21 +574,21 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
           {step === 'source' && (
             <div className="space-y-4">
               <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Import into account</span>
-                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
+                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
                   <option value="">— no account —</option>
                   {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </label>
-              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-strong text-[13px] text-secondary cursor-pointer hover:ring-slate-400 hover:bg-surface-sunken">
+              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-strong text-[13px] text-secondary cursor-pointer hover:ring-strong hover:bg-surface-sunken">
                 <Upload className="w-4 h-4" /> Upload a bank-statement .csv
                 <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => readFile(e.target.files?.[0])} />
               </label>
               <div>
                 <span className="block text-[12px] font-semibold text-secondary mb-1">…or paste CSV</span>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="Date,Description,Amount&#10;2026-07-01,Stripe payout,4200&#10;2026-07-02,AWS,-820"
-                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
-              {error && <p className="text-[12px] text-rose-600">{error}</p>}
+              {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>
           )}
 
@@ -609,13 +609,13 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
                   Positive numbers are money OUT (flip the sign)
                 </label>
               )}
-              {error && <p className="text-[12px] text-rose-600">{error}</p>}
+              {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>
           )}
 
           {step === 'done' && (
             <div className="py-8 text-center">
-              <Check className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
+              <Check className="w-10 h-10 text-success mx-auto mb-3" />
               <p className="text-sm font-semibold text-primary">Imported {count} transactions</p>
               <p className="text-[12px] text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (bad date/amount).` : 'All rows imported.'}</p>
             </div>

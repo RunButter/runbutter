@@ -147,15 +147,15 @@ export default function AnalyticsPage() {
     }
 
     const kpis = [
-        { label: 'Total candidates', value: metrics.totalCandidates, icon: Users, tone: 'text-violet-600' },
-        { label: 'Total hires', value: metrics.hiredCandidates, icon: CheckCircle2, tone: 'text-emerald-600' },
-        { label: 'Hire rate', value: `${metrics.offerRate}%`, icon: TrendingUp, tone: 'text-blue-600' },
+        { label: 'Total candidates', value: metrics.totalCandidates, icon: Users, tone: 'text-accent' },
+        { label: 'Total hires', value: metrics.hiredCandidates, icon: CheckCircle2, tone: 'text-success' },
+        { label: 'Hire rate', value: `${metrics.offerRate}%`, icon: TrendingUp, tone: 'text-accent' },
         { label: 'Active positions', value: metrics.totalPositions, icon: Briefcase, tone: 'text-orange-600' },
     ];
 
     return (
         <>
-            <PageHeader title="Analytics" badge={<span className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600">Live</span>}>
+            <PageHeader title="Analytics" badge={<span className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
                 <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>

@@ -89,14 +89,14 @@ function CandidateCard({ candidate, onClick, isOverlay = false }: { candidate: a
             ref={setNodeRef}
             style={style}
             onClick={() => onClick && onClick(candidate)}
-            className={`bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-3 group transition-all hover:border-primary-300 hover:shadow-md cursor-pointer ${isOverlay ? 'shadow-2xl border-primary-400 rotate-2' : ''}`}
+            className={`bg-surface p-4 rounded-xl shadow-sm border border-subtle mb-3 group transition-all hover:border-accent/30 hover:shadow-md cursor-pointer ${isOverlay ? 'shadow-popover border-accent/30 rotate-2' : ''}`}
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
-                    <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition truncate">{candidate.full_name}</h4>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{candidate.position_title}</p>
+                    <h4 className="font-medium text-primary group-hover:text-accent transition truncate">{candidate.full_name}</h4>
+                    <p className="text-[10px] text-tertiary font-medium uppercase tracking-widest truncate">{candidate.position_title}</p>
                 </div>
-                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-600">
+                <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-tertiary hover:text-secondary">
                     <GripVertical className="w-4 h-4" />
                 </div>
             </div>
@@ -104,16 +104,16 @@ function CandidateCard({ candidate, onClick, isOverlay = false }: { candidate: a
             <div className="flex items-center justify-between mt-4">
                 <div className="flex -space-x-2">
                     {candidate.assessment_results?.[0]?.overall_score ? (
-                        <div className="w-8 h-8 rounded-full bg-indigo-50 border-2 border-white flex items-center justify-center text-[10px] font-black text-indigo-700 shadow-sm">
+                        <div className="w-8 h-8 rounded-full bg-accent/10 border-2 border-white flex items-center justify-center text-[10px] font-semibold text-accent shadow-sm">
                             {candidate.assessment_results[0].overall_score}
                         </div>
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-300 shadow-sm">
+                        <div className="w-8 h-8 rounded-full bg-surface-sunken border-2 border-white flex items-center justify-center text-[10px] font-medium text-tertiary shadow-sm">
                             ?
                         </div>
                     )}
                 </div>
-                <div className="text-[10px] text-gray-400 font-medium">
+                <div className="text-[10px] text-tertiary font-medium">
                     {new Date(candidate.applied_at).toLocaleDateString()}
                 </div>
             </div>
@@ -131,21 +131,21 @@ function KanbanColumn({ id, title, candidates, onCardClick }: { id: string, titl
         <div className="w-72 flex-shrink-0 flex flex-col h-full overflow-hidden">
             <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-black text-gray-700 uppercase tracking-widest">{title}</h3>
-                    <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <h3 className="text-sm font-semibold text-secondary uppercase tracking-widest">{title}</h3>
+                    <span className="bg-strong text-secondary text-[10px] font-medium px-2 py-0.5 rounded-full">
                         {candidates.length}
                     </span>
                 </div>
-                <button className="text-gray-300 hover:text-gray-600"><MoreHorizontal className="w-4 h-4" /></button>
+                <button className="text-tertiary hover:text-secondary"><MoreHorizontal className="w-4 h-4" /></button>
             </div>
-            <div ref={setNodeRef} className="flex-1 bg-gray-50 rounded-2xl p-3 overflow-y-auto no-scrollbar border-2 border-transparent hover:border-gray-200 transition">
+            <div ref={setNodeRef} className="flex-1 bg-surface-sunken rounded-2xl p-3 overflow-y-auto no-scrollbar border-2 border-transparent hover:border-subtle transition">
                 <SortableContext items={candidates.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {candidates.map(c => (
                         <CandidateCard key={c.id} candidate={c} onClick={onCardClick} />
                     ))}
                 </SortableContext>
                 {candidates.length === 0 && (
-                    <div className="h-24 border-2 border-dashed border-gray-100 rounded-xl flex items-center justify-center text-[10px] text-gray-300 font-bold uppercase tracking-widest">
+                    <div className="h-24 border-2 border-dashed border-subtle rounded-xl flex items-center justify-center text-[10px] text-tertiary font-medium uppercase tracking-widest">
                         Empty
                     </div>
                 )}
@@ -177,29 +177,29 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
     } : null;
 
     return (
-        <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-md flex items-center justify-end p-4">
-            <div className="bg-white w-full max-w-4xl h-full rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-right duration-500">
+        <div className="fixed inset-0 z-[100] bg-inverse backdrop-blur-md flex items-center justify-end p-4">
+            <div className="bg-surface w-full max-w-4xl h-full rounded-3xl shadow-popover overflow-hidden flex flex-col animate-in slide-in-from-right duration-500">
                 <header className="px-8 py-6 border-b flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
+                        <button onClick={onClose} className="p-2 hover:bg-surface-hover rounded-full transition"><ArrowLeft className="w-5 h-5 text-secondary" /></button>
                         <div>
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{candidate.full_name}</h2>
-                            <p className="text-sm text-gray-500 font-medium">{candidate.position_title} • {candidate.position_department}</p>
+                            <h2 className="text-2xl font-semibold text-primary tracking-tight">{candidate.full_name}</h2>
+                            <p className="text-sm text-secondary font-medium">{candidate.position_title} • {candidate.position_department}</p>
                         </div>
                     </div>
                 </header>
                 <div className="flex-1 overflow-y-auto p-8 space-y-12 no-scrollbar">
                     {/* Insights */}
                     {results && (
-                        <div className="bg-primary-900 text-white rounded-3xl p-10 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2" />
+                        <div className="bg-primary-900 text-white rounded-3xl p-10 shadow-popover relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-accent rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2" />
                             <div className="relative z-10 grid md:grid-cols-2 gap-10">
                                 <div>
-                                    <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-primary-200 mb-6 border border-white/10">Neuro-Match Result</div>
-                                    <h3 className="text-4xl font-bold mb-3 tracking-tight">{results.overall_score}% Match</h3>
-                                    <p className="text-primary-100/90 leading-relaxed text-sm">&quot;{results.summary}&quot;</p>
+                                    <div className="inline-block px-3 py-1 bg-surface/$1 rounded-full text-[10px] font-semibold uppercase tracking-widest text-accent-fg mb-6 border border-white/10">Neuro-Match Result</div>
+                                    <h3 className="text-4xl font-medium mb-3 tracking-tight">{results.overall_score}% Match</h3>
+                                    <p className="text-accent-fg/90 leading-relaxed text-sm">&quot;{results.summary}&quot;</p>
                                 </div>
-                                <div className="h-64 flex items-center justify-center bg-white/5 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
+                                <div className="h-64 flex items-center justify-center bg-surface/$1 rounded-3xl border border-white/5 p-6 backdrop-blur-sm">
                                     {radarData && (
                                         <Radar
                                             data={radarData}
@@ -217,28 +217,28 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</h4>
-                            <p className="font-bold text-gray-900 capitalize">{candidate.status}</p>
+                        <div className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
+                            <h4 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-1">Status</h4>
+                            <p className="font-medium text-primary capitalize">{candidate.status}</p>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Source</h4>
-                            <p className="font-bold text-gray-900 capitalize">{candidate.source}</p>
+                        <div className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
+                            <h4 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-1">Source</h4>
+                            <p className="font-medium text-primary capitalize">{candidate.source}</p>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logic Score</h4>
-                            <p className="font-bold text-gray-900">{results?.cognitive_data?.logic || 'N/A'}</p>
+                        <div className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
+                            <h4 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-1">Logic Score</h4>
+                            <p className="font-medium text-primary">{results?.cognitive_data?.logic || 'N/A'}</p>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Resilience</h4>
-                            <p className="font-bold text-gray-900">{results?.personality_data?.neuroticism ? (100 - results.personality_data.neuroticism) : 'N/A'}%</p>
+                        <div className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
+                            <h4 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-1">Resilience</h4>
+                            <p className="font-medium text-primary">{results?.personality_data?.neuroticism ? (100 - results.personality_data.neuroticism) : 'N/A'}%</p>
                         </div>
                     </div>
                 </div>
-                <footer className="p-8 border-t bg-gray-50 flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-gray-500">
-                        <User className="w-10 h-10 bg-white p-2 rounded-full border" />
-                        <span className="text-sm font-bold">{candidate.email}</span>
+                <footer className="p-8 border-t bg-surface-sunken flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-secondary">
+                        <User className="w-10 h-10 bg-surface p-2 rounded-full border" />
+                        <span className="text-sm font-medium">{candidate.email}</span>
                     </div>
                     <button onClick={onClose} className="btn-primary px-10">Close Record</button>
                 </footer>
@@ -300,7 +300,7 @@ export default function DemoPage() {
     const NavItem = ({ id, icon: Icon, label }: { id: DemoView, icon: any, label: string }) => (
         <button
             onClick={() => setView(id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-bold text-sm ${view === id ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${view === id ? 'bg-accent text-white shadow-lg' : 'text-tertiary hover:bg-surface-hover hover:text-primary'}`}
         >
             <Icon className="w-5 h-5" />
             {label}
@@ -308,16 +308,16 @@ export default function DemoPage() {
     );
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900">
+        <div className="flex h-screen bg-surface-sunken overflow-hidden text-primary">
             {/* Sidebar */}
-            <aside className="w-72 bg-white border-r h-full flex flex-col p-6 sticky top-0 hidden lg:flex">
+            <aside className="w-72 bg-surface border-r h-full flex flex-col p-6 sticky top-0 hidden lg:flex">
                 <div className="mb-10 px-2 flex items-center gap-3">
                     <Logo />
-                    <div className="bg-primary-100 text-primary-700 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-200 shadow-sm">Demo Mode</div>
+                    <div className="bg-accent/10 text-accent text-[8px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full border border-accent/30 shadow-sm">Demo Mode</div>
                 </div>
 
                 <nav className="flex-1 space-y-1">
-                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 px-4">Talent Management</div>
+                    <div className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-4 px-4">Talent Management</div>
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Overview" />
                     <NavItem id="pipeline" icon={Users} label="Visual Pipeline" />
                     <NavItem id="treasury" icon={Sparkles} label="Talent Treasury" />
@@ -326,45 +326,45 @@ export default function DemoPage() {
                     <NavItem id="analytics" icon={TrendingUp} label="Analytics" />
                 </nav>
 
-                <div className="mt-auto p-5 bg-primary-900 rounded-3xl text-white relative overflow-hidden group shadow-xl">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition duration-500" />
-                    <p className="text-xs font-bold text-primary-100 mb-3 relative z-10">Start hiring today.</p>
-                    <Link href="/auth/register" className="relative z-10 block w-full py-2.5 bg-white text-primary-900 rounded-xl text-center text-[10px] font-black tracking-widest uppercase hover:bg-gray-50 transition shadow-lg">Get Full Version</Link>
+                <div className="mt-auto p-5 bg-primary-900 rounded-3xl text-white relative overflow-hidden group shadow-popover">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-accent rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition duration-500" />
+                    <p className="text-xs font-medium text-accent-fg mb-3 relative z-10">Start hiring today.</p>
+                    <Link href="/auth/register" className="relative z-10 block w-full py-2.5 bg-surface text-accent rounded-xl text-center text-[10px] font-semibold tracking-widest uppercase hover:bg-surface-sunken transition shadow-lg">Get Full Version</Link>
                 </div>
             </aside>
 
             {/* Content Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b px-8 py-5 flex items-center justify-between sticky top-0 z-50">
+                <header className="bg-surface border-b px-8 py-5 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-black tracking-tight text-gray-900 capitalize">
+                        <h2 className="text-xl font-semibold tracking-tight text-primary capitalize">
                             {view}
-                            <span className="text-primary-600 ml-2 animate-pulse">•</span>
+                            <span className="text-accent ml-2 animate-pulse">•</span>
                         </h2>
                     </div>
                     <div className="flex items-center gap-6">
                         <div className="relative hidden md:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" />
                             <input
-                                className="bg-gray-50 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary-500 outline-none w-64 transition-all focus:w-80"
+                                className="bg-surface-sunken border border-subtle rounded-full pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-accent/30 outline-none w-64 transition-all focus:w-80"
                                 placeholder="Filter demo data..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center text-white font-bold text-xs ring-4 ring-primary-50">JD</div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center text-white font-medium text-xs ring-4 ring-accent/30">JD</div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gray-50/30">
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-surface-sunken">
                     {view === 'dashboard' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Stats */}
                             <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
                                 {Object.entries(MOCK_STATS).map(([key, val]) => (
-                                    <div key={key} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition hover:shadow-xl hover:-translate-y-1 duration-300">
-                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 whitespace-nowrap">{key.replace(/([A-Z])/g, ' $1')}</div>
-                                        <div className="text-3xl font-black text-gray-900 tracking-tighter">{val}</div>
+                                    <div key={key} className="bg-surface p-6 rounded-3xl border border-subtle shadow-sm transition hover:shadow-popover hover:-translate-y-1 duration-300">
+                                        <div className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-2 whitespace-nowrap">{key.replace(/([A-Z])/g, ' $1')}</div>
+                                        <div className="text-3xl font-semibold text-primary tracking-tighter">{val}</div>
                                     </div>
                                 ))}
                             </div>
@@ -372,8 +372,8 @@ export default function DemoPage() {
                             {/* Recent Grid */}
                             <div className="grid lg:grid-cols-3 gap-8">
                                 <div className="lg:col-span-2 space-y-6">
-                                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-primary-600" />
+                                    <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                                        <Clock className="w-5 h-5 text-accent" />
                                         Fastest Growing Talent
                                     </h3>
                                     <div className="grid gap-4">
@@ -381,38 +381,38 @@ export default function DemoPage() {
                                             <div
                                                 key={c.id}
                                                 onClick={() => setSelectedCandidate(c)}
-                                                className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-xl cursor-pointer transition-all group lg:pr-8"
+                                                className="bg-surface p-6 rounded-3xl border border-subtle shadow-sm flex items-center justify-between hover:shadow-popover cursor-pointer transition-all group lg:pr-8"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-primary-600 font-black text-lg border border-gray-100 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">{c.full_name[0]}</div>
+                                                    <div className="w-12 h-12 bg-surface-sunken rounded-2xl flex items-center justify-center text-accent font-semibold text-lg border border-subtle group-hover:bg-accent group-hover:text-white transition-all duration-300">{c.full_name[0]}</div>
                                                     <div>
-                                                        <h4 className="font-black text-gray-900 group-hover:text-primary-600 transition">{c.full_name}</h4>
-                                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{c.position_title}</p>
+                                                        <h4 className="font-semibold text-primary group-hover:text-accent transition">{c.full_name}</h4>
+                                                        <p className="text-xs text-secondary font-medium uppercase tracking-widest">{c.position_title}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="inline-block px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-100 group-hover:bg-green-600 group-hover:text-white transition">
+                                                    <div className="inline-block px-3 py-1 bg-success/10 text-success text-[10px] font-semibold rounded-full uppercase tracking-widest border border-success/30 group-hover:bg-success group-hover:text-white transition">
                                                         {c.assessment_results?.[0]?.overall_score}% Match
                                                     </div>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-2 group-hover:text-primary-400">Active now</p>
+                                                    <p className="text-[10px] text-tertiary font-medium uppercase mt-2 group-hover:text-accent">Active now</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                                 <div className="space-y-6">
-                                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                                        <TrendingUp className="w-5 h-5 text-primary-600" />
+                                    <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                                        <TrendingUp className="w-5 h-5 text-accent" />
                                         Activity Hub
                                     </h3>
-                                    <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-6 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2" />
+                                    <div className="bg-surface rounded-3xl p-6 border border-subtle shadow-sm space-y-6 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2" />
                                         {MOCK_ACTIVITY.map(act => (
-                                            <div key={act.id} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-0.5 before:bg-primary-100 last:before:hidden">
+                                            <div key={act.id} className="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-0.5 before:bg-accent/10 last:before:hidden">
                                                 <div className="absolute left-[-4px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary-500 border-2 border-white" />
-                                                <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{act.action.replace(/_/g, ' ')}</h5>
-                                                <p className="text-sm font-bold text-gray-800">{act.candidate_name}</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-1">{new Date(act.created_at).toLocaleTimeString()}</p>
+                                                <h5 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-1">{act.action.replace(/_/g, ' ')}</h5>
+                                                <p className="text-sm font-medium text-primary">{act.candidate_name}</p>
+                                                <p className="text-[10px] text-tertiary font-medium mt-1">{new Date(act.created_at).toLocaleTimeString()}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -452,21 +452,21 @@ export default function DemoPage() {
                         <div className="flex gap-6 animate-in fade-in duration-500">
                             {/* Faceted sidebar */}
                             <aside className="w-60 shrink-0 hidden xl:block">
-                                <div className="bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 shadow-soft p-5 sticky top-0">
-                                    <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
+                                <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle shadow-soft p-5 sticky top-0">
+                                    <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-tertiary mb-4">
                                         <SlidersHorizontal className="w-4 h-4" /> Filters
                                     </h3>
                                     <div className="mb-4">
-                                        <div className="flex justify-between text-xs font-bold text-gray-600 mb-1">
-                                            <span>Min match</span><span className="font-mono text-gray-400">{minMatch}</span>
+                                        <div className="flex justify-between text-xs font-medium text-secondary mb-1">
+                                            <span>Min match</span><span className="font-mono text-tertiary">{minMatch}</span>
                                         </div>
-                                        <input type="range" min={0} max={100} value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="w-full accent-primary-600 cursor-pointer" />
+                                        <input type="range" min={0} max={100} value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="w-full accent-accent cursor-pointer" />
                                     </div>
-                                    <div className="space-y-2 pt-3 border-t border-gray-100">
-                                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Source</div>
+                                    <div className="space-y-2 pt-3 border-t border-subtle">
+                                        <div className="text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-1">Source</div>
                                         {['LinkedIn', 'Indeed', 'Referral', 'Direct'].map((s) => (
-                                            <label key={s} className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                                                <input type="checkbox" className="accent-primary-600" /> {s}
+                                            <label key={s} className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
+                                                <input type="checkbox" className="accent-accent" /> {s}
                                             </label>
                                         ))}
                                     </div>
@@ -475,9 +475,9 @@ export default function DemoPage() {
                             {/* Candidate grid */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <Sparkles className="w-5 h-5 text-primary-600" />
-                                    <h3 className="text-lg font-black text-gray-900">Talent Treasury</h3>
-                                    <span className="text-sm text-gray-400">
+                                    <Sparkles className="w-5 h-5 text-accent" />
+                                    <h3 className="text-lg font-semibold text-primary">Talent Treasury</h3>
+                                    <span className="text-sm text-tertiary">
                                         · {filteredCandidates.filter(c => (c.assessment_results?.[0]?.overall_score || 0) >= minMatch).length} in view
                                     </span>
                                 </div>
@@ -494,19 +494,19 @@ export default function DemoPage() {
                                             ] : [];
                                             return (
                                                 <button key={c.id} onClick={() => setSelectedCandidate(c)}
-                                                    className="text-left bg-white rounded-2xl border border-gray-200 ring-1 ring-slate-200/40 shadow-soft p-5 hover:shadow-soft-lg hover:border-primary-200 transition-all duration-200">
+                                                    className="text-left bg-surface rounded-2xl border border-subtle ring-1 ring-subtle shadow-soft p-5 hover:shadow-soft-lg hover:border-accent/30 transition-all duration-200">
                                                     <div className="flex items-start justify-between gap-3 mb-3">
                                                         <div className="min-w-0">
-                                                            <div className="font-bold text-gray-900 truncate">{c.full_name}</div>
-                                                            <div className="text-xs text-gray-500 truncate">{c.position_title}</div>
+                                                            <div className="font-medium text-primary truncate">{c.full_name}</div>
+                                                            <div className="text-xs text-secondary truncate">{c.position_title}</div>
                                                         </div>
-                                                        <div className="text-2xl font-black text-primary-600">{r?.overall_score ?? '—'}</div>
+                                                        <div className="text-2xl font-semibold text-accent">{r?.overall_score ?? '—'}</div>
                                                     </div>
                                                     <div className="space-y-1.5">
                                                         {bars.map(([label, val]) => (
                                                             <div key={label} className="flex items-center gap-2">
-                                                                <span className="w-24 text-[10px] font-semibold text-gray-400">{label}</span>
-                                                                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                                <span className="w-24 text-[10px] font-semibold text-tertiary">{label}</span>
+                                                                <div className="flex-1 h-1.5 bg-surface-hover rounded-full overflow-hidden">
                                                                     <div className="h-full bg-primary-500 rounded-full transition-all duration-500" style={{ width: `${val}%` }} />
                                                                 </div>
                                                             </div>
@@ -527,22 +527,22 @@ export default function DemoPage() {
                                 { title: 'Product Manager', dept: 'Product', apps: 18, score: 85 },
                                 { title: 'Sales Executive', dept: 'Sales', apps: 65, score: 78 }
                             ].map((job, i) => (
-                                <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between hover:shadow-xl transition-all group gap-6">
+                                <div key={i} className="bg-surface p-8 rounded-3xl border border-subtle shadow-sm flex flex-col md:flex-row md:items-center justify-between hover:shadow-popover transition-all group gap-6">
                                     <div className="flex items-center gap-6">
-                                        <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 font-black border border-primary-100 group-hover:bg-primary-600 group-hover:text-white transition duration-500 shadow-sm">
+                                        <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center text-accent font-semibold border border-accent/30 group-hover:bg-accent group-hover:text-white transition duration-500 shadow-sm">
                                             <Briefcase className="w-8 h-8" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-gray-900 mb-1 group-hover:text-primary-600 transition">{job.title}</h3>
-                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{job.dept} • {job.apps} Applications</p>
+                                            <h3 className="text-xl font-semibold text-primary mb-1 group-hover:text-accent transition">{job.title}</h3>
+                                            <p className="text-xs text-secondary font-medium uppercase tracking-widest">{job.dept} • {job.apps} Applications</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8">
                                         <div className="text-right">
-                                            <div className="text-2xl font-black text-gray-900 group-hover:text-primary-600 transition">{job.score}%</div>
-                                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Avg. Quality</div>
+                                            <div className="text-2xl font-semibold text-primary group-hover:text-accent transition">{job.score}%</div>
+                                            <div className="text-[10px] text-tertiary font-semibold uppercase tracking-widest">Avg. Quality</div>
                                         </div>
-                                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition shadow-inner">
+                                        <button className="p-3 bg-surface-sunken text-tertiary rounded-xl hover:bg-accent/10 hover:text-accent transition shadow-inner">
                                             <MoreHorizontal className="w-5 h-5" />
                                         </button>
                                     </div>
@@ -553,33 +553,33 @@ export default function DemoPage() {
 
                     {view === 'interviews' && (
                         <div className="space-y-4 animate-in fade-in duration-500">
-                            <div className="bg-primary-900 text-white p-8 rounded-3xl shadow-xl mb-8 flex flex-col md:flex-row md:items-center justify-between relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition duration-700" />
+                            <div className="bg-primary-900 text-white p-8 rounded-3xl shadow-popover mb-8 flex flex-col md:flex-row md:items-center justify-between relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-accent rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition duration-700" />
                                 <div className="relative z-10">
-                                    <h3 className="text-2xl font-bold tracking-tight mb-1">Next Interview in 45m</h3>
-                                    <p className="text-primary-100 font-bold uppercase tracking-widest text-[10px]">Sarah Jenkins • Enterprise Sales Role</p>
+                                    <h3 className="text-2xl font-medium tracking-tight mb-1">Next Interview in 45m</h3>
+                                    <p className="text-accent-fg font-medium uppercase tracking-widest text-[10px]">Sarah Jenkins • Enterprise Sales Role</p>
                                 </div>
-                                <button onClick={() => alert('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-white text-primary-900 rounded-2xl font-black tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
+                                <button onClick={() => alert('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-surface text-accent rounded-2xl font-semibold tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
                             </div>
-                            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-2 overflow-hidden">
+                            <div className="bg-surface rounded-3xl border border-subtle shadow-sm p-2 overflow-hidden">
                                 {[
                                     { name: 'Sarah Jenkins', time: 'Today, 2:00 PM', type: 'Google Meet' },
                                     { name: 'Marcus Thorne', time: 'Tomorrow, 10:00 AM', type: 'Design Review' },
                                     { name: 'David Kim', time: 'Monday, 11:30 AM', type: 'Technical Interview' }
                                 ].map((int, i) => (
-                                    <div key={i} className="flex items-center justify-between p-6 hover:bg-gray-50 rounded-2xl transition group cursor-pointer">
+                                    <div key={i} className="flex items-center justify-between p-6 hover:bg-surface-sunken rounded-2xl transition group cursor-pointer">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100 group-hover:border-primary-100 group-hover:text-primary-600 transition-all shadow-inner">
+                                            <div className="w-10 h-10 bg-surface-sunken rounded-full flex items-center justify-center text-tertiary border border-subtle group-hover:border-accent/30 group-hover:text-accent transition-all shadow-inner">
                                                 <Calendar className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-900 group-hover:text-primary-600 transition">{int.name}</h4>
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{int.time}</p>
+                                                <h4 className="font-medium text-primary group-hover:text-accent transition">{int.name}</h4>
+                                                <p className="text-[10px] text-tertiary font-medium uppercase tracking-widest">{int.time}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 bg-primary-50 px-3 py-1 rounded-full border border-primary-100 shadow-sm group-hover:bg-primary-600 group-hover:text-white transition duration-300">{int.type}</span>
-                                            <button className="text-gray-300 hover:text-gray-900 transition"><MoreHorizontal className="w-4 h-4" /></button>
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-accent bg-accent/10 px-3 py-1 rounded-full border border-accent/30 shadow-sm group-hover:bg-accent group-hover:text-white transition duration-300">{int.type}</span>
+                                            <button className="text-tertiary hover:text-primary transition"><MoreHorizontal className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -589,44 +589,44 @@ export default function DemoPage() {
 
                     {view === 'analytics' && (
                         <div className="grid lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-6 duration-700">
-                            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group">
-                                <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-primary-600 transition">
+                            <div className="bg-surface p-8 rounded-3xl border border-subtle shadow-sm group">
+                                <h3 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-accent transition">
                                     <TrendingUp className="w-4 h-4" />
                                     Hiring Velocity (Days to Close)
                                 </h3>
                                 <div className="h-64 flex items-end gap-5 px-4 pb-4">
                                     {[60, 80, 45, 90, 70, 85].map((h, i) => (
-                                        <div key={i} className="flex-1 bg-gray-50 rounded-t-2xl relative group/bar hover:bg-primary-100 transition-colors duration-300" style={{ height: `${h}%` }}>
-                                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-all duration-300 shadow-xl scale-95 group-hover/bar:scale-100 z-10">{h} Days</div>
-                                            <div className="h-full w-full bg-primary-600/10 rounded-t-2xl opacity-0 group-hover/bar:opacity-100 transition-opacity" />
-                                            <div className="absolute bottom-[-28px] left-1/2 -translate-x-1/2 text-[8px] font-black text-gray-400 uppercase tracking-tighter">Apr-{'0' + (i + 1)}</div>
+                                        <div key={i} className="flex-1 bg-surface-sunken rounded-t-2xl relative group/bar hover:bg-accent/10 transition-colors duration-300" style={{ height: `${h}%` }}>
+                                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-inverse text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-all duration-300 shadow-popover scale-95 group-hover/bar:scale-100 z-10">{h} Days</div>
+                                            <div className="h-full w-full bg-accent/10 rounded-t-2xl opacity-0 group-hover/bar:opacity-100 transition-opacity" />
+                                            <div className="absolute bottom-[-28px] left-1/2 -translate-x-1/2 text-[8px] font-semibold text-tertiary uppercase tracking-tighter">Apr-{'0' + (i + 1)}</div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group">
-                                <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-primary-600 transition">
+                            <div className="bg-surface p-8 rounded-3xl border border-subtle shadow-sm group">
+                                <h3 className="text-[10px] font-semibold text-tertiary uppercase tracking-widest mb-8 flex items-center gap-2 group-hover:text-accent transition">
                                     <Brain className="w-4 h-4" />
                                     Candidate Quality of Hire
                                 </h3>
                                 <div className="space-y-8">
                                     {[
                                         { label: 'Technical Match', value: 94, color: 'bg-primary-500' },
-                                        { label: 'Culture & Soft Skills', value: 88, color: 'bg-emerald-500' },
+                                        { label: 'Culture & Soft Skills', value: 88, color: 'bg-success' },
                                         { label: 'Longevity Prediction', value: 82, color: 'bg-purple-500' }
                                     ].map((stat, i) => (
                                         <div key={i} className="space-y-3">
-                                            <div className="flex justify-between text-xs font-black uppercase tracking-widest text-gray-600">
+                                            <div className="flex justify-between text-xs font-semibold uppercase tracking-widest text-secondary">
                                                 <span>{stat.label}</span>
-                                                <span className="text-gray-900">{stat.value}%</span>
+                                                <span className="text-primary">{stat.value}%</span>
                                             </div>
-                                            <div className="h-3 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
+                                            <div className="h-3 bg-surface-sunken rounded-full overflow-hidden border border-subtle p-0.5">
                                                 <div className={`h-full ${stat.color} rounded-full transition-all duration-1000 shadow-sm`} style={{ width: `${stat.value}%` }} />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-12 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 text-sm text-indigo-700 font-medium">
+                                <div className="mt-12 p-5 bg-accent/10 rounded-2xl border border-accent/30 text-sm text-accent font-medium">
                                     &quot;Insight: Your hiring quality has improved by 24% since implementing skills &amp; personality matching.&quot;
                                 </div>
                             </div>

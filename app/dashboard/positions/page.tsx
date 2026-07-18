@@ -89,7 +89,7 @@ export default function PositionsPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search positions…"
-                        className="h-8 w-56 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                        className="h-8 w-56 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
                 <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> Create
@@ -116,7 +116,7 @@ export default function PositionsPage() {
                                     <td className="px-4 h-[52px] border-b border-subtle text-secondary">{pos.department || '—'}</td>
                                     <td className="px-4 h-[52px] border-b border-subtle text-secondary tabular-nums">{pos.candidates?.[0]?.count || 0}</td>
                                     <td className="px-4 h-[52px] border-b border-subtle">
-                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${pos.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-200/60' : 'bg-surface-hover text-secondary ring-subtle'}`}>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${pos.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-secondary ring-subtle'}`}>
                                             {pos.is_active ? 'Active' : 'Draft'}
                                         </span>
                                     </td>
@@ -124,7 +124,7 @@ export default function PositionsPage() {
                                         <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                                             <Link href={`/apply/${pos.id}`} target="_blank" title="View portal" className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover"><Eye className="w-4 h-4" /></Link>
                                             <button onClick={() => router.push(`/dashboard/positions/${pos.id}/edit`)} title="Edit" className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover"><Edit2 className="w-4 h-4" /></button>
-                                            <button onClick={() => handleDeletePosition(pos.id)} title="Delete" className="p-1.5 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDeletePosition(pos.id)} title="Delete" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </td>
                                 </tr>

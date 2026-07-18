@@ -58,11 +58,11 @@ export default function CheckoutButton({
     const getVariantStyles = () => {
         switch (variant) {
             case 'white':
-                return 'bg-white text-primary-700 hover:bg-indigo-50 shadow-xl';
+                return 'bg-surface text-accent hover:bg-surface-hover shadow-popover';
             case 'dark':
                 return 'bg-gray-900 text-white hover:bg-gray-800';
             default:
-                return 'btn-primary shadow-xl hover:translate-y-[-2px] transition-all';
+                return 'btn-primary shadow-popover hover:translate-y-[-2px] transition-all';
         }
     };
 
@@ -70,7 +70,7 @@ export default function CheckoutButton({
         <button
             onClick={handleCheckout}
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all disabled:opacity-50 ${getVariantStyles()}`}
+            className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold transition-all disabled:opacity-50 ${getVariantStyles()}`}
         >
             {loading ? (
                 <>

@@ -270,13 +270,13 @@ export default function SettingsPage() {
                 <div className="grid gap-6">
                     {/* Status Messages */}
                     {success && (
-                        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
+                        <div className="flex items-center gap-3 p-4 bg-success/10 border border-success/30 rounded-xl text-success">
                             <CheckCircle className="w-5 h-5" />
                             {success}
                         </div>
                     )}
                     {error && (
-                        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                        <div className="flex items-center gap-3 p-4 bg-danger/10 border border-danger/30 rounded-xl text-danger">
                             <AlertCircle className="w-5 h-5" />
                             {error}
                         </div>
@@ -336,7 +336,7 @@ export default function SettingsPage() {
                                             <button
                                                 type="button"
                                                 onClick={removeItemLogo}
-                                                className="absolute -top-2 -right-2 p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition shadow-sm"
+                                                className="absolute -top-2 -right-2 p-1.5 bg-danger/10 text-danger rounded-full hover:bg-red-200 transition shadow-sm"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -389,7 +389,7 @@ export default function SettingsPage() {
                                     </div>
                                     <div>
                                         {isGoogleConnected ? (
-                                            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 font-semibold rounded-lg border border-green-200">
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-success/10 text-success font-semibold rounded-lg border border-success/30">
                                                 <CheckCircle className="w-4 h-4" /> Connected
                                             </div>
                                         ) : (
@@ -406,7 +406,7 @@ export default function SettingsPage() {
                                 {/* Webhooks & notifications */}
                                 <div className="p-6 border border-subtle rounded-xl">
                                     <div className="flex items-start gap-4 mb-5">
-                                        <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-primary-100 text-accent shrink-0">
+                                        <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/30 text-accent shrink-0">
                                             <Zap className="w-6 h-6" />
                                         </div>
                                         <div>
@@ -429,10 +429,10 @@ export default function SettingsPage() {
                                                         <div className="text-xs text-tertiary truncate">{w.url}</div>
                                                     </div>
                                                     <button onClick={() => testWebhook(w)} disabled={hookTesting === w.id}
-                                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-subtle text-secondary hover:border-primary-200 hover:text-accent flex items-center gap-1.5 shrink-0">
+                                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-subtle text-secondary hover:border-accent/30 hover:text-accent flex items-center gap-1.5 shrink-0">
                                                         {hookTesting === w.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Test
                                                     </button>
-                                                    <button onClick={() => removeWebhook(w.id)} className="p-2 rounded-lg text-tertiary hover:text-rose-600 hover:bg-rose-50 shrink-0">
+                                                    <button onClick={() => removeWebhook(w.id)} className="p-2 rounded-lg text-tertiary hover:text-danger hover:bg-danger/10 shrink-0">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -477,9 +477,9 @@ export default function SettingsPage() {
                     )}
 
                     {/* Tips Section */}
-                    <div className="p-6 bg-accent/10 rounded-2xl border border-primary-100">
-                        <h3 className="font-semibold text-primary-900 mb-2">Why add branding?</h3>
-                        <p className="text-sm text-primary-800 leading-relaxed">
+                    <div className="p-6 bg-accent/10 rounded-2xl border border-accent/30">
+                        <h3 className="font-semibold text-accent mb-2">Why add branding?</h3>
+                        <p className="text-sm text-accent leading-relaxed">
                             Adding your company logo and name creates a professional experience for candidates.
                             Companies with complete profiles see a 24% higher completion rate on assessments.
                         </p>

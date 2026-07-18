@@ -133,7 +133,7 @@ export default function BillingPage() {
                     </div>
                 </div>
                 {company?.plan === 'professional' && (
-                    <div className="flex items-center gap-3 text-green-600 font-semibold bg-green-50 px-6 py-3 rounded-2xl border border-green-100">
+                    <div className="flex items-center gap-3 text-success font-semibold bg-success/10 px-6 py-3 rounded-2xl border border-success/30">
                         <ShieldCheck className="w-5 h-5" />
                         Professional Features Active
                     </div>
@@ -145,8 +145,8 @@ export default function BillingPage() {
                     <div
                         key={tier.name}
                         className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 ${tier.highlight
-                            ? 'bg-gradient-to-b from-primary-600 to-indigo-700 text-white shadow-2xl scale-105 z-10'
-                            : 'bg-surface border-2 border-subtle text-primary hover:border-primary-200 shadow-sm'
+                            ? 'bg-gradient-to-b from-primary-600 to-indigo-700 text-white shadow-popover scale-105 z-10'
+                            : 'bg-surface border-2 border-subtle text-primary hover:border-accent/30 shadow-sm'
                             }`}
                     >
                         {tier.highlight && (
@@ -175,7 +175,7 @@ export default function BillingPage() {
                         <div className="space-y-4 mb-10 flex-grow">
                             {tier.features.map((feature) => (
                                 <div key={feature} className="flex items-start gap-3 text-sm font-semibold">
-                                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${tier.highlight ? 'text-indigo-300' : 'text-primary-500'}`} />
+                                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${tier.highlight ? 'text-indigo-300' : 'text-accent'}`} />
                                     <span className={tier.highlight ? 'text-indigo-50' : 'text-secondary'}>{feature}</span>
                                 </div>
                             ))}
@@ -185,8 +185,8 @@ export default function BillingPage() {
                             <a
                                 href={tier.link}
                                 className={`w-full py-4 rounded-2xl font-semibold text-center transition flex items-center justify-center gap-2 ${tier.highlight
-                                    ? 'bg-surface text-accent hover:bg-accent/10 shadow-xl'
-                                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                                    ? 'bg-surface text-accent hover:bg-accent/10 shadow-popover'
+                                    : 'bg-inverse text-white hover:bg-inverse'
                                     }`}
                             >
                                 {tier.buttonText}
@@ -207,7 +207,7 @@ export default function BillingPage() {
 
             <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-surface-sunken p-10 rounded-[40px] border border-subtle">
                 <div className="space-y-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-accent rounded-full text-[10px] font-semibold uppercase tracking-widest">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent rounded-full text-[10px] font-semibold uppercase tracking-widest">
                         <Zap className="w-3 h-3 fill-current" />
                         Product Focus
                     </div>
@@ -226,11 +226,11 @@ export default function BillingPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-surface p-8 rounded-3xl border border-subtle shadow-xl relative overflow-hidden group">
-                    <Globe className="absolute -right-20 -bottom-20 w-64 h-64 text-primary-50 opacity-50 group-hover:scale-110 transition-transform duration-700" />
+                <div className="bg-surface p-8 rounded-3xl border border-subtle shadow-popover relative overflow-hidden group">
+                    <Globe className="absolute -right-20 -bottom-20 w-64 h-64 text-accent-fg opacity-50 group-hover:scale-110 transition-transform duration-700" />
                     <div className="relative z-10">
                         <h4 className="text-lg font-semibold text-primary mb-4 flex items-center gap-3">
-                            <AlertCircle className="w-5 h-5 text-primary-500" />
+                            <AlertCircle className="w-5 h-5 text-accent" />
                             Infrastructure Ready
                         </h4>
                         <div className="space-y-4">

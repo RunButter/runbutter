@@ -120,16 +120,16 @@ export default function BrandingPage() {
                     {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
                     <input type="file" accept="image/*" className="hidden" onChange={onLogoFile} disabled={!privy || uploading} />
                   </label>
-                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-[12px] text-tertiary hover:text-rose-600">Remove</button>}
+                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
                 </div>
                 <input value={form.logo_url} onChange={(e) => set({ logo_url: e.target.value })} placeholder="…or paste a logo image URL"
-                  className="mt-2 w-full h-9 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="mt-2 w-full h-9 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               <div>
                 <label className="block text-[12px] font-semibold text-secondary mb-1">Legal company name</label>
                 <input value={form.legal_name} onChange={(e) => set({ legal_name: e.target.value })} placeholder={wsName}
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               {/* Country-driven legal identity */}
@@ -137,7 +137,7 @@ export default function BrandingPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Legal identity — shown on invoices</span>
                   <select value={form.country} onChange={(e) => set({ country: e.target.value })}
-                    className="h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none">
+                    className="h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -145,7 +145,7 @@ export default function BrandingPage() {
                   <div key={f.key}>
                     <label className="block text-[12px] font-semibold text-secondary mb-1">{f.label}</label>
                     <input value={form[f.key]} onChange={(e) => set({ [f.key]: e.target.value } as any)} placeholder={f.placeholder}
-                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
                   </div>
                 ))}
               </div>
@@ -156,19 +156,19 @@ export default function BrandingPage() {
                 <div>
                   <label className="block text-[12px] font-semibold text-secondary mb-1">IBAN / account number</label>
                   <input value={form.iban} onChange={(e) => set({ iban: e.target.value })} placeholder="PL00 0000 0000 0000 0000 0000 0000"
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
                 </div>
                 <div>
                   <label className="block text-[12px] font-semibold text-secondary mb-1">Bank name</label>
                   <input value={form.bank_name} onChange={(e) => set({ bank_name: e.target.value })}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-[12px] font-semibold text-secondary mb-1">Address</label>
                 <textarea value={form.address} onChange={(e) => set({ address: e.target.value })} rows={2} placeholder="Street, city, country"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               <div>
@@ -177,18 +177,18 @@ export default function BrandingPage() {
                   <input type="color" value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
                     className="w-9 h-9 rounded-md ring-1 ring-subtle cursor-pointer bg-surface" />
                   <input value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
-                    className="w-28 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none tabular-nums" />
+                    className="w-28 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-[12px] font-semibold text-secondary mb-1">Invoice footer / payment terms</label>
                 <textarea value={form.invoice_footer} onChange={(e) => set({ invoice_footer: e.target.value })} rows={3} placeholder="Payment within 14 days · bank details · VAT no…"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
-              {!privy && <p className="text-[12px] text-amber-600">Sign in to upload a logo and save branding.</p>}
-              {error && <p className="text-[12px] text-rose-600">{error}</p>}
+              {!privy && <p className="text-[12px] text-warning">Sign in to upload a logo and save branding.</p>}
+              {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>
 
             {/* Live preview */}

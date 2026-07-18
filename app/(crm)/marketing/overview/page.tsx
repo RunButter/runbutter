@@ -10,7 +10,7 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
 const CHANNEL_TONE: Record<string, string> = {
   email: 'bg-sky-400', social: 'bg-fuchsia-400', ads: 'bg-amber-400',
-  event: 'bg-violet-400', content: 'bg-teal-400', other: 'bg-slate-300',
+  event: 'bg-violet-400', content: 'bg-teal-400', other: 'bg-strong',
 };
 
 export default function MarketingOverview() {
@@ -42,8 +42,8 @@ export default function MarketingOverview() {
   const cards = [
     { label: 'Active campaigns', value: String(stats.active), sub: `${rows.length} total`, icon: Megaphone, tone: 'text-fuchsia-600' },
     { label: 'Spend', value: money(stats.spend), sub: `of ${money(stats.budget)} budget`, icon: Wallet, tone: 'text-secondary' },
-    { label: 'Leads', value: stats.leads.toLocaleString(), sub: 'from all campaigns', icon: Users, tone: 'text-emerald-600' },
-    { label: 'Cost / lead', value: stats.leads ? money(stats.cpl) : '—', sub: 'spend ÷ leads', icon: Target, tone: 'text-amber-600' },
+    { label: 'Leads', value: stats.leads.toLocaleString(), sub: 'from all campaigns', icon: Users, tone: 'text-success' },
+    { label: 'Cost / lead', value: stats.leads ? money(stats.cpl) : '—', sub: 'spend ÷ leads', icon: Target, tone: 'text-warning' },
   ];
 
   const maxSpend = Math.max(1, ...stats.byChannel.map(([, v]) => v.spend));
@@ -52,7 +52,7 @@ export default function MarketingOverview() {
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Marketing</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
       </header>

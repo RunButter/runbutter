@@ -12,7 +12,7 @@ import { rpc } from '@/lib/rpc';
 const MOOD_EMOJI: Record<string, string> = { happy: '😀', balanced: '😐', overwhelmed: '😟' };
 
 const scoreColor = (v: number | null) =>
-    v == null ? 'text-tertiary' : v >= 66 ? 'text-emerald-600' : v >= 33 ? 'text-amber-500' : 'text-rose-500';
+    v == null ? 'text-tertiary' : v >= 66 ? 'text-success' : v >= 33 ? 'text-warning' : 'text-danger';
 
 export default function MyTeamPage() {
     const router = useRouter();
@@ -93,14 +93,14 @@ export default function MyTeamPage() {
                 <>
                     {/* Retention alerts */}
                     {alerts.length > 0 && (
-                        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                            <div className="flex items-center gap-2 text-amber-800 font-semibold text-sm mb-2">
+                        <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 p-4">
+                            <div className="flex items-center gap-2 text-warning font-semibold text-sm mb-2">
                                 <AlertTriangle className="w-4 h-4" /> Retention alerts ({alerts.length})
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {alerts.map((m) => (
                                     <button key={m.id} onClick={() => setSelected(m)}
-                                        className="text-xs font-semibold px-3 py-1 rounded-full bg-surface border border-amber-200 text-amber-700 hover:bg-amber-100">
+                                        className="text-xs font-semibold px-3 py-1 rounded-full bg-surface border border-warning/30 text-warning hover:bg-warning/10">
                                         {m.full_name} — overwhelmed 2 weeks
                                     </button>
                                 ))}
@@ -135,12 +135,12 @@ export default function MyTeamPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                             {team.map((m) => (
                                 <button key={m.id} onClick={() => setSelected(m)}
-                                    className="text-left bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5 hover:shadow-lg hover:border-primary-200 transition-all duration-200">
+                                    className="text-left bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200">
                                     <div className="flex items-start justify-between gap-3 mb-3">
                                         <div className="min-w-0">
                                             <div className="font-semibold text-primary truncate flex items-center gap-2">
                                                 {m.full_name}
-                                                {m.has_alert && <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />}
+                                                {m.has_alert && <AlertTriangle className="w-4 h-4 text-warning shrink-0" />}
                                             </div>
                                             <div className="text-xs text-secondary truncate">{m.position_title || '—'}</div>
                                         </div>

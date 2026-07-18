@@ -16,10 +16,10 @@ import { rpc } from '@/lib/rpc';
 // Psychometric dimensions the sliders filter on (discrete 0-100 score columns).
 const DIMS = [
     { key: 'overall_score', label: 'Overall Match', accent: 'bg-indigo-500' },
-    { key: 'screening_score', label: 'Screening Fit', accent: 'bg-emerald-500' },
+    { key: 'screening_score', label: 'Screening Fit', accent: 'bg-success' },
     { key: 'cognitive_score', label: 'Cognitive', accent: 'bg-sky-500' },
     { key: 'personality_score', label: 'Personality', accent: 'bg-violet-500' },
-    { key: 'work_style_score', label: 'Work Style', accent: 'bg-amber-500' },
+    { key: 'work_style_score', label: 'Work Style', accent: 'bg-warning' },
 ] as const;
 
 const SORTS = [
@@ -34,9 +34,9 @@ const titleize = (s: string) =>
 
 const scoreColor = (v: number | null) =>
     v == null ? 'text-tertiary'
-        : v >= 66 ? 'text-emerald-600'
-            : v >= 33 ? 'text-amber-500'
-                : 'text-rose-500';
+        : v >= 66 ? 'text-success'
+            : v >= 33 ? 'text-warning'
+                : 'text-danger';
 
 export default function TreasuryPage() {
     const router = useRouter();
@@ -174,12 +174,12 @@ export default function TreasuryPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
-                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
                 <div className="relative">
                     <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary pointer-events-none" />
                     <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}
-                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none appearance-none cursor-pointer">
+                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none appearance-none cursor-pointer">
                         {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                 </div>
@@ -254,9 +254,9 @@ export default function TreasuryPage() {
                             <div className="flex flex-wrap items-center gap-2 mb-4">
                                 {chips.map((chip, i) => (
                                     <button key={i} onClick={chip.clear}
-                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-accent/10 ring-1 ring-primary-200/60 text-accent text-[12px] font-semibold hover:bg-primary-100 transition-colors">
+                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-accent/10 ring-1 ring-accent/30 text-accent text-[12px] font-semibold hover:bg-accent/10 transition-colors">
                                         {chip.label}
-                                        <X className="w-3 h-3 text-primary-400 group-hover:text-accent" />
+                                        <X className="w-3 h-3 text-accent group-hover:text-accent" />
                                     </button>
                                 ))}
                             </div>

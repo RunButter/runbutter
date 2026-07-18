@@ -223,7 +223,7 @@ export default function SourcesPage() {
                                     <div key={l.id} className="flex items-center gap-3 p-3 rounded-xl border border-subtle hover:bg-surface-sunken transition">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-primary-100">{titleize(l.source || 'other')}</span>
+                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/30">{titleize(l.source || 'other')}</span>
                                                 <span className="text-sm font-semibold text-primary truncate">{l.label || l.position_title || 'Untitled'}</span>
                                             </div>
                                             <div className="text-[11px] text-tertiary truncate font-mono mt-0.5">{buildUrl(l)}</div>
@@ -237,8 +237,8 @@ export default function SourcesPage() {
                                             <div className="text-[9px] uppercase tracking-widest text-tertiary font-semibold">applied</div>
                                         </div>
                                         <button onClick={() => copy(l)}
-                                            className="shrink-0 p-2 rounded-lg border border-subtle text-secondary hover:text-accent hover:border-primary-200 transition">
-                                            {copied === l.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                                            className="shrink-0 p-2 rounded-lg border border-subtle text-secondary hover:text-accent hover:border-accent/30 transition">
+                                            {copied === l.id ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 ))}

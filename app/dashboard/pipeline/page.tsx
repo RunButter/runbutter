@@ -75,7 +75,7 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-surface p-3 rounded-lg ring-1 ring-subtle mb-2 transition-all hover:ring-strong hover:shadow-sm ${isOverlay ? 'shadow-2xl ring-primary-300 rotate-2' : ''}`}
+            className={`group bg-surface p-3 rounded-lg ring-1 ring-subtle mb-2 transition-all hover:ring-strong hover:shadow-sm ${isOverlay ? 'shadow-popover ring-accent/30 rotate-2' : ''}`}
         >
             <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0 flex-1">
@@ -118,7 +118,7 @@ function KanbanColumn({ id, title, candidates }: { id: string, title: string, ca
         <div className="w-72 flex-shrink-0 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-2 px-1">
                 <h3 className="text-[11px] font-semibold text-secondary uppercase tracking-wider">{title}</h3>
-                <span className="bg-slate-200/70 text-secondary text-[10px] font-semibold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
+                <span className="bg-strong text-secondary text-[10px] font-semibold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
             </div>
 
             <div ref={setNodeRef} className="flex-1 bg-surface-sunken ring-1 ring-subtle rounded-xl p-2 overflow-y-auto no-scrollbar transition-colors">

@@ -25,7 +25,7 @@ const LogoContainer: React.FC<LogoContainerProps> = ({
 
     return (
         <div
-            className={`flex items-center justify-center overflow-hidden ${showBorder ? 'border border-gray-100 p-2 bg-white rounded-xl' : ''} ${className}`}
+            className={`flex items-center justify-center overflow-hidden ${showBorder ? 'border border-subtle p-2 bg-surface rounded-xl' : ''} ${className}`}
             style={{ maxWidth: width, maxHeight: height }}
         >
             {/* eslint-disable-next-line @next/next/no-img-element */}

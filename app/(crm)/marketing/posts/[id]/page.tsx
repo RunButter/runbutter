@@ -104,15 +104,15 @@ export default function PostStudio() {
       <header className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
         <button onClick={() => router.push('/marketing/posts')} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-3.5 h-3.5" /> Posts</button>
         <h1 className="text-sm font-semibold text-primary">Post studio</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${post.live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{post.live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${post.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{post.live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-2">
           <select value={post.status} onChange={(e) => set({ status: e.target.value })}
-            className="h-7 px-2 text-[12px] font-semibold rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-primary-500 capitalize">
+            className="h-7 px-2 text-[12px] font-semibold rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 capitalize">
             {STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
           </select>
           <button onClick={copyReviewLink}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Review link'}
+            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Link2 className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Review link'}
           </button>
           <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
             className="h-7 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
@@ -140,7 +140,7 @@ export default function PostStudio() {
               <div className="flex gap-1">
                 {PLATFORMS.map((pl) => (
                   <button key={pl} onClick={() => set({ platform: pl })}
-                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-accent text-white' : 'bg-surface-hover text-secondary hover:bg-slate-200'}`}>
+                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-accent text-white' : 'bg-surface-hover text-secondary hover:bg-strong'}`}>
                     {pl === 'x' ? 'X' : pl}
                   </button>
                 ))}
@@ -149,12 +149,12 @@ export default function PostStudio() {
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Account / handle</label>
               <input value={post.handle || ''} onChange={(e) => set({ handle: e.target.value })} placeholder="@yourbrand"
-                className="w-full h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none" />
+                className="w-full h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
             </div>
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Content</label>
               <textarea value={post.content} onChange={(e) => set({ content: e.target.value })} rows={5} placeholder="Write your post…"
-                className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-primary-500 outline-none resize-none" />
+                className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none resize-none" />
             </div>
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Image</label>
@@ -164,7 +164,7 @@ export default function PostStudio() {
                   {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPostImage(f); }} disabled={!privy || uploading} />
                 </label>
-                {post.image_url && <button onClick={() => set({ image_url: null })} className="text-[12px] text-tertiary hover:text-rose-600">Remove</button>}
+                {post.image_url && <button onClick={() => set({ image_url: null })} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
               </div>
               {uploadError && <p className="mt-1.5 text-[12px] text-danger">{uploadError}</p>}
             </div>
@@ -186,8 +186,8 @@ export default function PostStudio() {
                       {pin >= 0 && <span className="w-4.5 h-4.5 min-w-[18px] h-[18px] rounded-full rounded-bl-none bg-accent text-white text-[10px] font-semibold flex items-center justify-center">{pin + 1}</span>}
                       <span className="text-[12px] font-semibold text-secondary truncate">{c.author}</span>
                       <button onClick={() => toggleResolved(c.id, !c.resolved)} title={c.resolved ? 'Reopen' : 'Resolve'}
-                        className="ml-auto p-0.5 rounded text-tertiary hover:text-emerald-600">
-                        {c.resolved ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Circle className="w-4 h-4" />}
+                        className="ml-auto p-0.5 rounded text-tertiary hover:text-success">
+                        {c.resolved ? <CheckCircle2 className="w-4 h-4 text-success" /> : <Circle className="w-4 h-4" />}
                       </button>
                     </div>
                     <p className={`mt-1 text-[12.5px] leading-snug ${c.resolved ? 'text-tertiary line-through' : 'text-secondary'}`}>{c.body}</p>

@@ -1,13 +1,31 @@
 'use client';
 
+import { useEffect } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import DialogProvider from '@/components/ui/Dialog';
+
+// Belt-and-braces theme sync. The inline no-flash script in layout.tsx handles
+// the first paint, but it doesn't always execute (statically prerendered routes
+// can end up with the <head> script never running), which left a saved dark
+// preference rendering light on some pages. This re-asserts the class on mount
+// for every route; it's a no-op when the script already did its job.
+function useThemeSync() {
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('hb-theme');
+      const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', dark);
+    } catch { /* storage blocked — leave whatever the script decided */ }
+  }, []);
+}
 
 // Public identifier (not a secret) — each deployment sets its own Privy app id.
 // dashboard.privy.io → your app → App ID. See .env.example.
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  useThemeSync();
+
   // DialogProvider wraps everything (incl. public pages) so useDialog() works
   // anywhere without falling back to browser confirm/alert.
   const tree = <DialogProvider>{children}</DialogProvider>;

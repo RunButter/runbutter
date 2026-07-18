@@ -22,9 +22,9 @@ function currentWeekStart(): string {
 }
 
 const MOODS: { key: 'happy' | 'balanced' | 'overwhelmed'; label: string; emoji: string; cls: string }[] = [
-    { key: 'happy', label: 'Happy', emoji: '😀', cls: 'bg-green-50 border-green-200 text-green-700' },
-    { key: 'balanced', label: 'Balanced', emoji: '😐', cls: 'bg-blue-50 border-blue-200 text-blue-700' },
-    { key: 'overwhelmed', label: 'Overwhelmed', emoji: '😟', cls: 'bg-amber-50 border-amber-200 text-amber-700' },
+    { key: 'happy', label: 'Happy', emoji: '😀', cls: 'bg-success/10 border-success/30 text-success' },
+    { key: 'balanced', label: 'Balanced', emoji: '😐', cls: 'bg-accent/10 border-accent/30 text-accent' },
+    { key: 'overwhelmed', label: 'Overwhelmed', emoji: '😟', cls: 'bg-warning/10 border-warning/30 text-warning' },
 ];
 
 export default function MemberOnboardingModal({ member, privyUserId, onClose, onChange }: Props) {
@@ -89,7 +89,7 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-surface rounded-2xl shadow-popover w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-subtle sticky top-0 bg-surface">
                     <div>
                         <h3 className="text-xl font-semibold text-primary">{member.full_name}</h3>

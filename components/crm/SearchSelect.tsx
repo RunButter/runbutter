@@ -67,21 +67,21 @@ export default function SearchSelect({
   return (
     <div ref={rootRef} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)}
-        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle hover:ring-strong focus:ring-2 focus:ring-primary-500 outline-none text-left ${buttonClassName}`}>
+        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle hover:ring-strong focus:ring-2 focus:ring-accent/30 outline-none text-left ${buttonClassName}`}>
         {selected?.image && <img src={selected.image} alt="" className="w-5 h-5 rounded object-cover shrink-0" />}
         <span className={`flex-1 truncate ${selected ? 'text-primary font-medium' : 'text-tertiary'}`}>
           {selected ? selected.name : placeholder}
         </span>
         {allowClear && selected ? (
           <span role="button" aria-label="Clear" onClick={(e) => { e.stopPropagation(); onChange(''); }}
-            className="p-0.5 rounded text-tertiary hover:text-rose-600"><X className="w-3.5 h-3.5" /></span>
+            className="p-0.5 rounded text-tertiary hover:text-danger"><X className="w-3.5 h-3.5" /></span>
         ) : (
           <ChevronDown className="w-3.5 h-3.5 text-tertiary shrink-0" />
         )}
       </button>
 
       {open && (
-        <div className="absolute z-[80] mt-1 w-full min-w-[220px] rounded-lg bg-surface ring-1 ring-subtle shadow-xl overflow-hidden">
+        <div className="absolute z-[80] mt-1 w-full min-w-[220px] rounded-lg bg-surface ring-1 ring-subtle shadow-popover overflow-hidden">
           <div className="flex items-center gap-1.5 px-2.5 h-9 border-b border-subtle">
             <Search className="w-3.5 h-3.5 text-tertiary shrink-0" />
             <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={onKey}

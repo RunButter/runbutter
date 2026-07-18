@@ -45,13 +45,13 @@ export default function DocsPage() {
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><FileText className="w-4 h-4 text-tertiary" /> Docs</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto">
-          <p className="text-[13px] text-secondary mb-4 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary-500" /> Write documents with AI — using your own provider key (Settings → AI keys).</p>
+          <p className="text-[13px] text-secondary mb-4 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-accent" /> Write documents with AI — using your own provider key (Settings → AI keys).</p>
           {loading ? (
             <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
           ) : rows.length === 0 ? (
@@ -66,7 +66,7 @@ export default function DocsPage() {
                 <div key={d.id} onClick={() => router.push(`/docs/${d.id}`)} className="group cursor-pointer rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">
                   <div className="flex items-start justify-between gap-2">
                     <div className="text-[14px] font-semibold text-primary truncate">{d.title || 'Untitled'}</div>
-                    <button onClick={(e) => remove(e, d)} disabled={!canEdit} className="p-1 rounded-md text-tertiary hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={(e) => remove(e, d)} disabled={!canEdit} className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                   <p className="text-[12px] text-secondary mt-1 line-clamp-2 whitespace-pre-wrap">{d.snippet || 'Empty document'}</p>
                   <div className="text-[11px] text-tertiary mt-2">Updated {fmt(d.updated_at)}</div>

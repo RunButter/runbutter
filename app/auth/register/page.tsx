@@ -179,7 +179,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="mb-6 flex items-center justify-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-accent text-white' : 'bg-green-500 text-white'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-accent text-white' : 'bg-success text-white'}`}>
             {step === 'auth' ? '1' : '✓'}
           </div>
           <div className={`w-16 h-1 ${step === 'company' ? 'bg-accent' : 'bg-strong'}`} />
@@ -222,7 +222,7 @@ export default function RegisterPage() {
 
           {step === 'company' && (
             <form onSubmit={handleCompanySubmit} className="space-y-5">
-              <div className="p-3 bg-green-50 rounded-lg text-center text-sm text-green-700">
+              <div className="p-3 bg-success/10 rounded-lg text-center text-sm text-success">
                 ✅ Signed in as <strong>{user?.email?.address ?? user?.google?.email ?? 'your account'}</strong>
               </div>
 
@@ -232,7 +232,7 @@ export default function RegisterPage() {
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
                     placeholder="Acme Corporation"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
                     placeholder="acme"
                     value={formData.subdomain}
                     onChange={(e) => handleSubdomainChange(e.target.value)}
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                   Portal: <span className="font-medium">{formData.subdomain || 'your-company'}.runbutter.app</span>
                 </p>
                 {formData.subdomain && subdomainAvailable !== null && (
-                  <p className={`mt-1 text-sm ${subdomainAvailable ? 'text-green-600' : 'text-danger'}`}>
+                  <p className={`mt-1 text-sm ${subdomainAvailable ? 'text-success' : 'text-danger'}`}>
                     {subdomainAvailable ? '✓ Available' : '✗ Already taken'}
                   </p>
                 )}

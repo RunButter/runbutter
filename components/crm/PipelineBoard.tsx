@@ -28,7 +28,7 @@ function CardBody({ rec, dragging = false }: { rec: PipelineRecord; dragging?: b
           {sub && <div className="text-[11px] text-tertiary truncate">{sub}</div>}
         </div>
       </div>
-      {rec.amount ? <div className="mt-2 text-[11px] font-semibold text-emerald-600 tabular-nums">${rec.amount.toLocaleString()}</div> : null}
+      {rec.amount ? <div className="mt-2 text-[11px] font-semibold text-success tabular-nums">${rec.amount.toLocaleString()}</div> : null}
     </div>
   );
 }
@@ -55,7 +55,7 @@ function Column({ stage, records }: { stage: PipelineStage; records: PipelineRec
         {sum > 0 && <span className="ml-auto text-[11px] font-semibold text-tertiary tabular-nums">${sum.toLocaleString()}</span>}
       </div>
       <div ref={setNodeRef}
-        className={`flex-1 overflow-y-auto rounded-xl p-2 ring-1 transition-colors duration-150 ${isOver ? 'bg-accent/10 ring-primary-200' : 'bg-surface-sunken/60 ring-subtle'}`}>
+        className={`flex-1 overflow-y-auto rounded-xl p-2 ring-1 transition-colors duration-150 ${isOver ? 'bg-accent/10 ring-accent/30' : 'bg-surface-sunken/60 ring-subtle'}`}>
         {records.map((r) => <Card key={r.id} rec={r} />)}
       </div>
     </div>
