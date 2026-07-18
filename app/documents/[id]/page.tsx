@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock, FileDown } from 'lucide-react';
 import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
+import { useDialog } from '@/components/ui/Dialog';
 
 const fmt = (n: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n || 0);
@@ -23,6 +24,7 @@ const STATUS_TONE: Record<string, string> = {
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 export default function DocumentPage() {
+  const { notify } = useDialog();
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
       <DocumentInner />
@@ -31,6 +33,7 @@ export default function DocumentPage() {
 }
 
 function DocumentInner() {
+  const { notify } = useDialog();
   const params = useParams();
   const router = useRouter();
   const search = useSearchParams();
@@ -63,7 +66,7 @@ function DocumentInner() {
     setConverting(true);
     const res = await convertOffer(privy, id);
     setConverting(false);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     if (res.id) router.push(`/documents/${res.id}`);
   };
 

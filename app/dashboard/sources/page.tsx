@@ -8,6 +8,7 @@ import {
     Radio, Plus, Copy, Check, Loader2, MousePointerClick, Users, TrendingUp, Link2,
 } from 'lucide-react';
 import { rpc } from '@/lib/rpc';
+import { useDialog } from '@/components/ui/Dialog';
 
 const CHANNELS = [
     { value: 'linkedin', label: 'LinkedIn' },
@@ -24,6 +25,7 @@ const titleize = (s: string) =>
     (s || 'direct').replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default function SourcesPage() {
+  const { notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -104,7 +106,7 @@ export default function SourcesPage() {
             setCampaign(''); setLabel('');
         } catch (e: any) {
             console.error('create link failed', e);
-            alert(e?.message || 'Failed to create tracking link');
+            notify(e?.message || 'Failed to create tracking link');
         } finally {
             setCreating(false);
         }

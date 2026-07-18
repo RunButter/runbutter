@@ -10,11 +10,13 @@ import {
   type PostDetail, type PostPlatform,
 } from '@/lib/crm/data';
 import PostCanvas from '@/components/marketing/PostCanvas';
+import { useDialog } from '@/components/ui/Dialog';
 
 const PLATFORMS: PostPlatform[] = ['instagram', 'facebook', 'x', 'linkedin'];
 const STATUSES = ['draft', 'in_review', 'approved', 'published'];
 
 export default function PostStudio() {
+  const { notify } = useDialog();
   const params = useParams();
   const router = useRouter();
   const id = String(params.id);
@@ -44,7 +46,7 @@ export default function PostStudio() {
       image_url: post.image_url, status: post.status,
     });
     setSaving(false);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     setSaved(true);
     if (!post.live && res.id) router.replace(`/marketing/posts/${res.id}`); else reload();
   };
@@ -60,7 +62,7 @@ export default function PostStudio() {
   const onAddComment = async (body: string, x: number, y: number) => {
     if (post?.live && privy) {
       const res = await addPostComment(privy, id, body, x, y);
-      if (res.error) { alert(res.error); return; }
+      if (res.error) { notify(res.error); return; }
       reload();
     } else {
       // sample mode: local-only so the flow is demonstrable

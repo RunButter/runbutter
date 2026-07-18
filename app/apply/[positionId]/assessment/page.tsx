@@ -9,12 +9,14 @@ import {
     Brain, Target, Clock, BarChart3, Check
 } from 'lucide-react';
 import LogoContainer from '@/components/LogoContainer';
+import { useDialog } from '@/components/ui/Dialog';
 
 // Candidate assessment, one question at a time (Typeform-style): a real
 // per-question progress bar, auto-advance on answer, and no way to finish
 // with unanswered questions (the old version silently scored skipped
 // questions as "neutral"). Scoring + submission logic is unchanged.
 export default function AssessmentPage({ params }: { params: { positionId: string } }) {
+  const { notify } = useDialog();
     const router = useRouter();
     const searchParams = useSearchParams();
     const candidateId = searchParams.get('candidateId');
@@ -224,7 +226,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             setCurrentStep(3);
         } catch (error: any) {
             console.error('Error submitting assessment:', error);
-            alert(`Failed to submit assessment: ${error.message || 'Please check your connection or contact support.'}`);
+            notify(`Failed to submit assessment: ${error.message || 'Please check your connection or contact support.'}`);
         } finally {
             setSubmitting(false);
         }

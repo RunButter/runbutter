@@ -23,6 +23,7 @@ import { Radar } from 'react-chartjs-2';
 import TeamFitModal from './TeamFitModal';
 import CandidateMessageModal from './CandidateMessageModal';
 import { rpc } from '@/lib/rpc';
+import { useDialog } from '@/components/ui/Dialog';
 
 ChartJS.register(
     RadialLinearScale,
@@ -34,6 +35,7 @@ ChartJS.register(
 );
 
 export default function CandidateDetailPage({ params }: { params: { id: string } }) {
+  const { notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -182,7 +184,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             loadCandidateData();
         } catch (error) {
             console.error('Error generating demo data:', error);
-            alert('Failed to generate demo data');
+            notify('Failed to generate demo data');
         } finally {
             setLoading(false);
         }
@@ -209,7 +211,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             loadCandidateData();
         } catch (error) {
             console.error('Error updating status:', error);
-            alert('Failed to update status');
+            notify('Failed to update status');
         }
     };
 
@@ -239,7 +241,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     };
 
     const handleSchedule = async () => {
-        if (!scheduleTime) return alert('Please select a date and time');
+        if (!scheduleTime) return notify('Please select a date and time');
 
         setIsScheduling(true);
         try {
@@ -257,19 +259,19 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
             if (!res.ok) {
                 if (data.error === 'Scheduling requires a Pro plan') {
-                    alert('Locked Feature: Please upgrade your account to Premium to schedule interviews automatically.');
+                    notify('Locked Feature: Please upgrade your account to Premium to schedule interviews automatically.');
                 } else {
                     throw new Error(data.error || 'Failed to schedule interview. Ensure Google Calendar is integrated.');
                 }
                 return;
             }
 
-            alert('Interview successfully scheduled via Google Calendar!');
+            notify('Interview successfully scheduled via Google Calendar!');
             setShowScheduleModal(false);
             loadCandidateData();
         } catch (error: any) {
             console.error('Scheduling error:', error);
-            alert(error.message);
+            notify(error.message);
         } finally {
             setIsScheduling(false);
         }
@@ -422,7 +424,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             className={`flex items-center justify-center gap-2 py-2 px-4 shadow-sm text-sm rounded border w-full sm:w-auto ${companyPlan === 'free' ? 'bg-surface-hover text-secondary border-subtle cursor-not-allowed' : 'btn-primary'}`}
                             onClick={() => {
                                 if (companyPlan === 'free') {
-                                    alert('Automatic Interview Scheduling is a Premium feature. Upgrade your plan to use it!');
+                                    notify('Automatic Interview Scheduling is a Premium feature. Upgrade your plan to use it!');
                                     return;
                                 }
                                 setShowScheduleModal(true);

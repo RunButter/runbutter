@@ -10,6 +10,7 @@ import {
 } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 import SearchSelect from '@/components/crm/SearchSelect';
+import { useDialog } from '@/components/ui/Dialog';
 
 const fmt = (n: number, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n || 0);
 
@@ -20,6 +21,7 @@ interface Prod { id: string; name: string; unit_price: number; image?: string | 
 const cellInput = 'w-full bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-1 text-[13px] outline-none focus:ring-1 focus:ring-accent/30 tabular-nums';
 
 export default function DocumentBuilder() {
+  const { notify } = useDialog();
   const params = useParams();
   const router = useRouter();
   const id = String(params.id);
@@ -97,7 +99,7 @@ export default function DocumentBuilder() {
     setConverting(true);
     const res = await convertOffer(privy, id);
     setConverting(false);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { notify(res.error); return; }
     if (res.id) router.push(`/documents/${res.id}/edit`);
   };
 
@@ -107,7 +109,7 @@ export default function DocumentBuilder() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ privyUserId: privy, invoiceId: id }),
     });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); alert(e.error || 'KSeF export failed'); return; }
+    if (!res.ok) { const e = await res.json().catch(() => ({})); notify(e.error || 'KSeF export failed'); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${header.number || 'faktura'}-fa3.xml`; a.click();

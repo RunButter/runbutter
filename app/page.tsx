@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, CheckCheck, ShieldCheck, Zap, Plug, Sparkles, Github, Database, Terminal } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, ShieldCheck, Zap, Plug, Sparkles, Github, Database, Terminal, Bot } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public
@@ -30,14 +30,14 @@ const MODULES = [
 // Cross-cutting capabilities, shown as a bento with rhythm (the first tile is
 // wide). Monochrome throughout — no hue.
 const CAPS = [
-  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records. Templates included.', wide: true },
-  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make.' },
+  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records.' },
   { icon: Sparkles, name: 'AI docs, your key', body: 'Draft with Claude, GPT or Gemini. No token markup.' },
+  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make.' },
   { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, from your documents.' },
   { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
   { icon: Table, name: 'Import & export', body: 'CSV or Google Sheets in, any list out, one click.' },
   { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
-  { icon: CheckCheck, name: 'Bulk actions', body: 'Select, categorize, export and delete across every list.' },
 ];
 
 const PLANS = [
@@ -50,7 +50,8 @@ const PLANS = [
 const FAQ = [
   { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together.' },
   { q: 'Is it open source?', a: 'Yes, MIT licensed. Clone the repo, run it against your own Supabase and Privy, and self-host for free. Or use the hosted version and skip the setup.' },
-  { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing assist uses your own API key, so there is no per-token markup from us.' },
+  { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
+  { q: 'Can AI agents actually do work for me?', a: 'Yes. Define an agent with a role and a scoped set of tools, then run it on a task. It reads and updates records through the same verified endpoints the app uses, on your own AI key. By default it proposes changes for you to approve; you can let trusted agents run on their own within a step limit.' },
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
@@ -99,11 +100,11 @@ export default function HomePage() {
             <span className="w-1.5 h-1.5 rounded-full bg-inverse" /> Open source · MIT licensed
           </div>
           <h1 className="text-4xl md:text-6xl font-medium tracking-tight leading-[1.05] text-primary">
-            The whole company,<br />in one clean workspace
+            Run your whole company,<br />smooth as butter
           </h1>
           <p className="mt-6 text-base md:text-lg text-secondary max-w-xl mx-auto leading-relaxed">
-            Sales, finance, marketing, projects, and people on one relational core.
-            Built on Postgres, no AI token bill, yours to self-host.
+            Sales, finance, marketing, projects and people on one core, plus AI
+            agents that do the work. Open source, no token bill.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command={`git clone ${REPO_URL}.git`} />
@@ -272,8 +273,8 @@ export default function HomePage() {
             <div className="relative overflow-hidden rounded-2xl bg-inverse px-8 py-20 text-center">
               <div className="absolute inset-0 opacity-40"><AsciiField colors={['160,160,168', '120,120,130']} baseAlpha={0.05} peakAlpha={0.4} /></div>
               <div className="relative pointer-events-none">
-                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-inverse-fg">Your company, organized.</h2>
-                <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for sales, finance, marketing, projects, and people. Set it up in minutes.</p>
+                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-inverse-fg">Everything, running smooth.</h2>
+                <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for every team, with AI agents doing the busywork. Set it up in minutes.</p>
                 <div className="pointer-events-auto mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse-fg text-inverse text-sm font-medium hover:opacity-90 transition-opacity">
                     Start free <ArrowRight className="w-4 h-4" />

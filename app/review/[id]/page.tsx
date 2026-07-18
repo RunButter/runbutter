@@ -6,6 +6,7 @@ import { Loader2, Lock, MessageCircle } from 'lucide-react';
 import { loadPublicPost, addPublicPostComment, type PostDetail } from '@/lib/crm/data';
 import { mockPostDetail } from '@/lib/crm/mock';
 import PostCanvas from '@/components/marketing/PostCanvas';
+import { useDialog } from '@/components/ui/Dialog';
 
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
@@ -15,6 +16,7 @@ const STATUS_CHIP: Record<string, string> = {
 };
 
 export default function ReviewPage() {
+  const { notify } = useDialog();
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
       <ReviewInner />
@@ -23,6 +25,7 @@ export default function ReviewPage() {
 }
 
 function ReviewInner() {
+  const { notify } = useDialog();
   const params = useParams();
   const search = useSearchParams();
   const id = String(params.id);
@@ -47,7 +50,7 @@ function ReviewInner() {
     try { localStorage.setItem('hb-reviewer-name', author); } catch {}
     if (post?.live) {
       const res = await addPublicPostComment(id, token, author, body, x, y);
-      if (res.error) { alert(res.error); return; }
+      if (res.error) { notify(res.error); return; }
       reload();
     } else {
       setPost((p) => p ? { ...p, comments: [...p.comments, { id: `local-${Date.now()}`, author, body, x, y, resolved: false }] } : p);

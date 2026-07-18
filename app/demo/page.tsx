@@ -39,6 +39,7 @@ import {
 import { Radar } from 'react-chartjs-2';
 import { MOCK_CANDIDATES, MOCK_STATS, MOCK_ACTIVITY } from '@/lib/mock-data';
 import Logo from '@/components/Logo';
+import { useDialog } from '@/components/ui/Dialog';
 
 // Register ChartJS
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -249,6 +250,7 @@ function CandidateDetailModal({ candidate, onClose }: { candidate: any, onClose:
 
 // --- Main Demo Page ---
 export default function DemoPage() {
+  const { notify } = useDialog();
     type DemoView = 'dashboard' | 'pipeline' | 'treasury' | 'positions' | 'interviews' | 'analytics';
     const [view, setView] = useState<DemoView>('dashboard');
     const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
@@ -559,7 +561,7 @@ export default function DemoPage() {
                                     <h3 className="text-2xl font-medium tracking-tight mb-1">Next Interview in 45m</h3>
                                     <p className="text-accent-fg font-medium uppercase tracking-widest text-[10px]">Sarah Jenkins • Enterprise Sales Role</p>
                                 </div>
-                                <button onClick={() => alert('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-surface text-accent rounded-2xl font-semibold tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
+                                <button onClick={() => notify('Demo Success: Google Meet link generated and calendar invite sent to Sarah Jenkins!')} className="relative z-10 px-8 py-3 bg-surface text-accent rounded-2xl font-semibold tracking-widest text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all mt-4 md:mt-0">Launch Meet</button>
                             </div>
                             <div className="bg-surface rounded-3xl border border-subtle shadow-sm p-2 overflow-hidden">
                                 {[

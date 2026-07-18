@@ -17,8 +17,10 @@ import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { Package } from 'lucide-react';
+import { useDialog } from '@/components/ui/Dialog';
 
 export default function ObjectPage() {
+  const { notify } = useDialog();
   const params = useParams();
   const router = useRouter();
   const slug = String(params.object);
@@ -104,7 +106,7 @@ export default function ObjectPage() {
     const results = await Promise.all(ids.map((id) => deleteRecord(privy, slug, id)));
     reload();
     const failed = results.filter((r) => r.error);
-    if (failed.length) alert(failed[0].error?.includes('FORBIDDEN') ? 'Deleting requires an owner/admin role.' : `${failed.length} could not be deleted.`);
+    if (failed.length) notify(failed[0].error?.includes('FORBIDDEN') ? 'Deleting requires an owner/admin role.' : `${failed.length} could not be deleted.`);
   };
 
   const exportSelected = (sel: any[]) => {

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, MessageCircle, Loader2 } from 'lucide-react';
 import { loadPosts, savePost, type PostListItem } from '@/lib/crm/data';
+import { useDialog } from '@/components/ui/Dialog';
 
 const PLATFORM_CHIP: Record<string, string> = {
   instagram: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/60',
@@ -20,6 +21,7 @@ const STATUS_CHIP: Record<string, string> = {
 };
 
 export default function PostsPage() {
+  const { notify } = useDialog();
   const router = useRouter();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
@@ -40,7 +42,7 @@ export default function PostsPage() {
     const res = await savePost(privy, null, { platform: 'instagram', status: 'draft', content: '' });
     setCreating(false);
     if (res.id) router.push(`/marketing/posts/${res.id}`);
-    else if (res.error) alert(res.error.includes('save_post') ? 'Run migration 0028 first.' : res.error);
+    else if (res.error) notify(res.error);
   };
 
   return (

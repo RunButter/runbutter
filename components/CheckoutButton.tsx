@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Loader2, CreditCard } from 'lucide-react';
+import { useDialog } from '@/components/ui/Dialog';
 
 interface CheckoutButtonProps {
     companyId: string;
@@ -18,11 +19,12 @@ export default function CheckoutButton({
     text,
     variant = 'primary'
 }: CheckoutButtonProps) {
+    const { notify } = useDialog();
     const [loading, setLoading] = useState(false);
 
     const handleCheckout = async () => {
         if (!priceId || priceId.includes('PLACEHOLDER')) {
-            alert('Stripe Price ID is missing or invalid. Please configure your Price IDs in the billing page or environment variables.');
+            notify('Stripe Price ID is missing or invalid. Please configure your Price IDs in the billing page or environment variables.');
             return;
         }
 
@@ -49,7 +51,7 @@ export default function CheckoutButton({
             }
         } catch (error: any) {
             console.error('Checkout error:', error);
-            alert(`Could not initiate checkout: ${error.message}`);
+            notify(`Could not initiate checkout: ${error.message}`);
         } finally {
             setLoading(false);
         }
