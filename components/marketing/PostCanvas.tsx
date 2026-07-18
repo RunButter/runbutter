@@ -158,7 +158,7 @@ export default function PostCanvas({ post, comments, canComment, onAddComment }:
       {/* existing pins */}
       {pinned.map((c, i) => (
         <div key={c.id} data-pin title={`${c.author}: ${c.body}`}
-          className="absolute z-10 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-primary-600 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white shadow-md cursor-default"
+          className="absolute z-10 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-accent text-accent-fg text-[11px] font-bold flex items-center justify-center ring-2 ring-surface shadow-md cursor-default"
           style={{ left: `${c.x}%`, top: `${c.y}%` }}>
           {i + 1}
         </div>
@@ -167,18 +167,18 @@ export default function PostCanvas({ post, comments, canComment, onAddComment }:
       {/* pending pin + input */}
       {pending && (
         <>
-          <div data-pin className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-amber-500 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white shadow-md"
+          <div data-pin className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-warning text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-surface shadow-md"
             style={{ left: `${pending.x}%`, top: `${pending.y}%` }}>+</div>
-          <div data-popover className="absolute z-30 w-64 bg-white rounded-lg ring-1 ring-slate-200 shadow-xl p-2.5"
+          <div data-popover className="absolute z-30 w-64 bg-surface rounded-lg border border-subtle shadow-popover p-2.5"
             style={{ left: `min(max(${pending.x}%, 10%), 65%)`, top: `calc(${pending.y}% + 18px)` }}
             onClick={(e) => e.stopPropagation()}>
             <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} rows={2} placeholder="Leave a comment…"
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }}
-              className="w-full px-2 py-1.5 text-[12.5px] rounded-md bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-primary-500 outline-none resize-none" />
+              className="w-full px-2 py-1.5 text-[12.5px] rounded-md bg-surface text-primary placeholder:text-tertiary border border-subtle focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none resize-none" />
             <div className="flex items-center justify-end gap-1.5 mt-1.5">
-              <button onClick={() => setPending(null)} className="p-1 rounded text-slate-400 hover:bg-slate-100" aria-label="Cancel"><XIcon className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setPending(null)} className="p-1 rounded text-tertiary hover:bg-surface-hover" aria-label="Cancel"><XIcon className="w-3.5 h-3.5" /></button>
               <button onClick={submit} disabled={saving || !draft.trim()}
-                className="h-7 px-2.5 rounded-md text-[12px] font-bold text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40">Comment</button>
+                className="h-7 px-2.5 rounded-md text-[12px] font-medium text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40">Comment</button>
             </div>
           </div>
         </>

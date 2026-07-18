@@ -63,7 +63,10 @@ export default function PostStudio() {
     if (post?.live && privy) {
       const res = await addPostComment(privy, id, body, x, y);
       if (res.error) { notify(res.error); return; }
-      reload();
+      // Refresh only the comments from the server; keep the user's in-progress
+      // edits (uploaded image, caption, status) which a full reload would wipe.
+      const fresh = await loadPost(privy, id);
+      setPost((p) => (p && fresh ? { ...p, comments: fresh.comments } : (fresh ?? p)));
     } else {
       // sample mode: local-only so the flow is demonstrable
       setPost((p) => p ? { ...p, comments: [...p.comments, { id: `local-${Date.now()}`, author: 'You', body, x, y, resolved: false }] } : p);
@@ -73,7 +76,8 @@ export default function PostStudio() {
   const toggleResolved = async (commentId: string, resolved: boolean) => {
     if (post?.live && privy) {
       await setPostCommentResolved(privy, commentId, resolved);
-      reload();
+      const fresh = await loadPost(privy, id);
+      setPost((p) => (p && fresh ? { ...p, comments: fresh.comments } : (fresh ?? p)));
     } else {
       setPost((p) => p ? { ...p, comments: p.comments.map((c) => (c.id === commentId ? { ...c, resolved } : c)) } : p);
     }
