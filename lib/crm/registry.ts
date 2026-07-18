@@ -266,6 +266,7 @@ export const NAV = [
     { slug: 'board', label: 'Board', icon: 'Columns3', href: '/projects/board' },
   ]},
   { group: 'Automate', items: [
+    { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
   ]},

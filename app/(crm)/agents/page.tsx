@@ -1,0 +1,326 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight } from 'lucide-react';
+import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
+import {
+  listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun,
+  READ_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, type Agent, type AgentRun,
+} from '@/lib/crm/agents';
+import PageHeader from '@/components/dashboard/PageHeader';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
+
+const BLANK: Partial<Agent> = {
+  name: '', role: '', instructions: '', model: '',
+  allowed_tools: [...READ_TOOLS], allowed_objects: [], autonomy: 'suggest', max_steps: 12,
+};
+
+export default function AgentsPage() {
+  const { ready, authenticated, user } = usePrivy();
+  const privy = authenticated && user ? user.id : null;
+  const [ws, setWs] = useState<WorkspaceContext | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<Agent> | null>(null);
+  const [running, setRunning] = useState<Agent | null>(null);
+
+  const reload = useCallback(async (w: WorkspaceContext, p: string) => {
+    const [a, r] = await Promise.all([listAgents(p, w.id), listRuns(p, w.id)]);
+    setAgents(a); setRuns(r); setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!privy) { setLoading(false); return; }
+    getWorkspace(privy).then((w) => { if (w) { setWs(w); reload(w, privy); } else setLoading(false); });
+  }, [ready, privy, reload]);
+
+  const refresh = () => { if (ws && privy) reload(ws, privy); };
+
+  if (!ready || loading) {
+    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+  }
+
+  return (
+    <>
+      <PageHeader title="Agents" count={agents.length}>
+        <Button size="sm" variant="primary" onClick={() => setEditing({ ...BLANK })} disabled={!privy}>
+          <Plus className="w-3.5 h-3.5" /> New agent
+        </Button>
+      </PageHeader>
+
+      <div className="flex-1 overflow-auto p-5 lg:p-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <p className="text-sm text-secondary max-w-2xl">
+            Agents run on your own AI key and act through your workspace tools. Give one a role and
+            instructions, scope which tools and objects it may touch, and choose whether it proposes
+            changes for your approval or acts on its own.
+          </p>
+
+          {!privy && (
+            <div className="rounded-lg border border-subtle bg-surface-sunken p-4 text-sm text-secondary">
+              Sign in to create and run agents.
+            </div>
+          )}
+
+          {/* Agents list */}
+          <section className="grid sm:grid-cols-2 gap-3">
+            {agents.map((a) => (
+              <div key={a.id} className="rounded-lg border border-subtle bg-surface p-4 flex flex-col">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-md bg-surface-hover flex items-center justify-center shrink-0">
+                    <Bot className="w-4 h-4 text-accent" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-primary truncate">{a.name}</h3>
+                      {!a.enabled && <Badge tone="neutral">off</Badge>}
+                    </div>
+                    <p className="text-xs text-tertiary truncate">{a.role || 'No role set'}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-secondary mt-2.5 line-clamp-2 min-h-[2rem]">{a.instructions || 'No instructions yet.'}</p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                  <Badge tone={a.autonomy === 'auto' ? 'warning' : 'accent'}>
+                    {a.autonomy === 'auto' ? <><Zap className="w-3 h-3 mr-0.5 inline" />autonomous</> : <><ShieldCheck className="w-3 h-3 mr-0.5 inline" />approve writes</>}
+                  </Badge>
+                  <Badge tone="neutral">{a.allowed_tools.filter((t) => WRITE_TOOLS.includes(t)).length ? 'read + write' : 'read only'}</Badge>
+                  {a.model && <span className="text-2xs font-mono text-tertiary">{a.model}</span>}
+                </div>
+                <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-subtle">
+                  <Button size="sm" variant="primary" onClick={() => setRunning(a)} disabled={!a.enabled}><Play className="w-3.5 h-3.5" /> Run</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditing(a)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <label className="ml-auto flex items-center gap-1.5 text-2xs text-tertiary cursor-pointer select-none">
+                    <input type="checkbox" checked={a.enabled} onChange={(e) => ws && privy && setAgentEnabled(privy, ws.id, a.id, e.target.checked).then(refresh)} className="rounded border-strong accent-accent" />
+                    enabled
+                  </label>
+                  <Button size="sm" variant="ghost" onClick={() => { if (ws && privy && confirm(`Delete agent "${a.name}"?`)) deleteAgent(privy, ws.id, a.id).then(refresh); }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
+                </div>
+              </div>
+            ))}
+            {agents.length === 0 && privy && (
+              <div className="sm:col-span-2 rounded-lg border border-dashed border-subtle p-10 text-center">
+                <Bot className="w-6 h-6 text-tertiary mx-auto mb-2" />
+                <p className="text-sm text-secondary">No agents yet. Create one to get started.</p>
+              </div>
+            )}
+          </section>
+
+          {/* Run history */}
+          {runs.length > 0 && (
+            <section>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Recent runs</h2>
+              <div className="rounded-lg border border-subtle divide-y divide-subtle overflow-hidden">
+                {runs.slice(0, 12).map((r) => <RunRow key={r.id} run={r} ws={ws} privy={privy} onChange={refresh} />)}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+
+      {editing && ws && privy && (
+        <AgentEditor initial={editing} onClose={() => setEditing(null)}
+          onSave={async (a) => { await saveAgent(privy, ws.id, a); setEditing(null); refresh(); }} />
+      )}
+      {running && ws && privy && (
+        <RunModal agent={running} ws={ws.id} privy={privy} onClose={() => { setRunning(null); refresh(); }} />
+      )}
+    </>
+  );
+}
+
+// ── Run history row (expandable) ──────────────────────────────────────────────
+function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceContext | null; privy: string | null; onChange: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const tone = run.status === 'done' ? 'success' : run.status === 'error' ? 'danger' : run.status === 'awaiting_approval' ? 'warning' : 'neutral';
+  const approve = async () => {
+    if (!ws || !privy) return;
+    setBusy(true);
+    try { await approveRun(privy, ws.id, run.id); onChange(); } catch (e: any) { alert(e.message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="bg-surface">
+      <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center gap-2.5 px-3 h-11 text-left hover:bg-surface-hover transition-colors">
+        <ChevronRight className={`w-3.5 h-3.5 text-tertiary transition-transform ${open ? 'rotate-90' : ''}`} />
+        <span className="text-sm text-primary truncate flex-1">{run.agent_name}: <span className="text-secondary">{run.task}</span></span>
+        <Badge tone={tone as any}>{run.status.replace('_', ' ')}</Badge>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pt-1 space-y-2 text-xs">
+          {run.result && <p className="text-secondary whitespace-pre-wrap">{run.result}</p>}
+          {run.proposed?.length > 0 && (
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-2.5">
+              <div className="font-medium text-primary mb-1.5">{run.proposed.length} proposed change(s)</div>
+              {run.proposed.map((p: any, i: number) => (
+                <div key={i} className="font-mono text-2xs text-secondary">{p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 80)}</div>
+              ))}
+              {run.status === 'awaiting_approval' && (
+                <Button size="sm" variant="primary" className="mt-2" onClick={approve} disabled={busy}>
+                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Approve &amp; apply
+                </Button>
+              )}
+            </div>
+          )}
+          {run.steps?.filter((s: any) => s.type === 'tool').map((s: any, i: number) => (
+            <div key={i} className="font-mono text-2xs text-tertiary truncate">→ {s.name}({s.args?.object || ''})</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Editor modal ──────────────────────────────────────────────────────────────
+function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
+  const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...READ_TOOLS], allowed_objects: initial.allowed_objects || [] });
+  const [saving, setSaving] = useState(false);
+  const set = (k: keyof Agent, v: any) => setA((p) => ({ ...p, [k]: v }));
+  const toggleTool = (t: string) => set('allowed_tools', a.allowed_tools?.includes(t) ? a.allowed_tools.filter((x) => x !== t) : [...(a.allowed_tools || []), t]);
+  const toggleObj = (o: string) => set('allowed_objects', a.allowed_objects?.includes(o) ? a.allowed_objects.filter((x) => x !== o) : [...(a.allowed_objects || []), o]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle sticky top-0 bg-surface">
+          <h3 className="text-sm font-medium text-primary">{initial.id ? 'Edit agent' : 'New agent'}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4 space-y-4">
+          <Field label="Name"><input value={a.name || ''} onChange={(e) => set('name', e.target.value)} className="input-field" placeholder="Collections assistant" /></Field>
+          <Field label="Role"><input value={a.role || ''} onChange={(e) => set('role', e.target.value)} className="input-field" placeholder="collections specialist" /></Field>
+          <Field label="Instructions" hint="What the agent should do, and how.">
+            <textarea value={a.instructions || ''} onChange={(e) => set('instructions', e.target.value)} rows={4} className="input-field !h-auto py-2 resize-y" placeholder="Find overdue invoices and draft a friendly reminder task for each." />
+          </Field>
+          <Field label="Model" hint="Optional. Leave blank to use your default AI key's model.">
+            <input value={a.model || ''} onChange={(e) => set('model', e.target.value)} className="input-field font-mono" placeholder="claude-sonnet-5" />
+          </Field>
+
+          <Field label="Autonomy">
+            <div className="grid grid-cols-2 gap-2">
+              {(['suggest', 'auto'] as const).map((mode) => (
+                <button key={mode} onClick={() => set('autonomy', mode)}
+                  className={`text-left rounded-md border p-2.5 transition-colors ${a.autonomy === mode ? 'border-accent bg-accent/5' : 'border-subtle hover:border-strong'}`}>
+                  <div className="text-xs font-medium text-primary flex items-center gap-1">
+                    {mode === 'suggest' ? <ShieldCheck className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+                    {mode === 'suggest' ? 'Approve writes' : 'Autonomous'}
+                  </div>
+                  <div className="text-2xs text-tertiary mt-0.5">{mode === 'suggest' ? 'Proposes changes; you approve.' : 'Writes on its own, within limits.'}</div>
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Tools">
+            <div className="flex flex-wrap gap-1.5">
+              {[...READ_TOOLS, ...WRITE_TOOLS].map((t) => (
+                <button key={t} onClick={() => toggleTool(t)}
+                  className={`text-2xs font-mono px-2 py-1 rounded border transition-colors ${a.allowed_tools?.includes(t) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>
+                  {t}{WRITE_TOOLS.includes(t) ? ' ✎' : ''}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Objects" hint="Leave all off to allow every object.">
+            <div className="flex flex-wrap gap-1.5">
+              {AGENT_OBJECTS.map((o) => (
+                <button key={o} onClick={() => toggleObj(o)}
+                  className={`text-2xs px-2 py-1 rounded border transition-colors ${a.allowed_objects?.includes(o) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>{o}</button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Max steps" hint="Upper bound on tool calls per run (1-40).">
+            <input type="number" min={1} max={40} value={a.max_steps || 12} onChange={(e) => set('max_steps', Math.max(1, Math.min(40, Number(e.target.value) || 12)))} className="input-field w-24" />
+          </Field>
+        </div>
+        <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle sticky bottom-0 bg-surface">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" disabled={saving || !a.name?.trim()} onClick={async () => { setSaving(true); await onSave(a); setSaving(false); }}>
+            {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save agent
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Run modal ─────────────────────────────────────────────────────────────────
+function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; privy: string; onClose: () => void }) {
+  const [task, setTask] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [out, setOut] = useState<any | null>(null);
+  const [err, setErr] = useState('');
+
+  const run = async () => {
+    if (!task.trim()) return;
+    setBusy(true); setErr(''); setOut(null);
+    try { setOut(await runAgentTask(privy, ws, agent.id, task)); }
+    catch (e: any) { setErr(e.message || 'Run failed'); }
+    finally { setBusy(false); }
+  };
+  const approve = async () => {
+    setBusy(true);
+    try { await approveRun(privy, ws, out.runId); setOut({ ...out, status: 'done', result: (out.result || '') + '\n\nApplied.' }); }
+    catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle">
+          <Bot className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-medium text-primary flex-1 truncate">Run {agent.name}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          <textarea autoFocus value={task} onChange={(e) => setTask(e.target.value)} rows={3} className="input-field !h-auto py-2 resize-y" placeholder="Describe the task, e.g. 'List overdue invoices and draft a reminder task for each.'" />
+          <Button variant="primary" onClick={run} disabled={busy || !task.trim()} className="w-full">
+            {busy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Working…</> : <><Play className="w-3.5 h-3.5" /> Run</>}
+          </Button>
+
+          {err && <div className="rounded-md border border-danger/30 bg-danger/5 p-2.5 text-xs text-danger">{err}</div>}
+
+          {out && (
+            <div className="rounded-md border border-subtle bg-surface-sunken p-3 space-y-2 text-xs">
+              <p className="text-secondary whitespace-pre-wrap">{out.result}</p>
+              {out.proposed?.length > 0 && (
+                <div className="rounded border border-warning/30 bg-warning/5 p-2">
+                  <div className="font-medium text-primary mb-1">{out.proposed.length} proposed change(s)</div>
+                  {out.proposed.map((p: any, i: number) => (
+                    <div key={i} className="font-mono text-2xs text-secondary truncate">{p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 70)}</div>
+                  ))}
+                  {out.status === 'awaiting_approval' && (
+                    <Button size="sm" variant="primary" className="mt-2" onClick={approve} disabled={busy}>
+                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Approve &amp; apply
+                    </Button>
+                  )}
+                </div>
+              )}
+              <details className="text-tertiary">
+                <summary className="cursor-pointer select-none">Steps ({out.steps?.length || 0})</summary>
+                {(out.steps || []).map((s: any, i: number) => (
+                  <div key={i} className="font-mono text-2xs mt-1 truncate">{s.type === 'tool' ? `→ ${s.name}(${s.args?.object || ''})` : s.type === 'thought' ? `· ${s.text?.slice(0, 90)}` : JSON.stringify(s).slice(0, 90)}</div>
+                ))}
+              </details>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <div className="text-xs font-medium text-secondary mb-1">{label}</div>
+      {children}
+      {hint && <div className="text-2xs text-tertiary mt-1">{hint}</div>}
+    </label>
+  );
+}

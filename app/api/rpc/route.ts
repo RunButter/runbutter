@@ -53,6 +53,8 @@ const ALLOWED = new Set([
   // HR crown-jewel table access (0041) — recruiter side, verified proxy only
   'hr_overview_data', 'hr_analytics_data', 'hr_candidate_activity',
   'hr_update_candidate_status', 'hr_seed_demo_result', 'hr_google_connected',
+  // Agents (0043)
+  'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
 ]);
 
 function db() {

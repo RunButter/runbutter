@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
   Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
   GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight, Landmark,
-  Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut,
+  Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut, Bot,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 import { getWorkspace, loadBranding, loadNavActivity, type WorkspaceContext } from '@/lib/crm/data';
@@ -17,7 +17,7 @@ const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
   Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
   GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight, Landmark,
-  Zap, Plug,
+  Zap, Plug, Bot,
 };
 
 // Nav slugs the "new since you last looked" badge tracks (must match RPC keys).
