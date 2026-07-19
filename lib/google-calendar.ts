@@ -93,7 +93,25 @@ async function getCalendarClient(userId: string) {
 
   if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
     oauth2Client.setCredentials({ refresh_token: tokenData.refresh_token });
-    const { credentials } = await oauth2Client.refreshAccessToken();
+    let credentials;
+    try {
+      ({ credentials } = await oauth2Client.refreshAccessToken());
+    } catch (err: any) {
+      // Google refused the refresh token. The common causes are permanent: the
+      // user revoked access, or the grant aged out (unverified apps in Testing
+      // have their refresh tokens expire after 7 days). Drop our dead copy so
+      // hr_google_connected reports false and the UI offers Connect again —
+      // otherwise the card keeps claiming "Connected" while every interview is
+      // silently scheduled without a Meet link.
+      const reason = err?.response?.data?.error || err?.message || '';
+      if (/invalid_grant|invalid_request|unauthorized/i.test(reason)) {
+        await supabase.from('integration_tokens').delete().eq('id', tokenData.id);
+        console.warn(`google-calendar: refresh rejected (${reason}); cleared the stale connection`);
+      } else {
+        console.error('google-calendar: refresh failed (transient, keeping token):', reason);
+      }
+      return null;
+    }
     await supabase
       .from('integration_tokens')
       .update({
