@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { Resend } from 'resend';
 
@@ -49,14 +50,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'User is already a part of this organization.' }, { status: 400 });
         }
 
-        // 4. Insert pending user
+        // 4. Insert the pending member with a single-use invite token. The token
+        //    is what proves the invite on the way back in — the previous flow
+        //    matched only on email address, which anyone could guess.
+        const inviteToken = randomUUID();
         const { error: insertError } = await supabaseAdmin
             .from('company_users')
             .insert({
                 company_id: companyId,
-                email: email,
+                email: email.toLowerCase().trim(),  // stored normalised; lookups were case-sensitive before
                 full_name: fullName,
-                role: role
+                role: role,
+                invite_token: inviteToken,
+                invited_at: new Date().toISOString(),
+                invited_by: privyUserId,
             });
 
         if (insertError) {
@@ -64,19 +71,30 @@ export async function POST(req: Request) {
         }
 
         // 5. Send Invite Email via Resend
+        const origin = req.headers.get('x-forwarded-host')
+            ? `${req.headers.get('x-forwarded-proto') || 'https'}://${req.headers.get('x-forwarded-host')}`
+            : (process.env.NEXT_PUBLIC_APP_URL || 'https://runbutter.app');
+        const acceptUrl = `${origin}/auth/accept?token=${inviteToken}`;
+
         if (process.env.RESEND_API_KEY) {
             await resend.emails.send({
                 from: 'RunButter <no-reply@runbutter.app>',
                 to: email,
                 subject: `You've been invited to join ${company?.name} on RunButter`,
                 html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px;">
-                        <h2>Welcome to RunButter!</h2>
-                        <p>You have been invited to collaborate with your team at <b>${company?.name}</b>.</p>
-                        <p>Your assigned role is: <b>${role.toUpperCase()}</b></p>
-                        <br/>
-                        <a href="https://runbutter.app/auth/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Accept Invitation & Setup Account</a>
-                        <p style="margin-top: 20px; color: #666; font-size: 12px;">Ensure you sign up using this exact email address (${email}) so your portal automatically links.</p>
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; padding: 20px;">
+                        <h2 style="color:#111;">You've been invited to ${company?.name}</h2>
+                        <p style="line-height:1.6;">You have been invited to collaborate with your team at <b>${company?.name}</b> on RunButter.</p>
+                        <p style="line-height:1.6;">Your role: <b>${String(role).toUpperCase()}</b></p>
+                        <div style="text-align:center; margin:28px 0;">
+                          <a href="${acceptUrl}" style="background-color:#4F46E5; color:#fff; padding:12px 28px; text-decoration:none; border-radius:8px; font-weight:600; display:inline-block;">Accept invitation</a>
+                        </div>
+                        <p style="font-size:12px; color:#6B7280; line-height:1.6;">
+                          This link is unique to you and can only be used once. You can sign in with any
+                          method — the invitation is tied to the link, not to how you sign in.
+                          If the button doesn't work, paste this into your browser:<br/>
+                          <span style="word-break:break-all;">${acceptUrl}</span>
+                        </p>
                     </div>
                 `
             });

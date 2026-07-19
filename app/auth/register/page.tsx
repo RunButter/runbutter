@@ -49,24 +49,13 @@ export default function RegisterPage() {
         if (data) {
           router.push('/dashboard');
         } else {
-          // Securely check if user has a pending team invite waiting to be claimed
-          const email = user.email?.address ?? user.google?.email ?? '';
-          if (email) {
-              try {
-                  const res = await fetch('/api/team/claim', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ email, privyUserId: user.id })
-                  });
-                  const claimData = await res.json();
-                  if (claimData.claimed) {
-                      router.push('/dashboard?welcome=true');
-                      return;
-                  }
-              } catch (claimErr) {
-                  console.error('Failed to claim invite:', claimErr);
-              }
-          }
+          // No auto-claim by email here. It used to POST { email, privyUserId }
+          // to /api/team/claim, which trusted both — anyone could bind their
+          // account to a pending invite just by knowing the address. Invites are
+          // now redeemed at /auth/accept?token=…, using the single-use token
+          // from the invitation email, with identity taken from the verified
+          // Privy session. Someone who signs up here without their link simply
+          // creates their own workspace, which is the correct outcome.
           setStep('company');
         }
       } catch (err: any) {
