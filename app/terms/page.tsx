@@ -71,6 +71,22 @@ export default function TermsPage() {
                             </p>
                         </section>
 
+                        <section className="mb-8">
+                            <h2 className="text-xl font-medium text-primary mb-4">6. Third-Party Integrations</h2>
+                            <p className="text-secondary leading-relaxed mb-4">
+                                RunButter can connect to third-party services you choose to authorise — including Google
+                                Calendar for interview scheduling. These connections are optional and you may disconnect
+                                them at any time.
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2 text-secondary">
+                                <li>Your use of a connected service remains governed by that provider&rsquo;s own terms and privacy policy.</li>
+                                <li>You confirm you are authorised to connect the account you link.</li>
+                                <li>We are not responsible for outages, changes, or data loss caused by a third-party provider. If a provider is unavailable, interviews still save in RunButter — only the external calendar event or email may be delayed or missed.</li>
+                                <li>How we handle data received from these providers, including Google user data, is described in our{' '}
+                                    <a href="/privacy" className="text-accent underline">Privacy Policy</a>.</li>
+                            </ul>
+                        </section>
+
                         <section className="mt-12 pt-8 border-t text-center">
                             <p className="text-secondary">
                                 Questions? Email us at:{' '}
