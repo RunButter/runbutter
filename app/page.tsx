@@ -47,7 +47,10 @@ const PLANS = [
   { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Professional', 'Unlimited seats & records', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
-const FAQ = [
+// `open` renders that entry expanded on load. The Google Calendar answer uses it
+// because OAuth verification requires the homepage to visibly explain why we ask
+// for user data — a reviewer should not have to click an accordion to find it.
+const FAQ: { q: string; a: string; open?: boolean }[] = [
   { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together.' },
   { q: 'Is it open source?', a: 'Yes, MIT licensed. Clone the repo, run it against your own Supabase and Privy, and self-host for free. Or use the hosted version and skip the setup.' },
   { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
@@ -55,7 +58,7 @@ const FAQ = [
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
-  { q: 'How does the Google Calendar integration work?', a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details — then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
+  { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details — then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
 ];
 
 const MCP_SNIPPET = `{
@@ -255,7 +258,7 @@ export default function HomePage() {
             <h2 className="text-2xl md:text-4xl font-medium tracking-tight text-center">Questions, answered</h2>
             <div className="mt-10 border-t border-subtle">
               {FAQ.map((f) => (
-                <details key={f.q} className="group border-b border-subtle [&_summary]:cursor-pointer">
+                <details key={f.q} open={f.open} className="group border-b border-subtle [&_summary]:cursor-pointer">
                   <summary className="flex items-center justify-between gap-4 list-none py-4 text-sm font-medium text-primary hover:text-secondary transition-colors">
                     {f.q}
                     <span className="text-tertiary text-lg leading-none transition-transform group-open:rotate-45">+</span>
