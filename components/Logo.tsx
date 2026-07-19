@@ -28,7 +28,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = fa
             />
             {!iconOnly && (
                 <span className={`text-lg font-semibold tracking-tight ${dark ? 'text-white' : 'text-primary'}`}>
-                    runbutter<span className="text-tertiary">.app</span>
+                    Run<span className="text-tertiary">Butter</span>
                 </span>
             )}
         </div>
