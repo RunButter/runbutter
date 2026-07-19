@@ -18,10 +18,16 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
-  // Link previews. public/og.png is the designed 1200x630 card — NOT the logo:
-  // logo.png is a 4000x4000 square, which scrapers crop to an unreadable centre
-  // and some reject outright. metadataBase above makes these absolute, which
-  // Slack/LinkedIn require.
+  // Link previews point at a static public/og.png (1200x630). Generating the
+  // card via app/opengraph-image.tsx was tried and reverted: Next 14's bundled
+  // @vercel/og cannot load its default font on Windows (it builds an invalid
+  // `.\file:\C:\...ttf` URL), so the route 500s locally and could not be
+  // verified before deploy — not a risk worth taking on the one asset every
+  // shared link renders.
+  //
+  // og.png replaced logo.png, a 4000x4000 square that scrapers cropped to an
+  // unreadable centre. metadataBase above makes these absolute, which Slack
+  // and LinkedIn require.
   openGraph: {
     type: 'website',
     url: SITE_URL,
