@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, getAccessToken } from '@privy-io/react-auth';
 import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send, Calendar, CheckCircle } from 'lucide-react';
 import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
@@ -33,6 +33,30 @@ export default function IntegrationsPage() {
   const [origin, setOrigin] = useState('https://runbutter.app');
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleMsg, setGoogleMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Revoke the grant at Google and drop our stored tokens.
+  const disconnectGoogle = async () => {
+    if (!await confirmDialog({
+      title: 'Disconnect Google Calendar?',
+      body: 'RunButter will stop creating Meet links and calendar invites for new interviews. Existing events stay in your calendar. You can reconnect at any time.',
+      danger: true, confirmLabel: 'Disconnect',
+    })) return;
+    setGoogleBusy(true);
+    try {
+      const token = await getAccessToken().catch(() => null);
+      const res = await fetch('/api/auth/google/disconnect', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
+      });
+      const j = await res.json().catch(() => null);
+      if (!res.ok) { setGoogleMsg({ ok: false, text: j?.error || 'Could not disconnect. Try again.' }); return; }
+      setGoogleConnected(false);
+      setGoogleMsg({ ok: true, text: 'Google Calendar disconnected. RunButter no longer has access to your calendar.' });
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
 
@@ -116,7 +140,13 @@ export default function IntegrationsPage() {
                 <p className="text-[12px] text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
               </div>
               {googleConnected ? (
-                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success shrink-0"><CheckCircle className="w-4 h-4" /> Connected</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success"><CheckCircle className="w-4 h-4" /> Connected</span>
+                  <button onClick={disconnectGoogle} disabled={googleBusy}
+                    className="h-8 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40">
+                    {googleBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />} Disconnect
+                  </button>
+                </div>
               ) : (
                 <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
                   <Calendar className="w-3.5 h-3.5" /> Connect
