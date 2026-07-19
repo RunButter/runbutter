@@ -18,19 +18,25 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
+  // Link previews. public/og.png is the designed 1200x630 card — NOT the logo:
+  // logo.png is a 4000x4000 square, which scrapers crop to an unreadable centre
+  // and some reject outright. metadataBase above makes these absolute, which
+  // Slack/LinkedIn require.
   openGraph: {
     type: 'website',
     url: SITE_URL,
     siteName: 'RunButter',
     title: 'RunButter | The open company OS',
     description: 'Run your whole company in one clean workspace. Open source, no AI token bill.',
-    images: ['/logo.png'],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'RunButter — your whole company, one clean workspace' }],
   },
   twitter: {
-    card: 'summary',
+    // summary_large_image = the wide banner card. Plain 'summary' renders a
+    // small square thumbnail no matter how good the image is.
+    card: 'summary_large_image',
     title: 'RunButter | The open company OS',
     description: 'Run your whole company in one clean workspace. Open source, no AI token bill.',
-    images: ['/logo.png'],
+    images: [{ url: '/og.png', alt: 'RunButter — your whole company, one clean workspace' }],
   },
 };
 
