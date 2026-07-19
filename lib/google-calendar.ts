@@ -23,10 +23,11 @@ export interface CalendarEvent {
 
 export async function getAuthUrl(userId: string, companyId: string, redirectUri?: string) {
   const oauth2Client = getOAuth2Client(redirectUri);
-  const scopes = [
-    'https://www.googleapis.com/auth/calendar.events',
-    'https://www.googleapis.com/auth/calendar.readonly',
-  ];
+  // calendar.events only — it covers insert/patch/delete AND events.list, which is
+  // everything we do (always on calendarId 'primary'; we never enumerate calendars).
+  // Asking for calendar.readonly on top added a second sensitive scope to Google's
+  // verification review and a scarier consent prompt, for no capability we use.
+  const scopes = ['https://www.googleapis.com/auth/calendar.events'];
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -61,7 +62,7 @@ export async function handleOAuthCallback(code: string, state: string, redirectU
     access_token: tokens.access_token!,
     refresh_token: tokens.refresh_token,
     expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
-    scope: ['calendar.events', 'calendar.readonly'],
+    scope: ['calendar.events'],
   });
 
   return tokens;
