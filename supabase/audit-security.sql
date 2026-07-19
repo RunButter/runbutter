@@ -1,75 +1,83 @@
 -- ============================================================================
--- audit-security.sql  —  READ ONLY. Paste into the Supabase SQL editor.
+-- audit-security.sql  —  READ ONLY. Paste the whole thing and hit Run.
 --
--- Answers the question an ERD cannot: *who can reach this data?* The anon key
--- ships in the browser bundle, so any table `anon` can SELECT is effectively
--- public, and any table with RLS off has no second line of defence.
+-- ONE query on purpose: the Supabase SQL editor only returns the LAST result
+-- set of a multi-statement script, so a split audit silently loses its most
+-- important half. Everything below comes back as a single table.
 --
--- Part A — table exposure     (look for rows flagged EXPOSED / REVIEW)
--- Part B — function exposure  (SECURITY DEFINER functions anon may execute)
--- Part C — tables with RLS on but zero policies (locked, usually intentional)
+-- Answers what an ERD cannot: *who can reach this data?* The anon key ships in
+-- the browser bundle, so any table anon can SELECT is effectively public, and a
+-- table with RLS off has no second line of defence.
+--
+-- Read the `verdict` column. Anything starting with "!!" is exposed data.
 -- ============================================================================
 
--- ── Part A: which tables can the browser's keys reach? ──────────────────────
-select
-  c.relname                                                        as table_name,
-  case when c.relrowsecurity then 'on' else 'OFF' end              as rls,
-  (select count(*) from pg_policies p
-    where p.schemaname = 'public' and p.tablename = c.relname)     as policies,
-  case when has_table_privilege('anon', c.oid, 'select') then 'yes' else '-' end          as anon_read,
-  case when has_table_privilege('anon', c.oid, 'insert')
+with tables_audit as (
+  select
+    'A. table' as section,
+    c.relname::text as name,
+    (case when c.relrowsecurity then 'RLS on' else 'RLS OFF' end
+      || ', ' || (select count(*) from pg_policies p
+                   where p.schemaname = 'public' and p.tablename = c.relname)::text
+      || ' policies')::text as detail,
+    (case when has_table_privilege('anon', c.oid, 'select') then 'read' else '' end
+      || case when has_table_privilege('anon', c.oid, 'insert')
+                or has_table_privilege('anon', c.oid, 'update')
+                or has_table_privilege('anon', c.oid, 'delete') then ' write' else '' end)::text as anon_can,
+    (case when has_table_privilege('authenticated', c.oid, 'select') then 'read' else '' end)::text as auth_can,
+    (case
+      when (has_table_privilege('anon', c.oid, 'insert')
          or has_table_privilege('anon', c.oid, 'update')
-         or has_table_privilege('anon', c.oid, 'delete') then 'yes' else '-' end          as anon_write,
-  case when has_table_privilege('authenticated', c.oid, 'select') then 'yes' else '-' end as auth_read,
-  case
-    when has_table_privilege('anon', c.oid, 'select') and not c.relrowsecurity
-      then '!! EXPOSED - anon can read, no RLS'
-    when (has_table_privilege('anon', c.oid, 'insert')
-       or has_table_privilege('anon', c.oid, 'update')
-       or has_table_privilege('anon', c.oid, 'delete')) and not c.relrowsecurity
-      then '!! EXPOSED - anon can write, no RLS'
-    when has_table_privilege('anon', c.oid, 'select') and c.relrowsecurity
-         and (select count(*) from pg_policies p
-               where p.schemaname = 'public' and p.tablename = c.relname) = 0
-      then 'ok - granted but RLS denies all'
-    when has_table_privilege('anon', c.oid, 'select')
-      then 'REVIEW - anon reads via policy'
-    else 'ok - not reachable by anon'
-  end                                                              as verdict
-from pg_class c
-join pg_namespace n on n.oid = c.relnamespace
-where n.nspname = 'public' and c.relkind = 'r'
-order by
-  (has_table_privilege('anon', c.oid, 'select')
-   or has_table_privilege('anon', c.oid, 'insert'))::int desc,
-  c.relrowsecurity::int,
-  c.relname;
-
--- ── Part B: which functions can anon execute? ───────────────────────────────
--- SECURITY DEFINER functions run as their owner and bypass RLS, so an
--- anon-executable one is a direct data path. The public apply/assessment flow
--- legitimately needs a few (apply_to_position, set_candidate_cv, submit_*).
--- Anything else showing up here deserves a second look.
-select
-  p.proname                                              as function_name,
-  pg_get_function_identity_arguments(p.oid)              as arguments,
-  case when p.prosecdef then 'DEFINER' else 'invoker' end as runs_as,
-  case when has_function_privilege('anon', p.oid, 'execute') then 'yes' else '-' end           as anon,
-  case when has_function_privilege('authenticated', p.oid, 'execute') then 'yes' else '-' end  as authenticated
-from pg_proc p
-join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public'
-  and (has_function_privilege('anon', p.oid, 'execute')
-    or has_function_privilege('authenticated', p.oid, 'execute'))
-order by p.prosecdef desc, p.proname;
-
--- ── Part C: RLS on, no policies (= deny all except definer/service_role) ────
--- This is the intended end state for the locked ATS tables (migration 0042):
--- nothing reaches them except SECURITY DEFINER RPCs and the service role.
-select c.relname as table_name, 'RLS on, 0 policies - deny all' as note
-from pg_class c
-join pg_namespace n on n.oid = c.relnamespace
-where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity
-  and (select count(*) from pg_policies p
-        where p.schemaname = 'public' and p.tablename = c.relname) = 0
-order by c.relname;
+         or has_table_privilege('anon', c.oid, 'delete')) and not c.relrowsecurity
+        then '!! EXPOSED - anon can WRITE, no RLS'
+      when has_table_privilege('anon', c.oid, 'select') and not c.relrowsecurity
+        then '!! EXPOSED - anon can READ, no RLS'
+      when has_table_privilege('anon', c.oid, 'select')
+           and (select count(*) from pg_policies p
+                 where p.schemaname = 'public' and p.tablename = c.relname) = 0
+        then 'ok - granted but RLS denies all'
+      when has_table_privilege('anon', c.oid, 'select')
+        then 'REVIEW - anon reads via policy'
+      when not c.relrowsecurity
+        then 'ok - no anon grant (RLS off, definer/service_role only)'
+      else 'ok - locked'
+    end)::text as verdict,
+    (case
+      when (has_table_privilege('anon', c.oid, 'select')
+         or has_table_privilege('anon', c.oid, 'insert')) and not c.relrowsecurity then 0
+      when has_table_privilege('anon', c.oid, 'select') then 1
+      else 2 end) as sort
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r'
+),
+funcs_audit as (
+  -- Only the ones that are actually reachable without the service role.
+  -- SECURITY DEFINER runs as the owner and bypasses RLS, so a DEFINER function
+  -- anon can execute is a direct data path. A few are legitimate: the public
+  -- apply / assessment flow (apply_to_position, set_candidate_cv, submit_*).
+  select
+    'B. function' as section,
+    p.proname::text as name,
+    (case when p.prosecdef then 'SECURITY DEFINER' else 'invoker' end
+      || ' (' || left(pg_get_function_identity_arguments(p.oid), 60) || ')')::text as detail,
+    (case when has_function_privilege('anon', p.oid, 'execute') then 'execute' else '' end)::text as anon_can,
+    (case when has_function_privilege('authenticated', p.oid, 'execute') then 'execute' else '' end)::text as auth_can,
+    (case
+      when p.prosecdef and has_function_privilege('anon', p.oid, 'execute')
+        then '!! REVIEW - definer, callable by anon'
+      when p.prosecdef
+        then 'REVIEW - definer, callable by authenticated'
+      else 'ok - invoker rights'
+    end)::text as verdict,
+    (case when has_function_privilege('anon', p.oid, 'execute') then 0 else 1 end) as sort
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and p.prosecdef                      -- definer only; invoker funcs can't escalate
+    and (has_function_privilege('anon', p.oid, 'execute')
+      or has_function_privilege('authenticated', p.oid, 'execute'))
+)
+select section, name, detail, anon_can, auth_can, verdict
+from (select * from tables_audit union all select * from funcs_audit) x
+order by section, sort, name;
