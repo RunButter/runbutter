@@ -38,6 +38,14 @@ alter table interviews add column if not exists notes text;
 alter table interviews add column if not exists status text default 'scheduled';
 alter table interviews add column if not exists updated_at timestamptz default now();
 
+-- Re-apply the 0042 lockdown. Normally a no-op, but if the `create table if not
+-- exists` above actually created the table (fresh project, or a DB that predates
+-- the base schema), it would otherwise pick up Supabase's default privileges for
+-- anon/authenticated and sit there readable. The hr_* RPCs below are SECURITY
+-- DEFINER and run as the owner, so RLS does not impede them.
+revoke all on table public.interviews from anon, authenticated;
+alter table public.interviews enable row level security;
+
 -- ── Candidate contact card (for building the Meet event + the email) ──────────
 create or replace function hr_candidate_contact(p_privy text, p_candidate_id uuid)
 returns jsonb language plpgsql security definer set search_path = public as $$
