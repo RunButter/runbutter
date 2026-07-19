@@ -55,6 +55,7 @@ const FAQ = [
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
+  { q: 'How does the Google Calendar integration work?', a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details — then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
 ];
 
 const MCP_SNIPPET = `{
@@ -103,8 +104,9 @@ export default function HomePage() {
             Run your whole company,<br />smooth as butter
           </h1>
           <p className="mt-6 text-base md:text-lg text-secondary max-w-xl mx-auto leading-relaxed">
-            Sales, finance, marketing, projects and people on one core, plus AI
-            agents that do the work. Open source, no token bill.
+            <strong className="font-medium text-primary">RunButter</strong> is an open-source
+            company OS: run your sales pipeline, invoicing, marketing, projects and hiring in
+            one workspace — with AI agents that do the busywork. No token bill.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command={`git clone ${REPO_URL}.git`} />
