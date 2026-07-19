@@ -54,6 +54,26 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
   return error ? { error: error.message } : {};
 }
 
+// Invites someone to the caller's workspace. Sends only name/email/role — the
+// inviter and their company are resolved server-side from the verified Privy
+// token, so the caller cannot invite into a workspace they don't belong to.
+export async function inviteMember(fullName: string, email: string, role: string): Promise<{ error?: string }> {
+  try {
+    const { getAccessToken } = await import('@privy-io/react-auth');
+    const token = await getAccessToken().catch(() => null);
+    const res = await fetch('/api/team/invite', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
+      body: JSON.stringify({ fullName: fullName.trim(), email: email.toLowerCase().trim(), role }),
+    });
+    const j = await res.json().catch(() => null);
+    if (!res.ok) return { error: j?.error || `Could not send the invitation (HTTP ${res.status}).` };
+    return {};
+  } catch (e: any) {
+    return { error: e?.message || 'Network error' };
+  }
+}
+
 // Removes a joined member, or revokes a pending invite — the id tells them
 // apart server-side. Drops both the workspace row and the legacy ATS row, so
 // the person does not keep HR access.

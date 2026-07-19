@@ -8,7 +8,7 @@ import { Users, UserPlus, Shield, Loader2, Mail, CheckCircle, AlertCircle, Trash
 import Paywall from '@/components/Paywall';
 import Link from 'next/link';
 import { useDialog } from '@/components/ui/Dialog';
-import { removeMember } from '@/lib/crm/data';
+import { removeMember, inviteMember } from '@/lib/crm/data';
 
 export default function TeamPage() {
   const { confirm: confirmDialog, notify } = useDialog();
@@ -72,20 +72,10 @@ export default function TeamPage() {
         setIsInviting(true);
 
         try {
-            const res = await fetch('/api/team/invite', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: inviteEmail.toLowerCase().trim(),
-                    fullName: inviteName.trim(),
-                    role: inviteRole,
-                    companyId: company?.id,
-                    privyUserId: user?.id
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to send invite');
+            // Inviter + company come from the verified Privy session server-side;
+            // passing them from here was spoofable.
+            const { error: inviteErr } = await inviteMember(inviteName, inviteEmail, inviteRole);
+            if (inviteErr) throw new Error(inviteErr);
 
             setMessage({ text: `Successfully invited ${inviteEmail}!`, type: 'success' });
             setShowInviteModal(false);

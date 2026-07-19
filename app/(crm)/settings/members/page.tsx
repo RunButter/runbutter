@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Loader2, ShieldCheck, Trash2, Clock } from 'lucide-react';
-import { getWorkspace, getMembers, setMemberRole, removeMember, type WorkspaceContext } from '@/lib/crm/data';
+import { Loader2, ShieldCheck, Trash2, Clock, UserPlus, X } from 'lucide-react';
+import { getWorkspace, getMembers, setMemberRole, removeMember, inviteMember, type WorkspaceContext } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 
 const ROLES = ['owner', 'admin', 'member'];
@@ -22,6 +22,8 @@ export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [sent, setSent] = useState('');
 
   const canManage = ws?.role === 'owner' || ws?.role === 'admin';
 
@@ -61,9 +63,15 @@ export default function MembersPage() {
   return (
     <>
       <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Members</h1>
+        <h1 className="text-sm font-semibold text-primary">Members &amp; roles</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{members.length}</span>
         {ws && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
+        {canManage && (
+          <button onClick={() => { setInviting(true); setError(''); setSent(''); }}
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm">
+            <UserPlus className="w-3.5 h-3.5" /> Invite
+          </button>
+        )}
       </header>
 
       <div className="flex-1 overflow-auto p-4">
@@ -111,10 +119,89 @@ export default function MembersPage() {
               ))}
               {members.length === 0 && <div className="px-4 py-10 text-center text-tertiary text-sm">No members yet.</div>}
             </div>
-            <p className="mt-3 text-[12px] text-tertiary">Invite teammates from the HR → <a href="/dashboard/team" className="text-accent hover:underline">Team</a> page; they appear here automatically.</p>
+            <p className="mt-3 text-[12px] text-tertiary">
+              Invited people get a single-use link. They appear above as <span className="text-secondary font-medium">Invited</span> until they accept, and you can cancel the invitation any time.
+            </p>
           </div>
         )}
       </div>
+
+      {inviting && ws && (
+        <InviteModal
+          onClose={() => setInviting(false)}
+          canGrantOwner={ws.role === 'owner'}
+          onSent={async (email) => {
+            setInviting(false);
+            setSent(`Invitation sent to ${email}.`);
+            if (privy) setMembers(await getMembers(privy, ws.id));
+          }}
+        />
+      )}
+      {sent && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-success/10 ring-1 ring-success/30 px-3 py-2 text-[12px] text-success shadow-popover">
+          {sent}
+        </div>
+      )}
     </>
+  );
+}
+
+function InviteModal({
+  onClose, onSent, canGrantOwner,
+}: { onClose: () => void; onSent: (email: string) => void; canGrantOwner: boolean }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('member');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const submit = async () => {
+    if (!name.trim() || !email.trim()) return;
+    setBusy(true);
+    setErr('');
+    const res = await inviteMember(name, email, role);
+    setBusy(false);
+    if (res.error) { setErr(res.error); return; }
+    onSent(email.trim());
+  };
+
+  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="w-full max-w-md bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
+          <h3 className="text-sm font-semibold text-primary">Invite a teammate</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">{err}</div>}
+          <label className="block">
+            <span className="block text-[12px] font-semibold text-secondary mb-1">Full name *</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className={input} />
+          </label>
+          <label className="block">
+            <span className="block text-[12px] font-semibold text-secondary mb-1">Email *</span>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="ada@company.com" className={input} />
+          </label>
+          <label className="block">
+            <span className="block text-[12px] font-semibold text-secondary mb-1">Role</span>
+            <select value={role} onChange={(e) => setRole(e.target.value)} className={input + ' capitalize'}>
+              {ROLES.filter((r) => r !== 'owner' || canGrantOwner).map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </label>
+          <p className="text-[11px] text-tertiary leading-relaxed">
+            They get an email with a single-use link. Signing in through it joins them to this workspace at the role above.
+          </p>
+        </div>
+        <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
+          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={submit} disabled={busy || !name.trim() || !email.trim()}
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+            {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Send invitation
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

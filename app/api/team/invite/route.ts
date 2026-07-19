@@ -1,31 +1,57 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { verifyPrivyToken } from '@/lib/auth/privy-verify';
+import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { Resend } from 'resend';
 
+export const runtime = 'nodejs';
+
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
+const ROLES = new Set(['owner', 'admin', 'member', 'viewer']);
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const { email, fullName, role, companyId, privyUserId } = await req.json();
+        const rl = rateLimit(`invite:${clientIp(req)}`, 30);
+        if (!rl.ok) return tooMany(rl.retryAfterS);
 
-        if (!email || !fullName || !role || !companyId || !privyUserId) {
-            return NextResponse.json({ error: 'Missing required configuration fields.' }, { status: 400 });
+        // Identity from the signed Privy token. This used to read privyUserId
+        // and companyId out of the request body and then "verify" the caller
+        // against those same values — so anyone who knew an admin's Privy DID
+        // could invite themselves into that workspace as owner.
+        const v = await verifyPrivyToken(req);
+        if (v.status !== 'verified') {
+            return NextResponse.json({ error: 'Your session is invalid or expired. Sign in again.' }, { status: 401 });
+        }
+        const privyUserId = v.userId;
+
+        const { email, fullName, role } = await req.json();
+
+        if (!email || !fullName || !role) {
+            return NextResponse.json({ error: 'Name, email and role are required.' }, { status: 400 });
+        }
+        if (!ROLES.has(String(role))) {
+            return NextResponse.json({ error: 'That role is not recognised.' }, { status: 400 });
         }
 
         const supabaseAdmin = createAdminClient();
 
-        // 1. Verify caller is an admin or owner
+        // 1. Caller's company + role, resolved server-side from the proven identity
         const { data: caller } = await supabaseAdmin
             .from('company_users')
-            .select('role')
+            .select('role, company_id')
             .eq('privy_user_id', privyUserId)
-            .eq('company_id', companyId)
-            .single();
+            .limit(1)
+            .maybeSingle();
 
         if (!caller || (caller.role !== 'owner' && caller.role !== 'admin')) {
-            return NextResponse.json({ error: 'Unauthorized. You must be an Admin to invite members.' }, { status: 403 });
+            return NextResponse.json({ error: 'Only owners and admins can invite people.' }, { status: 403 });
         }
+        // Only an owner may mint another owner.
+        if (role === 'owner' && caller.role !== 'owner') {
+            return NextResponse.json({ error: 'Only an owner can invite another owner.' }, { status: 403 });
+        }
+        const companyId = caller.company_id;
 
         // 2. Enforce Pro limits
         const { data: company } = await supabaseAdmin
@@ -33,7 +59,7 @@ export async function POST(req: Request) {
             .select('plan, name')
             .eq('id', companyId)
             .single();
-            
+
         if (company?.plan === 'free') {
             return NextResponse.json({ error: 'Multi-user teams require a Premium plan.' }, { status: 403 });
         }
