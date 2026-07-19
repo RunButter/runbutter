@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { getAuthUrl } from '@/lib/google-calendar';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { createAdminClient } from '@/lib/supabase';
@@ -45,9 +46,22 @@ export async function GET(request: Request) {
         const companyId = cu?.company_id || searchParams.get('companyId') || '';
         if (!companyId) return back('nocompany');
 
+        // Single-use CSRF nonce: it goes to Google as `state` and into an
+        // httpOnly cookie. The callback only proceeds if the two match, which
+        // stops a forged callback from binding someone else's Google account.
+        const nonce = randomBytes(16).toString('hex');
         const redirectUri = `${baseUrl}/api/auth/google/callback`;
-        const authUrl = await getAuthUrl(userId, companyId, redirectUri);
-        return NextResponse.redirect(authUrl);
+        const authUrl = await getAuthUrl(nonce, redirectUri);
+
+        const res = NextResponse.redirect(authUrl);
+        res.cookies.set('g_oauth_state', nonce, {
+            httpOnly: true,
+            secure: protocol === 'https',
+            sameSite: 'lax', // sent on Google's top-level redirect back to us
+            path: '/api/auth/google',
+            maxAge: 600,
+        });
+        return res;
     } catch (error: any) {
         console.error('Google Auth Route Error:', error);
         return back('error');

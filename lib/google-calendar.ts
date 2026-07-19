@@ -21,7 +21,13 @@ export interface CalendarEvent {
   conferenceData?: boolean; // create Google Meet link
 }
 
-export async function getAuthUrl(userId: string, companyId: string, redirectUri?: string) {
+// `state` must be an unguessable, single-use nonce that the caller also stores
+// (we put it in an httpOnly cookie) and re-checks on the callback. It carries no
+// identity: the user is re-derived from their Privy session in the callback.
+// Encoding userId/companyId here instead — as this used to — let an attacker
+// replay their own consent code with a victim's id in state, binding the
+// attacker's Google account to the victim's workspace.
+export async function getAuthUrl(state: string, redirectUri?: string) {
   const oauth2Client = getOAuth2Client(redirectUri);
   // calendar.events only — it covers insert/patch/delete AND events.list, which is
   // everything we do (always on calendarId 'primary'; we never enumerate calendars).
@@ -32,14 +38,15 @@ export async function getAuthUrl(userId: string, companyId: string, redirectUri?
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
-    state: JSON.stringify({ userId, companyId }),
+    state,
     prompt: 'consent' // Force refresh token
   });
 }
 
-export async function handleOAuthCallback(code: string, state: string, redirectUri?: string) {
+// userId/companyId come from the caller, which derives them from the verified
+// Privy session on the callback request — never from anything Google echoed back.
+export async function handleOAuthCallback(code: string, userId: string, companyId: string, redirectUri?: string) {
   const oauth2Client = getOAuth2Client(redirectUri);
-  const { userId, companyId } = JSON.parse(state) as { userId: string; companyId: string };
 
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
