@@ -86,17 +86,51 @@ You can keep the existing project or start clean.
   **migrations `0039`→`0042` are run** (still outstanding — the security lockdown),
   then `verify-migrations.sql` shows ✅ through row 42.
 - **Fresh project (recommended for a clean public launch):** create it, run
-  `supabase-schema.sql` → the root `add-*.sql` → `supabase/migrations/0001…0042` in
+  `supabase-schema.sql` → the root `add-*.sql` → `supabase/migrations/0001…0045` in
   order, enable `pg_cron` + `unaccent`, then put the new URL/anon/service keys in Render.
 - **Storage → allowed origins / redirect**: add `https://runbutter.app`.
 
 ---
 
 ## 6. Google OAuth (Calendar interviews)
-Google Cloud Console → **APIs & Services → Credentials → your OAuth client**:
-- **Authorized redirect URIs**: add `https://runbutter.app/api/auth/google/callback`
-- **Authorized JS origins**: add `https://runbutter.app`
-- Update `GOOGLE_REDIRECT_URI` in Render to match.
+
+> `Error 400: redirect_uri_mismatch` means the callback URL the app sent is not
+> registered on the OAuth client. The app derives it from the host you loaded it
+> from — `https://<host>/api/auth/google/callback` — so **every host you use must
+> be registered**, including the raw `*.onrender.com` URL and localhost.
+> The Google error page's "see error details" shows the exact rejected URI.
+
+**a. Enable the API** — APIs & Services → **Library** → "Google Calendar API" → **Enable**.
+
+**b. Credentials** → your **OAuth 2.0 Web client** (must be the one whose id is
+`GOOGLE_CLIENT_ID` in Render — check the project picker is the right project):
+
+*Authorized redirect URIs* (exact, no trailing slash):
+```
+https://runbutter.app/api/auth/google/callback
+https://www.runbutter.app/api/auth/google/callback
+https://<your-service>.onrender.com/api/auth/google/callback
+http://localhost:3000/api/auth/google/callback
+```
+*Authorized JavaScript origins*: `https://runbutter.app`, `https://www.runbutter.app`,
+`http://localhost:3000`
+
+**c. OAuth consent screen** — add `runbutter.app` to **Authorized domains**; point
+app name / homepage / privacy / terms at the new domain. Scopes used:
+`calendar.events` + `calendar.readonly` (both **sensitive**).
+
+**d. Publishing status — the 7-day trap.** While the app is in **Testing**, add your
+Google account under **Test users** or consent fails. But testing-mode refresh
+tokens are **revoked after 7 days**, so the calendar connection silently breaks
+weekly and every recruiter has to reconnect. For a real launch either publish to
+**Production** (sensitive scopes → Google verification) or use **Internal** user
+type if you have a Google Workspace org.
+
+**e. Render**: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` must match this client.
+`GOOGLE_REDIRECT_URI` is only a fallback (the app computes the URI per request) —
+set it to `https://runbutter.app/api/auth/google/callback` for consistency.
+
+Changes usually apply within minutes; Google warns they can take a few hours.
 
 ---
 
