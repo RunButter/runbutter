@@ -54,6 +54,16 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
   return error ? { error: error.message } : {};
 }
 
+// Removes a joined member, or revokes a pending invite — the id tells them
+// apart server-side. Drops both the workspace row and the legacy ATS row, so
+// the person does not keep HR access.
+export async function removeMember(privyUserId: string, workspaceId: string, id: string): Promise<{ error?: string; kind?: string }> {
+  const { data, error } = await rpc('remove_member', { p_privy: privyUserId, p_workspace: workspaceId, p_id: id });
+  if (error) return { error: error.message };
+  if (!data?.ok) return { error: 'That person could not be found in this workspace.' };
+  return { kind: data.kind };
+}
+
 // Offers are invoices with kind='offer'; map the 'offers' object onto the
 // invoices table so the whole generic CRUD stack works without bespoke SQL.
 const rpcObject = (o: string) => (o === 'offers' ? 'invoices' : o);

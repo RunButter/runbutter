@@ -8,6 +8,7 @@ import { Users, UserPlus, Shield, Loader2, Mail, CheckCircle, AlertCircle, Trash
 import Paywall from '@/components/Paywall';
 import Link from 'next/link';
 import { useDialog } from '@/components/ui/Dialog';
+import { removeMember } from '@/lib/crm/data';
 
 export default function TeamPage() {
   const { confirm: confirmDialog, notify } = useDialog();
@@ -98,21 +99,22 @@ export default function TeamPage() {
         }
     };
 
+    // Goes through remove_member (0049) rather than deleting company_users from
+    // the browser. The RPC enforces owner/admin, blocks removing yourself or the
+    // last owner, and drops the matching `accounts` row too — the direct delete
+    // left that behind, so the person kept workspace access after being
+    // "removed" from the team.
     const handleRemoveMember = async (memberId: string) => {
-        if (!await confirmDialog('Are you sure you want to remove this team member?')) return;
-        
-        try {
-            const { error } = await supabase
-                .from('company_users')
-                .delete()
-                .eq('id', memberId)
-                .eq('company_id', company.id);
+        if (!user?.id || !company?.id) return;
+        if (!await confirmDialog({
+            title: 'Remove this team member?',
+            body: 'They lose access to this workspace straight away, including candidate and HR data. Records they created stay.',
+            danger: true, confirmLabel: 'Remove',
+        })) return;
 
-            if (error) throw error;
-            loadTeam();
-        } catch (error: any) {
-            notify(error.message);
-        }
+        const res = await removeMember(user.id, company.id, memberId);
+        if (res.error) { notify(res.error.replace(/_/g, ' ').toLowerCase()); return; }
+        loadTeam();
     };
 
     if (!ready || loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-accent" /></div>;
