@@ -63,11 +63,35 @@ export default function PrivacyPage() {
                             <ul className="list-disc pl-5 space-y-2 text-secondary">
                                 <li><strong>Cloud Providers:</strong> Supabase (Database storage).</li>
                                 <li><strong>AI Infrastructure:</strong> OpenAI / Anthropic (Processing analysis—data is not used to train their global models).</li>
+                                <li><strong>Google Calendar:</strong> Only if a recruiter connects their own Google account, and only to schedule interviews (see section 5).</li>
+                                <li><strong>Email Delivery:</strong> Resend (sending interview invitations and status updates to candidates).</li>
                             </ul>
                         </section>
 
                         <section className="mb-8">
-                            <h2 className="text-xl font-medium text-primary mb-4">5. Your 2026 Rights</h2>
+                            <h2 className="text-xl font-medium text-primary mb-4">5. Google User Data (Calendar Integration)</h2>
+                            <p className="text-secondary leading-relaxed mb-4">
+                                Connecting Google Calendar is entirely optional and is initiated by a recruiter for their
+                                own Google account. If connected, we request a single permission—
+                                <code className="text-[13px]">calendar.events</code>—and use it strictly to schedule interviews.
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2 text-secondary mb-4">
+                                <li><strong>What we do:</strong> create, update, and cancel the interview events you schedule in RunButter, attach a Google Meet link, and invite the candidate.</li>
+                                <li><strong>What we store:</strong> the OAuth tokens for your connection, plus the event ID and Meet link of interviews you created here.</li>
+                                <li><strong>What we never do:</strong> read, scan, index, or store the rest of your calendar; use Google data for advertising, profiling, or to train any AI model; or sell or transfer it to third parties.</li>
+                                <li><strong>Revoking access:</strong> disconnect at any time in Automate → Integrations, or from your Google Account permissions page. Revoking deletes the stored tokens.</li>
+                            </ul>
+                            <p className="text-secondary leading-relaxed">
+                                RunButter&rsquo;s use and transfer of information received from Google APIs to any other app
+                                will adhere to the{' '}
+                                <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-accent underline">
+                                    Google API Services User Data Policy
+                                </a>, including the Limited Use requirements.
+                            </p>
+                        </section>
+
+                        <section className="mb-8">
+                            <h2 className="text-xl font-medium text-primary mb-4">6. Your 2026 Rights</h2>
                             <ul className="list-disc pl-5 space-y-2 text-secondary">
                                 <li><strong>Right to Human Review:</strong> You may request that a human recruiter reviews any AI-generated score.</li>
                                 <li><strong>Right to Explanation:</strong> You may request an explanation of the logic used to generate your psychometric profile.</li>
