@@ -211,26 +211,8 @@ export async function cancelCalendarEvent(userId: string, eventId: string): Prom
   }
 }
 
-export async function getUpcomingInterviews(userId: string, days = 7) {
-  try {
-    const calendar = await getCalendarClient(userId);
-    if (!calendar) return [];
-
-    const now = new Date();
-    const future = new Date();
-    future.setDate(future.getDate() + days);
-
-    const response = await calendar.events.list({
-      calendarId: 'primary',
-      timeMin: now.toISOString(),
-      timeMax: future.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
-
-    return response.data.items ?? [];
-  } catch (error) {
-    console.error('Error fetching interviews:', error);
-    return [];
-  }
-}
+// NOTE: deliberately no read/list helper here. The upcoming-interviews list is
+// served from our own `interviews` table, so the only Google Calendar calls we
+// make are insert/patch/delete on events this app created. That keeps the
+// promise in our privacy policy — we never read the rest of a user's calendar —
+// true by construction rather than by convention.
