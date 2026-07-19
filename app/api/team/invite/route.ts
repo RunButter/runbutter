@@ -8,7 +8,7 @@ import { Resend } from 'resend';
 export const runtime = 'nodejs';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
-const ROLES = new Set(['owner', 'admin', 'member', 'viewer']);
+const ROLES = new Set(['owner', 'admin', 'member', 'recruiter', 'viewer']);
 
 export async function POST(req: NextRequest) {
     try {

@@ -6,7 +6,7 @@ import { Loader2, ShieldCheck, Trash2, Clock, UserPlus, X } from 'lucide-react';
 import { getWorkspace, getMembers, setMemberRole, removeMember, inviteMember, type WorkspaceContext } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 
-const ROLES = ['owner', 'admin', 'member'];
+const ROLES = ['owner', 'admin', 'member', 'recruiter', 'viewer'];
 const ROLE_TONE: Record<string, string> = {
   owner: 'bg-accent/10 text-accent ring-accent/20',
   admin: 'bg-accent/10 text-accent ring-accent/30',
