@@ -54,6 +54,33 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
   return error ? { error: error.message } : {};
 }
 
+// ── Scheduled reports ────────────────────────────────────────────────────────
+export interface ReportSchedule {
+  id: string | null; name: string; frequency: 'weekly' | 'monthly';
+  day_of_week: number; day_of_month: number; hour: number; timezone: string;
+  recipients: string[]; sections: string[]; enabled: boolean; last_sent_at: string | null;
+}
+
+export async function getReportSchedules(privyUserId: string, workspaceId: string): Promise<ReportSchedule[]> {
+  const { data } = await rpc('get_report_schedules', { p_privy: privyUserId, p_workspace: workspaceId });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function saveReportSchedule(privyUserId: string, workspaceId: string, s: ReportSchedule): Promise<{ error?: string }> {
+  const { error } = await rpc('save_report_schedule', {
+    p_privy: privyUserId, p_workspace: workspaceId, p_id: s.id,
+    p_name: s.name, p_frequency: s.frequency, p_day_of_week: s.day_of_week,
+    p_day_of_month: s.day_of_month, p_hour: s.hour, p_timezone: s.timezone,
+    p_recipients: s.recipients, p_sections: s.sections, p_enabled: s.enabled,
+  });
+  return error ? { error: error.message } : {};
+}
+
+export async function deleteReportSchedule(privyUserId: string, workspaceId: string, id: string): Promise<{ error?: string }> {
+  const { error } = await rpc('delete_report_schedule', { p_privy: privyUserId, p_workspace: workspaceId, p_id: id });
+  return error ? { error: error.message } : {};
+}
+
 export interface WorkspaceOption { id: string; name: string; slug: string; plan: string; role: string; active: boolean }
 
 // Every workspace this person belongs to. Usually one; more once they've

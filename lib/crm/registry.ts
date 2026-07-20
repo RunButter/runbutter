@@ -269,6 +269,7 @@ export const NAV = [
     { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
+    { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
   ]},
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
