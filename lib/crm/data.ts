@@ -54,6 +54,25 @@ export async function setMemberRole(privyUserId: string, workspaceId: string, ac
   return error ? { error: error.message } : {};
 }
 
+export interface WorkspaceOption { id: string; name: string; slug: string; plan: string; role: string; active: boolean }
+
+// Every workspace this person belongs to. Usually one; more once they've
+// accepted an invite to someone else's.
+export async function listMyWorkspaces(privyUserId: string | null): Promise<WorkspaceOption[]> {
+  if (!privyUserId) return [];
+  const { data } = await rpc('list_my_workspaces', { p_privy: privyUserId });
+  return Array.isArray(data) ? data : [];
+}
+
+// Persists which workspace this person is working in. Both resolvers
+// (get_my_workspace and hr_company_id) read it, so CRM and HR can't drift apart.
+export async function setActiveWorkspace(privyUserId: string, workspaceId: string): Promise<{ error?: string }> {
+  const { data, error } = await rpc('set_active_workspace', { p_privy: privyUserId, p_workspace: workspaceId });
+  if (error) return { error: error.message };
+  if (data !== true) return { error: 'You are not a member of that workspace.' };
+  return {};
+}
+
 // Invites someone to the caller's workspace. Sends only name/email/role — the
 // inviter and their company are resolved server-side from the verified Privy
 // token, so the caller cannot invite into a workspace they don't belong to.

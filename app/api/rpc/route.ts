@@ -24,7 +24,8 @@ const IDENTITY_ARGS = ['p_privy', 'p_privy_user_id'] as const;
 // so a leaked function name in the schema is not automatically reachable.
 const ALLOWED = new Set([
   // workspace / CRM core
-  'get_my_workspace', 'list_records', 'get_record', 'create_record', 'update_record',
+  'get_my_workspace', 'list_my_workspaces', 'set_active_workspace',
+  'list_records', 'get_record', 'create_record', 'update_record',
   'delete_record', 'import_records', 'get_pipeline_by_kind', 'move_pipeline_record',
   'get_finance_summary', 'get_finance_analytics', 'get_project', 'get_roadmap',
   'get_members', 'set_member_role', 'remove_member', 'get_invoice_document', 'save_invoice_items',
