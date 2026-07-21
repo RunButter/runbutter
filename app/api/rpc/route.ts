@@ -64,6 +64,8 @@ const ALLOWED = new Set([
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*
   'get_sign_documents', 'void_sign_document',
+  // Custom Forms (0054) — owner side; public get_public_form/submit_form are anon/server
+  'get_forms', 'get_form', 'save_form', 'delete_form', 'get_form_submissions',
 ]);
 
 function db() {

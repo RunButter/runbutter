@@ -50,7 +50,8 @@ with applied(ord, section, item, probe, ok) as (
   (50, 'A. migration', '0050 unify roles',       'company_users accepts member/recruiter', (select exists(select 1 from pg_constraint where conname='company_users_role_check' and pg_get_constraintdef(oid) ilike '%member%' and pg_get_constraintdef(oid) ilike '%recruiter%'))),
   (51, 'A. migration', '0051 active workspace',  'user_settings + both resolvers agree', ((to_regclass('public.user_settings') is not null) and (select exists(select 1 from pg_proc where proname='effective_workspace')) and (select exists(select 1 from pg_proc where proname='hr_company_id' and pg_get_functiondef(oid) ilike '%effective_workspace%')))),
   (52, 'A. migration', '0052 report schedules',  'report_schedules + due_report_schedules', ((to_regclass('public.report_schedules') is not null) and (select exists(select 1 from pg_proc where proname='due_report_schedules')))),
-  (53, 'A. migration', '0053 e-signatures',      'sign_documents + record_signature RPC', ((to_regclass('public.sign_documents') is not null) and (to_regclass('public.sign_recipients') is not null) and (select exists(select 1 from pg_proc where proname='record_signature'))))
+  (53, 'A. migration', '0053 e-signatures',      'sign_documents + record_signature RPC', ((to_regclass('public.sign_documents') is not null) and (to_regclass('public.sign_recipients') is not null) and (select exists(select 1 from pg_proc where proname='record_signature')))),
+  (54, 'A. migration', '0054 custom forms',      'forms + submit_form + public getter', ((to_regclass('public.forms') is not null) and (to_regclass('public.form_submissions') is not null) and (select exists(select 1 from pg_proc where proname='submit_form')) and (select has_function_privilege('anon', 'submit_form(text, jsonb, text)', 'execute'))))
 ),
 -- Freshness: running an older migration AFTER a newer one silently reverts a
 -- function. These check the live body for tokens only the latest version has.
