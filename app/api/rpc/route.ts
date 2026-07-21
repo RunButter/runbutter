@@ -62,6 +62,8 @@ const ALLOWED = new Set([
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
+  // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*
+  'get_sign_documents', 'void_sign_document',
 ]);
 
 function db() {

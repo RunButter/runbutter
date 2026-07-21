@@ -241,6 +241,7 @@ export const NAV = [
     { slug: 'transactions', label: 'Transactions', icon: 'ArrowLeftRight', href: '/finance/transactions' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
+    { slug: 'sign', label: 'Signatures', icon: 'PenLine', href: '/finance/sign' },
   ]},
   { group: 'Marketing', items: [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
