@@ -1,34 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Eye, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check } from 'lucide-react';
 import { loadDoc, saveDoc, runAI, type Doc } from '@/lib/crm/docs';
-
-// tiny, escaped markdown → html for the live preview (headings/bold/italic/code/lists)
-function mdToHtml(md: string): string {
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const inline = (s: string) => esc(s)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code class="bg-surface-hover rounded px-1 text-[0.85em]">$1</code>');
-  const out: string[] = []; let inList = false;
-  for (const raw of (md || '').split('\n')) {
-    const line = raw.trimEnd();
-    const li = line.match(/^\s*[-*]\s+(.*)$/);
-    if (li) { if (!inList) { out.push('<ul class="list-disc pl-5 space-y-1 my-2">'); inList = true; } out.push(`<li>${inline(li[1])}</li>`); continue; }
-    if (inList) { out.push('</ul>'); inList = false; }
-    if (/^###\s+/.test(line)) out.push(`<h3 class="text-[15px] font-semibold text-primary mt-3 mb-1">${inline(line.replace(/^###\s+/, ''))}</h3>`);
-    else if (/^##\s+/.test(line)) out.push(`<h2 class="text-lg font-semibold text-primary mt-4 mb-1">${inline(line.replace(/^##\s+/, ''))}</h2>`);
-    else if (/^#\s+/.test(line)) out.push(`<h1 class="text-xl font-semibold text-primary mt-4 mb-2">${inline(line.replace(/^#\s+/, ''))}</h1>`);
-    else if (line === '') out.push('<div class="h-2"></div>');
-    else out.push(`<p class="text-[14px] text-secondary leading-relaxed">${inline(line)}</p>`);
-  }
-  if (inList) out.push('</ul>');
-  return out.join('');
-}
+import RichEditor from '@/components/crm/RichEditor';
 
 const AI_ACTIONS = [
   { mode: 'improve', label: 'Improve', icon: Wand2 },
@@ -60,8 +38,6 @@ export default function DocEditor() {
     setLoading(true);
     loadDoc(privy, id).then((d) => { setDoc(d); setTitle(d?.title || ''); setBody(d?.body || ''); setLoading(false); });
   }, [ready, privy, id]);
-
-  const html = useMemo(() => mdToHtml(body), [body]);
 
   const save = async () => {
     if (!privy) return;
@@ -98,7 +74,7 @@ export default function DocEditor() {
       <header className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
         <button onClick={() => router.push('/docs')} className="p-1.5 -ml-1 rounded-md text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Untitled" disabled={!canEdit} className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary bg-transparent" />
-        <button onClick={() => setPreview((p) => !p)} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">{preview ? <Pencil className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} {preview ? 'Edit' : 'Preview'}</button>
+        <button onClick={() => setPreview((p) => !p)} title={preview ? 'Rich editor' : 'Edit markdown source'} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">{preview ? <Pencil className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />} {preview ? 'Editor' : 'Markdown'}</button>
         <button onClick={save} disabled={!canEdit || saving} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedAt ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />} {savedAt ? 'Saved' : 'Save'}</button>
       </header>
 
@@ -124,14 +100,17 @@ export default function DocEditor() {
         </div>
       )}
 
-      {/* Editor / preview */}
+      {/* Editor / raw-markdown view */}
       <div className="flex-1 overflow-hidden">
         {preview ? (
-          <div className="h-full overflow-auto p-8"><div className="max-w-2xl mx-auto" dangerouslySetInnerHTML={{ __html: html }} /></div>
+          <div className="h-full overflow-auto p-8">
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={!canEdit}
+              placeholder="# Markdown source…"
+              className="w-full h-full resize-none text-[13px] leading-relaxed text-primary font-mono outline-none bg-transparent" />
+          </div>
         ) : (
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={!canEdit}
-            placeholder="# Start writing…&#10;&#10;Use the AI toolbar to draft, improve, or summarize. Markdown supported."
-            className="w-full h-full resize-none p-8 text-[14px] leading-relaxed text-primary font-mono outline-none disabled:bg-surface-sunken/40" />
+          <RichEditor value={body} onChange={setBody} editable={canEdit}
+            placeholder="Start writing… type ‘# ’ for a heading, ‘- ’ for a list, or use the AI toolbar above." />
         )}
       </div>
     </>
