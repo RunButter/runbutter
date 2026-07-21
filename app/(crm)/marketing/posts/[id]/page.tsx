@@ -121,7 +121,7 @@ export default function PostStudio() {
             {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Link2 className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Review link'}
           </button>
           <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
-            className="h-7 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
+            className="h-7 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function PostStudio() {
               <div className="flex gap-1">
                 {PLATFORMS.map((pl) => (
                   <button key={pl} onClick={() => set({ platform: pl })}
-                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-accent text-white' : 'bg-surface-hover text-secondary hover:bg-strong'}`}>
+                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-accent text-accent-fg' : 'bg-surface-hover text-secondary hover:bg-strong'}`}>
                     {pl === 'x' ? 'X' : pl}
                   </button>
                 ))}
@@ -189,7 +189,7 @@ export default function PostStudio() {
                 return (
                   <div key={c.id} className={`rounded-lg ring-1 p-2.5 ${c.resolved ? 'ring-subtle bg-surface-sunken/60 opacity-60' : 'ring-subtle bg-surface'}`}>
                     <div className="flex items-center gap-1.5">
-                      {pin >= 0 && <span className="w-4.5 h-4.5 min-w-[18px] h-[18px] rounded-full rounded-bl-none bg-accent text-white text-[10px] font-semibold flex items-center justify-center">{pin + 1}</span>}
+                      {pin >= 0 && <span className="w-4.5 h-4.5 min-w-[18px] h-[18px] rounded-full rounded-bl-none bg-accent text-accent-fg text-[10px] font-semibold flex items-center justify-center">{pin + 1}</span>}
                       <span className="text-[12px] font-semibold text-secondary truncate">{c.author}</span>
                       <button onClick={() => toggleResolved(c.id, !c.resolved)} title={c.resolved ? 'Reopen' : 'Resolve'}
                         className="ml-auto p-0.5 rounded text-tertiary hover:text-success">

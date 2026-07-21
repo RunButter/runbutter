@@ -18,9 +18,9 @@ const fmtDate = (s?: string | null) => {
 
 const QUICK = [
   { label: 'Hiring pipeline', desc: 'Drag-and-drop stages', icon: Columns3, href: '/dashboard/pipeline', tone: 'text-accent' },
-  { label: 'Candidates', desc: 'Browse all applicants', icon: Users, href: '/dashboard/candidates', tone: 'text-cyan-600' },
+  { label: 'Candidates', desc: 'Browse all applicants', icon: Users, href: '/dashboard/candidates', tone: 'text-accent' },
   { label: 'Positions', desc: 'Create & manage roles', icon: Briefcase, href: '/dashboard/positions', tone: 'text-accent' },
-  { label: 'Interviews', desc: 'Schedule & track', icon: Calendar, href: '/dashboard/interviews', tone: 'text-orange-600' },
+  { label: 'Interviews', desc: 'Schedule & track', icon: Calendar, href: '/dashboard/interviews', tone: 'text-warning' },
   { label: 'Talent Treasury', desc: 'Explore your talent pool', icon: Sparkles, href: '/dashboard/treasury', tone: 'text-warning' },
   { label: 'Email templates', desc: 'Reusable candidate emails', icon: Mail, href: '/dashboard/templates', tone: 'text-success' },
 ];
@@ -34,10 +34,10 @@ export default function HrOverviewPage() {
 
   const s = hr?.stats;
   const kpis = [
-    { label: 'Candidates', value: s?.totalCandidates, icon: Users, tone: 'text-cyan-600' },
+    { label: 'Candidates', value: s?.totalCandidates, icon: Users, tone: 'text-accent' },
     { label: 'Open roles', value: s?.activePositions, icon: Briefcase, tone: 'text-accent' },
     { label: 'Assessed', value: s?.assessmentsCompleted, icon: CheckCircle2, tone: 'text-success' },
-    { label: 'Interviews', value: s?.upcomingInterviews, icon: Calendar, tone: 'text-orange-600' },
+    { label: 'Interviews', value: s?.upcomingInterviews, icon: Calendar, tone: 'text-warning' },
     { label: 'New (7d)', value: s?.newApplications, icon: TrendingUp, tone: 'text-accent' },
     { label: 'Pending', value: s?.pendingReview, icon: Clock, tone: 'text-warning' },
   ];
@@ -50,7 +50,7 @@ export default function HrOverviewPage() {
           <h1 className="text-2xl font-semibold text-primary tracking-tight">Recruiting</h1>
           <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
           {hr?.company?.plan && <span className="text-[11px] font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">{hr.company.plan} plan</span>}
-          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
             <Plus className="w-3.5 h-3.5" /> New position
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default function HrOverviewPage() {
             <div className="px-5 py-12 text-center">
               <Users className="w-10 h-10 text-tertiary mx-auto mb-3" />
               <p className="text-[13px] text-secondary mb-3">No candidates yet.</p>
-              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90">Create your first position</Link>
+              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90">Create your first position</Link>
             </div>
           ) : (
             <div className="divide-y divide-subtle">
@@ -118,7 +118,7 @@ export default function HrOverviewPage() {
                 const st = hrStatus(c.status);
                 return (
                   <Link key={c.id} href={`/dashboard/candidates/${c.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-sunken/70 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-secondary text-[11px] font-semibold flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-surface-hover text-secondary text-[11px] font-semibold flex items-center justify-center shrink-0">
                       {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">

@@ -136,13 +136,13 @@ export default function DocumentBuilder() {
             <button onClick={exportKsef} title="Download FA(3) e-invoice XML" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /> KSeF XML</button>
             {isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in' : ''}
-                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-white bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-success-fg bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
                 {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
               </button>
             )}
             <button onClick={() => setSendOpen(true)} disabled={!privy} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
             <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-white bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
             </button>
           </div>

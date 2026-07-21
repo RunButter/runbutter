@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
         { label: 'Total candidates', value: metrics.totalCandidates, icon: Users, tone: 'text-accent' },
         { label: 'Total hires', value: metrics.hiredCandidates, icon: CheckCircle2, tone: 'text-success' },
         { label: 'Hire rate', value: `${metrics.offerRate}%`, icon: TrendingUp, tone: 'text-accent' },
-        { label: 'Active positions', value: metrics.totalPositions, icon: Briefcase, tone: 'text-orange-600' },
+        { label: 'Active positions', value: metrics.totalPositions, icon: Briefcase, tone: 'text-warning' },
     ];
 
     return (

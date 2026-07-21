@@ -22,7 +22,7 @@ function CardBody({ rec, dragging = false }: { rec: PipelineRecord; dragging?: b
   return (
     <div className={`bg-surface rounded-lg ring-1 ring-subtle p-2.5 ${dragging ? 'shadow-lg ring-strong rotate-1' : 'hover:ring-strong'} transition-all duration-150`}>
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">{initials(subject)}</div>
+        <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">{initials(subject)}</div>
         <div className="min-w-0">
           <div className="text-[13px] font-semibold text-primary truncate">{subject}</div>
           {sub && <div className="text-[11px] text-tertiary truncate">{sub}</div>}

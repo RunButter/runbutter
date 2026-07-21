@@ -142,7 +142,7 @@ export default function InvoiceItemsModal({
             <span className="mx-1.5 text-tertiary">·</span>Total <span className="font-semibold text-primary tabular-nums">{money(totals.total)}</span>
           </div>
           <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save items
           </button>
         </div>

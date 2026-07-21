@@ -173,7 +173,7 @@ export default function CandidatesPage() {
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex justify-between items-center text-[10px] font-semibold tracking-wider text-tertiary"><span>MATCH</span><span className="tabular-nums">{sc}%</span></div>
                                                     <div className="w-24 h-1.5 bg-surface-hover rounded-full overflow-hidden">
-                                                        <div className={`h-full rounded-full transition-all duration-700 ${sc >= 66 ? 'bg-success' : sc >= 33 ? 'bg-amber-400' : 'bg-danger'}`} style={{ width: `${sc}%` }} />
+                                                        <div className={`h-full rounded-full transition-all duration-700 ${sc >= 66 ? 'bg-success' : sc >= 33 ? 'bg-warning' : 'bg-danger'}`} style={{ width: `${sc}%` }} />
                                                     </div>
                                                 </div>
                                             ) : <span className="text-tertiary text-[12px] italic">N/A</span>}

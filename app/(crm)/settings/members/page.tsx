@@ -68,7 +68,7 @@ export default function MembersPage() {
         {ws && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
         {canManage && (
           <button onClick={() => { setInviting(true); setError(''); setSent(''); }}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm">
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm">
             <UserPlus className="w-3.5 h-3.5" /> Invite
           </button>
         )}
@@ -86,7 +86,7 @@ export default function MembersPage() {
             <div className="rounded-xl ring-1 ring-subtle bg-surface divide-y divide-subtle">
               {members.map((m) => (
                 <div key={m.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 rounded-full text-white text-[11px] font-semibold flex items-center justify-center ${m.pending ? 'bg-surface-hover text-tertiary ring-1 ring-subtle ring-dashed' : 'bg-gradient-to-br from-indigo-400 to-fuchsia-400'}`}>
+                  <div className={`w-8 h-8 rounded-full text-accent-fg text-[11px] font-semibold flex items-center justify-center ${m.pending ? 'bg-surface-hover text-tertiary ring-1 ring-subtle ring-dashed' : 'bg-accent'}`}>
                     {m.pending ? <Clock className="w-4 h-4" /> : (m.name || '?').slice(0, 1).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -197,7 +197,7 @@ function InviteModal({
         <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
           <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
           <button onClick={submit} disabled={busy || !name.trim() || !email.trim()}
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Send invitation
           </button>
         </div>

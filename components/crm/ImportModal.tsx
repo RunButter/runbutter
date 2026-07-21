@@ -133,16 +133,16 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
           {step === 'source' && (
             <>
               <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-              <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40">Continue</button>
+              <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40">Continue</button>
             </>
           )}
           {step === 'map' && (
-            <button onClick={runImport} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+            <button onClick={runImport} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
               {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows
             </button>
           )}
           {step === 'done' && (
-            <button onClick={onImported} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90">Done</button>
+            <button onClick={onImported} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90">Done</button>
           )}
         </div>
       </div>

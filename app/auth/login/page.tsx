@@ -66,7 +66,7 @@ export default function LoginPage() {
 
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-white rounded-lg transition font-medium"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-accent-fg rounded-lg transition font-medium"
           >
             Continue with Email
           </button>

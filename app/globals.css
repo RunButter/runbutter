@@ -38,6 +38,13 @@
     --warning: 35 92% 42%;
     --danger:  0 72% 51%;
 
+    /* Label on a SOLID status fill. White only clears AA on the light danger
+       fill (4.80); on every other fill it fails (success 3.88, warning 3.24,
+       and worse in dark where the fills lighten). These are measured to pass. */
+    --success-fg: 152 70% 6%;   /* 4.66 on --success */
+    --warning-fg: 35 70% 6%;    /* 5.75 on --warning */
+    --danger-fg:  0 0% 100%;    /* 4.80 on --danger  */
+
     /* A hue that works as a FILL is too light as small TEXT. These are the
        text-safe versions (used by text-accent / text-success / ...), so a
        label on a 10%-tint chip still clears AA. Fills keep the vars above. */
@@ -73,6 +80,12 @@
     --success: 152 55% 45%;
     --warning: 35 90% 55%;
     --danger:  0 72% 62%;
+
+    /* Dark fills are lighter, so every solid status label goes dark here —
+       white would fail on all three (success 2.70, warning 2.16, danger 3.59). */
+    --success-fg: 152 70% 6%;   /* 6.69 */
+    --warning-fg: 35 70% 6%;    /* 8.62 */
+    --danger-fg:  0 70% 6%;     /* 5.48 */
 
     --accent-text:  243 95% 80%;
     --success-text: 152 60% 62%;

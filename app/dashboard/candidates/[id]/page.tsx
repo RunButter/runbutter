@@ -430,7 +430,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition text-sm flex items-center gap-2 shadow-sm">
+                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-accent text-accent-fg font-semibold rounded-xl hover:bg-accent/90 transition text-sm flex items-center gap-2 shadow-sm">
                                         <Users className="w-4 h-4" />
                                         Simulate Team Fit
                                     </button>
@@ -446,7 +446,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 { label: 'Overall Match', value: results.overall_score, color: 'bg-success/10 text-success border-success/30' },
                                 { label: 'Cognitive Score', value: results.cognitive_score, color: 'bg-accent/10 text-accent border-accent/30' },
                                 { label: 'Personality Fit', value: results.personality_score, color: 'bg-accent/10 text-accent border-accent/30' },
-                                { label: 'Work Style', value: results.work_style_score, color: 'bg-orange-50 text-orange-600 border-orange-100' }
+                                { label: 'Work Style', value: results.work_style_score, color: 'bg-warning/10 text-warning border-warning/30' }
                             ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className={`${stat.color} p-6 rounded-2xl border text-left`}>
                                     <div className="text-4xl font-semibold leading-none">{stat.value}</div>
@@ -514,7 +514,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                                 Neuro-Profile Analysis
                                             </h4>
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
-                                                candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-orange-100 text-orange-700' :
+                                                candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-warning/10 text-warning' :
                                                     candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-accent/10 text-accent' :
                                                         'bg-success/10 text-success'
                                                 }`}>

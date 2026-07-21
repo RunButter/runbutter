@@ -44,7 +44,7 @@ export default function AssistantPage() {
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setEditing({ platform: 'telegram', autonomy: 'auto', enabled: true, allowed_senders: [] })}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm">
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> Connect a bot
           </button>
         )}
@@ -174,7 +174,7 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
 
         <div className="h-14 shrink-0 flex items-center justify-end gap-2 px-4 border-t border-subtle">
           <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-50">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {channel.id ? 'Save' : 'Connect'}
           </button>
         </div>

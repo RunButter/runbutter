@@ -45,7 +45,7 @@ export default function BoardPage() {
           <span className="h-7 px-2 inline-flex items-center gap-1.5 text-[12px] font-semibold bg-surface text-primary"><Columns3 className="w-3.5 h-3.5" /> Board</span>
           <Link href={`/pipelines/${slug}/table`} className="h-7 px-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-tertiary hover:bg-surface-sunken"><Table2 className="w-3.5 h-3.5" /> Table</Link>
         </div>
-        <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 transition-colors shadow-sm"><Plus className="w-3.5 h-3.5" /> New</button>
+        <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 transition-colors shadow-sm"><Plus className="w-3.5 h-3.5" /> New</button>
       </header>
       <div className="flex-1 overflow-hidden p-4">
         {loading ? (

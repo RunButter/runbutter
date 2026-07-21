@@ -302,7 +302,7 @@ export default function DemoPage() {
     const NavItem = ({ id, icon: Icon, label }: { id: DemoView, icon: any, label: string }) => (
         <button
             onClick={() => setView(id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${view === id ? 'bg-accent text-white shadow-lg' : 'text-tertiary hover:bg-surface-hover hover:text-primary'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${view === id ? 'bg-accent text-accent-fg shadow-lg' : 'text-tertiary hover:bg-surface-hover hover:text-primary'}`}
         >
             <Icon className="w-5 h-5" />
             {label}

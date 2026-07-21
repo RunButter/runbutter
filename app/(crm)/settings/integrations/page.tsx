@@ -149,7 +149,7 @@ export default function IntegrationsPage() {
                   </button>
                 </div>
               ) : (
-                <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
+                <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
                   <Calendar className="w-3.5 h-3.5" /> Connect
                 </a>
               )}
@@ -161,7 +161,7 @@ export default function IntegrationsPage() {
           {/* Connect cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              { name: 'Zapier', body: 'Trigger Zaps from RunButter (paste a Catch Hook URL below), or let Zapier create records via the API.', tone: 'text-orange-600 bg-orange-50' },
+              { name: 'Zapier', body: 'Trigger Zaps from RunButter (paste a Catch Hook URL below), or let Zapier create records via the API.', tone: 'text-warning bg-warning/10' },
               { name: 'Make', body: 'Use a Custom webhook as a connection, and the HTTP module to push data back in with your API key.', tone: 'text-accent bg-accent/10' },
               { name: 'n8n', body: 'Self-hosted automation. Webhook node in, HTTP Request node out — same URL + key.', tone: 'text-danger bg-danger/10' },
               { name: 'Slack / Discord', body: 'Paste an Incoming Webhook URL as a connection; automations post updates to your channel.', tone: 'text-success bg-success/10' },
@@ -180,7 +180,7 @@ export default function IntegrationsPage() {
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-sm font-semibold text-primary flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Outgoing webhooks</h2>
               <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
-              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
+              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
             <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
               {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -236,7 +236,7 @@ export default function IntegrationsPage() {
                 <div className="text-[12px] font-semibold text-success mb-1.5">Copy your key now — it won’t be shown again.</div>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-[12px] font-mono text-primary bg-surface ring-1 ring-subtle rounded-md px-2.5 py-1.5 truncate">{freshKey}</code>
-                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-[12px] font-semibold text-white bg-inverse hover:bg-inverse inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
+                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
                   <button onClick={() => setFreshKey(null)} className="p-1.5 rounded-md text-tertiary hover:bg-surface"><X className="w-4 h-4" /></button>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function IntegrationsPage() {
 
             <div className="flex items-center gap-2 mb-3">
               <input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Key name (e.g. Zapier)" className={inputCls + ' max-w-xs'} disabled={!canEdit} />
-              <button onClick={makeKey} disabled={!canEdit} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Create key</button>
+              <button onClick={makeKey} disabled={!canEdit} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Create key</button>
             </div>
 
             <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
@@ -308,7 +308,7 @@ export default function IntegrationsPage() {
             </div>
             <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
               <button onClick={() => setEditConn(null)} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-              <button onClick={saveConn} disabled={!editConn.url} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">Save</button>
+              <button onClick={saveConn} disabled={!editConn.url} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-50">Save</button>
             </div>
           </div>
         </div>
@@ -393,7 +393,7 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
 
         {msg && <div className="text-[12px] text-secondary">{msg}</div>}
         {canEdit && (
-          <button onClick={save} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+          <button onClick={save} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Cal.com settings
           </button>
         )}

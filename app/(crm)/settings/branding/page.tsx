@@ -98,7 +98,7 @@ export default function BrandingPage() {
         <h1 className="text-sm font-semibold text-primary">Branding</h1>
         <span className="text-[11px] text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
-          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
         </button>
       </header>

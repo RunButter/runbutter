@@ -241,7 +241,7 @@ export default function NewPositionPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {[
                                     { id: 'hard-tech', label: 'HARD-TECH', focus: 'Focus: C / O', color: 'border-accent/30 bg-accent/10 text-accent' },
-                                    { id: 'aggressive-sales', label: 'AGGRESSIVE-SALES', focus: 'Focus: E / A-', color: 'border-orange-200 bg-orange-50 text-orange-700' },
+                                    { id: 'aggressive-sales', label: 'AGGRESSIVE-SALES', focus: 'Focus: E / A-', color: 'border-warning/30 bg-warning/10 text-warning' },
                                     { id: 'creative-chaos', label: 'CREATIVE-CHAOS', focus: 'Focus: O / N', color: 'border-accent/30 bg-accent/10 text-accent' },
                                     { id: 'operations-monk', label: 'OPERATIONS-MONK', focus: 'Focus: C / N-', color: 'border-success/30 bg-success/10 text-success' }
                                 ].map((profile) => (

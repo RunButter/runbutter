@@ -82,7 +82,7 @@ export default function AiKeysPage() {
                 <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-… / paste your key" className={inputCls + ' font-mono'} autoComplete="off" /></label>
             </div>
             {error && <p className="text-[12px] text-danger mt-2">{error}</p>}
-            <button onClick={add} disabled={!canEdit || saving} className="mt-3 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Save key</button>
+            <button onClick={add} disabled={!canEdit || saving} className="mt-3 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Save key</button>
           </div>
 
           {/* List */}

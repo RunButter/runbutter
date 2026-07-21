@@ -145,13 +145,13 @@ export default function BillingPage() {
                     <div
                         key={tier.name}
                         className={`relative flex flex-col p-8 rounded-3xl transition-all duration-300 ${tier.highlight
-                            ? 'bg-gradient-to-b from-primary-600 to-indigo-700 text-white shadow-popover scale-105 z-10'
+                            ? 'bg-inverse text-inverse-fg shadow-popover scale-105 z-10'
                             : 'bg-surface border-2 border-subtle text-primary hover:border-accent/30 shadow-sm'
                             }`}
                     >
                         {tier.highlight && (
                             <div className="absolute top-0 right-8 transform -translate-y-1/2">
-                                <span className="bg-orange-500 text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                                <span className="bg-accent text-accent-fg text-[10px] font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                                     <Star className="w-3 h-3 fill-current" />
                                     Most Popular
                                 </span>
@@ -159,14 +159,14 @@ export default function BillingPage() {
                         )}
 
                         <div className="mb-8">
-                            <h3 className={`text-xl font-semibold mb-2 ${tier.highlight ? 'text-white' : 'text-primary'}`}>{tier.name}</h3>
-                            <p className={`text-sm font-medium ${tier.highlight ? 'text-indigo-100' : 'text-secondary'}`}>{tier.description}</p>
+                            <h3 className={`text-xl font-semibold mb-2 ${tier.highlight ? 'text-inverse-fg' : 'text-primary'}`}>{tier.name}</h3>
+                            <p className={`text-sm font-medium ${tier.highlight ? 'text-inverse-fg/80' : 'text-secondary'}`}>{tier.description}</p>
                         </div>
 
                         <div className="mb-8">
                             <div className="flex items-baseline gap-1">
                                 <span className="text-5xl font-semibold">{tier.price}</span>
-                                <span className={`text-sm font-semibold uppercase tracking-widest ${tier.highlight ? 'text-indigo-200' : 'text-tertiary'}`}>
+                                <span className={`text-sm font-semibold uppercase tracking-widest ${tier.highlight ? 'text-inverse-fg/70' : 'text-tertiary'}`}>
                                     {tier.interval}
                                 </span>
                             </div>
@@ -175,8 +175,8 @@ export default function BillingPage() {
                         <div className="space-y-4 mb-10 flex-grow">
                             {tier.features.map((feature) => (
                                 <div key={feature} className="flex items-start gap-3 text-sm font-semibold">
-                                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${tier.highlight ? 'text-indigo-300' : 'text-accent'}`} />
-                                    <span className={tier.highlight ? 'text-indigo-50' : 'text-secondary'}>{feature}</span>
+                                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${tier.highlight ? 'text-inverse-fg/80' : 'text-accent'}`} />
+                                    <span className={tier.highlight ? 'text-inverse-fg/90' : 'text-secondary'}>{feature}</span>
                                 </div>
                             ))}
                         </div>
@@ -186,7 +186,7 @@ export default function BillingPage() {
                                 href={tier.link}
                                 className={`w-full py-4 rounded-2xl font-semibold text-center transition flex items-center justify-center gap-2 ${tier.highlight
                                     ? 'bg-surface text-accent hover:bg-accent/10 shadow-popover'
-                                    : 'bg-inverse text-white hover:bg-inverse'
+                                    : 'bg-inverse text-inverse-fg hover:bg-inverse'
                                     }`}
                             >
                                 {tier.buttonText}

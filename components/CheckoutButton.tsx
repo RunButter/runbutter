@@ -62,7 +62,7 @@ export default function CheckoutButton({
             case 'white':
                 return 'bg-surface text-accent hover:bg-surface-hover shadow-popover';
             case 'dark':
-                return 'bg-gray-900 text-white hover:bg-gray-800';
+                return 'bg-inverse text-inverse-fg hover:bg-inverse/90';
             default:
                 return 'btn-primary shadow-popover hover:translate-y-[-2px] transition-all';
         }

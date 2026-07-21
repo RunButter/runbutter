@@ -62,14 +62,14 @@ export default function WorkspaceHome() {
     { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-danger' : 'text-success', href: '/finance/transactions' },
     { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview' },
     { label: 'Open pipeline', value: money(pipelineValue), sub: `${openDeals.length} active deal${openDeals.length === 1 ? '' : 's'}`, icon: Target, tone: 'text-accent', href: '/pipelines/sales/board' },
-    { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-cyan-600', href: '/dashboard/overview' },
+    { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-accent', href: '/dashboard/overview' },
   ];
 
   const pillars = [
     { label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board', tone: 'text-accent', bg: 'bg-accent/10' },
     { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview', tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview', tone: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
-    { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview', tone: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview', tone: 'text-accent', bg: 'bg-accent/10' },
+    { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview', tone: 'text-accent', bg: 'bg-accent/10' },
     { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board', tone: 'text-accent', bg: 'bg-accent/10' },
   ];
 
@@ -159,7 +159,7 @@ export default function WorkspaceHome() {
             {/* Recent applications */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-cyan-500" /> Recent applications</h3>
+                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
@@ -169,7 +169,7 @@ export default function WorkspaceHome() {
                   const st = hrStatus(c.status);
                   return (
                     <Link key={c.id} href={`/dashboard/candidates/${c.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-sunken/70 transition-colors">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-surface-hover text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">
                         {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">

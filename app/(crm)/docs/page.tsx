@@ -46,7 +46,7 @@ export default function DocsPage() {
         <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><FileText className="w-4 h-4 text-tertiary" /> Docs</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
-        <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>
+        <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -58,7 +58,7 @@ export default function DocsPage() {
             <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center">
               <FileText className="w-9 h-9 text-tertiary mx-auto mb-3" />
               <p className="text-[13px] text-secondary mb-3">No documents yet.</p>
-              <button onClick={create} disabled={!canEdit} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40">Create your first</button>
+              <button onClick={create} disabled={!canEdit} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40">Create your first</button>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-3">

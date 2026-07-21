@@ -22,7 +22,7 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
 
             {/* Lock Overlay */}
             <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
-                <div className="bg-white/80 backdrop-blur-xl border border-white p-10 rounded-3xl shadow-popover max-w-lg w-full text-center transform transition-all duration-500 scale-100 group-hover:scale-[1.02]">
+                <div className="bg-surface/80 backdrop-blur-xl border border-white p-10 rounded-3xl shadow-popover max-w-lg w-full text-center transform transition-all duration-500 scale-100 group-hover:scale-[1.02]">
                     <div className="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-primary-100">
                         <Lock className="w-10 h-10 text-accent animate-pulse" />
                     </div>

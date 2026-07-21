@@ -12,7 +12,7 @@ import { useDialog } from '@/components/ui/Dialog';
 
 const CATEGORIES = ['invite', 'decline', 'offer', 'reminder', 'custom'];
 const CAT_STYLE: Record<string, string> = {
-    invite: 'bg-cyan-50 text-cyan-700 ring-cyan-200/60',
+    invite: 'bg-accent/10 text-accent ring-accent/30',
     decline: 'bg-danger/10 text-danger ring-danger/30',
     offer: 'bg-success/10 text-success ring-success/30',
     reminder: 'bg-warning/10 text-warning ring-warning/30',
@@ -78,7 +78,7 @@ export default function TemplatesPage() {
     return (
         <>
             <PageHeader title="Email templates" count={templates.length}>
-                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> New template
                 </button>
             </PageHeader>
@@ -150,7 +150,7 @@ export default function TemplatesPage() {
                             </p>
                             <div className="flex justify-end gap-2 pt-1">
                                 <button onClick={() => setEditing(null)} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
                                 </button>
                             </div>

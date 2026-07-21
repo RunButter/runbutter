@@ -58,7 +58,7 @@ export default function ProjectDashboard() {
           {project?.identifier && <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
           {project?.status && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
           <span className={`ml-1 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
-          <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
+          <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
         </div>
       </header>
 

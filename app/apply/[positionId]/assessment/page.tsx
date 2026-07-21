@@ -322,7 +322,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
                         <button
                             onClick={() => { setCurrentStep(1); setQIndex(0); }}
-                            className="w-full h-12 rounded-xl bg-accent text-white text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition"
+                            className="w-full h-12 rounded-xl bg-accent text-accent-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition"
                         >
                             Start <ArrowRight className="w-4 h-4" />
                         </button>
@@ -393,7 +393,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             <button
                                 onClick={() => (screeningQs.length > 0 ? setCurrentStep(2) : handleComplete())}
                                 disabled={submitting}
-                                className="h-11 px-6 rounded-xl bg-accent text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-60"
+                                className="h-11 px-6 rounded-xl bg-accent text-accent-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-60"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                     <>{screeningQs.length > 0 ? 'Continue' : 'Finish & submit'} <ArrowRight className="w-4 h-4" /></>
@@ -458,7 +458,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                 <button
                                     onClick={handleComplete}
                                     disabled={submitting || !screeningMcqsAnswered}
-                                    className="h-11 px-6 rounded-xl bg-accent text-white text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-50"
+                                    className="h-11 px-6 rounded-xl bg-accent text-accent-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-50"
                                 >
                                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (<>Finish & submit <CheckCircle2 className="w-4 h-4" /></>)}
                                 </button>

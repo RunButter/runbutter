@@ -101,8 +101,8 @@ export default function WebAnalytics() {
   const cards = stats ? [
     { label: 'Pageviews', value: stats.pageviews.toLocaleString(), sub: `~${avgDay}/day`, icon: Eye, tone: 'text-primary' },
     { label: 'Unique visitors', value: stats.visitors.toLocaleString(), sub: 'daily-rotating, cookieless', icon: Users, tone: 'text-success' },
-    { label: 'Live now', value: String(stats.live), sub: 'last 5 minutes', icon: Activity, tone: 'text-fuchsia-600' },
-    { label: 'Mobile share', value: deviceTotal ? `${mobilePct}%` : '—', sub: deviceTotal ? `${(stats.desktop).toLocaleString()} desktop · ${(stats.mobile).toLocaleString()} mobile` : 'needs migration 0029', icon: Smartphone, tone: 'text-sky-600' },
+    { label: 'Live now', value: String(stats.live), sub: 'last 5 minutes', icon: Activity, tone: 'text-accent' },
+    { label: 'Mobile share', value: deviceTotal ? `${mobilePct}%` : '—', sub: deviceTotal ? `${(stats.desktop).toLocaleString()} desktop · ${(stats.mobile).toLocaleString()} mobile` : 'needs migration 0029', icon: Smartphone, tone: 'text-accent' },
   ] : [];
 
   const showCard = snippetOpen || sites.length === 0;
@@ -143,7 +143,7 @@ export default function WebAnalytics() {
             </>
           )}
           <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
         </div>
       </header>
 
@@ -171,14 +171,14 @@ export default function WebAnalytics() {
                       onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
                       className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                     <button onClick={addSite} disabled={busy || !privy} title={!privy ? 'Sign in to add' : ''}
-                      className="h-9 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                      className="h-9 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                       {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add
                     </button>
                     {error && <span className="text-[12px] text-danger">{error}</span>}
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 text-[12px] bg-inverse text-slate-100 rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippetFor(siteId || 'YOUR_SITE_ID')}</code>
+                  <code className="flex-1 text-[12px] bg-inverse text-inverse-fg rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippetFor(siteId || 'YOUR_SITE_ID')}</code>
                   <button onClick={copySnippet} className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                     {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy'}
                   </button>
@@ -214,7 +214,7 @@ export default function WebAnalytics() {
                   {c.label === 'Mobile share' && deviceTotal > 0 && (
                     <div className="mt-2 h-1.5 rounded-full bg-surface-hover overflow-hidden flex">
                       <div className="h-full bg-strong" style={{ width: `${100 - mobilePct}%` }} />
-                      <div className="h-full bg-sky-400" style={{ width: `${mobilePct}%` }} />
+                      <div className="h-full bg-accent" style={{ width: `${mobilePct}%` }} />
                     </div>
                   )}
                 </div>
@@ -300,7 +300,7 @@ export default function WebAnalytics() {
                 onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
                 className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
-                className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add
               </button>
             </div>

@@ -61,9 +61,12 @@ module.exports = {
         // keep the sub-keys (text-accent-fg is the label on an accent fill);
         // only the DEFAULT swaps to the text-safe variant.
         accent: { DEFAULT: hsl('--accent-text'), fg: hsl('--accent-fg'), soft: hsl('--accent-soft') },
-        success: hsl('--success-text'),
-        warning: hsl('--warning-text'),
-        danger: hsl('--danger-text'),
+        // Same shape as accent: DEFAULT is the text-safe hue for tinted chips;
+        // `fg` is the label on a SOLID fill. The fg values are measured to clear
+        // AA against each fill in both themes — white does not (see globals.css).
+        success: { DEFAULT: hsl('--success-text'), fg: hsl('--success-fg') },
+        warning: { DEFAULT: hsl('--warning-text'), fg: hsl('--warning-fg') },
+        danger: { DEFAULT: hsl('--danger-text'), fg: hsl('--danger-fg') },
       },
       borderColor: { DEFAULT: hsl('--border-subtle') },
       ringOffsetColor: { canvas: hsl('--canvas') },

@@ -90,7 +90,7 @@ export default function AutomationsPage() {
               </button>
             ))}
           </div>
-          <button onClick={() => setEditing(blank())} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>
+          <button onClick={() => setEditing(blank())} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>
             <Plus className="w-3.5 h-3.5" /> New automation
           </button>
         </div>
@@ -324,7 +324,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
           <label className="flex items-center gap-1.5 text-[12px] font-medium text-secondary"><input type="checkbox" checked={a.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="rounded border-subtle accent-accent" /> Enabled</label>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-            <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save</button>
+            <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save</button>
           </div>
         </div>
       </div>
@@ -335,7 +335,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
 function Step({ badge, label, tone, children }: { badge: string; label: string; tone: string; children: React.ReactNode }) {
   return (
     <div className="relative pb-4">
-      <span className={`absolute -left-[22px] top-0 w-6 h-6 -translate-x-0 rounded-full ${tone} text-white text-[11px] font-semibold flex items-center justify-center ring-4 ring-white`}>{badge}</span>
+      <span className={`absolute -left-[22px] top-0 w-6 h-6 -translate-x-0 rounded-full ${tone} text-accent-fg text-[11px] font-semibold flex items-center justify-center ring-4 ring-white`}>{badge}</span>
       <div className="rounded-xl ring-1 ring-subtle bg-surface p-3">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">{label}</div>
         {children}

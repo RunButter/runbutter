@@ -67,7 +67,7 @@ export default function PlansPage() {
                   <div key={key}
                     className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-accent/30 shadow-lg' : 'ring-1 ring-subtle'}`}>
                     {popular && (
-                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-white bg-accent rounded-full px-2 py-0.5">
+                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
                         <Sparkles className="w-3 h-3" /> Popular
                       </div>
                     )}
@@ -110,7 +110,7 @@ export default function PlansPage() {
                     {isCurrent ? (
                       <button disabled className="h-10 rounded-xl text-[13px] font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
                     ) : key === 'enterprise' ? (
-                      <Link href="/contact" className="h-10 rounded-xl text-[13px] font-semibold text-center inline-flex items-center justify-center bg-inverse text-white hover:bg-inverse transition">Contact sales</Link>
+                      <Link href="/contact" className="h-10 rounded-xl text-[13px] font-semibold text-center inline-flex items-center justify-center bg-inverse text-inverse-fg hover:bg-inverse transition">Contact sales</Link>
                     ) : isUpgrade && PRICE_IDS[key] ? (
                       <div className="[&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-[13px]">
                         <CheckoutButton

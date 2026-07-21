@@ -46,7 +46,7 @@ export default function LinksPage() {
         <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Link2 className="w-4 h-4 text-accent" /> Short links</h1>
         <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {privy && ws && (
-          <button onClick={() => setAdding(true)} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 shadow-sm">
+          <button onClick={() => setAdding(true)} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> New link
           </button>
         )}
@@ -127,7 +127,7 @@ function AddModal({ privy, wsId, onClose, onDone, notify }: { privy: string; wsI
         </div>
         <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle">
           <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={submit} disabled={busy || !target.trim()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+          <button onClick={submit} disabled={busy || !target.trim()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create
           </button>
         </div>

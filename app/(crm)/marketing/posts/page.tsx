@@ -8,10 +8,10 @@ import { loadPosts, savePost, type PostListItem } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 
 const PLATFORM_CHIP: Record<string, string> = {
-  instagram: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200/60',
+  instagram: 'bg-accent/10 text-accent ring-accent/30',
   facebook: 'bg-accent/10 text-accent ring-accent/30',
   x: 'bg-surface-hover text-secondary ring-subtle',
-  linkedin: 'bg-sky-50 text-sky-700 ring-sky-200/60',
+  linkedin: 'bg-success/10 text-success ring-success/30',
 };
 const STATUS_CHIP: Record<string, string> = {
   draft: 'bg-surface-hover text-secondary ring-subtle',
@@ -53,7 +53,7 @@ export default function PostsPage() {
         <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <span className="text-[12px] text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
         <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
-          className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
           {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New post
         </button>
       </header>

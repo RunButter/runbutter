@@ -167,7 +167,7 @@ export default function PostCanvas({ post, comments, canComment, onAddComment }:
       {/* pending pin + input */}
       {pending && (
         <>
-          <div data-pin className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-warning text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-surface shadow-md"
+          <div data-pin className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full rounded-bl-none bg-warning text-warning-fg text-[11px] font-bold flex items-center justify-center ring-2 ring-surface shadow-md"
             style={{ left: `${pending.x}%`, top: `${pending.y}%` }}>+</div>
           <div data-popover className="absolute z-30 w-64 bg-surface rounded-lg border border-subtle shadow-popover p-2.5"
             style={{ left: `min(max(${pending.x}%, 10%), 65%)`, top: `calc(${pending.y}% + 18px)` }}

@@ -168,11 +168,11 @@ export default function RegisterPage() {
         </div>
 
         <div className="mb-6 flex items-center justify-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-accent text-white' : 'bg-success text-white'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'auth' ? 'bg-accent text-accent-fg' : 'bg-success text-success-fg'}`}>
             {step === 'auth' ? '1' : '✓'}
           </div>
           <div className={`w-16 h-1 ${step === 'company' ? 'bg-accent' : 'bg-strong'}`} />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'company' ? 'bg-accent text-white' : 'bg-surface-hover text-secondary'}`}>2</div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${step === 'company' ? 'bg-accent text-accent-fg' : 'bg-surface-hover text-secondary'}`}>2</div>
         </div>
 
         <div className="bg-surface rounded-lg border border-subtle p-8">

@@ -117,7 +117,7 @@ function DocumentInner() {
           <div className="ml-auto flex items-center gap-2">
             {!recipient && isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in to accept' : ''}
-                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-white bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-success-fg bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
                 {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
               </button>
             )}

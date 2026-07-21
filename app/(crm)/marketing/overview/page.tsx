@@ -9,8 +9,8 @@ import { loadRecords } from '@/lib/crm/data';
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
 const CHANNEL_TONE: Record<string, string> = {
-  email: 'bg-sky-400', social: 'bg-fuchsia-400', ads: 'bg-amber-400',
-  event: 'bg-violet-400', content: 'bg-teal-400', other: 'bg-strong',
+  email: 'bg-accent', social: 'bg-accent/70', ads: 'bg-warning',
+  event: 'bg-accent/40', content: 'bg-success', other: 'bg-strong',
 };
 
 export default function MarketingOverview() {
@@ -40,7 +40,7 @@ export default function MarketingOverview() {
   }, [rows]);
 
   const cards = [
-    { label: 'Active campaigns', value: String(stats.active), sub: `${rows.length} total`, icon: Megaphone, tone: 'text-fuchsia-600' },
+    { label: 'Active campaigns', value: String(stats.active), sub: `${rows.length} total`, icon: Megaphone, tone: 'text-accent' },
     { label: 'Spend', value: money(stats.spend), sub: `of ${money(stats.budget)} budget`, icon: Wallet, tone: 'text-secondary' },
     { label: 'Leads', value: stats.leads.toLocaleString(), sub: 'from all campaigns', icon: Users, tone: 'text-success' },
     { label: 'Cost / lead', value: stats.leads ? money(stats.cpl) : '—', sub: 'spend ÷ leads', icon: Target, tone: 'text-warning' },
@@ -101,8 +101,8 @@ export default function MarketingOverview() {
             {/* Quick links */}
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { label: 'Campaigns', desc: 'Plan, budget, and track results', icon: Megaphone, href: '/objects/campaigns', tone: 'text-fuchsia-600' },
-                { label: 'Source tracking', desc: 'UTM links — see where people come from', icon: Radio, href: '/dashboard/sources', tone: 'text-sky-600' },
+                { label: 'Campaigns', desc: 'Plan, budget, and track results', icon: Megaphone, href: '/objects/campaigns', tone: 'text-accent' },
+                { label: 'Source tracking', desc: 'UTM links — see where people come from', icon: Radio, href: '/dashboard/sources', tone: 'text-accent' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
                   className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">

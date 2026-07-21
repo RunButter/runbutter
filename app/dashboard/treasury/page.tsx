@@ -15,10 +15,10 @@ import { rpc } from '@/lib/rpc';
 
 // Psychometric dimensions the sliders filter on (discrete 0-100 score columns).
 const DIMS = [
-    { key: 'overall_score', label: 'Overall Match', accent: 'bg-indigo-500' },
+    { key: 'overall_score', label: 'Overall Match', accent: 'bg-accent' },
     { key: 'screening_score', label: 'Screening Fit', accent: 'bg-success' },
-    { key: 'cognitive_score', label: 'Cognitive', accent: 'bg-sky-500' },
-    { key: 'personality_score', label: 'Personality', accent: 'bg-violet-500' },
+    { key: 'cognitive_score', label: 'Cognitive', accent: 'bg-accent/70' },
+    { key: 'personality_score', label: 'Personality', accent: 'bg-accent/40' },
     { key: 'work_style_score', label: 'Work Style', accent: 'bg-warning' },
 ] as const;
 
