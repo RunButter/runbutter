@@ -248,6 +248,7 @@ export const NAV = [
     { slug: 'campaigns', label: 'Campaigns', icon: 'Rocket', href: '/objects/campaigns' },
     { slug: 'posts', label: 'Posts', icon: 'PenSquare', href: '/marketing/posts' },
     { slug: 'forms', label: 'Forms', icon: 'FileInput', href: '/marketing/forms' },
+    { slug: 'links', label: 'Short links', icon: 'Link2', href: '/marketing/links' },
     { slug: 'webanalytics', label: 'Web analytics', icon: 'Globe', href: '/marketing/analytics' },
     { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
   ]},

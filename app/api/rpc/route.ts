@@ -66,6 +66,8 @@ const ALLOWED = new Set([
   'get_sign_documents', 'void_sign_document',
   // Custom Forms (0054) — owner side; public get_public_form/submit_form are anon/server
   'get_forms', 'get_form', 'save_form', 'delete_form', 'get_form_submissions',
+  // URL shortener (0055) — owner side; register_short_click is anon/redirect route
+  'get_short_links', 'create_short_link', 'delete_short_link',
 ]);
 
 function db() {
