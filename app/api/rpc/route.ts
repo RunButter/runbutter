@@ -70,6 +70,8 @@ const ALLOWED = new Set([
   'get_short_links', 'create_short_link', 'delete_short_link',
   // Cal.com connector (0056) — owner side; webhook route uses cal_resolve/cal_log server-side
   'get_cal_connection', 'save_cal_connection', 'get_meetings',
+  // Chat assistant (0057) — owner side; save via /api/assistant/save, webhooks server-side
+  'get_assistant_channels', 'delete_assistant_channel',
 ]);
 
 function db() {

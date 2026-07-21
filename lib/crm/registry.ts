@@ -270,6 +270,7 @@ export const NAV = [
   ]},
   { group: 'Automate', items: [
     { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
+    { slug: 'assistant', label: 'Assistant', icon: 'MessageCircle', href: '/settings/assistant' },
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
     { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
