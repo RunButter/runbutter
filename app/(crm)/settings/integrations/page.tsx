@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePrivy, getAccessToken } from '@privy-io/react-auth';
-import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send, Calendar, CheckCircle } from 'lucide-react';
+import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send, Calendar, CheckCircle, CalendarClock } from 'lucide-react';
 import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
 import { rpc } from '@/lib/rpc';
+import { getWorkspace } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 
 const KINDS = ['generic', 'slack', 'discord', 'zapier', 'make', 'n8n'];
@@ -153,6 +154,8 @@ export default function IntegrationsPage() {
                 </a>
               )}
             </div>
+
+            <CalConnect privy={privy} canEdit={canEdit} origin={origin} />
           </section>
 
           {/* Connect cards */}
@@ -311,5 +314,90 @@ export default function IntegrationsPage() {
         </div>
       )}
     </>
+  );
+}
+
+// Cal.com connector: store the booking link + a signed webhook URL. Cal.com is
+// AGPL — we integrate over its webhook API, never copy its code. Bookings whose
+// attendee matches a candidate also land on the Interviews page (migration 0056).
+function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit: boolean; origin: string }) {
+  const [wsId, setWsId] = useState<string | null>(null);
+  const [conn, setConn] = useState<{ booking_url: string | null; webhook_token: string; has_secret: boolean; enabled: boolean } | null>(null);
+  const [bookingUrl, setBookingUrl] = useState('');
+  const [secret, setSecret] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (!privy) return;
+    (async () => {
+      const w = await getWorkspace(privy);
+      if (!w) return;
+      setWsId(w.id);
+      const { data } = await rpc('get_cal_connection', { p_privy: privy, p_workspace: w.id });
+      if (data) { setConn(data); setBookingUrl(data.booking_url || ''); }
+    })();
+  }, [privy]);
+
+  const webhookUrl = conn ? `${origin}/api/integrations/cal/${conn.webhook_token}` : '';
+
+  const save = async () => {
+    if (!privy || !wsId) return;
+    setBusy(true); setMsg('');
+    const { data, error } = await rpc('save_cal_connection', {
+      p_privy: privy, p_workspace: wsId, p_booking_url: bookingUrl, p_secret: secret, p_enabled: true,
+    });
+    setBusy(false);
+    if (error) { setMsg(error.message.replace(/_/g, ' ').toLowerCase()); return; }
+    setSecret('');
+    setConn((c) => (c ? { ...c, booking_url: bookingUrl || null, has_secret: c.has_secret || !!secret } : c));
+    setMsg('Saved.');
+  };
+
+  return (
+    <div className="mt-3 rounded-xl bg-surface ring-1 ring-subtle p-4">
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><CalendarClock className="w-5 h-5" /></div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[13px] font-semibold text-primary">Cal.com scheduling</h3>
+          <p className="text-[12px] text-secondary leading-relaxed">Share your Cal.com booking link, and have new bookings logged automatically. If the attendee matches a candidate, it also appears on the Interviews page.</p>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        <label className="block">
+          <span className="block text-[12px] font-semibold text-secondary mb-1">Your Cal.com booking link</span>
+          <input value={bookingUrl} onChange={(e) => setBookingUrl(e.target.value)} disabled={!canEdit}
+            placeholder="https://cal.com/you/intro" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+        </label>
+
+        <div>
+          <span className="block text-[12px] font-semibold text-secondary mb-1">Webhook URL <span className="text-tertiary">— paste into Cal.com → Settings → Webhooks</span></span>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-[11px] font-mono text-secondary bg-surface-sunken ring-1 ring-subtle rounded-md px-2.5 py-2 truncate">{webhookUrl || '…'}</code>
+            <button onClick={() => { navigator.clipboard?.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+              disabled={!webhookUrl} className="h-8 px-2.5 rounded-md text-[12px] font-semibold ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1.5">
+              {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} Copy
+            </button>
+          </div>
+        </div>
+
+        <label className="block">
+          <span className="block text-[12px] font-semibold text-secondary mb-1">Webhook signing secret {conn?.has_secret && <span className="text-success">— set</span>}</span>
+          <input value={secret} onChange={(e) => setSecret(e.target.value)} disabled={!canEdit} type="password"
+            placeholder={conn?.has_secret ? 'Leave blank to keep current' : 'Paste the secret from Cal.com'}
+            className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+          <span className="block mt-1 text-[11px] text-tertiary">Cal.com signs each webhook with this; we verify it before recording anything.</span>
+        </label>
+
+        {msg && <div className="text-[12px] text-secondary">{msg}</div>}
+        {canEdit && (
+          <button onClick={save} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-white bg-accent hover:bg-accent/90 disabled:opacity-50">
+            {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Cal.com settings
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

@@ -68,6 +68,8 @@ const ALLOWED = new Set([
   'get_forms', 'get_form', 'save_form', 'delete_form', 'get_form_submissions',
   // URL shortener (0055) — owner side; register_short_click is anon/redirect route
   'get_short_links', 'create_short_link', 'delete_short_link',
+  // Cal.com connector (0056) — owner side; webhook route uses cal_resolve/cal_log server-side
+  'get_cal_connection', 'save_cal_connection', 'get_meetings',
 ]);
 
 function db() {
