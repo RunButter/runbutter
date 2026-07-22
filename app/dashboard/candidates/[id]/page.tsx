@@ -35,7 +35,35 @@ ChartJS.register(
     Legend
 );
 
+// Chart.js paints to a canvas and can't read CSS variables, so the radar was
+// hardcoded light: black gridlines and a white tooltip, which vanish or glare in
+// dark mode. Resolve the design tokens to concrete colours instead, and
+// recompute whenever the theme class flips on <html>.
+function useChartTokens() {
+    const read = () => {
+        const cs = getComputedStyle(document.documentElement);
+        const raw = (n: string) => cs.getPropertyValue(n).trim();
+        const hsl = (n: string, a = 1) => `hsl(${raw(n)} / ${a})`;
+        return {
+            accent: hsl('--accent'), accentFill: hsl('--accent', 0.18),
+            success: hsl('--success', 0.5), successFill: hsl('--success', 0.06),
+            grid: hsl('--border-subtle'), label: hsl('--text-tertiary'),
+            surface: hsl('--surface'), title: hsl('--text-primary'),
+            body: hsl('--text-secondary'), border: hsl('--border-strong'),
+        };
+    };
+    const [tokens, setTokens] = useState<ReturnType<typeof read> | null>(null);
+    useEffect(() => {
+        setTokens(read());
+        const obs = new MutationObserver(() => setTokens(read()));
+        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
+    return tokens;
+}
+
 export default function CandidateDetailPage({ params }: { params: { id: string } }) {
+    const chart = useChartTokens();
   const { notify } = useDialog();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
@@ -276,17 +304,18 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     results.personality_data?.agreeableness || 0,
                     results.personality_data?.neuroticism || 0,
                 ],
-                backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                borderColor: 'rgba(79, 70, 229, 1)',
+                backgroundColor: chart?.accentFill,
+                borderColor: chart?.accent,
                 borderWidth: 2,
                 pointRadius: 3,
+                pointBackgroundColor: chart?.accent,
                 order: 1
             },
             {
                 label: `${neuroProfile.toUpperCase()} Target`,
                 data: targetData,
-                backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                borderColor: 'rgba(16, 185, 129, 0.4)',
+                backgroundColor: chart?.successFill,
+                borderColor: chart?.success,
                 borderWidth: 2,
                 borderDash: [5, 5],
                 pointRadius: 0,
@@ -298,11 +327,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const radarOptions = {
         scales: {
             r: {
-                angleLines: { color: 'rgba(0,0,0,0.05)' },
-                grid: { color: 'rgba(0,0,0,0.05)' },
+                angleLines: { color: chart?.grid },
+                grid: { color: chart?.grid },
                 pointLabels: {
-                    font: { size: 11, weight: 'bold' as any },
-                    color: '#64748b'
+                    font: { size: 11, weight: 600 as any },
+                    color: chart?.label
                 },
                 suggestedMin: 0,
                 suggestedMax: 100,
@@ -312,10 +341,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
         plugins: {
             legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                titleColor: '#1e293b',
-                bodyColor: '#475569',
-                borderColor: '#e2e8f0',
+                backgroundColor: chart?.surface,
+                titleColor: chart?.title,
+                bodyColor: chart?.body,
+                borderColor: chart?.border,
                 borderWidth: 1,
                 padding: 10,
                 displayColors: false
@@ -325,20 +354,18 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     };
 
     const WorkStyleBar = ({ label, left, right, value = 0 }: any) => (
-        <div className="space-y-2">
-            <div className="flex justify-between text-sm font-semibold text-secondary">
-                <span>{label}</span>
-                <span className="text-accent">{(value || 0)}% {(value || 0) > 50 ? right : left}</span>
+        <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[12px] font-medium text-secondary truncate">{label}</span>
+                <span className="text-[12px] font-semibold text-primary tabular-nums shrink-0">{value || 0}%</span>
             </div>
-            <div className="h-3 bg-surface-hover rounded-full overflow-hidden border border-subtle">
-                <div
-                    className="h-full bg-primary-500 rounded-full transition-all duration-500"
-                    style={{ width: `${value || 0}%` }}
-                />
+            <div className="h-1.5 bg-surface-sunken rounded-full overflow-hidden ring-1 ring-subtle">
+                <div className="h-full bg-accent rounded-full transition-[width] duration-500"
+                    style={{ width: `${value || 0}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] text-tertiary uppercase font-semibold tracking-tighter">
-                <span>{left}</span>
-                <span>{right}</span>
+            <div className="flex justify-between text-[10px] text-tertiary uppercase tracking-widest">
+                <span className={(value || 0) <= 50 ? 'text-secondary font-semibold' : ''}>{left}</span>
+                <span className={(value || 0) > 50 ? 'text-secondary font-semibold' : ''}>{right}</span>
             </div>
         </div>
     );
@@ -415,104 +442,99 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-8">
+            <main className="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-6">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
-                    <section className="bg-surface rounded-3xl shadow-popover border border-subtle overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
-                        <div className="bg-surface p-8 border-b border-subtle">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div>
-                                    <h2 className="text-2xl font-semibold text-primary flex items-center gap-3">
-                                        Candidate Assessment Report
-                                    </h2>
-                                    <p className="mt-1 text-secondary font-medium flex items-center gap-2">
-                                        {candidate.full_name} • {candidate.position?.title} • Completed: {new Date(results.completed_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <button onClick={openFitSimulator} className="px-5 py-2.5 bg-accent text-accent-fg font-semibold rounded-xl hover:bg-accent/90 transition text-sm flex items-center gap-2 shadow-sm">
-                                        <Users className="w-4 h-4" />
-                                        Simulate Team Fit
-                                    </button>
-                                    <button className="px-5 py-2.5 bg-surface-sunken text-secondary font-semibold rounded-xl border border-subtle hover:bg-surface-hover transition text-sm">
-                                        Switch to Candidate View
-                                    </button>
-                                </div>
+                    <section className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                        <div className="px-5 py-4 border-b border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <h2 className="text-sm font-semibold text-primary">Assessment report</h2>
+                                <p className="mt-0.5 text-[12px] text-tertiary truncate">
+                                    {candidate.full_name}
+                                    {candidate.position?.title && <> · {candidate.position.title}</>}
+                                    {results.completed_at && <> · completed {new Date(results.completed_at).toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button onClick={openFitSimulator}
+                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+                                    <Users className="w-3.5 h-3.5" /> Simulate team fit
+                                </button>
                             </div>
                         </div>
 
-                        <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Headline scores */}
+                        <div className="px-5 py-4 grid grid-cols-2 lg:grid-cols-4 gap-3 border-b border-subtle">
                             {[
-                                { label: 'Overall Match', value: results.overall_score, color: 'bg-success/10 text-success border-success/30' },
-                                { label: 'Cognitive Score', value: results.cognitive_score, color: 'bg-accent/10 text-accent border-accent/30' },
-                                { label: 'Personality Fit', value: results.personality_score, color: 'bg-accent/10 text-accent border-accent/30' },
-                                { label: 'Work Style', value: results.work_style_score, color: 'bg-warning/10 text-warning border-warning/30' }
+                                { label: 'Overall match', value: results.overall_score },
+                                { label: 'Cognitive', value: results.cognitive_score },
+                                { label: 'Personality', value: results.personality_score },
+                                { label: 'Work style', value: results.work_style_score },
                             ].filter((stat) => stat.value != null).map((stat) => (
-                                <div key={stat.label} className={`${stat.color} p-6 rounded-2xl border text-left`}>
-                                    <div className="text-4xl font-semibold leading-none">{stat.value}</div>
-                                    <div className="mt-2 text-xs font-semibold uppercase tracking-widest opacity-80">{stat.label}</div>
+                                <div key={stat.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
+                                    <div className="text-2xl font-semibold text-primary tabular-nums leading-none">{stat.value}<span className="text-tertiary text-sm font-normal">%</span></div>
+                                    <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-tertiary">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="px-8 pb-12">
-                            <div className="mb-12">
-                                <h3 className="text-lg font-semibold text-primary mb-8">Big 5 Personality Traits</h3>
-                                <div className="bg-surface-sunken/50 rounded-3xl p-12 flex items-center justify-center relative">
-                                    <div className="h-[360px] w-full max-w-[500px]">
+                        <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Big 5 radar */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-primary mb-3">Big 5 personality</h3>
+                                <div className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-4">
+                                    <div className="h-[300px]">
                                         {radarData && <Radar data={radarData} options={radarOptions} />}
                                     </div>
-                                    <div className="absolute bottom-8 flex gap-6 text-[10px] font-semibold uppercase tracking-widest text-tertiary">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-primary-500 opacity-20 border border-accent/30" />
-                                            Candidate Profile
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full border-2 border-dashed border-subtle" />
-                                            Role Benchmark
-                                        </div>
+                                    <div className="mt-3 pt-3 border-t border-subtle flex items-center justify-center gap-5 text-[10px] font-semibold uppercase tracking-widest text-tertiary">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-sm bg-accent/30 ring-1 ring-accent" /> Candidate
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-sm ring-1 ring-dashed ring-success" /> Role benchmark
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+                            <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-primary mb-8">Work Style Preferences</h3>
-                                    <div className="space-y-6">
-                                        <div className="grid grid-cols-2 gap-6">
+                                    <h3 className="text-sm font-semibold text-primary mb-3">Work style</h3>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <WorkStyleBar label="Collaboration vs Independent" left="Individualist" right="Collaborative" value={results.work_style_data.collaboration} />
                                             <WorkStyleBar label="Structured vs Flexible" left="Highly Flexible" right="Highly Structured" value={results.work_style_data.structure} />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <WorkStyleBar label="Strategic vs Tactical" left="Tactical Execution" right="Strategic Thinking" value={results.work_style_data.strategic} />
                                             <WorkStyleBar label="Innovation vs Optimization" left="System Optimizer" right="Creative Innovator" value={results.work_style_data.innovation} />
                                         </div>
                                     </div>
                                 </div>
-                                <div className="space-y-8">
-                                    {results.cognitive_data && (
-                                        <>
-                                            <h3 className="text-lg font-semibold text-primary mb-8">Cognitive Assessment</h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                {[
-                                                    { label: 'Logical Reasoning', value: results.cognitive_data?.logic },
-                                                    { label: 'Pattern Recognition', value: results.cognitive_data?.patterns },
-                                                    { label: 'Problem Solving', value: results.cognitive_data?.problem_solving }
-                                                ].filter((stat) => stat.value != null).map((stat) => (
-                                                    <div key={stat.label} className="bg-surface-sunken p-6 rounded-2xl border border-subtle">
-                                                        <div className="text-2xl font-semibold text-primary">{stat.value}</div>
-                                                        <div className="text-[10px] font-semibold text-secondary uppercase tracking-widest mt-1">{stat.label}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className="p-6 bg-accent/10 rounded-2xl border border-accent/20">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-xs font-semibold text-accent uppercase tracking-widest flex items-center gap-2">
-                                                <Target className="w-4 h-4" />
-                                                Neuro-Profile Analysis
-                                            </h4>
+
+                                {results.cognitive_data && (
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-primary mb-3">Cognitive</h3>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {[
+                                                { label: 'Logic', value: results.cognitive_data?.logic },
+                                                { label: 'Patterns', value: results.cognitive_data?.patterns },
+                                                { label: 'Problem solving', value: results.cognitive_data?.problem_solving }
+                                            ].filter((stat) => stat.value != null).map((stat) => (
+                                                <div key={stat.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
+                                                    <div className="text-lg font-semibold text-primary tabular-nums leading-none">{stat.value}</div>
+                                                    <div className="mt-1 text-[10px] font-semibold text-tertiary uppercase tracking-widest leading-tight">{stat.label}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                        <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
+                                            <Target className="w-3.5 h-3.5 text-accent" /> Neuro-profile
+                                        </h3>
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
                                                 candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-warning/10 text-warning' :
                                                     candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-accent/10 text-accent' :
@@ -520,76 +542,66 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                                 }`}>
                                                 {candidate?.position?.neuro_profile?.replace('-', ' ') || 'HARD TECH'}
                                             </span>
-                                        </div>
-                                        <p className="text-sm text-secondary leading-relaxed font-medium italic">
-                                            &quot;{results.summary || 'Analysis pending based on trait alignment.'}&quot;
+                                    </div>
+                                    <div className="rounded-xl bg-accent/5 ring-1 ring-accent/20 p-3">
+                                        <p className="text-[13px] text-secondary leading-relaxed">
+                                            {results.summary || 'Analysis pending based on trait alignment.'}
                                         </p>
                                     </div>
-
-                                    {results.screening_answers && results.screening_answers.length > 0 && (
-                                        <div className="pt-8 border-t border-subtle">
-                                            <h3 className="text-lg font-semibold text-primary mb-6 flex items-center gap-2">
-                                                <Target className="w-5 h-5 text-accent" />
-                                                Screening & Qualification
-                                            </h3>
-                                            <div className="space-y-4">
-                                                {results.screening_answers.map((sa: any, idx: number) => (
-                                                    <div key={idx} className="p-4 bg-surface-sunken rounded-xl border border-subtle">
-                                                        <div className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Question {idx + 1}</div>
-                                                        <p className="text-sm font-semibold text-primary mb-3">{sa.question}</p>
-                                                        <div className="flex items-center justify-between">
-                                                            <div className={`text-sm px-3 py-1 rounded-lg font-medium ${sa.is_correct === true ? 'bg-success/10 text-success border border-success/30' :
-                                                                sa.is_correct === false ? 'bg-danger/10 text-danger border border-danger/30' :
-                                                                    'bg-surface text-secondary border border-subtle'
-                                                                }`}>
-                                                                {sa.answer}
-                                                            </div>
-                                                            {sa.is_correct !== null && (
-                                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-tertiary">
-                                                                    {sa.is_correct ? 'Correct Match' : 'Mismatch'}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Screening — full width, its own band */}
+                        {results.screening_answers && results.screening_answers.length > 0 && (
+                            <div className="px-5 pb-5">
+                                <h3 className="text-sm font-semibold text-primary mb-3">Screening answers</h3>
+                                <div className="rounded-xl ring-1 ring-subtle divide-y divide-subtle overflow-hidden">
+                                    {results.screening_answers.map((sa: any, idx: number) => (
+                                        <div key={idx} className="p-4 bg-surface-sunken">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <p className="text-[13px] font-medium text-primary">{sa.question}</p>
+                                                {sa.is_correct !== null && (
+                                                    <span className={`shrink-0 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${sa.is_correct
+                                                        ? 'bg-success/10 text-success ring-success/30'
+                                                        : 'bg-danger/10 text-danger ring-danger/30'}`}>
+                                                        {sa.is_correct ? 'Match' : 'Mismatch'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="mt-1.5 text-[13px] text-secondary leading-relaxed">{sa.answer}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </section>
                 ) : (
-                    <div className="bg-surface rounded-3xl p-12 text-center border-2 border-dashed border-subtle flex flex-col items-center justify-center gap-6">
-                        <div className="w-20 h-20 bg-surface-sunken rounded-full flex items-center justify-center text-tertiary">
-                            <Brain className="w-10 h-10" />
-                        </div>
+                    <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
+                        <Brain className="w-8 h-8 text-tertiary mx-auto mb-3" />
                         <div>
-                            <h3 className="text-xl font-semibold text-primary">No Assessment Results</h3>
-                            <p className="text-sm text-secondary mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
+                            <h3 className="text-sm font-medium text-secondary">No assessment results</h3>
+                            <p className="text-[12px] text-tertiary mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
                         </div>
-                        <div className="flex gap-3">
-                            <button onClick={generateDemoResults} className="btn-secondary py-2 px-6 flex items-center gap-2">
-                                <TrendingUp className="w-4 h-4" />
-                                Generate Sample Results
-                            </button>
-                            <button className="btn-primary py-2 px-6">
-                                Send Reminder
+                        <div className="mt-4 flex items-center justify-center gap-2">
+                            <button onClick={generateDemoResults}
+                                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+                                <TrendingUp className="w-3.5 h-3.5" /> Generate sample results
                             </button>
                         </div>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column: Basic Info & Resume */}
-                    <div className="lg:col-span-2 space-y-8">
+                    <div className="lg:col-span-2 space-y-6">
                         {/* Profile Info */}
-                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-8">
-                            <h3 className="text-lg font-semibold text-primary mb-6 flex items-center gap-2">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                            <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
                                 <User className="w-5 h-5 text-accent" />
                                 Contact Details
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3 text-secondary bg-surface-sunken p-3 rounded-lg border border-subtle">
                                         <Mail className="w-5 h-5 text-accent" />
@@ -630,7 +642,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* CV Viewer */}
-                        <div className="bg-surface rounded-3xl shadow-sm border border-subtle overflow-hidden">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
                             <div className="p-6 border-b bg-surface-sunken flex items-center justify-between">
                                 <h3 className="font-semibold text-primary flex items-center gap-2">
                                     <FileText className="w-5 h-5 text-accent" />
@@ -675,7 +687,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Right Column: Mini Stats & activity */}
                     <div className="space-y-8">
                         {/* Status Card */}
-                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-6">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
                             <h3 className="font-semibold text-primary mb-6 flex items-center gap-2">
                                 <Target className="w-5 h-5 text-accent" />
                                 Pipeline Status
@@ -706,8 +718,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* Activity Timeline */}
-                        <div className="bg-surface rounded-xl shadow-sm border border-subtle p-6">
-                            <h3 className="font-semibold text-primary mb-8 flex items-center gap-2">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                            <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
                                 <BarChart className="w-5 h-5 text-accent" />
                                 Hiring Activity
                             </h3>
@@ -760,8 +772,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             {/* Schedule Modal */}
             {showScheduleModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-surface rounded-2xl shadow-popover w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-xl font-semibold text-primary mb-2">Schedule Interview</h3>
+                    <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-md p-5 animate-in zoom-in-95 duration-200">
+                        <h3 className="text-sm font-semibold text-primary mb-2">Schedule Interview</h3>
                         <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
 
                         <div className="mb-6">
