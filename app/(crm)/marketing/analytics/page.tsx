@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, RefreshCw, Smartphone, CheckCircle2, Settings2, Trash2, X } from 'lucide-react';
 import { loadSites, createSite, deleteSite, loadSiteStats, type Site, type SiteStats } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
+import StatCard from '@/components/ui/StatCard';
 
 const PERIODS = [
   { label: '7D', days: 7 },
@@ -204,20 +205,13 @@ export default function WebAnalytics() {
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (
-                <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
-                    <c.icon className="w-4 h-4 text-tertiary" />
-                  </div>
-                  <div className={`mt-2 text-2xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
-                  <div className="text-[11px] font-medium text-tertiary truncate">{c.sub}</div>
-                  {c.label === 'Mobile share' && deviceTotal > 0 && (
-                    <div className="mt-2 h-1.5 rounded-full bg-surface-hover overflow-hidden flex">
+                <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} icon={c.icon} tone={c.tone}
+                  footer={c.label === 'Mobile share' && deviceTotal > 0 ? (
+                    <div className="h-1.5 rounded-full bg-surface-hover overflow-hidden flex">
                       <div className="h-full bg-strong" style={{ width: `${100 - mobilePct}%` }} />
                       <div className="h-full bg-accent" style={{ width: `${mobilePct}%` }} />
                     </div>
-                  )}
-                </div>
+                  ) : undefined} />
               ))}
             </div>
 

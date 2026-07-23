@@ -20,6 +20,8 @@ type StatCardProps = {
   trend?: StatTrend;
   /** Raw series for a mini sparkline; drawn only if 2+ points. */
   spark?: number[];
+  /** Extra content rendered under the value (e.g. a share bar). */
+  footer?: React.ReactNode;
   href?: string;
   className?: string;
 };
@@ -47,7 +49,7 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 export default function StatCard({
-  label, value, sub, icon: Icon, tone, trend, spark, href, className,
+  label, value, sub, icon: Icon, tone, trend, spark, footer, href, className,
 }: StatCardProps) {
   const interactive = !!href;
   const TrendArrow = trend?.dir === 'up' ? ArrowUpRight : ArrowDownRight;
@@ -76,6 +78,8 @@ export default function StatCard({
           <span className={cn('shrink-0 self-center', tone || 'text-tertiary')}><Sparkline data={spark} /></span>
         )}
       </div>
+
+      {footer && <div className="mt-2">{footer}</div>}
 
       {trend && (
         <div className="mt-3 flex items-center gap-1.5">

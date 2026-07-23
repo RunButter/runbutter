@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2, ArrowLeftRight } from 'lucide-react';
 import { loadFinanceAnalytics, loadBankAccounts, type FinanceAnalytics, type BankAccount } from '@/lib/crm/data';
 import FinanceChart from '@/components/crm/FinanceChart';
+import StatCard from '@/components/ui/StatCard';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -37,12 +38,17 @@ export default function FinanceOverview() {
   const live = fin?.live ?? false;
   const net = fin?.net ?? 0;
 
+  // Truthful monthly series for the tile sparklines.
+  const revSeries = fin?.series?.map((p) => p.revenue) ?? [];
+  const costSeries = fin?.series?.map((p) => p.costs) ?? [];
+  const netSeries = fin?.series?.map((p) => p.revenue - p.costs) ?? [];
+
   const cards = [
-    { label: 'Revenue', value: fin ? money(fin.revenue) : '—', sub: 'Paid invoices', icon: TrendingUp, tone: 'text-success' },
-    { label: 'Costs', value: fin ? money(fin.costs) : '—', sub: 'Approved + paid', icon: Wallet, tone: 'text-secondary' },
-    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger' },
+    { label: 'Revenue', value: fin ? money(fin.revenue) : '—', sub: 'Paid invoices', icon: TrendingUp, tone: 'text-success', spark: revSeries },
+    { label: 'Costs', value: fin ? money(fin.costs) : '—', sub: 'Approved + paid', icon: Wallet, tone: 'text-secondary', spark: costSeries },
+    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', spark: netSeries },
     { label: 'Outstanding', value: fin ? money(fin.outstanding) : '—', sub: 'Owed to you', icon: Clock, tone: 'text-warning' },
-  ];
+  ] as const;
 
   return (
     <>
@@ -69,14 +75,7 @@ export default function FinanceOverview() {
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (
-                <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
-                    <c.icon className="w-4 h-4 text-tertiary" />
-                  </div>
-                  <div className={`mt-2 text-2xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
-                  <div className="text-[11px] font-medium text-tertiary">{c.sub}</div>
-                </div>
+                <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} icon={c.icon} tone={c.tone} spark={'spark' in c ? c.spark : undefined} />
               ))}
             </div>
 

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import HiringFunnel from '@/components/crm/HiringFunnel';
+import StatCard from '@/components/ui/StatCard';
 
 const fmtDate = (s?: string | null) => {
   if (!s) return '—';
@@ -58,13 +59,7 @@ export default function HrOverviewPage() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {kpis.map((k) => (
-            <div key={k.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{k.label}</span>
-                <k.icon className="w-4 h-4 text-tertiary" />
-              </div>
-              <div className={`mt-2 text-2xl font-semibold tabular-nums ${k.tone}`}>{k.value === undefined ? '—' : k.value}</div>
-            </div>
+            <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} tone={k.tone} />
           ))}
         </div>
 

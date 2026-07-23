@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { Megaphone, Wallet, Users, Target, ArrowUpRight, Loader2, Radio } from 'lucide-react';
 import { loadRecords } from '@/lib/crm/data';
+import StatCard from '@/components/ui/StatCard';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -65,14 +66,7 @@ export default function MarketingOverview() {
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (
-                <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
-                    <c.icon className="w-4 h-4 text-tertiary" />
-                  </div>
-                  <div className={`mt-2 text-2xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
-                  <div className="text-[11px] font-medium text-tertiary">{c.sub}</div>
-                </div>
+                <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} icon={c.icon} tone={c.tone} />
               ))}
             </div>
 

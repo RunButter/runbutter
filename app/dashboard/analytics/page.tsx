@@ -8,6 +8,7 @@ import { useChartTokens } from '@/lib/chart-tokens';
 import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2, Briefcase } from 'lucide-react';
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
+import StatCard from '@/components/ui/StatCard';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -182,13 +183,7 @@ export default function AnalyticsPage() {
                     <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                             {kpis.map((k) => (
-                                <div key={k.label} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{k.label}</span>
-                                        <k.icon className="w-4 h-4 text-tertiary" />
-                                    </div>
-                                    <div className={`mt-2 text-2xl font-semibold tabular-nums ${k.tone}`}>{k.value}</div>
-                                </div>
+                                <StatCard key={k.label} label={k.label} value={k.value} icon={k.icon} tone={k.tone} />
                             ))}
                         </div>
 
