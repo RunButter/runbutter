@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import NavRail from '@/components/crm/NavRail';
+import CommandPalette from '@/components/CommandPalette';
 
 // App shell for the Business-OS workspace. The marketing site and the legacy
 // /dashboard keep their own layouts; this is the new Twenty-style surface.
@@ -25,6 +26,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </header>
         {children}
       </main>
+      <CommandPalette />
     </div>
   );
 }

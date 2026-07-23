@@ -88,5 +88,8 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  // tailwindcss-animate gives the enter/exit utilities (animate-in, fade-in-0,
+  // zoom-in-95, slide-in-from-*) that the Radix-based shadcn primitives use for
+  // their open/close transitions. Additive — no existing utility changes.
+  plugins: [require('tailwindcss-animate')],
 };

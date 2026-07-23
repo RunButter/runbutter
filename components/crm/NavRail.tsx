@@ -180,7 +180,9 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="px-2 pb-2">
-        <button className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-sm text-tertiary hover:bg-surface-hover transition-colors">
+        <button
+          onClick={() => window.dispatchEvent(new Event('runbutter:command'))}
+          className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-sm text-tertiary hover:bg-surface-hover transition-colors">
           <Search className="w-3.5 h-3.5" /> Search
           <span className="ml-auto text-2xs font-mono text-tertiary">⌘K</span>
         </button>
