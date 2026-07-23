@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { Loader2, Upload, Check } from 'lucide-react';
+import { Loader2, Upload, Check, Building2, ArrowRight } from 'lucide-react';
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
 
@@ -106,6 +107,19 @@ export default function BrandingPage() {
       <div className="flex-1 overflow-auto p-6">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : privy && !wsId ? (
+          // Signed in but no workspace yet — send them to finish company setup
+          // instead of the misleading "Sign in to save" dead-end.
+          <div className="max-w-md mx-auto mt-10 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-8 text-center">
+            <div className="w-12 h-12 rounded-xl bg-accent-soft ring-1 ring-subtle flex items-center justify-center mx-auto mb-4">
+              <Building2 className="w-6 h-6 text-accent" />
+            </div>
+            <h2 className="text-lg font-semibold text-primary">Finish setting up your company</h2>
+            <p className="mt-1.5 text-[13px] text-secondary">Create your workspace first — then you can add your logo, legal details and bank info here.</p>
+            <Link href="/auth/register" className="mt-5 inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+              Set up company <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         ) : (
           <div className="max-w-4xl grid lg:grid-cols-2 gap-6">
             {/* Form */}

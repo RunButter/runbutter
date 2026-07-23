@@ -4,19 +4,35 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
+import { supabase } from '@/lib/supabase';
 import { Users, Loader2 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { ready, authenticated, login, logout } = usePrivy();
+  const { ready, authenticated, user, login, logout } = usePrivy();
 
-  // If already fully authenticated with a company, go to dashboard
+  // Privy's login() also signs *up* a new email/social identity, so someone can
+  // land here fully authenticated but with no company yet. Route by whether they
+  // actually have one: existing members → dashboard; brand-new accounts →
+  // /auth/register (the company-setup step). Sending a company-less user straight
+  // to /dashboard was the bug — every company-scoped page then errored with
+  // "Sign in to save…" because their workspace never got created.
   useEffect(() => {
-    if (ready && authenticated) {
-      router.push('/dashboard');
-    }
-  }, [ready, authenticated, router]);
+    if (!ready || !authenticated || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('company_users')
+        .select('id')
+        .eq('privy_user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      // On a lookup error, fall through to onboarding rather than a broken shell.
+      router.push(data && !error ? '/dashboard' : '/auth/register');
+    })();
+    return () => { cancelled = true; };
+  }, [ready, authenticated, user, router]);
 
   const handleLogin = async () => {
     try {
