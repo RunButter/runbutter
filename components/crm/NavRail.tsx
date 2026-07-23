@@ -8,11 +8,14 @@ import {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
   Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
   GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight, Landmark,
-  Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut, Bot, Check, Loader2, FileBarChart, PenLine, FileInput, Link2, MessageCircle,
+  Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut, Bot, Loader2, FileBarChart, PenLine, FileInput, Link2, MessageCircle,
 } from 'lucide-react';
 import { NAV } from '@/lib/crm/registry';
 import { getWorkspace, loadBranding, loadNavActivity, listMyWorkspaces, setActiveWorkspace, type WorkspaceContext, type WorkspaceOption } from '@/lib/crm/data';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuCheck,
+} from '@/components/ui/dropdown-menu';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
@@ -82,9 +85,10 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
   const [wsList, setWsList] = useState<WorkspaceOption[] | null>(null);
   const [switching, setSwitching] = useState('');
 
-  const openSwitcher = async () => {
-    setWsOpen((o) => !o);
-    if (!wsList && user) setWsList(await listMyWorkspaces(user.id));
+  // Lazy-load the workspace list the first time the menu opens.
+  const onSwitcherOpenChange = (open: boolean) => {
+    setWsOpen(open);
+    if (open && !wsList && user) listMyWorkspaces(user.id).then(setWsList);
   };
 
   const switchTo = async (id: string) => {
@@ -136,48 +140,43 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <aside className="w-60 h-full shrink-0 bg-canvas flex flex-col">
-      <div className="relative">
-        <button onClick={openSwitcher} aria-haspopup="menu" aria-expanded={wsOpen}
-          className="w-full h-12 flex items-center gap-2 px-3 hover:bg-surface-hover transition-colors">
-          {logo ? (
-            <img src={logo} alt="" className="w-5 h-5 rounded object-cover border border-subtle shrink-0" />
-          ) : (
-            <div className="w-5 h-5 rounded bg-accent shrink-0 flex items-center justify-center text-2xs font-semibold text-accent-fg">
-              {(ws?.name || 'R')[0].toUpperCase()}
-            </div>
-          )}
-          <span className="text-sm font-medium text-primary truncate">{ws?.name || 'RunButter'}</span>
-          <ChevronsUpDown className="w-3.5 h-3.5 text-tertiary ml-auto shrink-0" />
-        </button>
-
-        {wsOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setWsOpen(false)} />
-            <div role="menu" className="absolute left-2 right-2 top-11 z-50 rounded-lg bg-surface ring-1 ring-subtle shadow-popover py-1">
-              <div className="px-3 py-1.5 text-2xs font-semibold uppercase tracking-widest text-tertiary">Workspaces</div>
-              {wsList === null ? (
-                <div className="px-3 py-2 text-xs text-tertiary flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Loading…</div>
-              ) : wsList.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-tertiary">No workspaces.</div>
-              ) : wsList.map((w) => (
-                <button key={w.id} role="menuitem" onClick={() => switchTo(w.id)} disabled={!!switching}
-                  className="w-full flex items-center gap-2 px-3 h-9 text-left hover:bg-surface-hover disabled:opacity-50">
-                  <div className="w-5 h-5 rounded bg-surface-hover text-secondary text-2xs font-semibold flex items-center justify-center shrink-0">
-                    {(w.name || 'R')[0].toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] text-primary truncate">{w.name}</div>
-                    <div className="text-2xs text-tertiary capitalize">{w.role}</div>
-                  </div>
-                  {switching === w.id
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin text-tertiary shrink-0" />
-                    : w.id === ws?.id && <Check className="w-3.5 h-3.5 text-accent shrink-0" />}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <DropdownMenu open={wsOpen} onOpenChange={onSwitcherOpenChange}>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="w-full h-12 flex items-center gap-2 px-3 outline-none hover:bg-surface-hover data-[state=open]:bg-surface-hover transition-colors">
+            {logo ? (
+              <img src={logo} alt="" className="w-5 h-5 rounded object-cover border border-subtle shrink-0" />
+            ) : (
+              <div className="w-5 h-5 rounded bg-accent shrink-0 flex items-center justify-center text-2xs font-semibold text-accent-fg">
+                {(ws?.name || 'R')[0].toUpperCase()}
+              </div>
+            )}
+            <span className="text-sm font-medium text-primary truncate">{ws?.name || 'RunButter'}</span>
+            <ChevronsUpDown className="w-3.5 h-3.5 text-tertiary ml-auto shrink-0" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" sideOffset={4} className="w-[14.5rem]">
+          <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
+          {wsList === null ? (
+            <div className="px-2 py-2 text-xs text-tertiary flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Loading…</div>
+          ) : wsList.length === 0 ? (
+            <div className="px-2 py-2 text-xs text-tertiary">No workspaces.</div>
+          ) : wsList.map((w) => (
+            <DropdownMenuItem key={w.id} disabled={!!switching} onSelect={() => switchTo(w.id)} className="h-9">
+              <div className="w-5 h-5 rounded bg-surface-hover text-secondary text-2xs font-semibold flex items-center justify-center shrink-0">
+                {(w.name || 'R')[0].toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[13px] text-primary truncate">{w.name}</div>
+                <div className="text-2xs text-tertiary capitalize">{w.role}</div>
+              </div>
+              {switching === w.id
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-tertiary shrink-0 ml-auto" />
+                : <DropdownMenuCheck show={w.id === ws?.id} />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="px-2 pb-2">
         <button
