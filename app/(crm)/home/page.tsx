@@ -15,6 +15,7 @@ import type { PipelineRecord } from '@/lib/crm/types';
 import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import FinanceChart from '@/components/crm/FinanceChart';
 import HiringFunnel from '@/components/crm/HiringFunnel';
+import StatCard from '@/components/ui/StatCard';
 
 const money = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
@@ -57,10 +58,12 @@ export default function WorkspaceHome() {
   const openDeals = deals.filter((d) => d.status === 'active');
   const pipelineValue = openDeals.reduce((s, d) => s + (d.amount || 0), 0);
   const net = fin?.net ?? 0;
+  // Truthful monthly net series (revenue − costs) for the Net-profit sparkline.
+  const netSeries = fin?.series?.map((p) => p.revenue - p.costs) ?? [];
 
   const kpis = [
     { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-danger' : 'text-success', href: '/finance/transactions' },
-    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview' },
+    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview', spark: netSeries },
     { label: 'Open pipeline', value: money(pipelineValue), sub: `${openDeals.length} active deal${openDeals.length === 1 ? '' : 's'}`, icon: Target, tone: 'text-accent', href: '/pipelines/sales/board' },
     { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-accent', href: '/dashboard/overview' },
   ];
@@ -91,14 +94,16 @@ export default function WorkspaceHome() {
           {/* Cross-pillar KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {kpis.map((k) => (
-              <Link key={k.label} href={k.href} className="group rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{k.label}</span>
-                  <k.icon className="w-4 h-4 text-tertiary group-hover:text-tertiary transition-colors" />
-                </div>
-                <div className={`mt-2 text-2xl font-semibold tabular-nums ${k.tone}`}>{k.value}</div>
-                <div className="text-[11px] font-medium text-tertiary">{k.sub}</div>
-              </Link>
+              <StatCard
+                key={k.label}
+                label={k.label}
+                value={k.value}
+                sub={k.sub}
+                icon={k.icon}
+                tone={k.tone}
+                spark={k.spark}
+                href={k.href}
+              />
             ))}
           </div>
 
