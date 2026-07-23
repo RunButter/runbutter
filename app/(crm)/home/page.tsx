@@ -15,7 +15,7 @@ import type { PipelineRecord } from '@/lib/crm/types';
 import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import FinanceChart from '@/components/crm/FinanceChart';
 import HiringFunnel from '@/components/crm/HiringFunnel';
-import StatCard from '@/components/ui/StatCard';
+import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 
 const money = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
@@ -63,7 +63,7 @@ export default function WorkspaceHome() {
 
   const kpis = [
     { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-danger' : 'text-success', href: '/finance/transactions' },
-    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview', spark: netSeries },
+    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview', spark: netSeries, trend: monthlyMomentum(netSeries) },
     { label: 'Open pipeline', value: money(pipelineValue), sub: `${openDeals.length} active deal${openDeals.length === 1 ? '' : 's'}`, icon: Target, tone: 'text-accent', href: '/pipelines/sales/board' },
     { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-accent', href: '/dashboard/overview' },
   ];
@@ -101,7 +101,8 @@ export default function WorkspaceHome() {
                 sub={k.sub}
                 icon={k.icon}
                 tone={k.tone}
-                spark={k.spark}
+                spark={'spark' in k ? k.spark : undefined}
+                trend={'trend' in k ? k.trend : undefined}
                 href={k.href}
               />
             ))}

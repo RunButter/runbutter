@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, ArrowDownRight, ArrowRight, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Premium KPI tile for dashboards. Everything past label/value is optional and
@@ -9,6 +9,25 @@ import { cn } from '@/lib/utils';
 // `href` is set the whole tile becomes a link with a hover affordance.
 
 export type StatTrend = { dir: 'up' | 'down'; label: string; good?: boolean };
+
+// Real month-over-month momentum from a chronological (oldest→newest) monthly
+// series. The LAST point is the current, still-partial month, so it's dropped —
+// comparing a mid-month total against a full month would fake a drop. Returns
+// the change between the two most recent COMPLETE months, or undefined when
+// there isn't enough data or the move is just noise (<0.5%). `upIsGood=false`
+// for metrics where a rise is bad (costs).
+export function monthlyMomentum(series: number[] | undefined, opts?: { upIsGood?: boolean }): StatTrend | undefined {
+  if (!series || series.length < 3) return undefined;
+  const complete = series.slice(0, -1);            // drop the partial current month
+  const cur = complete[complete.length - 1];
+  const prev = complete[complete.length - 2];
+  if (!prev) return undefined;                     // can't divide by zero
+  const pct = ((cur - prev) / Math.abs(prev)) * 100;
+  if (!isFinite(pct) || Math.abs(pct) < 0.5) return undefined;
+  const dir: 'up' | 'down' = pct >= 0 ? 'up' : 'down';
+  const upIsGood = opts?.upIsGood ?? true;
+  return { dir, label: `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}%`, good: dir === 'up' ? upIsGood : !upIsGood };
+}
 
 type StatCardProps = {
   label: string;
@@ -58,13 +77,22 @@ export default function StatCard({
 
   const inner = (
     <>
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{label}</span>
-        {Icon && (
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+        {/* Top-right: the trend badge when we have real momentum (shadcn-admin
+            style), otherwise the icon chip. */}
+        {trend ? (
+          <span className={cn(
+            'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold shrink-0',
+            trendGood ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+          )}>
+            <TrendArrow className="w-3 h-3" />{trend.label}
+          </span>
+        ) : Icon ? (
           <span className="w-7 h-7 -mr-0.5 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
             <Icon className={cn('w-3.5 h-3.5', tone || 'text-tertiary')} />
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-2">
@@ -80,18 +108,6 @@ export default function StatCard({
       </div>
 
       {footer && <div className="mt-2">{footer}</div>}
-
-      {trend && (
-        <div className="mt-3 flex items-center gap-1.5">
-          <span className={cn(
-            'inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[11px] font-semibold',
-            trendGood ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
-          )}>
-            <TrendArrow className="w-3 h-3" />{trend.label}
-          </span>
-          {interactive && <ArrowRight className="w-3 h-3 text-tertiary ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />}
-        </div>
-      )}
     </>
   );
 

@@ -6,7 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2, ArrowLeftRight } from 'lucide-react';
 import { loadFinanceAnalytics, loadBankAccounts, type FinanceAnalytics, type BankAccount } from '@/lib/crm/data';
 import FinanceChart from '@/components/crm/FinanceChart';
-import StatCard from '@/components/ui/StatCard';
+import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -44,9 +44,9 @@ export default function FinanceOverview() {
   const netSeries = fin?.series?.map((p) => p.revenue - p.costs) ?? [];
 
   const cards = [
-    { label: 'Revenue', value: fin ? money(fin.revenue) : '—', sub: 'Paid invoices', icon: TrendingUp, tone: 'text-success', spark: revSeries },
-    { label: 'Costs', value: fin ? money(fin.costs) : '—', sub: 'Approved + paid', icon: Wallet, tone: 'text-secondary', spark: costSeries },
-    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', spark: netSeries },
+    { label: 'Revenue', value: fin ? money(fin.revenue) : '—', sub: 'Paid invoices', icon: TrendingUp, tone: 'text-success', spark: revSeries, trend: monthlyMomentum(revSeries) },
+    { label: 'Costs', value: fin ? money(fin.costs) : '—', sub: 'Approved + paid', icon: Wallet, tone: 'text-secondary', spark: costSeries, trend: monthlyMomentum(costSeries, { upIsGood: false }) },
+    { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', spark: netSeries, trend: monthlyMomentum(netSeries) },
     { label: 'Outstanding', value: fin ? money(fin.outstanding) : '—', sub: 'Owed to you', icon: Clock, tone: 'text-warning' },
   ] as const;
 
@@ -75,7 +75,8 @@ export default function FinanceOverview() {
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (
-                <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} icon={c.icon} tone={c.tone} spark={'spark' in c ? c.spark : undefined} />
+                <StatCard key={c.label} label={c.label} value={c.value} sub={c.sub} icon={c.icon} tone={c.tone}
+                  spark={'spark' in c ? c.spark : undefined} trend={'trend' in c ? c.trend : undefined} />
               ))}
             </div>
 
