@@ -371,7 +371,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     return (
         <div className="min-h-screen bg-surface-sunken pb-12">
-            <header className="bg-surface border-b sticky top-0 z-10 transition-shadow hover:shadow-sm">
+            <header className="bg-surface border-b sticky top-0 z-10 transition-shadow hover:shadow-elevated">
                 <div className="max-w-7xl px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <Link href="/dashboard/candidates" className="p-2 hover:bg-surface-hover rounded-full transition shrink-0">
@@ -419,7 +419,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             <main className="max-w-7xl px-6 py-6 flex flex-col gap-6">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
-                    <section className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                    <section className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                         <div className="px-5 py-4 border-b border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="min-w-0">
                                 <h2 className="text-sm font-semibold text-primary">Assessment report</h2>
@@ -570,7 +570,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Left Column: Basic Info & Resume */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Profile Info */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                             <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
                                 <User className="w-5 h-5 text-accent" />
                                 Contact Details
@@ -616,7 +616,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* CV Viewer */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                             <div className="p-6 border-b bg-surface-sunken flex items-center justify-between">
                                 <h3 className="font-semibold text-primary flex items-center gap-2">
                                     <FileText className="w-5 h-5 text-accent" />
@@ -661,7 +661,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Right Column: Mini Stats & activity */}
                     <div className="space-y-8">
                         {/* Status Card */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                             <h3 className="font-semibold text-primary mb-6 flex items-center gap-2">
                                 <Target className="w-5 h-5 text-accent" />
                                 Pipeline Status
@@ -692,7 +692,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* Activity Timeline */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                             <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
                                 <BarChart className="w-5 h-5 text-accent" />
                                 Hiring Activity

@@ -80,7 +80,7 @@ export default function FinanceOverview() {
             </div>
 
             {/* Revenue vs costs chart */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <h2 className="text-sm font-semibold text-primary">Revenue vs costs</h2>
@@ -106,7 +106,7 @@ export default function FinanceOverview() {
                 { label: 'Expenses', desc: 'Money out — accounts payable', icon: Wallet, href: '/objects/expenses', tone: 'text-danger' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
-                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">
+                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center">
                     <q.icon className={`w-4 h-4 ${q.tone}`} />
                   </div>

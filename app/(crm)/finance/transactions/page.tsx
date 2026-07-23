@@ -168,7 +168,7 @@ export default function TransactionsPage() {
           { label: 'Net', value: money(summary.net), tone: summary.net >= 0 ? 'text-success' : 'text-danger', icon: ArrowLeftRightGlyph },
           { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-warning' : 'text-tertiary', icon: Link2 },
         ].map((c) => (
-          <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle p-3.5">
+          <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
               <c.icon className="w-4 h-4 text-tertiary" />
@@ -183,7 +183,7 @@ export default function TransactionsPage() {
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
-          <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+          <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
             <table className="w-full text-[13px] border-separate border-spacing-0">
               <thead>
                 <tr>

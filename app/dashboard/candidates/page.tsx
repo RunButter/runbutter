@@ -124,7 +124,7 @@ export default function CandidatesPage() {
                 <div className="md:hidden space-y-2.5">
                     {candidates.map((can) => (
                         <Link key={can.id} href={`/dashboard/candidates/${can.id}`}
-                            className="block rounded-xl bg-surface ring-1 ring-subtle p-4 active:bg-surface-sunken transition">
+                            className="block rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 active:bg-surface-sunken transition">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="font-semibold text-primary truncate">{can.full_name}</div>
@@ -147,7 +147,7 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* Desktop: table */}
-                <div className="hidden md:block rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                <div className="hidden md:block rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                     <table className="w-full text-[13px] border-separate border-spacing-0">
                         <thead>
                             <tr>

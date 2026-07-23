@@ -218,7 +218,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     }
   };
 
-  const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-surface ring-1 ring-subtle placeholder:text-tertiary focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
+  const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-surface ring-1 ring-subtle shadow-card placeholder:text-tertiary focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
 
   // Shared brand header: the company applying to, not RunButter.
   const CompanyMark = ({ big = false }: { big?: boolean }) =>

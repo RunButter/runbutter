@@ -69,7 +69,7 @@ export default function ProjectDashboard() {
           <>
             <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
               {stats.map((s) => (
-                <div key={s.label} className="rounded-xl bg-surface ring-1 ring-subtle p-3">
+                <div key={s.label} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
                   <s.icon className={`w-4 h-4 ${s.tone}`} />
                   <div className="mt-2 text-2xl font-semibold text-primary tabular-nums">{s.value}</div>
                   <div className="text-[12px] font-medium text-tertiary">{s.label}</div>

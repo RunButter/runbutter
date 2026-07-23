@@ -67,7 +67,7 @@ export default function PostsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
             {posts.map((p) => (
               <button key={p.id} onClick={() => router.push(`/marketing/posts/${p.id}`)}
-                className="text-left rounded-xl bg-surface ring-1 ring-subtle overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">
+                className="text-left rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">
                 {p.image_url
                   ? <img src={p.image_url} alt="" className="w-full h-36 object-cover" />
                   : <div className="w-full h-36 bg-surface-sunken flex items-center justify-center text-tertiary text-[12px] px-6 text-center line-clamp-3">{p.content || 'Text post'}</div>}

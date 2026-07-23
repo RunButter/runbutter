@@ -76,7 +76,13 @@ module.exports = {
         xl: 'calc(var(--radius) + 4px)',
       },
       boxShadow: {
-        // Only floating surfaces get elevation; panels stay flat.
+        // Resting elevation for cards — soft and low, so white cards float on
+        // the grey canvas (light) and read as raised (dark). This is the shift
+        // from the old dead-flat look toward the shadcn block gallery.
+        card: '0 1px 2px -1px hsl(240 10% 10% / 0.08), 0 4px 12px -3px hsl(240 10% 10% / 0.10)',
+        // Hover / emphasis lift.
+        elevated: '0 2px 4px -2px hsl(240 10% 10% / 0.10), 0 10px 24px -6px hsl(240 10% 10% / 0.16)',
+        // Floating layers (menus, dialogs, popovers).
         popover: '0 8px 24px -6px hsl(240 10% 10% / 0.12), 0 2px 6px -2px hsl(240 10% 10% / 0.08)',
       },
       fontSize: {

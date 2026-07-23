@@ -97,7 +97,7 @@ export default function PositionsPage() {
             </PageHeader>
 
             <div className="p-6">
-                <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                     <table className="w-full text-[13px] border-separate border-spacing-0">
                         <thead>
                             <tr>

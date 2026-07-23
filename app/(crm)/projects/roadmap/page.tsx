@@ -45,7 +45,7 @@ export default function RoadmapPage() {
         ) : projects.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No projects yet. Create one to see it on the roadmap.</div>
         ) : (
-          <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle overflow-x-auto">
+          <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-x-auto">
             <RoadmapTimeline projects={projects} />
           </div>
         )}

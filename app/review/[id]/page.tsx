@@ -97,7 +97,7 @@ function ReviewInner() {
         </div>
 
         {/* Comments */}
-        <aside className="rounded-2xl bg-surface ring-1 ring-subtle p-4">
+        <aside className="rounded-2xl bg-surface ring-1 ring-subtle shadow-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
             <MessageCircle className="w-3.5 h-3.5 text-tertiary" />
             <span className="text-[11px] font-medium uppercase tracking-widest text-tertiary">Comments</span>

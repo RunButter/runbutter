@@ -194,7 +194,7 @@ export default function BrandingPage() {
             {/* Live preview */}
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-2">Preview</div>
-              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-sm overflow-hidden">
+              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card shadow-sm overflow-hidden">
                 <div className="h-1.5" style={{ background: form.accent_color }} />
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-4">

@@ -75,7 +75,7 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-surface p-3 rounded-lg ring-1 ring-subtle mb-2 transition-all hover:ring-strong hover:shadow-sm ${isOverlay ? 'shadow-popover ring-accent/30 rotate-2' : ''}`}
+            className={`group bg-surface p-3 rounded-lg ring-1 ring-subtle mb-2 transition-all hover:ring-strong hover:shadow-elevated ${isOverlay ? 'shadow-popover ring-accent/30 rotate-2' : ''}`}
         >
             <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0 flex-1">

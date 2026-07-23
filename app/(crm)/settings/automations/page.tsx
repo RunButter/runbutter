@@ -104,7 +104,7 @@ export default function AutomationsPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {TEMPLATES.map((t) => (
                 <button key={t.key} onClick={() => fromTemplate(t.automation)} disabled={!canEdit}
-                  className="group text-left rounded-xl bg-surface ring-1 ring-subtle p-3 hover:ring-strong hover:shadow-sm transition-all disabled:opacity-50">
+                  className="group text-left rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3 hover:ring-strong hover:shadow-elevated transition-all disabled:opacity-50">
                   <div className={`inline-flex text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md mb-1.5 ${t.tone}`}>{t.name}</div>
                   <p className="text-[12px] text-secondary leading-snug">{t.desc}</p>
                   <span className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-accent opacity-0 group-hover:opacity-100 transition-opacity">Use template <ArrowRight className="w-3 h-3" /></span>
@@ -124,7 +124,7 @@ export default function AutomationsPage() {
           ) : (
             <div className="space-y-2.5">
               {rows.map((a) => { const TI = triggerIcon(a.trigger_type); return (
-                <div key={a.id} className={`rounded-xl bg-surface ring-1 ring-subtle p-4 ${a.enabled ? '' : 'opacity-60'}`}>
+                <div key={a.id} className={`rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 ${a.enabled ? '' : 'opacity-60'}`}>
                   <div className="flex items-center gap-3">
                     <button onClick={() => toggle(a)} disabled={!canEdit || !live} title={live ? 'Enable / disable' : 'Sign in'}
                       className={`w-9 h-5 rounded-full shrink-0 relative transition-colors ${a.enabled ? 'bg-success' : 'bg-strong'} disabled:opacity-50`}>
@@ -156,7 +156,7 @@ export default function AutomationsPage() {
           {/* Run log */}
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-2">Recent runs</div>
-            <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               {runs.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No runs yet.</div>
                 : runs.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 px-4 h-11 border-b border-subtle last:border-0 text-[12px]">

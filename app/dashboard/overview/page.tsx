@@ -65,7 +65,7 @@ export default function HrOverviewPage() {
 
         {/* Funnel + quick actions */}
         <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle p-5">
+          <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-semibold text-primary">Hiring funnel</h2>
@@ -76,7 +76,7 @@ export default function HrOverviewPage() {
             {!hr ? <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div> : <HiringFunnel stages={hr.funnel} />}
           </div>
 
-          <div className="rounded-xl bg-surface ring-1 ring-subtle p-3">
+          <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
             <div className="px-2 pt-1.5 pb-2 text-[11px] font-semibold uppercase tracking-widest text-tertiary">Quick actions</div>
             <div className="space-y-0.5">
               {QUICK.slice(0, 4).map((q) => (
@@ -94,7 +94,7 @@ export default function HrOverviewPage() {
         </div>
 
         {/* Recent applications */}
-        <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
           <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
             <h2 className="text-sm font-semibold text-primary">Recent applications</h2>
             <Link href="/dashboard/candidates" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All candidates <ArrowRight className="w-3 h-3" /></Link>

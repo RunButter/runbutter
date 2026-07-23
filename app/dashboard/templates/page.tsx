@@ -89,7 +89,7 @@ export default function TemplatesPage() {
 
                     <div className="grid gap-2.5">
                         {templates.map((t) => (
-                            <div key={t.id} className="group flex items-start justify-between gap-4 rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong transition-all">
+                            <div key={t.id} className="group flex items-start justify-between gap-4 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong transition-all">
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold text-primary">{t.name}</span>

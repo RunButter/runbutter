@@ -71,7 +71,7 @@ export default function MarketingOverview() {
             </div>
 
             {/* Spend by channel */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <h2 className="text-sm font-semibold text-primary mb-1">Spend by channel</h2>
               <p className="text-[12px] text-tertiary mb-4">Where the budget goes, and what it brings back.</p>
               {stats.byChannel.length === 0 ? (
@@ -99,7 +99,7 @@ export default function MarketingOverview() {
                 { label: 'Source tracking', desc: 'UTM links — see where people come from', icon: Radio, href: '/dashboard/sources', tone: 'text-accent' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
-                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">
+                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center">
                     <q.icon className={`w-4 h-4 ${q.tone}`} />
                   </div>

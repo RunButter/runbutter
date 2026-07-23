@@ -89,16 +89,16 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="h-full overflow-auto rounded-xl bg-surface ring-1 ring-subtle shadow-card">
       <table className="w-full text-sm border-separate border-spacing-0">
         <thead>
           <tr>
-            <th className="sticky top-0 z-10 bg-surface w-9 px-3 h-8 border-b border-subtle">
+            <th className="sticky top-0 z-10 bg-surface-sunken w-9 px-3 h-9 border-b border-subtle">
               <input ref={headRef} type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-strong accent-accent cursor-pointer" />
             </th>
             {object.fields.map((f) => (
               <th key={f.key} style={{ minWidth: f.width }}
-                className={`sticky top-0 z-10 bg-surface px-3 h-8 text-2xs font-medium text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
+                className={`sticky top-0 z-10 bg-surface-sunken px-3 h-9 text-2xs font-semibold uppercase tracking-wide text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
                 {f.label}
               </th>
             ))}

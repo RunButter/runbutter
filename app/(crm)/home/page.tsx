@@ -109,7 +109,7 @@ export default function WorkspaceHome() {
 
           {/* Cashflow + hiring funnel */}
           <div className="grid lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle p-5">
+            <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <h3 className="text-sm font-semibold text-primary">Cashflow</h3>
@@ -127,7 +127,7 @@ export default function WorkspaceHome() {
               )}
             </div>
 
-            <div className="rounded-xl bg-surface ring-1 ring-subtle p-5 flex flex-col">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-primary">Hiring funnel</h3>
@@ -148,7 +148,7 @@ export default function WorkspaceHome() {
             <div className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-3">Jump back in</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {pillars.map((p) => (
-                <Link key={p.label} href={p.href} className="group rounded-xl bg-surface ring-1 ring-subtle p-4 hover:ring-strong hover:shadow-sm transition-all">
+                <Link key={p.label} href={p.href} className="group rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className={`w-9 h-9 rounded-lg ${p.bg} ring-1 ring-subtle flex items-center justify-center mb-3`}>
                     <p.icon className={`w-4 h-4 ${p.tone}`} />
                   </div>
@@ -162,7 +162,7 @@ export default function WorkspaceHome() {
           {/* Recent activity */}
           <div className="grid lg:grid-cols-2 gap-4">
             {/* Recent applications */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
                 <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
@@ -189,7 +189,7 @@ export default function WorkspaceHome() {
             </div>
 
             {/* Recent transactions */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
                 <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>

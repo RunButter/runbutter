@@ -134,7 +134,7 @@ export default function IntegrationsPage() {
                 <span>{googleMsg.text}</span>
               </div>
             )}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle p-4 flex items-center gap-4">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><Calendar className="w-5 h-5" /></div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-[13px] font-semibold text-primary">Google Calendar</h3>
@@ -168,7 +168,7 @@ export default function IntegrationsPage() {
               { name: 'REST API', body: 'Any script or backend: create + read records with a bearer API key. See endpoints below.', tone: 'text-accent bg-accent/10' },
               { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-warning bg-warning/10' },
             ].map((c) => (
-              <div key={c.name} className="rounded-xl bg-surface ring-1 ring-subtle p-4">
+              <div key={c.name} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
                 <div className={`inline-flex text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
                 <p className="text-[12px] text-secondary leading-relaxed">{c.body}</p>
               </div>
@@ -182,7 +182,7 @@ export default function IntegrationsPage() {
               <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
               <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
-            <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
                 : connections.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
                 : connections.map((c) => (
@@ -212,7 +212,7 @@ export default function IntegrationsPage() {
           {deliveries.length > 0 && (
             <section>
               <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Recent deliveries</h2>
-              <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                 {deliveries.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-[12px]">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'ok' ? 'bg-success' : 'bg-danger'}`} />
@@ -247,7 +247,7 @@ export default function IntegrationsPage() {
               <button onClick={makeKey} disabled={!canEdit} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Create key</button>
             </div>
 
-            <div className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               {keys.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No API keys yet.</div>
                 : keys.map((k) => (
                   <div key={k.id} className={`flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0 ${k.revoked ? 'opacity-50' : ''}`}>
@@ -356,7 +356,7 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
   };
 
   return (
-    <div className="mt-3 rounded-xl bg-surface ring-1 ring-subtle p-4">
+    <div className="mt-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><CalendarClock className="w-5 h-5" /></div>
         <div className="min-w-0 flex-1">

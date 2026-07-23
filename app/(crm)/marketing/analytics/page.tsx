@@ -216,7 +216,7 @@ export default function WebAnalytics() {
             </div>
 
             {/* Daily traffic */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <h2 className="text-sm font-semibold text-primary mb-1">Traffic</h2>
               <p className="text-[12px] text-tertiary mb-4">Pageviews per day · last {days} days</p>
               <div className="flex items-end gap-[2px] h-40">
@@ -240,7 +240,7 @@ export default function WebAnalytics() {
                  ['Referrers', stats.top_referrers.map((r) => ({ label: r.ref, count: r.count }))]] as const).map(([title, rows]) => {
                 const max = Math.max(1, ...rows.map((r) => r.count));
                 return (
-                  <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle p-5">
+                  <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                     <h2 className="text-sm font-semibold text-primary mb-3">{title}</h2>
                     {rows.length === 0 ? (
                       <p className="py-4 text-center text-[12px] text-tertiary">No data yet.</p>

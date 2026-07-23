@@ -12,13 +12,16 @@
    ========================================================================== */
 @layer base {
   :root {
-    --canvas:        0 0% 98.4%;    /* app background behind panels */
+    /* Light theme, shadcn-style elevation: the canvas is a soft grey so white
+       cards visibly float on it (paired with shadow-card), the way the shadcn
+       block gallery reads. */
+    --canvas:        240 6% 96%;    /* app background behind panels */
     --surface:       0 0% 100%;     /* panels, tables, cards        */
-    --surface-hover: 240 5% 96%;    /* row / item hover             */
-    --surface-sunken:240 5% 97.5%;  /* rails, headers, inputs       */
+    --surface-hover: 240 5% 95.5%;  /* row / item hover             */
+    --surface-sunken:240 5% 97%;    /* rails, headers, inputs       */
 
-    --border-subtle: 240 6% 90%;    /* default hairline             */
-    --border-strong: 240 5% 84%;    /* emphasis, focus outlines     */
+    --border-subtle: 240 6% 89%;    /* default hairline             */
+    --border-strong: 240 5% 82%;    /* emphasis, focus outlines     */
 
     /* Steps chosen so even 11px tertiary text clears WCAG AA (4.5:1) on canvas. */
     --text-primary:  240 10% 10%;
@@ -57,17 +60,23 @@
     --warning-text: 30 95% 30%;
     --danger-text:  0 74% 42%;
 
-    --radius: 0.5rem;
+    /* Rounder than the old 8px — the shadcn gallery reads at ~12–16px. This
+       feeds rounded-md/lg/xl in tailwind.config, so every control and card
+       gets rounder at once. */
+    --radius: 0.75rem;
   }
 
   .dark {
-    --canvas:        240 6% 7%;
-    --surface:       240 5% 10%;
-    --surface-hover: 240 5% 14%;
-    --surface-sunken:240 6% 8.5%;
+    /* Deeper canvas + a lighter card surface than before, so cards clearly sit
+       ABOVE the background (the shadcn dark look leans on surface contrast +
+       borders, not heavy shadows). */
+    --canvas:        240 8% 5%;
+    --surface:       240 6% 11%;
+    --surface-hover: 240 6% 15%;
+    --surface-sunken:240 8% 8%;
 
-    --border-subtle: 240 4% 18%;
-    --border-strong: 240 4% 26%;
+    --border-subtle: 240 5% 18%;
+    --border-strong: 240 5% 27%;
 
     --text-primary:  0 0% 98%;
     --text-secondary:240 5% 72%;

@@ -141,7 +141,7 @@ export default function ObjectPage() {
 
       <FilterBar object={object} rows={rows} value={filters} onChange={setFilters} />
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 p-4">
         {loading ? (
           <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
         ) : (
