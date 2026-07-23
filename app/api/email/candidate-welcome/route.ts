@@ -24,7 +24,7 @@ export async function POST(req: Request) {
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
                     <div style="text-align: center; margin-bottom: 24px;">
-                        <h1 style="color: #4F46E5;">Thank you for applying!</h1>
+                        <h1 style="color: #4653CE;">Thank you for applying!</h1>
                     </div>
                     <p>Hi ${name},</p>
                     <p>We've successfully received your application and resume for the <strong>${position}</strong> position at <strong>${companyName}</strong>.</p>
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
                     <div style="background-color: #F3F4F6; padding: 20px; border-radius: 8px; margin: 24px 0;">
                         <h3 style="margin-top: 0; color: #1F2937;">Next Step: Complete Your Assessment</h3>
                         <p style="margin-bottom: 20px;">To move forward in the hiring process, please complete our brief, 15-minute personality and skills assessment.</p>
-                        <a href="${assessmentLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Start Assessment Now</a>
+                        <a href="${assessmentLink}" style="background-color: #4653CE; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Start Assessment Now</a>
                     </div>
                     
                     <p>This link is unique to you. If you have any questions, feel free to reply to this email.</p>

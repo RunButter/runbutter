@@ -120,13 +120,13 @@ export default function DocumentBuilder() {
 
   const isOffer = doc.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';
-  const accent = doc.seller?.accent_color || '#6366F1';
+  const accent = doc.seller?.accent_color || '#4653CE';
   const STATUSES = isOffer ? ['draft', 'sent', 'accepted', 'declined'] : ['draft', 'sent', 'paid', 'overdue'];
 
   return (
     <div className="min-h-screen bg-surface-hover text-primary">
       {/* Toolbar */}
-      <div className="sticky top-0 z-10 bg-surface/$1 backdrop-blur border-b border-subtle">
+      <div className="sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-2">
           <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /> Back</button>
           <span className="text-sm font-medium text-secondary">{title} builder</span>
@@ -142,7 +142,7 @@ export default function DocumentBuilder() {
             )}
             <button onClick={() => setSendOpen(true)} disabled={!privy} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
             <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
             </button>
           </div>

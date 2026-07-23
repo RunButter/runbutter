@@ -138,7 +138,7 @@ export default function TransactionsPage() {
           <button onClick={() => setImporting(true)} disabled={!canEdit}
             className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40" title={!canEdit ? 'Sign in to import' : ''}><Upload className="w-3.5 h-3.5" /> Import</button>
           <button onClick={() => setForm({ initial: { txn_date: new Date().toISOString().slice(0, 10), status: 'posted', method: 'transfer' } })} disabled={!canEdit}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</button>
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</button>
         </div>
       </header>
 
@@ -305,7 +305,7 @@ function BulkBar({ count, canEdit, categorySuggestions, onClear, onCategorize, o
                 className="w-full h-8 px-2 text-[13px] rounded-md border border-subtle bg-surface text-primary placeholder:text-tertiary focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none" />
               <datalist id="bulk-cats">{categorySuggestions.map((c) => <option key={c} value={c} />)}</datalist>
               <button onClick={() => { if (cat.trim()) { onCategorize(cat.trim()); setShowCat(false); setCat(''); } }}
-                className="mt-1.5 w-full h-7 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90">Apply</button>
+                className="mt-1.5 w-full h-7 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Apply</button>
             </div>
           )}
         </div>
@@ -363,7 +363,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
 
   const out = txn.amount < 0;
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex justify-end bg-black/50 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-sm h-full bg-surface shadow-popover ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-sm font-semibold text-primary">Transaction</h2>
@@ -426,7 +426,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
                     </div>
                     {canEdit && (
                       <button onClick={() => doMatch(s.kind, s.id)} disabled={busy === s.id}
-                        className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+                        className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                         {busy === s.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Match
                       </button>
                     )}
@@ -482,7 +482,7 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
         </div>
         <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
           <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={save} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create</button>
+          <button onClick={save} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create</button>
         </div>
       </div>
     </div>
@@ -625,12 +625,12 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
         <div className="shrink-0 flex items-center justify-end gap-2 p-3 border-t border-subtle">
           {step === 'source' && <>
             <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-            <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40">Continue</button>
+            <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Continue</button>
           </>}
           {step === 'map' && (
-            <button onClick={run} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows</button>
+            <button onClick={run} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">{busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows</button>
           )}
-          {step === 'done' && <button onClick={onDone} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90">Done</button>}
+          {step === 'done' && <button onClick={onDone} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Done</button>}
         </div>
       </div>
     </div>

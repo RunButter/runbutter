@@ -93,7 +93,7 @@ export async function sendStatusEmail(
         name: (candidate.full_name || 'there').split(' ')[0],
         position: position?.title || 'the role',
         company: company?.name || 'the company',
-        color: company?.brand_color || '#4F46E5',
+        color: company?.brand_color || '#4653CE',
     };
     const { subject, heading, body } = template(ctx);
 

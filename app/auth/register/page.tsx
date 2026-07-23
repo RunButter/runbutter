@@ -201,7 +201,7 @@ export default function RegisterPage() {
 
               <button
                 onClick={handleSignIn}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent hover:bg-accent/90 text-white rounded-lg transition font-medium"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-inverse hover:bg-inverse/90 text-inverse-fg rounded-lg transition font-medium"
               >
                 Continue with Email
               </button>
@@ -257,7 +257,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={submitting || !subdomainAvailable}
-                className="w-full py-3 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-inverse hover:bg-inverse/90 text-inverse-fg font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating...</> : 'Launch My Dashboard →'}
               </button>

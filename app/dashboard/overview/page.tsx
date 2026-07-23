@@ -44,13 +44,13 @@ export default function HrOverviewPage() {
 
   return (
     <div className="p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl space-y-6">
         {/* Title */}
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold text-primary tracking-tight">Recruiting</h1>
           <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
           {hr?.company?.plan && <span className="text-[11px] font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">{hr.company.plan} plan</span>}
-          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
             <Plus className="w-3.5 h-3.5" /> New position
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default function HrOverviewPage() {
             <div className="px-5 py-12 text-center">
               <Users className="w-10 h-10 text-tertiary mx-auto mb-3" />
               <p className="text-[13px] text-secondary mb-3">No candidates yet.</p>
-              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90">Create your first position</Link>
+              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Create your first position</Link>
             </div>
           ) : (
             <div className="divide-y divide-subtle">

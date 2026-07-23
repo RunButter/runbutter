@@ -75,9 +75,9 @@ function ReviewInner() {
   return (
     <div className="min-h-screen bg-surface-hover text-primary">
       {/* Toolbar */}
-      <div className="sticky top-0 z-10 bg-surface/$1 backdrop-blur border-b border-subtle">
+      <div className="sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
-          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary-600 to-purple-600" />
+          <div className="w-6 h-6 rounded-md bg-inverse" />
           <span className="text-[13px] font-medium text-primary">Post review</span>
           <span className={`text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded capitalize ${STATUS_CHIP[post.status] || STATUS_CHIP.draft}`}>{post.status.replace('_', ' ')}</span>
           <div className="ml-auto flex items-center gap-2">
@@ -90,8 +90,8 @@ function ReviewInner() {
 
       <div className="max-w-4xl mx-auto p-4 sm:p-8 grid lg:grid-cols-[1fr_280px] gap-6 items-start">
         {/* Canvas */}
-        <div className="rounded-2xl bg-surface/$1 ring-1 ring-subtle p-6 sm:p-10 flex flex-col items-center"
-          style={{ backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
+        <div className="rounded-2xl bg-surface/80 ring-1 ring-subtle p-6 sm:p-10 flex flex-col items-center"
+          style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--border-strong)) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
           <PostCanvas post={post} comments={post.comments} canComment onAddComment={onAddComment} />
           <p className="text-center text-[11px] text-tertiary mt-4">Click anywhere on the post to pin a comment.</p>
         </div>

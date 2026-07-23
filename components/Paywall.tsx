@@ -22,27 +22,27 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
 
             {/* Lock Overlay */}
             <div className="absolute inset-0 z-20 flex items-center justify-center p-6">
-                <div className="bg-surface/80 backdrop-blur-xl border border-white p-10 rounded-3xl shadow-popover max-w-lg w-full text-center transform transition-all duration-500 scale-100 group-hover:scale-[1.02]">
-                    <div className="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-primary-100">
-                        <Lock className="w-10 h-10 text-accent animate-pulse" />
+                <div className="bg-surface/90 backdrop-blur-xl border border-subtle p-10 rounded-3xl shadow-popover max-w-md w-full text-center">
+                    <div className="w-16 h-16 bg-accent-soft rounded-2xl flex items-center justify-center mx-auto mb-5 border border-subtle">
+                        <Lock className="w-8 h-8 text-accent" />
                     </div>
 
-                    <h2 className="text-3xl font-semibold text-primary mb-3 tracking-tight italic uppercase">Premium Feature</h2>
-                    <p className="text-secondary mb-8 font-medium leading-relaxed uppercase text-xs tracking-widest">
-                        {featureName} is only available on Professional and Enterprise plans.
+                    <h2 className="text-2xl font-semibold text-primary mb-2 tracking-tight">Premium feature</h2>
+                    <p className="text-secondary mb-6 text-sm">
+                        {featureName} is included from the <span className="font-medium text-primary">Professional</span> plan. Upgrade to unlock it.
                     </p>
 
                     <div className="space-y-3">
                         <Link
                             href="/dashboard/billing"
-                            className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-2 group/btn shadow-[0_10px_20px_rgba(79,70,229,0.2)]"
+                            className="btn-primary w-full py-3 flex items-center justify-center gap-2 group/btn"
                         >
                             <CreditCard className="w-5 h-5" />
-                            Upgrade to Unlock
-                            <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                            Upgrade to unlock
+                            <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform" />
                         </Link>
-                        <p className="text-[10px] text-tertiary font-medium uppercase tracking-tighter">
-                            Instant activation • Billed annually or monthly
+                        <p className="text-[11px] text-tertiary">
+                            Instant activation · Billed annually or monthly
                         </p>
                     </div>
                 </div>

@@ -68,7 +68,7 @@ export default function InterviewsPage() {
       </PageHeader>
 
       <div className="p-6">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl">
           <div className="mb-5">
             <h2 className="text-lg font-medium text-primary tracking-tight">Upcoming interviews</h2>
             <p className="text-[13px] text-secondary">
@@ -184,7 +184,7 @@ function InterviewModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="bg-surface border border-subtle rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary">{isEdit ? 'Reschedule interview' : 'Schedule interview'}</h3>

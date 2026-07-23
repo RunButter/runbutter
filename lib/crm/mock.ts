@@ -42,12 +42,12 @@ export function mockInvoiceDocument(id: string) {
       ? 'This proposal is valid for 30 days. We look forward to working together.'
       : 'Thank you for your business. Payment is due within 14 days via bank transfer.',
     seller: {
-      name: 'RunButter Inc.', accent_color: '#6366F1', tax_id: '5260250274', country: 'PL',
+      name: 'RunButter Inc.', accent_color: '#4653CE', tax_id: '5260250274', country: 'PL',
       vat_id: 'PL5260250274', reg_no: 'KRS 0000123456', bdo: '000012345',
       iban: 'PL61 1090 1014 0000 0712 1981 2874', bank_name: 'ACME Bank',
       address: '500 Howard St, San Francisco, CA 94105',
       footer: 'Payment within 14 days of the issue date.',
-      logo_url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' rx='16' fill='%236366F1'/><text x='40' y='54' font-size='42' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='bold'>H</text></svg>",
+      logo_url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' rx='16' fill='%234653CE'/><text x='40' y='54' font-size='42' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='600'>R</text></svg>",
     },
     buyer: { name: 'Northwind Labs', domain: 'northwind.io', industry: 'SaaS', tax_id: 'PL1132986470', address: 'ul. Testowa 1, 00-001 Warszawa', country: 'PL' },
     items: [

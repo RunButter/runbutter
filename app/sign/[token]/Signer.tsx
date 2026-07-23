@@ -102,6 +102,11 @@ export default function Signer({ token, title, signerName, docUrl }: {
           <button onClick={() => setMode('type')} className={`flex-1 h-8 rounded-md text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 ${mode === 'type' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary'}`}><Type className="w-3.5 h-3.5" /> Type</button>
         </div>
 
+        {/* PAPER EXCEPTION — the white/gray literals below are deliberate, not
+            missed tokens. The pen draws #111111 ink and the captured PNG is
+            stamped onto a white PDF page, so this pad depicts paper. Tokenizing
+            it would turn the pad dark in dark mode and the signature would be
+            invisible both here and on the finished document. */}
         {mode === 'draw' ? (
           <div>
             <div className="relative rounded-lg border border-subtle bg-white h-40">

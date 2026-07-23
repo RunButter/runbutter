@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { rpc } from '@/lib/rpc';
+import { useChartTokens } from '@/lib/chart-tokens';
 import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2, Briefcase } from 'lucide-react';
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -34,6 +35,7 @@ ChartJS.register(
 );
 
 export default function AnalyticsPage() {
+    const chart = useChartTokens();
     const router = useRouter();
     const { ready, authenticated, user } = usePrivy();
     const [loading, setLoading] = useState(true);
@@ -115,10 +117,21 @@ export default function AnalyticsPage() {
             {
                 label: 'Total Applications',
                 data: hasPositionData ? positionData : [0],
-                backgroundColor: 'rgba(79, 70, 229, 0.85)',
+                backgroundColor: chart?.accent,
                 borderRadius: 6,
             },
         ],
+    };
+
+    // Chart.js defaults its axes to a dark grey that disappears on the dark
+    // canvas, so both axes are driven off the tokens too.
+    const axisOptions = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false }, ticks: { color: chart?.label } },
+            y: { grid: { color: chart?.grid }, ticks: { color: chart?.label } },
+        },
     };
 
     const sourceLabels = Object.keys(metrics.sources);
@@ -130,8 +143,11 @@ export default function AnalyticsPage() {
         datasets: [
             {
                 data: hasSourceData ? sourceData : [100],
+                // Sources are categorical, so these stay distinct hues rather
+                // than shades of one token — but the lead slice is the accent
+                // so the chart still belongs to the palette.
                 backgroundColor: [
-                    'rgba(79, 70, 229, 0.85)',
+                    chart?.accent,
                     'rgba(147, 51, 234, 0.85)',
                     'rgba(59, 130, 246, 0.85)',
                     'rgba(16, 185, 129, 0.85)',
@@ -162,7 +178,7 @@ export default function AnalyticsPage() {
             </PageHeader>
 
             <div className="p-6">
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-6xl">
                     <Paywall isLocked={company?.plan === 'free'} featureName="Advanced Analytics">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                             {kpis.map((k) => (
@@ -183,7 +199,7 @@ export default function AnalyticsPage() {
                                     <span className="text-[10px] font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">
-                                    <Bar options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={barData} />
+                                    <Bar options={axisOptions} data={barData} />
                                 </div>
                             </div>
 

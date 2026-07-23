@@ -25,9 +25,13 @@
     --text-secondary:240 4% 34%;
     --text-tertiary: 240 4% 46%;
 
-    --accent:        243 75% 59%;   /* indigo, used sparingly       */
+    /* Deliberately NOT the 243° electric indigo every AI-built SaaS ships —
+       that hue is the single biggest "generic" tell. Pulled toward blue and
+       desaturated so it recedes next to the neutrals. Primary actions are the
+       monochrome inverse fill; this is for links, focus rings and tints. */
+    --accent:        234 58% 54%;
     --accent-fg:     0 0% 100%;
-    --accent-soft:   243 75% 96%;
+    --accent-soft:   234 58% 96%;
 
     /* Neutral solid fill — the monochrome CTA. Near-black on light, near-white
        on dark. Lets a page go fully grayscale without touching the accent. */
@@ -48,7 +52,7 @@
     /* A hue that works as a FILL is too light as small TEXT. These are the
        text-safe versions (used by text-accent / text-success / ...), so a
        label on a 10%-tint chip still clears AA. Fills keep the vars above. */
-    --accent-text:  243 70% 50%;
+    --accent-text:  234 62% 44%;
     --success-text: 152 68% 26%;
     --warning-text: 30 95% 30%;
     --danger-text:  0 74% 42%;
@@ -70,9 +74,9 @@
     --text-tertiary: 240 4% 58%;
 
     /* Dark accent stays dark enough for white accent-fg labels to clear AA. */
-    --accent:        243 72% 56%;
+    --accent:        234 56% 58%;
     --accent-fg:     0 0% 100%;
-    --accent-soft:   243 60% 18%;
+    --accent-soft:   234 50% 18%;
 
     --inverse:       0 0% 96%;
     --inverse-fg:    240 10% 8%;
@@ -87,7 +91,7 @@
     --warning-fg: 35 70% 6%;    /* 8.62 */
     --danger-fg:  0 70% 6%;     /* 5.48 */
 
-    --accent-text:  243 95% 80%;
+    --accent-text:  234 80% 76%;
     --success-text: 152 60% 62%;
     --warning-text: 40 95% 62%;
     --danger-text:  0 85% 72%;
@@ -104,6 +108,17 @@
   /* Product UI is compact and quiet: tight tracking, restrained weights.
      Display-scale type belongs to the marketing page, not the app. */
   h1, h2, h3 { letter-spacing: -0.015em; }
+
+  /* Icons: Lucide ships stroke-width 2, which at our 14–16px sizes reads blunt
+     and is a large part of why stock Tailwind UIs look alike. 1.5 keeps them
+     legible but noticeably finer, and matches the hairline borders. Set once
+     here rather than passing strokeWidth to a few hundred call sites. */
+  svg.lucide { stroke-width: 1.5; }
+  /* Small glyphs need the weight back or they disappear. */
+  svg.lucide[width="12"], svg.lucide[width="14"] { stroke-width: 1.75; }
+
+  /* Numbers align in columns wherever they're compared. */
+  .tabular-nums { font-variant-numeric: tabular-nums; }
 
   ::selection { background: hsl(var(--accent) / 0.18); }
 
@@ -136,15 +151,22 @@
 }
 
 @layer components {
-  /* Buttons: compact (h-8), flat, medium weight. No shadows, no scale bounce. */
+  /* Buttons: compact (h-8), flat, medium weight. The primary action is the
+     monochrome inverse fill — the same confident near-black/near-white the
+     landing uses. A coloured primary on every screen is what made the app read
+     as generic; the accent is now reserved for links, focus and small tints.
+     `active:` gives a physical press without a bouncy scale. */
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-medium
-           transition-colors duration-100 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap;
+           transition-[background-color,color,opacity,box-shadow] duration-150
+           active:translate-y-px focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-accent/40 focus-visible:ring-offset-1 focus-visible:ring-offset-canvas
+           disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap;
   }
-  .btn-primary   { @apply btn bg-accent text-accent-fg hover:bg-accent/90; }
+  .btn-primary   { @apply btn bg-inverse text-inverse-fg hover:bg-inverse/90; }
   .btn-secondary { @apply btn bg-surface text-primary border border-subtle hover:bg-surface-hover; }
   .btn-ghost     { @apply btn text-secondary hover:bg-surface-hover hover:text-primary; }
-  .btn-danger    { @apply btn bg-danger text-white hover:bg-danger/90; }
+  .btn-danger    { @apply btn bg-danger text-danger-fg hover:bg-danger/90; }
 
   .input-field {
     @apply w-full h-8 px-2.5 bg-surface border border-subtle rounded-md text-[13px] text-primary

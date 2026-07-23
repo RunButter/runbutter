@@ -110,13 +110,13 @@ export default function BillingPage() {
     ];
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl px-6 py-12">
             <div className="text-center mb-16">
                 <h1 className="text-4xl font-semibold text-primary flex items-center justify-center gap-3 mb-4">
                     <CreditCard className="w-10 h-10 text-accent" />
                     Transparent Pricing
                 </h1>
-                <p className="text-xl text-secondary font-medium max-w-2xl mx-auto">
+                <p className="text-xl text-secondary font-medium max-w-2xl">
                     Choose the plan that fits your hiring needs. No hidden fees, just high-performance hiring.
                 </p>
             </div>

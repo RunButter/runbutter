@@ -143,7 +143,7 @@ export default function WebAnalytics() {
             </>
           )}
           <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
         </div>
       </header>
 
@@ -171,7 +171,7 @@ export default function WebAnalytics() {
                       onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
                       className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                     <button onClick={addSite} disabled={busy || !privy} title={!privy ? 'Sign in to add' : ''}
-                      className="h-9 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                      className="h-9 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                       {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add
                     </button>
                     {error && <span className="text-[12px] text-danger">{error}</span>}
@@ -228,7 +228,7 @@ export default function WebAnalytics() {
               <div className="flex items-end gap-[2px] h-40">
                 {stats.series.map((p) => (
                   <div key={p.day} className="flex-1 group relative">
-                    <div className="w-full rounded-t bg-primary-500/80 group-hover:bg-accent transition-colors"
+                    <div className="w-full rounded-t bg-accent/80 group-hover:bg-accent transition-colors"
                       style={{ height: `${Math.max(2, (p.pageviews / maxPv) * 152)}px` }}
                       title={`${p.label} — ${p.pageviews} views · ${p.visitors} visitors`} />
                   </div>
@@ -300,7 +300,7 @@ export default function WebAnalytics() {
                 onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
                 className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
               <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
-                className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add
               </button>
             </div>

@@ -205,7 +205,7 @@ export default function SourcesPage() {
                                             </span>
                                         </div>
                                         <div className="h-2 bg-surface-hover rounded-full overflow-hidden">
-                                            <div className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                                            <div className="h-full bg-accent rounded-full transition-all duration-500"
                                                 style={{ width: `${(Number(a.applicants) / maxApplicants) * 100}%` }} />
                                         </div>
                                     </div>
@@ -255,12 +255,13 @@ export default function SourcesPage() {
                     width: 100%;
                     padding: 0.5rem 0.75rem;
                     font-size: 0.875rem;
-                    border: 1px solid #d1d5db;
+                    border: 1px solid hsl(var(--border-subtle));
                     border-radius: 0.5rem;
                     outline: none;
-                    background: white;
+                    background: hsl(var(--surface));
+                    color: hsl(var(--text-primary));
                 }
-                .treasury-input:focus { box-shadow: 0 0 0 2px rgb(99 102 241 / 0.4); }
+                .treasury-input:focus { box-shadow: 0 0 0 2px hsl(var(--accent) / 0.4); }
             `}</style>
         </div>
     );

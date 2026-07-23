@@ -121,7 +121,7 @@ export default function PostStudio() {
             {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Link2 className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Review link'}
           </button>
           <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
-            className="h-7 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed">
+            className="h-7 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function PostStudio() {
       <div className="flex-1 flex overflow-hidden">
         {/* Canvas */}
         <div className="flex-1 overflow-auto bg-surface-hover/70 p-8 flex items-start justify-center"
-          style={{ backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
+          style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--border-strong)) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
           <div className="my-4">
             <PostCanvas post={post} comments={post.comments} canComment onAddComment={onAddComment} />
             <p className="text-center text-[11px] text-tertiary mt-4">Click anywhere on the post to leave a pinned comment — like Figma.</p>
@@ -146,7 +146,7 @@ export default function PostStudio() {
               <div className="flex gap-1">
                 {PLATFORMS.map((pl) => (
                   <button key={pl} onClick={() => set({ platform: pl })}
-                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-accent text-accent-fg' : 'bg-surface-hover text-secondary hover:bg-strong'}`}>
+                    className={`flex-1 h-7 rounded-md text-[11px] font-semibold capitalize transition-colors ${post.platform === pl ? 'bg-inverse text-inverse-fg' : 'bg-surface-hover text-secondary hover:bg-strong'}`}>
                     {pl === 'x' ? 'X' : pl}
                   </button>
                 ))}

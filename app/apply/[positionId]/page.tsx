@@ -229,7 +229,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     ) : (
       <div className="flex justify-center">
         <div className="inline-flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white font-semibold text-lg">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-accent-fg font-semibold text-lg">
             {positionInfo?.companyName?.charAt(0) || 'C'}
           </div>
           <span className="text-lg font-medium text-primary">{positionInfo?.companyName || ''}</span>
@@ -259,7 +259,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
               </p>
               <Link
                 href={`/apply/${params.positionId}/assessment?candidateId=${candidateId}&token=${accessToken}`}
-                className="w-full h-11 rounded-xl bg-accent text-accent-fg font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors"
+                className="w-full h-11 rounded-xl bg-inverse text-inverse-fg font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition-colors"
               >
                 Start assessment <ArrowRight className="w-4 h-4" />
               </Link>
@@ -355,7 +355,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl bg-accent text-accent-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition disabled:opacity-60"
+              className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition disabled:opacity-60"
               disabled={loading}
             >
               {loading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>) : (<>Submit application <ArrowRight className="w-4 h-4" /></>)}

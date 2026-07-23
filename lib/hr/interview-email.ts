@@ -40,7 +40,7 @@ export async function sendInterviewEmail(a: Args): Promise<InterviewEmailResult>
   if (!a.to) return { ok: true, skipped: true, reason: 'no_email' };
 
   const first = (a.candidateName || 'there').split(' ')[0];
-  const color = a.color || '#4F46E5';
+  const color = a.color || '#4653CE';
   const when = fmtWhen(a.whenISO);
   const role = a.position || 'the role';
 

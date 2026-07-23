@@ -2,8 +2,8 @@ import type { FinanceSeriesPoint } from '@/lib/crm/data';
 
 // Lightweight grouped-bar chart (revenue vs costs) rendered as inline SVG — no
 // charting dependency, scales to its container, matches the clean shell styling.
-const REVENUE = '#10b981'; // emerald-500
-const COSTS = '#94a3b8';   // slate-400
+const REVENUE = 'hsl(var(--success))';
+const COSTS = 'hsl(var(--border-strong))';
 
 const kfmt = (n: number) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`);
 
@@ -28,8 +28,8 @@ export default function FinanceChart({ series }: { series: FinanceSeriesPoint[] 
         const y = padTop + plotH * (1 - f);
         return (
           <g key={f}>
-            <line x1={padX} y1={y} x2={W - padX} y2={y} stroke="#f1f5f9" strokeWidth={1} />
-            <text x={W - padX} y={y - 3} textAnchor="end" fontSize={9} fill="#cbd5e1" className="tabular-nums">{kfmt(max * f)}</text>
+            <line x1={padX} y1={y} x2={W - padX} y2={y} stroke="hsl(var(--border-subtle))" strokeWidth={1} />
+            <text x={W - padX} y={y - 3} textAnchor="end" fontSize={9} fill="hsl(var(--text-tertiary))" className="tabular-nums">{kfmt(max * f)}</text>
           </g>
         );
       })}
@@ -47,7 +47,7 @@ export default function FinanceChart({ series }: { series: FinanceSeriesPoint[] 
             <rect x={pairX + barW + gap} y={cY} width={barW} height={Math.max(0, baseY - cY)} rx={3} fill={COSTS}>
               <title>{`${p.label} · Costs ${kfmt(p.costs)}`}</title>
             </rect>
-            <text x={groupX + groupW / 2} y={H - 10} textAnchor="middle" fontSize={10} fill="#94a3b8">{p.label}</text>
+            <text x={groupX + groupW / 2} y={H - 10} textAnchor="middle" fontSize={10} fill="hsl(var(--text-tertiary))">{p.label}</text>
           </g>
         );
       })}

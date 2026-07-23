@@ -151,7 +151,7 @@ export default function NewPositionPage() {
     return (
         <div className="min-h-screen bg-surface-sunken">
             <header className="bg-surface border-b">
-                <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+                <div className="max-w-3xl px-6 py-4 flex items-center gap-4">
                     <Link href="/dashboard/positions" className="p-2 hover:bg-surface-hover rounded-lg">
                         <ArrowLeft className="w-5 h-5 text-secondary" />
                     </Link>
@@ -159,7 +159,7 @@ export default function NewPositionPage() {
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto px-6 py-8">
+            <main className="max-w-3xl px-6 py-8">
                 <div className="bg-surface rounded-2xl shadow-sm border border-subtle p-8">
                     {error && (
                         <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg text-danger text-sm">

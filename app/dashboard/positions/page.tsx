@@ -91,13 +91,13 @@ export default function PositionsPage() {
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search positions…"
                         className="h-8 w-56 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
-                <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+                <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> Create
                 </Link>
             </PageHeader>
 
             <div className="p-6">
-                <div className="max-w-6xl mx-auto rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
+                <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
                     <table className="w-full text-[13px] border-separate border-spacing-0">
                         <thead>
                             <tr>

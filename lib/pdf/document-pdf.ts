@@ -56,7 +56,7 @@ async function fetchImage(src?: string | null): Promise<Buffer | null> {
 export async function buildDocumentPdf(d: InvoiceDocument): Promise<Buffer> {
   const isOffer = d.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';
-  const accent = d.seller?.accent_color || '#6366F1';
+  const accent = d.seller?.accent_color || '#4653CE';
   const cur = d.currency || 'USD';
 
   // Pre-fetch images (logo + product images for offers).

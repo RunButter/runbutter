@@ -224,7 +224,7 @@ function AddCandidateModal({ privy, onClose, onAdded }: { privy: string; onClose
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
             <div className="bg-surface border border-subtle rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
                 <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
                     <h3 className="text-sm font-medium text-primary">New candidate</h3>

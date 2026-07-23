@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
             <h2 style="color:#111;">${ws.name} would like your signature</h2>
             <p style="line-height:1.6;">You've been asked to review and sign <b>${title}</b>.</p>
             <div style="text-align:center;margin:28px 0;">
-              <a href="${link}" style="background:#4F46E5;color:#fff;padding:12px 28px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;">Review &amp; sign</a>
+              <a href="${link}" style="background:#4653CE;color:#fff;padding:12px 28px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;">Review &amp; sign</a>
             </div>
             <p style="font-size:12px;color:#6B7280;line-height:1.6;">This link is unique to you. If the button doesn't work, paste this into your browser:<br/><span style="word-break:break-all;">${link}</span></p>
           </div>`,

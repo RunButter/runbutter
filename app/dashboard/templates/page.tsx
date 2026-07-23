@@ -78,13 +78,13 @@ export default function TemplatesPage() {
     return (
         <>
             <PageHeader title="Email templates" count={templates.length}>
-                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> New template
                 </button>
             </PageHeader>
 
             <div className="p-6">
-                <div className="max-w-3xl mx-auto">
+                <div className="max-w-3xl">
                     <p className="text-[13px] text-secondary mb-4">Reusable messages for inviting, rejecting, and updating candidates.</p>
 
                     <div className="grid gap-2.5">
@@ -150,7 +150,7 @@ export default function TemplatesPage() {
                             </p>
                             <div className="flex justify-end gap-2 pt-1">
                                 <button onClick={() => setEditing(null)} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
                                 </button>
                             </div>

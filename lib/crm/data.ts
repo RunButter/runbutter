@@ -454,7 +454,7 @@ export async function loadBranding(privyUserId: string, workspaceId: string): Pr
   const d = data as any;
   return {
     name: d.name, logo_url: d.logo_url, legal_name: d.legal_name, address: d.address,
-    accent_color: d.accent_color || '#6366F1', invoice_footer: d.invoice_footer, tax_id: d.tax_id,
+    accent_color: d.accent_color || '#4653CE', invoice_footer: d.invoice_footer, tax_id: d.tax_id,
     country: d.country, vat_id: d.vat_id, reg_no: d.reg_no, bdo: d.bdo, iban: d.iban, bank_name: d.bank_name,
   };
 }

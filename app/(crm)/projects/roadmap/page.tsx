@@ -6,8 +6,10 @@ import { Loader2 } from 'lucide-react';
 import { loadRoadmap, type RoadmapProject } from '@/lib/crm/data';
 import RoadmapTimeline from '@/components/crm/RoadmapTimeline';
 
+// Must stay in step with PRIORITY_COLOR in components/crm/RoadmapTimeline.tsx.
 const PRIORITY: [string, string][] = [
-  ['Urgent', '#f43f5e'], ['High', '#f59e0b'], ['Medium', '#3b82f6'], ['Low', '#94a3b8'],
+  ['Urgent', 'hsl(var(--danger))'], ['High', 'hsl(var(--warning))'],
+  ['Medium', 'hsl(var(--accent))'], ['Low', 'hsl(var(--text-tertiary))'],
 ];
 
 export default function RoadmapPage() {

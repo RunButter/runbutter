@@ -94,7 +94,7 @@ function DocumentInner() {
 
   const isOffer = doc.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';
-  const accent = doc.seller?.accent_color || '#6366F1';
+  const accent = doc.seller?.accent_color || '#4653CE';
   const subtotal = doc.items.reduce((s, it) => s + (it.line_total || 0), 0);
   const total = doc.items.length ? subtotal : doc.amount; // fall back to header amount if no line items
   const tot = doc.totals;
@@ -104,7 +104,7 @@ function DocumentInner() {
       <style>{`@media print { .no-print { display: none !important; } body { background: #fff !important; } .doc-sheet { box-shadow: none !important; margin: 0 !important; border: 0 !important; } } @page { margin: 16mm; }`}</style>
 
       {/* Toolbar */}
-      <div className="no-print sticky top-0 z-10 bg-surface/$1 backdrop-blur border-b border-subtle">
+      <div className="no-print sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
           {recipient ? (
             <span className="text-[13px] font-semibold text-secondary">{doc.seller?.name || 'Document'} — {isOffer ? 'offer' : 'invoice'} {doc.number || ''}</span>
@@ -138,7 +138,7 @@ function DocumentInner() {
                 </a>
               ) : null;
             })()}
-            <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-white bg-inverse hover:bg-inverse"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
+            <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-inverse-fg bg-inverse hover:bg-inverse/90"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
           </div>
         </div>
       </div>

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
                 replyTo: email,
                 html: `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
-                        <h2 style="color: #4F46E5;">New Contact Form Submission</h2>
+                        <h2 style="color: #4653CE;">New Contact Form Submission</h2>
                         <p><strong>Name:</strong> ${name}</p>
                         <p><strong>Email:</strong> ${email}</p>
                         <p><strong>Subject:</strong> ${subject || 'N/A'}</p>

@@ -66,7 +66,7 @@ export default function ContactPage() {
     return (
         <div className="min-h-screen bg-surface-sunken">
             {/* Navigation Header */}
-            <header className="bg-surface/$1 backdrop-blur-md border-b sticky top-0 z-50">
+            <header className="bg-surface/80 backdrop-blur-md border-b border-subtle sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <Link href="/" className="p-2 hover:bg-surface-hover rounded-full transition">
@@ -199,10 +199,10 @@ export default function ContactPage() {
                                 <button
                                     disabled={loading}
                                     type="submit"
-                                    className="w-full btn-primary py-5 text-lg font-semibold flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(79,70,229,0.2)] hover:shadow-none transition-all disabled:opacity-50"
+                                    className="w-full btn-primary py-4 text-base flex items-center justify-center gap-3 disabled:opacity-50"
                                 >
                                     {loading ? (
-                                        <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                                        <div className="w-5 h-5 border-2 border-inverse-fg border-t-transparent rounded-full animate-spin" />
                                     ) : (
                                         <>
                                             Send Message

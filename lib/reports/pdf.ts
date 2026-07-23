@@ -10,7 +10,7 @@ import type { ReportBlock } from './registry';
 const INK = '#111111';
 const MUTED = '#6B7280';
 const LINE = '#E5E7EB';
-const ACCENT = '#4F46E5';
+const ACCENT = '#4653CE';
 
 export interface ReportMeta {
   workspaceName: string;

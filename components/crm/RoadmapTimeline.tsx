@@ -10,11 +10,17 @@ const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
 const addMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 1);
 
+// Status/priority stay categorical, but drive them off the semantic tokens so
+// the bars keep their meaning on both canvases. The old literals were
+// light-mode pastels — #cbd5e1 all but vanished on the light surface and read
+// as a bright smear in dark.
 const STATUS_COLOR: Record<string, string> = {
-  active: '#34d399', paused: '#fbbf24', completed: '#cbd5e1', cancelled: '#fda4af',
+  active: 'hsl(var(--success))', paused: 'hsl(var(--warning))',
+  completed: 'hsl(var(--border-strong))', cancelled: 'hsl(var(--danger))',
 };
 const PRIORITY_COLOR: Record<string, string> = {
-  urgent: '#f43f5e', high: '#f59e0b', medium: '#3b82f6', low: '#94a3b8', none: '#cbd5e1',
+  urgent: 'hsl(var(--danger))', high: 'hsl(var(--warning))', medium: 'hsl(var(--accent))',
+  low: 'hsl(var(--text-tertiary))', none: 'hsl(var(--border-strong))',
 };
 
 export default function RoadmapTimeline({ projects }: { projects: RoadmapProject[] }) {
@@ -85,7 +91,7 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
               {/* month gridlines */}
               {months.map((m) => <span key={m.key} className="absolute top-0 h-full w-px bg-surface-hover" style={{ left: `${m.left}%` }} />)}
               {/* today line */}
-              <span className="absolute top-0 h-full w-px bg-primary-400/60" style={{ left: `${todayPct}%` }} />
+              <span className="absolute top-0 h-full w-px bg-accent/60" style={{ left: `${todayPct}%` }} />
               {/* project span bar */}
               {hasBar && (
                 <div className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full opacity-70" style={{ left: `${barLeft}%`, width: `${barWidth}%`, minWidth: '10px', background: barColor }} />
@@ -94,7 +100,7 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
               {p.issues.filter((i) => i.due_date).map((i) => (
                 <span key={i.id}
                   title={`${i.title} · ${parse(i.due_date!).toLocaleDateString()} · ${i.priority} · ${i.status.replace(/_/g, ' ')}`}
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm cursor-default"
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full ring-2 ring-canvas shadow-sm cursor-default"
                   style={{ left: `${centerPct(parse(i.due_date!))}%`, background: PRIORITY_COLOR[i.priority] || PRIORITY_COLOR.none }} />
               ))}
             </div>

@@ -11,7 +11,7 @@ interface Form {
   tax_id: string; country: string; vat_id: string; reg_no: string; bdo: string; iban: string; bank_name: string;
 }
 const EMPTY: Form = {
-  logo_url: '', legal_name: '', address: '', accent_color: '#6366F1', invoice_footer: '',
+  logo_url: '', legal_name: '', address: '', accent_color: '#4653CE', invoice_footer: '',
   tax_id: '', country: 'PL', vat_id: '', reg_no: '', bdo: '', iban: '', bank_name: '',
 };
 
@@ -61,7 +61,7 @@ export default function BrandingPage() {
       const b = await loadBranding(privy, ws.id);
       if (b) setForm({
         logo_url: b.logo_url || '', legal_name: b.legal_name || '', address: b.address || '',
-        accent_color: b.accent_color || '#6366F1', invoice_footer: b.invoice_footer || '',
+        accent_color: b.accent_color || '#4653CE', invoice_footer: b.invoice_footer || '',
         tax_id: b.tax_id || '', country: b.country || 'PL', vat_id: b.vat_id || '',
         reg_no: b.reg_no || '', bdo: b.bdo || '', iban: b.iban || '', bank_name: b.bank_name || '',
       });
@@ -98,7 +98,7 @@ export default function BrandingPage() {
         <h1 className="text-sm font-semibold text-primary">Branding</h1>
         <span className="text-[11px] text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
-          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
         </button>
       </header>

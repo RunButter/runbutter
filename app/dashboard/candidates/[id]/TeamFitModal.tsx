@@ -6,6 +6,7 @@ import {
     Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
+import { useChartTokens } from '@/lib/chart-tokens';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -29,6 +30,7 @@ interface Props {
 // group (hired team, or candidates by position) and visualises personality
 // mesh vs friction. All computed client-side — no LLM, no extra cost.
 export default function TeamFitModal({ candidate, results, treasury, loading, onClose }: Props) {
+    const chart = useChartTokens();
     const candVals = BIG5.map((t) => Number(results?.personality_data?.[t.key] ?? 0));
 
     const teams = useMemo(() => {
@@ -78,16 +80,22 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
         return { deltas, synergy, biggest: sorted[0], closest: sorted[sorted.length - 1] };
     }, [teamAvg, candVals]);
 
-    const radarData = teamAvg ? {
+    const radarData = teamAvg && chart ? {
         labels: BIG5.map((t) => t.label),
         datasets: [
-            { label: 'Candidate', data: candVals, backgroundColor: 'rgba(79,70,229,0.2)', borderColor: 'rgba(79,70,229,1)', borderWidth: 2, pointRadius: 3 },
-            { label: 'Team average', data: teamAvg, backgroundColor: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.6)', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
+            { label: 'Candidate', data: candVals, backgroundColor: chart.accentFill, borderColor: chart.accent, borderWidth: 2, pointRadius: 3 },
+            { label: 'Team average', data: teamAvg, backgroundColor: chart.successFill, borderColor: chart.success, borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
         ],
     } : null;
 
     const radarOptions: any = {
-        scales: { r: { angleLines: { color: 'rgba(0,0,0,0.05)' }, grid: { color: 'rgba(0,0,0,0.05)' }, pointLabels: { font: { size: 10, weight: 'bold' }, color: '#64748b' }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+        scales: {
+            r: {
+                angleLines: { color: chart?.grid }, grid: { color: chart?.grid },
+                pointLabels: { font: { size: 10, weight: 500 }, color: chart?.label },
+                suggestedMin: 0, suggestedMax: 100, ticks: { display: false },
+            },
+        },
         plugins: { legend: { display: false } },
         maintainAspectRatio: false,
     };
@@ -102,7 +110,7 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
         : analysis && analysis.synergy >= 40 ? 'text-warning' : 'text-danger';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
             <div className="bg-surface rounded-2xl shadow-popover w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-subtle">
                     <div>

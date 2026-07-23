@@ -237,7 +237,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} width="130px" height="36px" className="h-9 w-auto" />
         ) : (
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-accent-fg font-semibold text-sm">
                     {companyInfo?.name?.charAt(0) || 'C'}
                 </div>
                 <span className="font-medium text-primary text-[15px]">{companyInfo?.name}</span>
@@ -277,7 +277,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     return (
         <div className="min-h-[100dvh] bg-surface-sunken flex flex-col">
             {/* Header: company + real per-question progress */}
-            <header className="bg-surface/$1 backdrop-blur border-b border-subtle sticky top-0 z-10">
+            <header className="bg-surface/80 backdrop-blur border-b border-subtle sticky top-0 z-10">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
                     <CompanyMark />
                     <div className="flex items-center gap-3 min-w-0">
@@ -322,7 +322,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
                         <button
                             onClick={() => { setCurrentStep(1); setQIndex(0); }}
-                            className="w-full h-12 rounded-xl bg-accent text-accent-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 active:scale-[0.99] transition"
+                            className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition"
                         >
                             Start <ArrowRight className="w-4 h-4" />
                         </button>
@@ -347,7 +347,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                             }`}
                                     >
                                         <span className={`w-5 h-5 rounded-full ring-1 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-accent ring-accent/30' : 'ring-strong bg-surface'}`}>
-                                            {selected && <Check className="w-3 h-3 text-white" />}
+                                            {selected && <Check className="w-3 h-3 text-accent-fg" />}
                                         </span>
                                         {opt}
                                     </button>
@@ -393,7 +393,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             <button
                                 onClick={() => (screeningQs.length > 0 ? setCurrentStep(2) : handleComplete())}
                                 disabled={submitting}
-                                className="h-11 px-6 rounded-xl bg-accent text-accent-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-60"
+                                className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-60"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                     <>{screeningQs.length > 0 ? 'Continue' : 'Finish & submit'} <ArrowRight className="w-4 h-4" /></>
@@ -458,7 +458,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                 <button
                                     onClick={handleComplete}
                                     disabled={submitting || !screeningMcqsAnswered}
-                                    className="h-11 px-6 rounded-xl bg-accent text-accent-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-accent/90 transition disabled:opacity-50"
+                                    className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-50"
                                 >
                                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (<>Finish & submit <CheckCircle2 className="w-4 h-4" /></>)}
                                 </button>

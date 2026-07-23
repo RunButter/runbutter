@@ -178,7 +178,7 @@ export default function PostCanvas({ post, comments, canComment, onAddComment }:
             <div className="flex items-center justify-end gap-1.5 mt-1.5">
               <button onClick={() => setPending(null)} className="p-1 rounded text-tertiary hover:bg-surface-hover" aria-label="Cancel"><XIcon className="w-3.5 h-3.5" /></button>
               <button onClick={submit} disabled={saving || !draft.trim()}
-                className="h-7 px-2.5 rounded-md text-[12px] font-medium text-accent-fg bg-accent hover:bg-accent/90 disabled:opacity-40">Comment</button>
+                className="h-7 px-2.5 rounded-md text-[12px] font-medium text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Comment</button>
             </div>
           </div>
         </>

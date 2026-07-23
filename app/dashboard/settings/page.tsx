@@ -249,7 +249,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-surface-sunken">
             <header className="bg-surface border-b">
-                <div className="max-w-4xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="max-w-4xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard" className="p-2 hover:bg-surface-hover rounded-full transition">
                             <ArrowLeft className="w-5 h-5 text-secondary" />
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto px-6 py-8">
+            <main className="max-w-4xl px-6 py-8">
                 <div className="grid gap-6">
                     {/* Status Messages */}
                     {success && (

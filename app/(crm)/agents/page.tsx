@@ -186,7 +186,7 @@ function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; on
   const toggleObj = (o: string) => set('allowed_objects', a.allowed_objects?.includes(o) ? a.allowed_objects.filter((x) => x !== o) : [...(a.allowed_objects || []), o]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle sticky top-0 bg-surface">
           <h3 className="text-sm font-medium text-primary">{initial.id ? 'Edit agent' : 'New agent'}</h3>
@@ -273,7 +273,7 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle">
           <Bot className="w-4 h-4 text-accent" />

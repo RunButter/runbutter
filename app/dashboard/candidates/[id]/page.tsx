@@ -24,6 +24,7 @@ import { Radar } from 'react-chartjs-2';
 import TeamFitModal from './TeamFitModal';
 import CandidateMessageModal from './CandidateMessageModal';
 import { rpc } from '@/lib/rpc';
+import { useChartTokens } from '@/lib/chart-tokens';
 import { useDialog } from '@/components/ui/Dialog';
 
 ChartJS.register(
@@ -34,33 +35,6 @@ ChartJS.register(
     Tooltip,
     Legend
 );
-
-// Chart.js paints to a canvas and can't read CSS variables, so the radar was
-// hardcoded light: black gridlines and a white tooltip, which vanish or glare in
-// dark mode. Resolve the design tokens to concrete colours instead, and
-// recompute whenever the theme class flips on <html>.
-function useChartTokens() {
-    const read = () => {
-        const cs = getComputedStyle(document.documentElement);
-        const raw = (n: string) => cs.getPropertyValue(n).trim();
-        const hsl = (n: string, a = 1) => `hsl(${raw(n)} / ${a})`;
-        return {
-            accent: hsl('--accent'), accentFill: hsl('--accent', 0.18),
-            success: hsl('--success', 0.5), successFill: hsl('--success', 0.06),
-            grid: hsl('--border-subtle'), label: hsl('--text-tertiary'),
-            surface: hsl('--surface'), title: hsl('--text-primary'),
-            body: hsl('--text-secondary'), border: hsl('--border-strong'),
-        };
-    };
-    const [tokens, setTokens] = useState<ReturnType<typeof read> | null>(null);
-    useEffect(() => {
-        setTokens(read());
-        const obs = new MutationObserver(() => setTokens(read()));
-        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        return () => obs.disconnect();
-    }, []);
-    return tokens;
-}
 
 export default function CandidateDetailPage({ params }: { params: { id: string } }) {
     const chart = useChartTokens();
@@ -398,7 +372,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     return (
         <div className="min-h-screen bg-surface-sunken pb-12">
             <header className="bg-surface border-b sticky top-0 z-10 transition-shadow hover:shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-7xl px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <Link href="/dashboard/candidates" className="p-2 hover:bg-surface-hover rounded-full transition shrink-0">
                             <ArrowLeft className="w-5 h-5 text-secondary" />
@@ -442,7 +416,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-6">
+            <main className="max-w-7xl px-6 py-6 flex flex-col gap-6">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
                     <section className="rounded-xl bg-surface ring-1 ring-subtle overflow-hidden">
@@ -457,7 +431,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button onClick={openFitSimulator}
-                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-accent-fg bg-accent hover:bg-accent/90 shadow-sm transition-colors">
+                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                                     <Users className="w-3.5 h-3.5" /> Simulate team fit
                                 </button>
                             </div>
@@ -727,7 +701,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 {activity.map((act) => (
                                     <div key={act.id} className="relative pl-8 group">
                                         <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface border-2 border-accent/30 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-sm">
-                                            <div className="w-2 h-2 rounded-full bg-primary-500" />
+                                            <div className="w-2 h-2 rounded-full bg-accent" />
                                         </div>
                                         <div>
                                             <div className="text-sm font-semibold text-primary leading-tight capitalize">{act.action.replace(/_/g, ' ')}</div>
@@ -771,7 +745,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
             {/* Schedule Modal */}
             {showScheduleModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
                     <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-md p-5 animate-in zoom-in-95 duration-200">
                         <h3 className="text-sm font-semibold text-primary mb-2">Schedule Interview</h3>
                         <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>

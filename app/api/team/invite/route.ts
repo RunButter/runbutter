@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
                         <p style="line-height:1.6;">You have been invited to collaborate with your team at <b>${company?.name}</b> on RunButter.</p>
                         <p style="line-height:1.6;">Your role: <b>${String(role).toUpperCase()}</b></p>
                         <div style="text-align:center; margin:28px 0;">
-                          <a href="${acceptUrl}" style="background-color:#4F46E5; color:#fff; padding:12px 28px; text-decoration:none; border-radius:8px; font-weight:600; display:inline-block;">Accept invitation</a>
+                          <a href="${acceptUrl}" style="background-color:#4653CE; color:#fff; padding:12px 28px; text-decoration:none; border-radius:8px; font-weight:600; display:inline-block;">Accept invitation</a>
                         </div>
                         <p style="font-size:12px; color:#6B7280; line-height:1.6;">
                           This link is unique to you and can only be used once. You can sign in with any

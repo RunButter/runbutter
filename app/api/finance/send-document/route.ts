@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     // account. Without it the page is login-gated and a client would see nothing.
     const link = `${origin}/documents/${invoiceId}${d.share_token ? `?t=${d.share_token}` : ''}`;
     const sellerName = d.seller?.name || 'Your company';
-    const accent = d.seller?.accent_color || '#6366F1';
+    const accent = d.seller?.accent_color || '#4653CE';
     const logo = d.seller?.logo_url;
     const footer = d.seller?.footer;
 

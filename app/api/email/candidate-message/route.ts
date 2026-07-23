@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         };
         const finalSubject = renderTemplate(subject, vars);
         const finalBodyText = renderTemplate(body, vars);
-        const color = company?.brand_color || '#4F46E5';
+        const color = company?.brand_color || '#4653CE';
 
         if (!process.env.RESEND_API_KEY) {
             return NextResponse.json({ ok: true, skipped: true, reason: 'no_api_key' });
