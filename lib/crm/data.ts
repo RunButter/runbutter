@@ -12,11 +12,10 @@ export interface RecordsResult { rows: any[]; live: boolean }
 export interface BoardResult { stages: PipelineStage[]; records: PipelineRecord[]; live: boolean }
 export interface FinanceResult { revenue: number; outstanding: number; expenses: number; invoices: number; live: boolean }
 
+// Everything funnels through getWorkspace() so the answer is fetched ONCE per
+// session instead of by every caller (see the cache note there).
 async function resolveWorkspace(privyUserId: string): Promise<string | null> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
-  if (error || !data) return null;
-  return (data as any).id ?? null;
+  return (await getWorkspace(privyUserId))?.id ?? null;
 }
 
 // `plan` drives entitlements (lib/plans.ts). get_my_workspace already returns
@@ -38,12 +37,41 @@ export async function loadNavActivity(privyUserId: string | null, since: Record<
   }
 }
 
+// ── Workspace memo ──────────────────────────────────────────────────────────
+// get_my_workspace was being re-fetched by ~18 call sites on a single page load:
+// NavRail, the CRM shell's plan gate, the page itself, and EVERY data loader via
+// resolveWorkspace(). Same question, same answer, one network round trip each —
+// far and away the biggest source of redundant latency in the app.
+//
+// Cached per Privy id for the session. Switching workspace does a hard
+// `window.location.href` reload, which clears module state anyway; clearWorkspaceCache()
+// is called on switch regardless. Failures are deliberately NOT cached, so a
+// transient error can't pin someone to "no workspace" for the whole session.
+let wsCache: { key: string; value: WorkspaceContext } | null = null;
+let wsInflight: { key: string; promise: Promise<WorkspaceContext | null> } | null = null;
+
+export function clearWorkspaceCache() { wsCache = null; wsInflight = null; }
+
 export async function getWorkspace(privyUserId: string): Promise<WorkspaceContext | null> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
-  const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
-  if (error || !data) return null;
-  const d = data as any;
-  return { id: d.id, name: d.name, role: d.role || 'member', plan: d.plan || 'free' };
+  if (wsCache?.key === privyUserId) return wsCache.value;
+  // Concurrent callers on first paint share one in-flight request.
+  if (wsInflight?.key === privyUserId) return wsInflight.promise;
+
+  const promise = (async (): Promise<WorkspaceContext | null> => {
+    const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
+    if (error || !data) return null;
+    const d = data as any;
+    const ws: WorkspaceContext = { id: d.id, name: d.name, role: d.role || 'member', plan: d.plan || 'free' };
+    wsCache = { key: privyUserId, value: ws };
+    return ws;
+  })();
+
+  wsInflight = { key: privyUserId, promise };
+  try {
+    return await promise;
+  } finally {
+    if (wsInflight?.promise === promise) wsInflight = null;
+  }
 }
 
 export async function getMembers(privyUserId: string, workspaceId: string): Promise<any[]> {
@@ -99,6 +127,7 @@ export async function setActiveWorkspace(privyUserId: string, workspaceId: strin
   const { data, error } = await rpc('set_active_workspace', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error) return { error: error.message };
   if (data !== true) return { error: 'You are not a member of that workspace.' };
+  clearWorkspaceCache();   // the memo now points at the old workspace
   return {};
 }
 
@@ -162,7 +191,6 @@ export async function loadRecords(privyUserId: string | null, object: string): P
 
 // ── CRUD ────────────────────────────────────────────────────────────────────
 export async function getRecord(privyUserId: string, object: string, id: string): Promise<any | null> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await rpc('get_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   if (error) return null;
   return data;
@@ -179,14 +207,12 @@ export async function createRecord(privyUserId: string, object: string, values: 
 }
 
 export async function updateRecord(privyUserId: string, object: string, id: string, values: Record<string, any>): Promise<{ error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { error } = await rpc('update_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id, p_data: values });
   if (!error) pingAutomations();
   return error ? { error: error.message } : {};
 }
 
 export async function deleteRecord(privyUserId: string, object: string, id: string): Promise<{ error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { error } = await rpc('delete_record', { p_privy: privyUserId, p_object: rpcObject(object), p_id: id });
   return error ? { error: error.message } : {};
 }
@@ -203,7 +229,6 @@ export async function importRecords(privyUserId: string, object: string, rows: R
 
 // Convert an accepted offer into a draft invoice (clones positions); returns the new invoice id.
 export async function convertOffer(privyUserId: string, offerId: string): Promise<{ id?: string; error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await rpc('convert_offer_to_invoice', { p_privy: privyUserId, p_offer: offerId });
   if (error) return { error: error.message };
   return { id: data as string };
@@ -304,7 +329,6 @@ export async function createBankAccount(privyUserId: string, name: string, curre
 }
 
 export async function deleteBankAccount(privyUserId: string, accountId: string): Promise<{ error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { error } = await rpc('delete_bank_account', { p_privy: privyUserId, p_account: accountId });
   return error ? { error: error.message } : {};
 }
@@ -330,20 +354,17 @@ export async function loadLedger(privyUserId: string | null, accountId: string |
 }
 
 export async function suggestMatches(privyUserId: string, txnId: string): Promise<MatchSuggestion[]> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await rpc('suggest_transaction_matches', { p_privy: privyUserId, p_txn: txnId });
   if (error || !Array.isArray(data)) return [];
   return (data as any[]).map((m) => ({ ...m, amount: +m.amount || 0 }));
 }
 
 export async function reconcileTransaction(privyUserId: string, txnId: string, kind: 'invoice' | 'expense' | 'none', targetId?: string): Promise<{ error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { error } = await rpc('reconcile_transaction', { p_privy: privyUserId, p_txn: txnId, p_kind: kind, p_target: targetId ?? null });
   return error ? { error: error.message } : {};
 }
 
 export async function bulkUpdateTransactions(privyUserId: string, ids: string[], patch: Record<string, any>): Promise<{ count?: number; error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await rpc('update_transactions_bulk', { p_privy: privyUserId, p_ids: ids, p_patch: patch });
   if (error) return { error: error.message };
   return { count: +(data as any) || 0 };
@@ -400,7 +421,6 @@ export async function loadProject(privyUserId: string | null, projectId: string)
   const mock = () => ({ project: MOCK_PROJECTS.find((x) => x.id === projectId) || MOCK_PROJECTS[0], stages: ISSUE_STAGES, records: toRecords(MOCK_ISSUES), live: false });
   if (!privyUserId) return mock();
   try {
-    await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
     const { data, error } = await rpc('get_project', { p_privy: privyUserId, p_project: projectId });
     if (error || !data) return mock();
     const d = data as any;
@@ -469,7 +489,6 @@ export async function loadInvoiceDocument(privyUserId: string | null, id: string
   const fallback = (): InvoiceDocument => ({ ...(mockInvoiceDocument(id) as any), live: false });
   if (!privyUserId) return fallback();
   try {
-    await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
     const { data, error } = await rpc('get_invoice_document', { p_privy: privyUserId, p_id: id });
     if (error || !data) return fallback();
     return mapDocument(data);
@@ -492,7 +511,6 @@ export async function loadPublicDocument(id: string, token: string): Promise<Inv
 
 export interface ItemInput { product_id?: string; description?: string; quantity: number; unit_price: number; discount_pct?: number; tax_rate?: number }
 export async function saveInvoiceItems(privyUserId: string, invoiceId: string, items: ItemInput[]): Promise<{ total?: number; error?: string }> {
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
   const { data, error } = await rpc('save_invoice_items', { p_privy: privyUserId, p_invoice: invoiceId, p_items: items });
   if (error) return { error: error.message };
   return { total: +(data as any) || 0 };

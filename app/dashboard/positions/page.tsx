@@ -29,7 +29,6 @@ export default function PositionsPage() {
 
     const loadPositions = async (privyUserId: string) => {
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
             const { data: companyUser } = await supabase
                 .from('company_users')

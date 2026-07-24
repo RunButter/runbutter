@@ -34,7 +34,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   async function loadCompanyData() {
     try {
-      await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user!.id, is_local: false });
       const { data } = await supabase.from('company_users').select('*, company:companies(*)').eq('privy_user_id', user!.id).single();
       if (data?.company) setCompany(data.company);
     } catch {

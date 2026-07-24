@@ -29,7 +29,6 @@ export default function TeamPage() {
     const loadTeam = useCallback(async () => {
         if (!user) return;
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user.id, is_local: false });
 
             // Fetch current user and their company
             const { data: me } = await supabase

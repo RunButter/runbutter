@@ -51,7 +51,6 @@ export default function SettingsPage() {
         try {
             setLoading(true);
             // Set the session variable for RLS
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
             // Get company info
             const { data: companyUser, error: companyError } = await supabase
@@ -149,7 +148,6 @@ export default function SettingsPage() {
             // 1. Upload new logo if selected
             if (logoFile && user) {
                 // Ensure RLS session variable is set for this connection
-                await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user.id, is_local: false });
 
                 const uploadedUrl = await uploadLogo(logoFile, company.id);
                 if (uploadedUrl) {

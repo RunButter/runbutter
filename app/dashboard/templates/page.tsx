@@ -38,7 +38,6 @@ export default function TemplatesPage() {
 
     const load = async (privyUserId: string) => {
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
             const { data, error } = await rpc('get_message_templates', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setTemplates(data || []);

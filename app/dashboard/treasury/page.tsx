@@ -63,7 +63,6 @@ export default function TreasuryPage() {
     const loadDataset = async (privyUserId: string) => {
         try {
             await supabase.auth.getUser();
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
             const { data: rows, error } = await rpc('get_treasury_dataset', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setData(rows || []);

@@ -30,7 +30,6 @@ export default function MyTeamPage() {
     const load = async (privyUserId: string) => {
         try {
             await supabase.auth.getUser();
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
             const { data, error } = await rpc('get_my_team', { p_privy_user_id: privyUserId });
             if (error) throw error;
             setTeam(data || []);

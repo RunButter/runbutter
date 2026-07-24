@@ -74,7 +74,6 @@ export default function NewPositionPage() {
         setError('');
 
         try {
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: user.id, is_local: false });
 
             const { data: companyUser } = await supabase
                 .from('company_users')

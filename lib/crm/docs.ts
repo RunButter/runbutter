@@ -38,7 +38,6 @@ export async function loadDoc(privy: string | null, docId: string): Promise<Doc 
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(docId);
   if (!uuid) return SAMPLE_DOC(docId);           // sample ids (d1…) render sample content
   if (!privy) return null;
-  await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privy, is_local: false });
   const { data, error } = await rpc('get_doc', { p_privy: privy, p_id: docId });
   if (error || !data) return null;
   return data as Doc;

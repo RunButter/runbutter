@@ -66,7 +66,6 @@ export default function CandidatesPage() {
             // Ensure we have a valid Supabase session for Native RLS
             await supabase.auth.getUser();
 
-            await supabase.rpc('set_config', { name: 'app.current_privy_user_id', value: privyUserId, is_local: false });
 
             // Single RPC handles both the full list (empty query) and Boolean
             // keyword search across resume text, ranked by ts_rank.
