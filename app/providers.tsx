@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import DialogProvider from '@/components/ui/Dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 // Belt-and-braces theme sync. The inline no-flash script in layout.tsx handles
 // the first paint, but it doesn't always execute (statically prerendered routes
@@ -34,8 +35,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const dark = useThemeSync();
 
   // DialogProvider wraps everything (incl. public pages) so useDialog() works
-  // anywhere without falling back to browser confirm/alert.
-  const tree = <DialogProvider>{children}</DialogProvider>;
+  // anywhere without falling back to browser confirm/alert. TooltipProvider sits
+  // alongside it so any <Tooltip> works app-wide without a local provider.
+  const tree = (
+    <TooltipProvider delayDuration={300} skipDelayDuration={200}>
+      <DialogProvider>{children}</DialogProvider>
+    </TooltipProvider>
+  );
 
   // Self-host guard: without a Privy app the auth SDK can't init. Public pages
   // (the marketing site) still render; only sign-in needs this configured.

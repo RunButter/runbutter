@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trash2, Download, X, Loader2 } from 'lucide-react';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
-import Badge, { toneFor } from '@/components/ui/Badge';
+import Badge, { toneFor, iconFor } from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
 
 function initials(s: string) {
@@ -28,7 +28,7 @@ export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
         </div>
       );
     case 'tags':
-      return <Badge tone={toneFor(String(v))}>{String(v).replace(/_/g, ' ')}</Badge>;
+      return <Badge tone={toneFor(String(v))} icon={iconFor(String(v))}>{String(v).replace(/_/g, ' ')}</Badge>;
     case 'relation':
       return <span className="text-secondary truncate">{v}</span>;
     case 'currency':

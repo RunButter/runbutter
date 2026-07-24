@@ -16,6 +16,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuCheck,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
@@ -227,13 +228,18 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           <div className="text-tertiary capitalize">{ws?.role || 'Member'}</div>
         </div>
         <ThemeToggle />
-        <button
-          aria-label="Sign out"
-          onClick={async () => { await logout(); router.push('/auth/login'); }}
-          className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-surface-hover transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              aria-label="Sign out"
+              onClick={async () => { await logout(); router.push('/auth/login'); }}
+              className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-surface-hover transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">Sign out</TooltipContent>
+        </Tooltip>
       </div>
     </aside>
   );
