@@ -19,7 +19,9 @@ async function resolveWorkspace(privyUserId: string): Promise<string | null> {
   return (data as any).id ?? null;
 }
 
-export interface WorkspaceContext { id: string; name: string; role: string }
+// `plan` drives entitlements (lib/plans.ts). get_my_workspace already returns
+// it; it used to be dropped here, which is why the CRM shell couldn't gate.
+export interface WorkspaceContext { id: string; name: string; role: string; plan: string }
 // Sidebar unread badges: count of NEW records per tab since the client's
 // per-tab last-seen timestamps (a { slug: ISO } map). Best-effort — returns {}
 // on any error so the nav never breaks.
@@ -41,7 +43,7 @@ export async function getWorkspace(privyUserId: string): Promise<WorkspaceContex
   const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
   if (error || !data) return null;
   const d = data as any;
-  return { id: d.id, name: d.name, role: d.role || 'member' };
+  return { id: d.id, name: d.name, role: d.role || 'member', plan: d.plan || 'free' };
 }
 
 export async function getMembers(privyUserId: string, workspaceId: string): Promise<any[]> {

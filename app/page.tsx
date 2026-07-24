@@ -40,11 +40,13 @@ const CAPS = [
   { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
 ];
 
+// Keep in step with lib/plans.ts — that file is the entitlement source of truth.
+// Self-hosting gets everything; these tiers price the hosted service.
 const PLANS = [
-  { name: 'Free', price: '$0', sub: 'for trying it out', features: ['1 workspace · 1 seat', 'Up to 25 records / object', 'All five modules', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
-  { name: 'Starter', price: '$99', sub: 'per month', features: ['Everything in Free', '3 seats · 250 records / object', 'Custom branding & PDF invoices', 'Resume search & Talent Treasury'], cta: 'Start free', href: '/auth/register?plan=starter', highlight: true },
-  { name: 'Professional', price: '$299', sub: 'per month', features: ['Everything in Starter', '10 seats · 2,500 records / object', 'Interviews & My Team', 'Advanced analytics & GDPR'], cta: 'Start free', href: '/auth/register?plan=professional', highlight: false },
-  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Professional', 'Unlimited seats & records', 'HRIS export & SSO', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
+  { name: 'Free', price: '$0', sub: 'self-host or start here', features: ['2 seats · 500 records', 'Sales, finance, projects & hiring', 'Pipelines, invoices & docs', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
+  { name: 'Team', price: '$15', sub: 'per seat / month', features: ['Everything in Free', 'Unlimited seats · 25,000 records', 'Automations & webhooks', 'Branding, e-sign & post studio'], cta: 'Start free', href: '/auth/register?plan=team', highlight: true },
+  { name: 'Business', price: '$39', sub: 'per seat / month', features: ['Everything in Team', 'AI agents on your own key', 'REST API & MCP server', 'Advanced analytics & attribution'], cta: 'Start free', href: '/auth/register?plan=business', highlight: false },
+  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Business', 'SSO / SAML & audit log', 'Unlimited everything', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
 // `open` renders that entry expanded on load. The Google Calendar answer uses it

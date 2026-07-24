@@ -82,6 +82,13 @@ Four things almost nobody combines:
 - **Finance analytics** — revenue vs costs, net, over any period.
 - **KSeF e-invoicing (Poland)** — export compliant FA(3) XML e-invoices straight from your documents. *(Phase 1: export. Live token submission is roadmap.)*
 
+### Documents & e-signature
+- **Built-in e-signatures** — send a document for signature via a tokenized link; the signer draws or
+  types their name, no account needed. Stored in a private bucket, audit-stamped. Built on pdf-lib +
+  signature_pad (MIT) — not a wrapper around someone else's service.
+- **Branded PDF documents** — invoices and offers with your logo, legal details and bank info.
+- **Scheduled reports** — weekly/monthly PDF summaries emailed to a recipient list on a cron.
+
 ### Marketing  ★ (coordination is a signature strength)
 - **Campaigns** — budget, spend, leads by channel.
 - **Post studio** — compose a social post and preview it **pixel-faithfully** as it will look on **Instagram, Facebook, X, and LinkedIn**.
@@ -90,6 +97,9 @@ Four things almost nobody combines:
 - **Approval workflow** — draft → in review → approved → published status on every post.
 - **Web analytics** — **cookieless, first-party** visitor tracking (visitors, pageviews, top pages, referrers, live now). No cookie banner needed.
 - **Source tracking** — generate per-channel tracking links with UTM capture; see which source actually converts to applicants/customers, with click→apply→hire attribution.
+- **Short links** — your own branded link shortener with click tracking, so every campaign link is measurable.
+- **Custom forms** — build a public form, share it, and have every submission land as a record in your
+  workspace (lead capture, contact, applications) with no third-party form tool.
 
 ### Projects
 - **Projects & issues** — records with status, priority, due dates.
@@ -105,7 +115,8 @@ Four things almost nobody combines:
 - **Talent Treasury** — a faceted explorer over your *entire* candidate pool: filter by score thresholds, source, status, position; sort and surface the best fits you already have.
 - **Team-Fit simulator** — model how a candidate would fit alongside your existing team's profiles.
 - **Résumé search** — full-text search across résumé text, powered by Postgres FTS (tsvector + GIN). **Zero AI cost** — it's a database query, not an LLM call.
-- **Interviews** — schedule via **Google Calendar** (with Meet links).
+- **Interviews** — schedule via **Google Calendar** (with Meet links), plus a **Cal.com connector** that
+  pulls booked meetings into the workspace.
 - **Email templates & candidate messaging** — reusable invite/decline/offer templates with variables; send and log messages per candidate.
 - **My Team** — onboarding checklists, weekly **pulse check-ins** (mood), a rule-based manager brief, and retention signals.
 - **Directory & Assets** — team directory and company equipment tracking (laptops, licenses, etc.).
@@ -117,6 +128,8 @@ Four things almost nobody combines:
 - **BYO key, no markup** — runs on *your* Claude/OpenAI/Gemini/OpenRouter key. Zero per-token cost from RunButter.
 - **Safety by default** — in "suggest" mode the agent **proposes** every write for one-click human approval; opt trusted agents into "autonomous" mode, bounded by a per-run step cap and its scoped tools.
 - **Full audit log** — every turn, tool call, result and proposed change is recorded per run.
+- **Chat assistant** — drive the workspace conversationally from **Telegram**; it runs the same governed
+  agent loop and the same verified tools as everything else.
 
 ### Automations
 - **Trigger → filter → action** rules: when a record is created/updated, an incoming webhook fires, or on a schedule → send email, fire webhooks, create records, or run an AI step.
@@ -224,7 +237,29 @@ Four things almost nobody combines:
 
 ---
 
-## 9. Keep it honest (so the launch survives scrutiny)
+## 9. Pricing & business model
+
+**MIT, and self-hosting gets everything.** We sell the hosted service — managed infra, updates,
+support — not a crippled build. Gating governs runbutter.app only.
+
+**Per seat, because a company OS is used by the whole company.** A flat per-company price charges a
+30-person customer the same as a 3-person one.
+
+| Plan | Price | Seats / records | What unlocks |
+|---|---|---|---|
+| **Free** | $0 | 2 seats · 500 records | The relational core: sales, finance, projects, hiring, docs |
+| **Team** | **$15** /seat/mo | unlimited seats · 25,000 records | Automations & webhooks, branding, e-sign, post studio, short links, forms, web analytics |
+| **Business** | **$39** /seat/mo | unlimited | **AI agents**, **REST API + MCP**, scheduled reports, advanced analytics & attribution, GDPR controls |
+| **Enterprise** | Custom | unlimited | SSO/SAML, audit log, dedicated support & SLA |
+
+**What we never gate:** the relational core — companies, people, deals, invoices, projects, issues,
+the pipeline, CSV export. That's the first impression; charging for it would kill adoption.
+**What we charge for:** scale (seats, records, volume), automation & AI, and governance.
+
+*Why AI agents are a paid tier and not a cost centre:* they run on the customer's own API key, so
+serving them costs us nothing per token — high perceived value, ~zero COGS.
+
+## 10. Keep it honest (so the launch survives scrutiny)
 - Say **"skills + Big-5 personality"**, not "cognitive/IQ testing" — the cognitive score isn't a real test.
 - **KSeF** is export today; live submission is roadmap. Say "export compliant e-invoices."
 - **Agents** are shipped and governed; the end-to-end tool-run has had limited live testing — demo "suggest/approve" mode first.

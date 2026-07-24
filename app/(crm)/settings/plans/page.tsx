@@ -7,13 +7,15 @@ import { supabase } from '@/lib/supabase';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
 import {
-  PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, type SubscriptionPlan,
+  PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, normalizePlan, type SubscriptionPlan,
 } from '@/lib/plans';
 
-// Maps a paid plan to its Stripe price id (same env vars the legacy billing uses).
+// Maps a paid plan to its Stripe price id. Env var names keep the old
+// STARTER/PRO wording so existing Render config keeps working after the
+// Team/Business rename — these must be PER-SEAT (quantity) prices in Stripe.
 const PRICE_IDS: Partial<Record<SubscriptionPlan, string>> = {
-  starter: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_STARTER_PLACEHOLDER',
-  professional: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_PRO_PLACEHOLDER',
+  team: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_STARTER_PLACEHOLDER',
+  business: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_PRO_PLACEHOLDER',
 };
 
 export default function PlansPage() {
@@ -34,7 +36,8 @@ export default function PlansPage() {
       .then(({ data }) => { const row = data?.[0]; if (row?.company) setCompany(row.company); setLoading(false); });
   }, [ready, authenticated, user]);
 
-  const current = (company?.plan && company.plan in PLANS ? company.plan : 'free') as SubscriptionPlan;
+  // normalizePlan maps legacy 'starter'/'professional' rows onto Team/Business.
+  const current = normalizePlan(company?.plan);
   const currentIdx = PLAN_ORDER.indexOf(current);
 
   return (
@@ -61,7 +64,7 @@ export default function PlansPage() {
                 const p = PLANS[key];
                 const isCurrent = key === current;
                 const isUpgrade = idx > currentIdx;
-                const popular = key === 'professional';
+                const popular = key === 'business';
                 const prev = idx > 0 ? PLAN_ORDER[idx - 1] : null;
                 const newFeats = ALL_FEATURES.filter((f) => p.features[f] && !(prev && PLANS[prev].features[f]));
 
@@ -80,7 +83,9 @@ export default function PlansPage() {
                     <h3 className="font-semibold text-primary">{p.name}</h3>
                     <div className="mt-1.5 flex items-baseline gap-1">
                       <span className="text-3xl font-semibold text-primary">{p.price}</span>
-                      {p.priceValue > 0 && <span className="text-[12px] font-semibold text-tertiary">/mo</span>}
+                      {p.priceValue > 0 && (
+                        <span className="text-[12px] font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
+                      )}
                     </div>
                     <p className="text-[12px] text-tertiary mb-4">{p.tagline}</p>
 
