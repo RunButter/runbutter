@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Trash2, Download, X, Loader2 } from 'lucide-react';
+import { Trash2, Download, X, Loader2, Inbox } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 import Badge, { toneFor, iconFor } from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
@@ -123,7 +124,15 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
             );
           })}
           {rows.length === 0 && (
-            <tr><td colSpan={object.fields.length + 1} className="px-3 py-12 text-center text-tertiary">No {object.plural.toLowerCase()} yet.</td></tr>
+            <tr>
+              <td colSpan={object.fields.length + 1}>
+                <EmptyState
+                  icon={Inbox}
+                  title={`No ${object.plural.toLowerCase()} yet`}
+                  description={`Add your first ${object.singular.toLowerCase()} with the New button above — or import an existing list.`}
+                />
+              </td>
+            </tr>
           )}
         </tbody>
       </table>

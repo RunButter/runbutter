@@ -16,6 +16,7 @@ import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import FinanceChart from '@/components/crm/FinanceChart';
 import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
+import EmptyState from '@/components/ui/EmptyState';
 
 const money = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
@@ -170,7 +171,8 @@ export default function WorkspaceHome() {
               </div>
               <div className="divide-y divide-subtle">
                 {(hr?.recent || []).length === 0 ? (
-                  <div className="px-5 py-8 text-center text-[13px] text-tertiary">No candidates yet.</div>
+                  <EmptyState icon={Users} title="No candidates yet"
+                    description="Applications land here as soon as your first position goes live." />
                 ) : (hr?.recent || []).map((c) => {
                   const st = hrStatus(c.status);
                   return (
@@ -197,7 +199,8 @@ export default function WorkspaceHome() {
               </div>
               <div className="divide-y divide-subtle">
                 {txns.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-[13px] text-tertiary">No transactions yet.</div>
+                  <EmptyState icon={Receipt} title="No transactions yet"
+                    description="Import a bank statement to start reconciling against your invoices." />
                 ) : txns.map((t) => (
                   <div key={t.id} className="flex items-center gap-3 px-5 py-2.5">
                     <div className="min-w-0 flex-1">

@@ -115,7 +115,7 @@ export default function MyTeamPage() {
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {cultureMap.map((g) => (
-                                <div key={g.name} className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-4">
+                                <div key={g.name} className="bg-surface rounded-2xl ring-1 ring-subtle p-4">
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-primary truncate">{g.name}</span>
                                         <span className="text-xs font-mono text-tertiary">{g.headcount} {g.headcount === 1 ? 'person' : 'people'}</span>
@@ -135,7 +135,7 @@ export default function MyTeamPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                             {team.map((m) => (
                                 <button key={m.id} onClick={() => setSelected(m)}
-                                    className="text-left bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200">
+                                    className="text-left bg-surface rounded-2xl ring-1 ring-subtle p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200">
                                     <div className="flex items-start justify-between gap-3 mb-3">
                                         <div className="min-w-0">
                                             <div className="font-semibold text-primary truncate flex items-center gap-2">

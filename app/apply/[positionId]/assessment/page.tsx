@@ -255,7 +255,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     if (currentStep === 3) {
         return (
             <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-8 text-center">
+                <div className="max-w-md w-full bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-8 text-center">
                     <div className="flex justify-center mb-6"><CompanyMark /></div>
                     <div className="w-14 h-14 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-5">
                         <CheckCircle2 className="w-8 h-8 text-success" />
@@ -293,7 +293,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
             <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 {currentStep === 0 && (
-                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8">
                         <div className="w-11 h-11 rounded-xl bg-accent/10 ring-1 ring-accent/30 flex items-center justify-center mb-5">
                             <Target className="w-5 h-5 text-accent" />
                         </div>
@@ -330,7 +330,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 1 && !personalityDone && activeQ && (
-                    <div key={activeQ.id} className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div key={activeQ.id} className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="text-[12px] font-semibold text-tertiary mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
                         <p className="text-lg sm:text-xl font-medium text-primary leading-snug mb-6">{activeQ.text}</p>
 
@@ -373,7 +373,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 1 && personalityDone && (
-                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="w-12 h-12 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Check className="w-6 h-6 text-success" />
                         </div>
@@ -404,7 +404,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 )}
 
                 {currentStep === 2 && (
-                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <h2 className="text-xl font-semibold tracking-tight text-primary mb-1.5">A few questions from {companyInfo?.name || 'the company'}</h2>
                         <p className="text-[13px] text-tertiary mb-8">Specific to this role.</p>
 

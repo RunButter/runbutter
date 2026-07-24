@@ -153,7 +153,7 @@ export default function SourcesPage() {
             <div className="grid lg:grid-cols-5 gap-6">
                 {/* Generator */}
                 <div className="lg:col-span-2">
-                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5 sticky top-4">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle p-5 sticky top-4">
                         <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                             <Plus className="w-4 h-4 text-accent" /> New tracking link
                         </h3>
@@ -190,7 +190,7 @@ export default function SourcesPage() {
                 {/* Links + breakdown */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Source breakdown */}
-                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle p-5">
                         <h3 className="font-semibold text-primary mb-4">Where candidates come from</h3>
                         {attribution.length === 0 ? (
                             <p className="text-sm text-tertiary">No applicants yet.</p>
@@ -215,7 +215,7 @@ export default function SourcesPage() {
                     </div>
 
                     {/* Links list */}
-                    <div className="bg-surface rounded-2xl border border-subtle ring-1 ring-subtle p-5">
+                    <div className="bg-surface rounded-2xl ring-1 ring-subtle p-5">
                         <h3 className="font-semibold text-primary mb-4">Your tracking links</h3>
                         {links.length === 0 ? (
                             <p className="text-sm text-tertiary">No links yet. Generate one on the left.</p>
@@ -278,7 +278,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="bg-surface rounded-xl border border-subtle ring-1 ring-subtle px-4 py-3">
+        <div className="bg-surface rounded-xl ring-1 ring-subtle px-4 py-3">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>

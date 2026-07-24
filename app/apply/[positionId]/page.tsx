@@ -241,7 +241,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     return (
       <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
         <div className="max-w-md w-full">
-          <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-8 text-center">
+          <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-8 text-center">
             <div className="mb-6"><CompanyMark /></div>
             <div className="w-14 h-14 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle2 className="w-8 h-8 text-success" />
@@ -287,7 +287,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           )}
         </div>
 
-        <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover shadow-slate-200/50 p-6 sm:p-8">
+        <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8">
           {error && (
             <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-danger/10 ring-1 ring-danger/30 text-danger text-[14px]">
               <X className="w-4 h-4 mt-0.5 shrink-0" /> {error}
