@@ -108,7 +108,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDef> = {
         features: f([]),
     },
     team: {
-        name: 'Team', price: '$15', priceValue: 15, perSeat: true,
+        name: 'Team', price: '$8', priceValue: 8, perSeat: true,
         tagline: 'Run the company on it',
         limits: {
             maxSeats: Infinity, maxRecords: 25000, maxPositions: 10, maxCandidates: 1000,
@@ -117,7 +117,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDef> = {
         features: f(TEAM_FEATURES),
     },
     business: {
-        name: 'Business', price: '$39', priceValue: 39, perSeat: true,
+        name: 'Business', price: '$33', priceValue: 33, perSeat: true,
         tagline: 'AI agents, API and analytics',
         limits: {
             maxSeats: Infinity, maxRecords: Infinity, maxPositions: Infinity, maxCandidates: Infinity,

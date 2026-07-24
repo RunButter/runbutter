@@ -248,8 +248,8 @@ support — not a crippled build. Gating governs runbutter.app only.
 | Plan | Price | Seats / records | What unlocks |
 |---|---|---|---|
 | **Free** | $0 | 2 seats · 500 records | The relational core: sales, finance, projects, hiring, docs |
-| **Team** | **$15** /seat/mo | unlimited seats · 25,000 records | Automations & webhooks, branding, e-sign, post studio, short links, forms, web analytics |
-| **Business** | **$39** /seat/mo | unlimited | **AI agents**, **REST API + MCP**, scheduled reports, advanced analytics & attribution, GDPR controls |
+| **Team** | **$8** /seat/mo | unlimited seats · 25,000 records | Automations & webhooks, branding, e-sign, post studio, short links, forms, web analytics |
+| **Business** | **$33** /seat/mo | unlimited | **AI agents**, **REST API + MCP**, scheduled reports, advanced analytics & attribution, GDPR controls |
 | **Enterprise** | Custom | unlimited | SSO/SAML, audit log, dedicated support & SLA |
 
 **What we never gate:** the relational core — companies, people, deals, invoices, projects, issues,

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, ShieldCheck, Zap, Plug, Sparkles, Github, Database, Terminal, Bot } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public
@@ -29,24 +29,29 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm (the first tile is
 // wide). Monochrome throughout — no hue.
+// 11 tiles, the first spanning two columns: exactly 12 cells, so the 4-column
+// grid fills three clean rows with no ragged gap at the end.
 const CAPS = [
   { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true },
   { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records.' },
-  { icon: Sparkles, name: 'AI docs, your key', body: 'Draft with Claude, GPT or Gemini. No token markup.' },
-  { icon: Plug, name: 'Open integrations', body: 'REST API, signed webhooks, Zapier & Make.' },
-  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, from your documents.' },
+  { icon: PenLine, name: 'E-signatures', body: 'Send a document, they sign in the browser. No account, no third-party seat.' },
+  { icon: FileInput, name: 'Custom forms', body: 'Publish a form, every answer lands as a record in your workspace.' },
+  { icon: Link2, name: 'Short links', body: 'Your own branded shortener, with click tracking on every campaign link.' },
+  { icon: FileBarChart, name: 'Scheduled reports', body: 'A PDF of the numbers that matter, in the right inboxes every Monday.' },
+  { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints the app uses.' },
+  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, straight from your documents.' },
   { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
-  { icon: Table, name: 'Import & export', body: 'CSV or Google Sheets in, any list out, one click.' },
-  { icon: ShieldCheck, name: 'GDPR & privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
+  { icon: Table, name: 'Import and export', body: 'CSV or Google Sheets in, any list out, one click.' },
+  { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
 ];
 
 // Keep in step with lib/plans.ts — that file is the entitlement source of truth.
 // Self-hosting gets everything; these tiers price the hosted service.
 const PLANS = [
-  { name: 'Free', price: '$0', sub: 'self-host or start here', features: ['2 seats · 500 records', 'Sales, finance, projects & hiring', 'Pipelines, invoices & docs', 'CSV & Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
-  { name: 'Team', price: '$15', sub: 'per seat / month', features: ['Everything in Free', 'Unlimited seats · 25,000 records', 'Automations & webhooks', 'Branding, e-sign & post studio'], cta: 'Start free', href: '/auth/register?plan=team', highlight: true },
-  { name: 'Business', price: '$39', sub: 'per seat / month', features: ['Everything in Team', 'AI agents on your own key', 'REST API & MCP server', 'Advanced analytics & attribution'], cta: 'Start free', href: '/auth/register?plan=business', highlight: false },
-  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Business', 'SSO / SAML & audit log', 'Unlimited everything', 'Dedicated support & SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
+  { name: 'Free', price: '$0', sub: 'self-host, or start here', features: ['2 seats, 500 records', 'Every core module', 'Pipelines, invoices, docs', 'CSV and Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
+  { name: 'Team', price: '$8', sub: 'per seat / month', features: ['Everything in Free', 'Unlimited seats, 25,000 records', 'Automations and webhooks', 'E-signatures, forms, short links'], cta: 'Start free', href: '/auth/register?plan=team', highlight: true },
+  { name: 'Business', price: '$33', sub: 'per seat / month', features: ['Everything in Team', 'AI agents on your own key', 'REST API and MCP server', 'Attribution and scheduled reports'], cta: 'Start free', href: '/auth/register?plan=business', highlight: false },
+  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Business', 'SSO / SAML and audit log', 'Unlimited everything', 'Dedicated support and SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
 ];
 
 // `open` renders that entry expanded on load. The Google Calendar answer uses it
@@ -60,7 +65,18 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
-  { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details — then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
+  { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details, then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
+];
+
+// The full inventory, grouped by module. Grouped chunks rather than one long
+// flat list: a buyer scans for the module they care about, not 35 bullets.
+const INCLUDED: { group: string; items: string[] }[] = [
+  { group: 'Sales', items: ['Deal pipeline', 'Companies and people', 'Product catalogue', 'Offers, accepted to invoice', 'VAT and NIP autofill'] },
+  { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'E-signatures', 'KSeF e-invoicing'] },
+  { group: 'Marketing', items: ['Campaigns and budgets', 'Post studio with real previews', 'Client review links', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Source attribution'] },
+  { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar'] },
+  { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
+  { group: 'Platform', items: ['AI agents on your own key', 'Automations and webhooks', 'REST API and MCP server', 'Scheduled PDF reports', 'Roles and permissions', 'Import and export', 'GDPR controls'] },
 ];
 
 const MCP_SNIPPET = `{
@@ -109,9 +125,8 @@ export default function HomePage() {
             Run your whole company,<br />smooth as butter
           </h1>
           <p className="mt-6 text-base md:text-lg text-secondary max-w-xl mx-auto leading-relaxed">
-            <strong className="font-medium text-primary">RunButter</strong> is an open-source
-            company OS: run your sales pipeline, invoicing, marketing, projects and hiring in
-            one workspace — with AI agents that do the busywork. No token bill.
+            One workspace for sales, invoicing, marketing, projects and hiring.
+            Plus AI agents that run on your own key.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CopyCommand command={`git clone ${REPO_URL}.git`} />
@@ -119,7 +134,6 @@ export default function HomePage() {
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="mt-4 text-xs text-tertiary">Free hosted plan, or self-host it yourself in minutes.</p>
         </div>
 
         {/* the big product window breaks out of the hero into the page */}
@@ -173,6 +187,38 @@ export default function HomePage() {
       <div className="border-t border-subtle">
         <Showcase />
       </div>
+
+      {/* ── The full inventory ───────────────────────────────────────────────
+          Grouped index rather than a flat list: this is the section a buyer
+          scans to check their own must-have is in the box. */}
+      <section className="border-t border-subtle">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <Reveal>
+            <div className="max-w-2xl">
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">One workspace instead of five subscriptions</h2>
+              <p className="text-secondary mt-3 leading-relaxed">
+                Everything below is included and runs on the same records. A deal knows its company,
+                an invoice knows its client, a candidate becomes a team member. Nothing to integrate.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10">
+            {INCLUDED.map((col, i) => (
+              <Reveal key={col.group} delay={i * 50}>
+                <div className="border-t border-strong pt-4">
+                  <h3 className="text-sm font-medium text-primary">{col.group}</h3>
+                  <ul className="mt-3 space-y-2">
+                    {col.items.map((item) => (
+                      <li key={item} className="text-sm text-secondary leading-relaxed">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── Developers / open source ─────────────────────────────────────── */}
       <section id="developers" className="border-t border-subtle bg-surface-sunken">
