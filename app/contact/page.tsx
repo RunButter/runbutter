@@ -151,7 +151,7 @@ export default function ContactPage() {
                                             name="name"
                                             type="text"
                                             placeholder="John Doe"
-                                            className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all font-medium"
+                                            className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none shadow-sm focus:ring-2 focus:ring-accent/30 transition-all font-medium"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -161,7 +161,7 @@ export default function ContactPage() {
                                             name="email"
                                             type="email"
                                             placeholder="john@company.com"
-                                            className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all font-medium"
+                                            className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none shadow-sm focus:ring-2 focus:ring-accent/30 transition-all font-medium"
                                         />
                                     </div>
                                 </div>
@@ -170,7 +170,7 @@ export default function ContactPage() {
                                     <label className="text-xs font-semibold text-tertiary uppercase tracking-widest ml-1">Subject</label>
                                     <select
                                         name="subject"
-                                        className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all font-medium appearance-none cursor-pointer"
+                                        className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none shadow-sm focus:ring-2 focus:ring-accent/30 transition-all font-medium appearance-none cursor-pointer"
                                     >
                                         <option>Enterprise Query</option>
                                         <option>Technical Support</option>
@@ -186,7 +186,7 @@ export default function ContactPage() {
                                         name="message"
                                         rows={5}
                                         placeholder="How can we help you scale your hiring?"
-                                        className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all font-medium resize-none"
+                                        className="w-full bg-surface-sunken border border-subtle rounded-2xl px-5 py-4 focus:outline-none shadow-sm focus:ring-2 focus:ring-accent/30 transition-all font-medium resize-none"
                                     />
                                 </div>
 

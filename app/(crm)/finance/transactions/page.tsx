@@ -125,7 +125,7 @@ export default function TransactionsPage() {
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
-              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+              className="h-7 w-40 pl-7 pr-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
           </div>
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {PERIODS.map((p) => (
@@ -382,13 +382,13 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
                 <input list="drawer-cats" value={cat} onChange={(e) => setCat(e.target.value)} placeholder="Uncategorized"
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 <datalist id="drawer-cats">{categorySuggestions.map((c) => <option key={c} value={c} />)}</datalist>
               </label>
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Status</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none capitalize">
+                  className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none capitalize">
                   {['posted', 'pending', 'excluded'].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </label>
@@ -469,15 +469,15 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
         </div>
         <div className="p-4 space-y-3">
           <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Name *</span>
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
+            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Business checking" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" /></label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Currency</span>
-              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none uppercase" /></label>
+              <input value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none uppercase" /></label>
             <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Opening balance</span>
-              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
+              <input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} placeholder="0" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" /></label>
           </div>
           <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Institution</span>
-            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" /></label>
+            <input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Mercury, Revolut…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" /></label>
           {error && <p className="text-[12px] text-danger">{error}</p>}
         </div>
         <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
@@ -553,7 +553,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
 
   const sel = (key: string) => (
     <select value={map[key] ?? -1} onChange={(e) => setMap((m) => ({ ...m, [key]: Number(e.target.value) }))}
-      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
+      className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
       <option value={-1}>— skip —</option>
       {headers.map((h, i) => <option key={i} value={i}>{h}</option>)}
     </select>
@@ -574,7 +574,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
           {step === 'source' && (
             <div className="space-y-4">
               <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Import into account</span>
-                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
+                <select value={acct} onChange={(e) => setAcct(e.target.value)} className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
                   <option value="">— no account —</option>
                   {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
@@ -586,7 +586,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
               <div>
                 <span className="block text-[12px] font-semibold text-secondary mb-1">…or paste CSV</span>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="Date,Description,Amount&#10;2026-07-01,Stripe payout,4200&#10;2026-07-02,AWS,-820"
-                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
               {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>

@@ -34,7 +34,7 @@ export default function PublicForm({ slug, form }: { slug: string; form: PublicF
     } finally { setBusy(false); }
   };
 
-  const input = 'w-full h-11 px-3 rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none text-[14px]';
+  const input = 'w-full h-11 px-3 rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none text-[14px]';
 
   if (done) {
     return (

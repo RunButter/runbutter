@@ -53,12 +53,12 @@ export default function SendDocumentModal({
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Recipient email <span className="text-danger">*</span></span>
                 <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="client@company.com"
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </label>
               <label className="block">
                 <span className="block text-[12px] font-semibold text-secondary mb-1">Message <span className="text-tertiary font-normal">(optional)</span></span>
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} placeholder={`Hi — please find the ${label} attached…`}
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </label>
               <p className="text-[11px] text-tertiary">A branded {label} summary with a link to view &amp; download the PDF will be emailed. Sending marks it as “sent”.</p>
               {error && <p className="text-[12px] text-danger">{error}</p>}

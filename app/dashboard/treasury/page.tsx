@@ -174,12 +174,12 @@ export default function TreasuryPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
-                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
                 <div className="relative">
                     <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary pointer-events-none" />
                     <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}
-                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none appearance-none cursor-pointer">
+                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none appearance-none cursor-pointer">
                         {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                 </div>

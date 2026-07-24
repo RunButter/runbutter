@@ -89,7 +89,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
                 <span className="block text-[12px] font-semibold text-secondary mb-1 flex items-center gap-1.5"><FileSpreadsheet className="w-3.5 h-3.5" /> …or a Google Sheet (Publish to web → CSV)</span>
                 <div className="flex gap-2">
                   <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://docs.google.com/…/pub?output=csv"
-                    className="flex-1 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                    className="flex-1 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                   <button onClick={fetchUrl} disabled={busy} className="h-9 px-3 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch'}</button>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
               <div>
                 <span className="block text-[12px] font-semibold text-secondary mb-1">…or paste CSV</span>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="name,domain,industry&#10;Acme,acme.com,SaaS"
-                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
               {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>
@@ -110,7 +110,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
                 <div key={f.key} className="flex items-center gap-3">
                   <span className="w-32 shrink-0 text-[13px] font-medium text-secondary">{f.label}{f.required && <span className="text-danger"> *</span>}</span>
                   <select value={mapping[f.key] ?? -1} onChange={(e) => setMapping((m) => ({ ...m, [f.key]: Number(e.target.value) }))}
-                    className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none">
+                    className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
                     <option value={-1}>— skip —</option>
                     {headers.map((h, i) => <option key={i} value={i}>{h}</option>)}
                   </select>

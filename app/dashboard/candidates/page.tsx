@@ -106,7 +106,7 @@ export default function CandidatesPage() {
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder='Search resumes — react node -junior  or  "node.js"'
-                        className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-[13px] rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     {searching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent animate-spin" />}
                 </div>
                 <Button size="sm" variant="primary" onClick={() => setAdding(true)} disabled={!user}>

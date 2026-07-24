@@ -83,7 +83,7 @@ function ReviewInner() {
           <div className="ml-auto flex items-center gap-2">
             <label className="text-[12px] text-tertiary hidden sm:block">Commenting as</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
-              className="h-8 w-36 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+              className="h-8 w-36 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
           </div>
         </div>
       </div>

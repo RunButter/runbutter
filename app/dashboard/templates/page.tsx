@@ -125,12 +125,12 @@ export default function TemplatesPage() {
                                 <label className="block">
                                     <span className="block text-[12px] font-semibold text-secondary mb-1">Name</span>
                                     <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                                        className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" placeholder="Interview invitation" />
+                                        className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" placeholder="Interview invitation" />
                                 </label>
                                 <label className="block">
                                     <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
                                     <select value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-                                        className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 capitalize">
+                                        className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 capitalize">
                                         {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                                     </select>
                                 </label>
@@ -138,12 +138,12 @@ export default function TemplatesPage() {
                             <label className="block">
                                 <span className="block text-[12px] font-semibold text-secondary mb-1">Subject</span>
                                 <input value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })}
-                                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+                                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" />
                             </label>
                             <label className="block">
                                 <span className="block text-[12px] font-semibold text-secondary mb-1">Body</span>
                                 <textarea value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} rows={9}
-                                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 font-mono" />
+                                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 font-mono" />
                             </label>
                             <p className="text-[11px] text-tertiary">
                                 Variables: {TEMPLATE_VARS.map((v) => <code key={v} className="mx-1 px-1 bg-surface-hover rounded">{`{{${v}}}`}</code>)}

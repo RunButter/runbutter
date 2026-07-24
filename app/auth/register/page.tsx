@@ -223,7 +223,7 @@ export default function RegisterPage() {
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg shadow-sm focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
                     placeholder="Acme Corporation"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg shadow-sm focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
                     placeholder="acme"
                     value={formData.subdomain}
                     onChange={(e) => handleSubdomainChange(e.target.value)}

@@ -45,7 +45,7 @@ export default function AiKeysPage() {
   const toggle = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { enabled: !r.enabled }); reload(); } };
   const remove = async (r: AiProviderRow) => { if (privy && await confirmDialog(`Remove your ${providerLabel(r.provider)} key?`)) { await deleteAiProvider(privy, r.id); reload(); } };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>

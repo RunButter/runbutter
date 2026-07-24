@@ -70,7 +70,7 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
                         <label className="block">
                             <span className="block text-xs font-semibold text-secondary mb-1">Start from a template</span>
                             <select onChange={(e) => e.target.value && applyTemplate(e.target.value)} defaultValue=""
-                                className="w-full px-3 py-2 text-sm border border-subtle rounded-lg bg-surface outline-none focus:ring-2 focus:ring-accent/30">
+                                className="w-full px-3 py-2 text-sm border border-subtle rounded-lg bg-surface outline-none shadow-sm focus:ring-2 focus:ring-accent/30">
                                 <option value="">— None —</option>
                                 {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
@@ -79,12 +79,12 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
                     <label className="block">
                         <span className="block text-xs font-semibold text-secondary mb-1">Subject</span>
                         <input value={subject} onChange={(e) => setSubject(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none focus:ring-2 focus:ring-accent/30" />
+                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-accent/30" />
                     </label>
                     <label className="block">
                         <span className="block text-xs font-semibold text-secondary mb-1">Message</span>
                         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10}
-                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none focus:ring-2 focus:ring-accent/30" />
+                            className="w-full px-3 py-2 text-sm border border-subtle rounded-lg outline-none shadow-sm focus:ring-2 focus:ring-accent/30" />
                     </label>
                     <p className="text-[11px] text-tertiary">Variables like <code className="px-1 bg-surface-hover rounded">{'{{first_name}}'}</code> are filled in automatically when sent.</p>
                     {error && <p className="text-sm text-danger">{error}</p>}

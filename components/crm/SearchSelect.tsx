@@ -67,7 +67,7 @@ export default function SearchSelect({
   return (
     <div ref={rootRef} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)}
-        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle hover:ring-strong focus:ring-2 focus:ring-accent/30 outline-none text-left ${buttonClassName}`}>
+        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm focus:ring-2 focus:ring-accent/30 outline-none text-left ${buttonClassName}`}>
         {selected?.image && <img src={selected.image} alt="" className="w-5 h-5 rounded object-cover shrink-0" />}
         <span className={`flex-1 truncate ${selected ? 'text-primary font-medium' : 'text-tertiary'}`}>
           {selected ? selected.name : placeholder}

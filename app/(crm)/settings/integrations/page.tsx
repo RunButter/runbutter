@@ -112,7 +112,7 @@ export default function IntegrationsPage() {
   };
   const revoke = async (k: ApiKey) => { if (!privy || !await confirmDialog('Revoke this key? Apps using it will stop working.')) return; await revokeApiKey(privy, k.id); reload(); };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>
@@ -369,7 +369,7 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
         <label className="block">
           <span className="block text-[12px] font-semibold text-secondary mb-1">Your Cal.com booking link</span>
           <input value={bookingUrl} onChange={(e) => setBookingUrl(e.target.value)} disabled={!canEdit}
-            placeholder="https://cal.com/you/intro" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+            placeholder="https://cal.com/you/intro" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
         </label>
 
         <div>
@@ -387,7 +387,7 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
           <span className="block text-[12px] font-semibold text-secondary mb-1">Webhook signing secret {conn?.has_secret && <span className="text-success">— set</span>}</span>
           <input value={secret} onChange={(e) => setSecret(e.target.value)} disabled={!canEdit} type="password"
             placeholder={conn?.has_secret ? 'Leave blank to keep current' : 'Paste the secret from Cal.com'}
-            className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+            className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
           <span className="block mt-1 text-[11px] text-tertiary">Cal.com signs each webhook with this; we verify it before recording anything.</span>
         </label>
 

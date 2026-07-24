@@ -155,12 +155,12 @@ export default function PostStudio() {
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Account / handle</label>
               <input value={post.handle || ''} onChange={(e) => set({ handle: e.target.value })} placeholder="@yourbrand"
-                className="w-full h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                className="w-full h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
             </div>
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Content</label>
               <textarea value={post.content} onChange={(e) => set({ content: e.target.value })} rows={5} placeholder="Write your post…"
-                className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none resize-none" />
+                className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none resize-none" />
             </div>
             <div>
               <label className="block text-[12px] font-semibold text-secondary mb-1">Image</label>

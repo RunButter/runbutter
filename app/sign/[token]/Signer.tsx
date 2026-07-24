@@ -118,7 +118,7 @@ export default function Signer({ token, title, signerName, docUrl }: {
         ) : (
           <div>
             <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Type your full name"
-              className="w-full h-11 px-3 rounded-lg bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none text-lg" />
+              className="w-full h-11 px-3 rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none text-lg" />
             {typed && <div className="mt-2 rounded-lg border border-subtle bg-white px-3 py-3 text-2xl text-gray-900" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>{typed}</div>}
           </div>
         )}

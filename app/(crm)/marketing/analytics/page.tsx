@@ -170,7 +170,7 @@ export default function WebAnalytics() {
                   <div className="flex items-center gap-2 mb-4">
                     <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="yourcompany.com"
                       onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                      className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                      className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     <button onClick={addSite} disabled={busy || !privy} title={!privy ? 'Sign in to add' : ''}
                       className="h-9 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                       {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add
@@ -292,7 +292,7 @@ export default function WebAnalytics() {
             <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">
               <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="add another domain…"
                 onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
                 className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add

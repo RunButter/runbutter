@@ -436,7 +436,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                         </div>
                                     ) : (
                                         <textarea
-                                            className="w-full p-3.5 rounded-xl ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none transition-shadow min-h-[110px] text-[14px] text-secondary placeholder:text-tertiary"
+                                            className="w-full p-3.5 rounded-xl ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow min-h-[110px] text-[14px] text-secondary placeholder:text-tertiary"
                                             placeholder="Type your answer…"
                                             value={answers[q.id] || ''}
                                             onChange={(e) => handleAnswer(q.id, e.target.value)}

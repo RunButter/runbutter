@@ -213,7 +213,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
     onSaved();
   };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -283,7 +283,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                   <div className="space-y-1.5">
                     <textarea value={ac.config.prompt || ''} onChange={(e) => setCfg(i, { prompt: e.target.value })} rows={3}
                       placeholder="Write a two-sentence brief on {{first_name}} {{last_name}} for the team"
-                      className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                      className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     <p className="text-[11px] text-tertiary">Runs on your workspace AI key (Settings → AI keys). The answer becomes <code className="bg-surface-hover rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
                   </div>
                 )}
@@ -297,17 +297,17 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                   <div className="space-y-2">
                     <input value={ac.config.to || ''} onChange={(e) => setCfg(i, { to: e.target.value })} placeholder="to ({{email}})" className={inputCls} />
                     <input value={ac.config.subject || ''} onChange={(e) => setCfg(i, { subject: e.target.value })} placeholder="Subject" className={inputCls} />
-                    <textarea value={ac.config.body || ''} onChange={(e) => setCfg(i, { body: e.target.value })} rows={3} placeholder="Body — use {{field}}" className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                    <textarea value={ac.config.body || ''} onChange={(e) => setCfg(i, { body: e.target.value })} rows={3} placeholder="Body — use {{field}}" className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                   </div>
                 )}
                 {ac.type === 'create_record' && (
                   <div className="space-y-2">
                     <select value={ac.config.object || 'invoices'} onChange={(e) => setCfg(i, { object: e.target.value })} className={inputCls + ' capitalize'}>{OBJECTS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
-                    <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={3} placeholder='{"number":"INV-{{id}}"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                    <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={3} placeholder='{"number":"INV-{{id}}"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                   </div>
                 )}
                 {ac.type === 'update_record' && (
-                  <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={2} placeholder='{"status":"paid"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={2} placeholder='{"status":"paid"}' className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 )}
               </Step>
             ))}

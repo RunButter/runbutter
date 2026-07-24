@@ -100,7 +100,7 @@ export default function MembersPage() {
                   <div className="ml-auto flex items-center gap-2">
                     {canManage && !m.pending ? (
                       <select value={m.role} onChange={(e) => changeRole(m.id, e.target.value)}
-                        className="h-8 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none capitalize">
+                        className="h-8 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none capitalize">
                         {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                       </select>
                     ) : (
@@ -165,7 +165,7 @@ function InviteModal({
     onSent(email.trim());
   };
 
-  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none';
+  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
