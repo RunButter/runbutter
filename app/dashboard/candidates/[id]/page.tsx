@@ -11,30 +11,18 @@ import {
     Send, ChevronRight, Brain, Target, BarChart, TrendingUp, Users
 } from 'lucide-react';
 import Link from 'next/link';
-import {
-    Chart as ChartJS,
-    RadialLinearScale,
-    PointElement,
-    LineElement,
-    Filler,
-    Tooltip,
-    Legend,
-} from 'chart.js';
-import { Radar } from 'react-chartjs-2';
-import TeamFitModal from './TeamFitModal';
+import dynamic from 'next/dynamic';
+// Chart.js (~110 kB) and the team-fit modal both load on demand: the radar sits
+// below the fold and the modal is usually never opened.
+const Radar = dynamic(() => import('@/components/charts/Charts').then((m) => m.Radar), {
+    ssr: false,
+    loading: () => <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>,
+});
+const TeamFitModal = dynamic(() => import('./TeamFitModal'), { ssr: false });
 import CandidateMessageModal from './CandidateMessageModal';
 import { rpc } from '@/lib/rpc';
 import { useChartTokens } from '@/lib/chart-tokens';
 import { useDialog } from '@/components/ui/Dialog';
-
-ChartJS.register(
-    RadialLinearScale,
-    PointElement,
-    LineElement,
-    Filler,
-    Tooltip,
-    Legend
-);
 
 export default function CandidateDetailPage({ params }: { params: { id: string } }) {
     const chart = useChartTokens();

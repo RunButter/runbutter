@@ -9,31 +9,13 @@ import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2,
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
 import StatCard from '@/components/ui/StatCard';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    PointElement,
-    LineElement,
-    ArcElement,
-} from 'chart.js';
-import { Bar, Pie } from 'react-chartjs-2';
+import dynamic from 'next/dynamic';
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    PointElement,
-    LineElement,
-    ArcElement,
-    Title,
-    Tooltip,
-    Legend
-);
+// Chart.js is ~110 kB and both charts sit below the fold — load it only when
+// they actually render, not before the page can paint.
+const chartLoader = () => <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+const Bar = dynamic(() => import('@/components/charts/Charts').then((m) => m.Bar), { ssr: false, loading: chartLoader });
+const Pie = dynamic(() => import('@/components/charts/Charts').then((m) => m.Pie), { ssr: false, loading: chartLoader });
 
 export default function AnalyticsPage() {
     const chart = useChartTokens();

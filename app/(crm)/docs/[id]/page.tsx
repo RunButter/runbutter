@@ -5,8 +5,20 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { loadDoc, saveDoc, runAI, type Doc } from '@/lib/crm/docs';
-import RichEditor from '@/components/crm/RichEditor';
+
+// Tiptap/ProseMirror is by far the heaviest thing we ship (~180 kB on this
+// route alone). Load it on demand so the doc shell paints immediately instead
+// of waiting on the whole editor; it's browser-only anyway.
+const RichEditor = dynamic(() => import('@/components/crm/RichEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[60vh] flex items-center justify-center text-tertiary">
+      <Loader2 className="w-5 h-5 animate-spin" />
+    </div>
+  ),
+});
 
 const AI_ACTIONS = [
   { mode: 'improve', label: 'Improve', icon: Wand2 },

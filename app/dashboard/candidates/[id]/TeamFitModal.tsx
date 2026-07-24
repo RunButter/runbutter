@@ -2,13 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { X, Sparkles, Loader2 } from 'lucide-react';
-import {
-    Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend,
-} from 'chart.js';
-import { Radar } from 'react-chartjs-2';
+// Shared Chart.js module — registration lives there so this file adds no
+// charting weight of its own (and the whole modal is dynamically imported).
+import { Radar } from '@/components/charts/Charts';
 import { useChartTokens } from '@/lib/chart-tokens';
-
-ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 const BIG5 = [
     { key: 'openness', label: 'Openness' },
