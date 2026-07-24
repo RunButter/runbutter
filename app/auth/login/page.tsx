@@ -22,14 +22,17 @@ export default function LoginPage() {
     if (!ready || !authenticated || !user) return;
     let cancelled = false;
     (async () => {
+      // limit(1), NOT maybeSingle(): a user can belong to more than one company
+      // (multi-workspace), and maybeSingle() throws "multiple rows returned".
       const { data, error } = await supabase
         .from('company_users')
         .select('id')
         .eq('privy_user_id', user.id)
-        .maybeSingle();
+        .limit(1);
       if (cancelled) return;
-      // On a lookup error, fall through to onboarding rather than a broken shell.
-      router.push(data && !error ? '/dashboard' : '/auth/register');
+      const hasCompany = !!data && data.length > 0;
+      // Genuine lookup error → send existing users to the app, not re-onboarding.
+      router.push(error || hasCompany ? '/dashboard' : '/auth/register');
     })();
     return () => { cancelled = true; };
   }, [ready, authenticated, user, router]);

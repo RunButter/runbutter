@@ -35,18 +35,20 @@ export default function RegisterPage() {
     // Authenticated — check for existing company
     const checkUser = async () => {
       try {
+        // limit(1), NOT maybeSingle(): someone can belong to more than one
+        // company, and maybeSingle() throws "multiple rows returned" for them.
         const { data, error } = await supabase
           .from('company_users')
           .select('id')
           .eq('privy_user_id', user.id)
-          .maybeSingle();
+          .limit(1);
 
         if (error) {
           setError(`DB check failed: ${error.message}`);
           setStep('auth');
           return;
         }
-        if (data) {
+        if (data && data.length > 0) {
           router.push('/dashboard');
         } else {
           // No auto-claim by email here. It used to POST { email, privyUserId }

@@ -24,12 +24,14 @@ export default function PlansPage() {
   useEffect(() => {
     if (!ready) return;
     if (!authenticated || !user) { setLoading(false); return; }
+    // limit(1), NOT maybeSingle(): belonging to more than one company made
+    // maybeSingle() throw "multiple rows returned" and left this page empty.
     supabase
       .from('company_users')
       .select('*, company:companies(*)')
       .eq('privy_user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => { if (data?.company) setCompany(data.company); setLoading(false); });
+      .limit(1)
+      .then(({ data }) => { const row = data?.[0]; if (row?.company) setCompany(row.company); setLoading(false); });
   }, [ready, authenticated, user]);
 
   const current = (company?.plan && company.plan in PLANS ? company.plan : 'free') as SubscriptionPlan;
