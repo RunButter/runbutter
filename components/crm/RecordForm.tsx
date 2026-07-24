@@ -7,6 +7,10 @@ import { createRecord, updateRecord, deleteRecord, loadRecords } from '@/lib/crm
 import { uploadImage } from '@/lib/crm/upload';
 import SearchSelect from './SearchSelect';
 import { useDialog } from '@/components/ui/Dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   object: ObjectDef;
@@ -121,7 +125,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {fields.map((f) => (
               <div key={f.key} className={`block ${f.input === 'textarea' || f.input === 'image' || f.input === 'lookup' ? 'sm:col-span-2' : ''}`}>
-                {f.input !== 'lookup' && <span className="block text-[12px] font-semibold text-secondary mb-1">{f.label}{f.required && <span className="text-danger"> *</span>}</span>}
+                {f.input !== 'lookup' && <Label required={f.required}>{f.label}</Label>}
                 {f.input === 'lookup' ? (
                   <button type="button" onClick={runLookup} disabled={lookupBusy}
                     className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-[13px] font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
@@ -142,24 +146,21 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                   <SearchSelect options={relOptions[f.key] || []} value={values[f.key] ?? ''} onChange={(id) => set(f.key, id)}
                     placeholder={relOptions[f.key] ? `Search ${f.label.toLowerCase()}…` : 'Loading…'} allowClear />
                 ) : f.input === 'select' ? (
-                  <select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none capitalize">
+                  <Select value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} className="capitalize">
                     <option value="">—</option>
                     {f.options?.map((o) => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
-                  </select>
+                  </Select>
                 ) : f.input === 'textarea' ? (
-                  <textarea value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} rows={3}
-                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <Textarea value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} rows={3} />
                 ) : f.input === 'datalist' ? (
                   <>
-                    <input list={`dl-${f.key}`} value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                      placeholder="Type or pick…" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                    <Input list={`dl-${f.key}`} value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                      placeholder="Type or pick…" />
                     <datalist id={`dl-${f.key}`}>{(suggestions?.[f.key] || []).map((o) => <option key={o} value={o} />)}</datalist>
                   </>
                 ) : (
-                  <input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
-                    value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <Input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
+                    value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
                 )}
               </div>
             ))}
