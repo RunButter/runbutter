@@ -8,6 +8,10 @@ interface CheckoutButtonProps {
     companyId: string;
     priceId: string;
     companyName: string;
+    /** Plan key, echoed back on the success URL and stored on the subscription. */
+    plan?: string;
+    /** Seat count — plans are per seat, so this becomes the Stripe quantity. */
+    seats?: number;
     text?: string;
     variant?: 'primary' | 'white' | 'dark';
 }
@@ -16,6 +20,8 @@ export default function CheckoutButton({
     companyId,
     priceId,
     companyName,
+    plan,
+    seats,
     text,
     variant = 'primary'
 }: CheckoutButtonProps) {
@@ -30,7 +36,10 @@ export default function CheckoutButton({
 
         setLoading(true);
         try {
-            const response = await fetch('/api/stripe/checkout', {
+            // /api/checkout is the REAL Stripe session. This used to post to a
+            // mock route that never touched Stripe and just redirected to a fake
+            // success page, so no upgrade ever charged or applied.
+            const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,6 +48,8 @@ export default function CheckoutButton({
                     companyId,
                     priceId,
                     companyName,
+                    plan,
+                    seats,
                 }),
             });
 
@@ -57,33 +68,22 @@ export default function CheckoutButton({
         }
     };
 
-    const getVariantStyles = () => {
-        switch (variant) {
-            case 'white':
-                return 'bg-surface text-accent hover:bg-surface-hover shadow-popover';
-            case 'dark':
-                return 'bg-inverse text-inverse-fg hover:bg-inverse/90';
-            default:
-                return 'btn-primary shadow-popover hover:translate-y-[-2px] transition-all';
-        }
-    };
+    // On the design system: h-10, rounded-md off --radius, shadow-sm, no bouncy
+    // translate. `white` is the readable variant on an inverse-filled card.
+    const variantStyles =
+        variant === 'white' ? 'bg-surface text-primary ring-1 ring-subtle hover:bg-surface-hover shadow-sm'
+            : 'bg-inverse text-inverse-fg hover:bg-inverse/90 shadow-sm';
 
     return (
         <button
             onClick={handleCheckout}
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold transition-all disabled:opacity-50 ${getVariantStyles()}`}
+            className={`w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-md text-[13px] font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none ${variantStyles}`}
         >
             {loading ? (
-                <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Connecting...
-                </>
+                <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>
             ) : (
-                <>
-                    <CreditCard className="w-5 h-5" />
-                    {text || 'Upgrade Now'}
-                </>
+                <><CreditCard className="w-4 h-4" /> {text || 'Upgrade'}</>
             )}
         </button>
     );
