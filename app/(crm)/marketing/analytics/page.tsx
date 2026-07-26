@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, RefreshCw, Smartphone, CheckCircle2, Settings2, Trash2, X } from 'lucide-react';
-import { loadSites, createSite, deleteSite, loadSiteStats, type Site, type SiteStats } from '@/lib/crm/data';
+import { loadSites, createSite, deleteSite, loadSiteStats, linkSiteToUmami, type Site, type SiteStats } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 import StatCard from '@/components/ui/StatCard';
 
@@ -13,7 +13,10 @@ const PERIODS = [
   { label: '90D', days: 90 },
 ];
 
-function snippetFor(siteId: string) {
+// Built-in pipeline snippet. When a site is linked to Umami the server sends
+// back Umami's own tag instead — the two collectors are different services and
+// pasting the wrong one silently records nothing.
+function builtinSnippet(siteId: string) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://runbutter.app';
   return `<script defer src="${origin}/t.js" data-site="${siteId}"></script>`;
 }
@@ -88,11 +91,26 @@ export default function WebAnalytics() {
     await refreshSites();
   };
 
+  // Umami's tag when the server sent one, ours otherwise.
+  const snippet = stats?.snippet || builtinSnippet(siteId || 'YOUR_SITE_ID');
+
   const copySnippet = async () => {
-    try { await navigator.clipboard.writeText(snippetFor(siteId || 'YOUR_SITE_ID')); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
+    try { await navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
+  };
+
+  const connectUmami = async () => {
+    if (!siteId) return;
+    setBusy(true); setError('');
+    const res = await linkSiteToUmami(siteId);
+    setBusy(false);
+    if (res.error) { setError(res.error); return; }
+    await refreshSites();
+    await refreshStats();
   };
 
   const site = sites.find((s) => s.id === siteId) || null;
+  // Offer the connect action only for a site still on the built-in pipeline.
+  const canConnectUmami = !!site && !site.umami_website_id;
   const live = stats?.live_flag ?? false;
   const maxPv = useMemo(() => Math.max(1, ...(stats?.series || []).map((p) => p.pageviews)), [stats]);
   const avgDay = stats && stats.series.length ? Math.round(stats.pageviews / stats.series.length) : 0;
@@ -179,11 +197,31 @@ export default function WebAnalytics() {
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 text-[12px] bg-inverse text-inverse-fg rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippetFor(siteId || 'YOUR_SITE_ID')}</code>
+                  <code className="flex-1 text-[12px] bg-inverse text-inverse-fg rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippet}</code>
                   <button onClick={copySnippet} className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                     {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
+
+                {/* Opt a site into Umami. Explicit rather than automatic on
+                    create: switching collectors changes which snippet is valid,
+                    and the built-in pipeline's history stays queryable either way. */}
+                {canConnectUmami && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button onClick={connectUmami} disabled={busy}
+                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">
+                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Code2 className="w-3.5 h-3.5" />} Collect with Umami
+                    </button>
+                    <span className="text-[11px] text-tertiary">
+                      Sessions, bounce rate, countries and browsers. Swaps the snippet above — re-paste it after connecting.
+                    </span>
+                  </div>
+                )}
+                {site?.umami_website_id && (
+                  <p className="mt-3 text-[11px] text-tertiary inline-flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-success" /> Collecting with Umami. Earlier pageviews stay in the built-in dashboard history.
+                  </p>
+                )}
                 {justAdded && (
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[12px] text-warning inline-flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Waiting for the first pageview — this updates automatically.</span>
@@ -234,10 +272,31 @@ export default function WebAnalytics() {
               </div>
             </div>
 
-            {/* Top pages + referrers */}
+            {/* Engagement — sessions only exist in Umami, so these panels are
+                absent rather than zeroed when the built-in pipeline is serving. */}
+            {stats.source === 'umami' && (stats.bounce_rate !== null || stats.avg_duration_s !== null) && (
+              <div className="grid grid-cols-2 gap-3">
+                <StatCard label="Bounce rate" icon={Activity}
+                  value={stats.bounce_rate === null ? '—' : `${stats.bounce_rate}%`}
+                  sub="single-page visits" />
+                <StatCard label="Avg. visit" icon={Users}
+                  value={(() => {
+                    const s = stats.avg_duration_s;
+                    if (s === null || s === undefined) return '—';
+                    return s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
+                  })()}
+                  sub="time on site per visit" />
+              </div>
+            )}
+
+            {/* Top pages + referrers (+ Umami-only breakdowns) */}
             <div className="grid md:grid-cols-2 gap-3">
               {([['Top pages', stats.top_pages.map((p) => ({ label: p.path, count: p.count }))],
-                 ['Referrers', stats.top_referrers.map((r) => ({ label: r.ref, count: r.count }))]] as const).map(([title, rows]) => {
+                 ['Referrers', stats.top_referrers.map((r) => ({ label: r.ref, count: r.count }))],
+                 ...(stats.source === 'umami' ? [
+                   ['Countries', (stats.countries ?? []).map((c) => ({ label: c.code || 'Unknown', count: c.count }))],
+                   ['Browsers', (stats.browsers ?? []).map((b) => ({ label: b.name || 'Unknown', count: b.count }))],
+                 ] as const : [])] as const).map(([title, rows]) => {
                 const max = Math.max(1, ...rows.map((r) => r.count));
                 return (
                   <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">

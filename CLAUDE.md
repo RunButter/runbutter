@@ -20,6 +20,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Migrations through 0057 are applied** (confirmed 2026-07-24). Don't report them as pending.
   **0058_sanctions.sql is PENDING** — run it in the SQL editor, then hit "Update list" once in a
   company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
+  **0059_umami.sql is PENDING** — only needed if you deploy Umami (`docs/umami-analytics.md`).
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
@@ -75,6 +76,16 @@ Same rule as the cost rule above: prefer public/government data + local computat
     name+12-aliases blob is ~0.2, so `%` returned "clear" for an entity's own name.
   - `status:'no_data'` (nothing imported) is never collapsed into `'clear'`.
   - OFAC's host **403s without a User-Agent header** — the single most common silent-ingest failure.
+- **Email hygiene** (`lib/marketing/email-hygiene.ts`) — syntax + vendored disposable list + role
+  detection + MX/A lookup over `node:dns`, gating `/api/forms/submit`. **Fails OPEN** on DNS
+  timeouts, accepts no-MX-but-has-A (RFC 5321 §5.1), and treats a typo suggestion as a question
+  ("Use gmail.com" / "Keep what I typed") — a false positive must never lock someone out of a form.
+- **Web analytics — Umami (0059, optional)** — `docs/umami-analytics.md`. Chosen over Plausible
+  because Umami is **MIT** (Plausible CE is AGPL-3.0) and runs on Postgres + one Node process
+  rather than Elixir + ClickHouse. The built-in `site_events` pipeline is **NOT removed**: it
+  serves any site without `sites.umami_website_id`, keeps its history, and the swap is per-site
+  and reversible. The Umami credential is instance-wide, so it stays server-side and
+  `/api/analytics/*` re-checks workspace membership in Postgres before every call.
 - **IBAN validation** (`lib/finance/iban.ts`) — ISO 13616 mod-97 + length table, entirely local.
 - **Company logos** (`lib/crm/logo.ts`) — favicon endpoints keyed off the `domain` we already store,
   initials fallback via `CompanyLogo`.
