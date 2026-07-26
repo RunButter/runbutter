@@ -7,10 +7,7 @@ import {
 } from '@dnd-kit/core';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 import { rpc } from '@/lib/rpc';
-
-function initials(s: string) {
-  return (s || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-}
+import CompanyLogo from './CompanyLogo';
 
 function subjectOf(r: PipelineRecord) {
   return r.person?.name || r.company?.name || r.title || 'Untitled';
@@ -22,7 +19,7 @@ function CardBody({ rec, dragging = false }: { rec: PipelineRecord; dragging?: b
   return (
     <div className={`bg-surface rounded-lg ring-1 ring-subtle p-2.5 ${dragging ? 'shadow-lg ring-strong rotate-1' : 'hover:ring-strong'} transition-all duration-150`}>
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-surface-hover text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">{initials(subject)}</div>
+        <CompanyLogo name={subject} domain={rec.company?.domain} size={24} />
         <div className="min-w-0">
           <div className="text-[13px] font-semibold text-primary truncate">{subject}</div>
           {sub && <div className="text-[11px] text-tertiary truncate">{sub}</div>}

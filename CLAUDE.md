@@ -18,6 +18,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
 - **Migrations through 0057 are applied** (confirmed 2026-07-24). Don't report them as pending.
+  **0058_sanctions.sql is PENDING** — run it in the SQL editor, then hit "Update list" once in a
+  company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
@@ -60,8 +62,32 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
 
+## Free-data features (no key, no per-call cost)
+Same rule as the cost rule above: prefer public/government data + local computation over metered APIs.
+- **Company lookup** — PL Biała lista + EU VIES (`/api/company-lookup`). Both keyless.
+- **Sanctions screening (0058)** — OFAC SDN + Consolidated CSVs ingested into `sanctions_entities`
+  by `/api/sanctions/refresh`, matched with **pg_trgm** in `screen_sanctions`. Deliberately NOT a
+  hosted screening API (all of them meter per query *and* need a commercial data licence).
+  - `sanctions_normalize()` is IMMUTABLE and transliterates **before** stripping punctuation —
+    otherwise "Åcme" screens as "CME". `search_text`/`norm_name`/`norm_aliases` are trigger-derived,
+    never written by the ingest route, so normalisation can't drift.
+  - The prefilter is `<%` (word_similarity), **not** `%`. Whole-string similarity against a
+    name+12-aliases blob is ~0.2, so `%` returned "clear" for an entity's own name.
+  - `status:'no_data'` (nothing imported) is never collapsed into `'clear'`.
+  - OFAC's host **403s without a User-Agent header** — the single most common silent-ingest failure.
+- **IBAN validation** (`lib/finance/iban.ts`) — ISO 13616 mod-97 + length table, entirely local.
+- **Company logos** (`lib/crm/logo.ts`) — favicon endpoints keyed off the `domain` we already store,
+  initials fallback via `CompanyLogo`.
+- **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts`) — merge/split/extract/delete/rotate/watermark/images→PDF
+  on the already-installed `pdf-lib`, **in the browser**, so files never upload. pdf-lib restructures
+  documents but does not re-encode streams, so **compression is not offered** — don't add it here.
+
 ## Verifying changes
 - `npx tsc --noEmit` for types; **`npm run build` is the definitive check** (it's what Render runs).
+  In a fresh cloud clone run `npm ci` first, and note the build needs a **well-formed**
+  `NEXT_PUBLIC_PRIVY_APP_ID` or every page fails to prerender.
+- SQL migrations can be checked for real: `initdb`/`pg_ctl` as the `postgres` user (PG 16 is installed),
+  stub `workspaces` + `is_workspace_member`, then run the migration and exercise the RPCs.
   **Don't build while the dev server is running** — it clobbers `.next`.
 - Most UI sits behind Privy login, which the preview can't do. What works: drop a temporary page under
   `app/`, render the **real component** with mock props, check computed styles, then delete it.

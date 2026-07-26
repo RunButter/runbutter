@@ -5,11 +5,12 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, Loader2, FileText } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
-import { loadRecords, getRecord, createRecord, deleteRecord } from '@/lib/crm/data';
+import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
+import SanctionsPanel from '@/components/crm/SanctionsPanel';
 import ImportModal from '@/components/crm/ImportModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
@@ -39,7 +40,15 @@ export default function ObjectPage() {
   const [importing, setImporting] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
+  const [wsId, setWsId] = useState<string | null>(null);
   const isDoc = slug === 'invoices' || slug === 'offers';
+  // Counterparties are the records worth screening; a product or an issue is not.
+  const screenable = slug === 'companies' || slug === 'people';
+
+  useEffect(() => {
+    if (!privy || !screenable) return;
+    getWorkspace(privy).then((w) => setWsId(w?.id ?? null));
+  }, [privy, screenable]);
 
   const reload = useCallback(() => {
     if (!object) return;
@@ -160,7 +169,12 @@ export default function ObjectPage() {
               <button onClick={() => router.push(`/documents/${detail.id}`)}
                 className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent hover:bg-accent/10"><FileText className="w-3.5 h-3.5" /> Document</button>
             </>
-          ) : undefined} />
+          ) : undefined}>
+          {screenable && detail.name && (
+            <SanctionsPanel privyUserId={privy} workspaceId={wsId} name={String(detail.name)}
+              object={slug} recordId={detail.id} />
+          )}
+        </RecordDetail>
       )}
       {form && (
         <RecordForm object={object} privyUserId={privy} recordId={form.id} initial={form.initial} suggestions={suggestions}

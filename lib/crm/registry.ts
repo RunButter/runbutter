@@ -228,6 +228,7 @@ export const NAV = [
   { group: 'Workspace', pinned: true, items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
     { slug: 'docs', label: 'Docs', icon: 'FileText', href: '/docs' },
+    { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
   ]},
   { group: 'Sales', items: [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
