@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { verifyEmail } from '@/lib/marketing/email-hygiene';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,35 @@ export async function POST(req: NextRequest) {
   for (const [k, v] of Object.entries(data)) {
     if (n++ >= 40) break;
     clean[String(k).slice(0, 100)] = String(v ?? '').slice(0, 2000);
+  }
+
+  // Gate on deliverability before this becomes a lead. Every junk address that
+  // gets in is one Resend will later try to mail, and bounce rate is what
+  // decides whether our real mail reaches inboxes at all.
+  //
+  // Only a definitively dead domain is refused. Disposable and role addresses
+  // are let through — plenty of real buyers use a shared info@ — and a typo
+  // suggestion is returned so the form can offer a correction rather than
+  // silently swallowing the lead.
+  const emailKey = Object.keys(clean).find((k) => /e-?mail/i.test(k))
+    ?? Object.keys(clean).find((k) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean[k]));
+  if (emailKey) {
+    const verdict = await verifyEmail(clean[emailKey]);
+    if (verdict.undeliverable) {
+      return NextResponse.json({ error: verdict.message, field: emailKey }, { status: 400 });
+    }
+    clean[emailKey] = verdict.normalized;
+    // A suggestion is a question, not a rejection: "gmial.com" is a live domain
+    // and somebody's address really might be there. Ask once, then honour
+    // whatever they say — otherwise a false positive locks them out of the form
+    // permanently, which is a worse bug than accepting one typo'd lead.
+    if (verdict.suggestion && body?.confirmEmail !== true) {
+      return NextResponse.json({
+        error: verdict.message, field: emailKey,
+        suggestion: `${verdict.local}@${verdict.suggestion}`,
+        confirmable: true,
+      }, { status: 400 });
+    }
   }
 
   const admin = createAdminClient();
