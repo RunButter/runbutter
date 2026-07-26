@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { Loader2, Upload, Check, Building2, ArrowRight } from 'lucide-react';
+import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
+import { validateIban, formatIban } from '@/lib/finance/iban';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
@@ -71,6 +72,11 @@ export default function BrandingPage() {
   }, [ready, privy]);
 
   const set = (patch: Partial<Form>) => { setForm((f) => ({ ...f, ...patch })); setSaved(false); };
+
+  // Checked locally on every keystroke (ISO 13616 mod-97) — no request, and the
+  // account number never leaves the browser. A typo here means invoices go out
+  // with an unpayable account, so it's worth flagging before save, not after.
+  const ibanCheck = validateIban(form.iban);
 
   const onLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -169,8 +175,22 @@ export default function BrandingPage() {
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Bank — for payment on invoices</span>
                 <div>
                   <label className="block text-[12px] font-semibold text-secondary mb-1">IBAN / account number</label>
-                  <input value={form.iban} onChange={(e) => set({ iban: e.target.value })} placeholder="PL00 0000 0000 0000 0000 0000 0000"
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
+                  <input value={form.iban} onChange={(e) => set({ iban: e.target.value })}
+                    onBlur={() => form.iban && set({ iban: formatIban(form.iban) })}
+                    placeholder="PL00 0000 0000 0000 0000 0000 0000"
+                    className={`w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 shadow-sm outline-none tabular-nums focus:ring-2 ${
+                      ibanCheck.reason === 'empty' ? 'ring-subtle focus:ring-accent/30'
+                        : ibanCheck.valid ? 'ring-success/40 focus:ring-success/30'
+                        : 'ring-danger/40 focus:ring-danger/30'
+                    }`} />
+                  {ibanCheck.reason !== 'empty' && (
+                    <p className={`mt-1.5 flex items-start gap-1.5 text-[12px] ${ibanCheck.valid ? 'text-success' : 'text-danger'}`}>
+                      {ibanCheck.valid
+                        ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-px" />
+                        : <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />}
+                      <span>{ibanCheck.message}</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[12px] font-semibold text-secondary mb-1">Bank name</label>

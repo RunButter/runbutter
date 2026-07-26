@@ -72,6 +72,10 @@ const ALLOWED = new Set([
   'get_cal_connection', 'save_cal_connection', 'get_meetings',
   // Chat assistant (0057) — owner side; save via /api/assistant/save, webhooks server-side
   'get_assistant_channels', 'delete_assistant_channel',
+  // Sanctions screening (0058) — screen_sanctions writes an audit row, so it is
+  // deliberately not named get_*: lib/rpc must never serve it from cache.
+  // The list refresh runs service-side in /api/sanctions/refresh.
+  'screen_sanctions', 'get_sanctions_status', 'get_sanctions_screenings',
 ]);
 
 function db() {

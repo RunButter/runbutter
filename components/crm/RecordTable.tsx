@@ -6,10 +6,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 import Badge, { toneFor, iconFor } from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
-
-function initials(s: string) {
-  return (s || '?').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-}
+import CompanyLogo from './CompanyLogo';
 
 export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
   const v = row[field.key];
@@ -22,9 +19,11 @@ export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
 
   switch (field.type) {
     case 'avatar':
+      // CompanyLogo falls back to initials on its own when there's no domain
+      // to look up, so every object keeps the same avatar treatment.
       return (
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-5 h-5 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center shrink-0">{initials(String(v))}</div>
+          <CompanyLogo name={String(v)} domain={row.domain} size={20} />
           <span className="font-medium text-primary truncate">{v}</span>
         </div>
       );

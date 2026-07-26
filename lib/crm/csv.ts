@@ -1,6 +1,15 @@
 // Tiny dependency-free CSV parser. Handles quoted fields, escaped quotes (""),
 // embedded commas/newlines, and CRLF. Good enough for spreadsheet exports.
 export function parseCSV(text: string): { headers: string[]; rows: string[][] } {
+  const rows = parseCSVRows(text);
+  const headers = (rows.shift() || []).map((h) => h.trim());
+  return { headers, rows };
+}
+
+// Same parser, but every line is data. Government exports (the OFAC sanctions
+// lists, for one) ship without a header row, and treating the first sanctioned
+// party as column names loses a record.
+export function parseCSVRows(text: string): string[][] {
   const out: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -26,9 +35,7 @@ export function parseCSV(text: string): { headers: string[]; rows: string[][] } 
   }
   if (field.length > 0 || row.length > 0) { row.push(field); out.push(row); }
 
-  const nonEmpty = out.filter((r) => r.some((cell) => cell.trim() !== ''));
-  const headers = (nonEmpty.shift() || []).map((h) => h.trim());
-  return { headers, rows: nonEmpty };
+  return out.filter((r) => r.some((cell) => cell.trim() !== ''));
 }
 
 // Serialise rows to CSV text (RFC-4180-ish: quote fields with comma/quote/newline).

@@ -3,6 +3,7 @@
 import { X, Pencil } from 'lucide-react';
 import type { ObjectDef } from '@/lib/crm/types';
 import { FieldValue } from './RecordTable';
+import CompanyLogo from './CompanyLogo';
 
 interface Props {
   object: ObjectDef;
@@ -11,9 +12,10 @@ interface Props {
   onEdit: () => void;
   onClose: () => void;
   extraActions?: React.ReactNode;   // object-specific buttons (e.g. invoice → document)
+  children?: React.ReactNode;       // object-specific panel under the fields (e.g. sanctions screening)
 }
 
-export default function RecordDetail({ object, row, canEdit, onEdit, onClose, extraActions }: Props) {
+export default function RecordDetail({ object, row, canEdit, onEdit, onClose, extraActions, children }: Props) {
   const primary = object.fields.find((f) => f.primary) || object.fields[0];
   const rest = object.fields.filter((f) => f !== primary);
 
@@ -32,7 +34,10 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose, ex
         </div>
 
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="text-lg font-semibold text-primary mb-5">{row[primary.key] ?? '—'}</div>
+          <div className="flex items-center gap-2.5 mb-5">
+            <CompanyLogo name={String(row[primary.key] ?? '')} domain={row.domain} size={32} />
+            <div className="text-lg font-semibold text-primary min-w-0 truncate">{row[primary.key] ?? '—'}</div>
+          </div>
           <dl className="divide-y divide-subtle">
             {rest.map((f) => (
               <div key={f.key} className="flex items-center justify-between gap-4 py-2.5">
@@ -41,6 +46,7 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose, ex
               </div>
             ))}
           </dl>
+          {children}
         </div>
       </div>
     </div>
