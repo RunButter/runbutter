@@ -517,7 +517,29 @@ export async function saveInvoiceItems(privyUserId: string, invoiceId: string, i
 }
 
 // ── First-party web analytics (Marketing) ─────────────────────────────────────
-export interface Site { id: string; domain: string; name?: string | null; created_at?: string | null }
+export interface Site {
+  id: string; domain: string; name?: string | null; created_at?: string | null;
+  /** Set once the site is provisioned in Umami (0059); null = built-in pipeline. */
+  umami_website_id?: string | null;
+}
+
+/** Register a site with Umami so it starts collecting there. */
+export async function linkSiteToUmami(siteId: string): Promise<{ snippet?: string; error?: string }> {
+  try {
+    const { getAccessToken } = await import('@privy-io/react-auth');
+    const token = await getAccessToken().catch(() => null);
+    const res = await fetch('/api/analytics/site', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ site: siteId }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: body?.error || `Could not connect Umami (HTTP ${res.status}).` };
+    return { snippet: body.snippet };
+  } catch (e: any) {
+    return { error: e?.message || 'Could not connect Umami.' };
+  }
+}
 export interface SiteStatsDay { day: string; label: string; pageviews: number; visitors: number }
 export interface SiteStats {
   pageviews: number; visitors: number; live: number;
@@ -526,6 +548,15 @@ export interface SiteStats {
   top_pages: { path: string; count: number }[];
   top_referrers: { ref: string; count: number }[];
   live_flag: boolean; // true = real data
+  // Only Umami supplies these; the built-in pipeline has no session concept,
+  // so they stay null there and the UI hides those panels rather than
+  // inventing a bounce rate.
+  source?: 'umami' | 'builtin';
+  bounce_rate?: number | null;
+  avg_duration_s?: number | null;
+  countries?: { code: string; count: number }[];
+  browsers?: { name: string; count: number }[];
+  snippet?: string | null;
 }
 
 export async function loadSites(privyUserId: string | null): Promise<{ sites: Site[]; live: boolean }> {
@@ -557,6 +588,37 @@ export async function deleteSite(privyUserId: string, siteId: string): Promise<{
 export async function loadSiteStats(privyUserId: string | null, siteId: string | null, days: number): Promise<SiteStats> {
   const fallback = (): SiteStats => ({ ...mockSiteStats(days), live_flag: false });
   if (!privyUserId || !siteId) return fallback();
+
+  // Umami first when this site is linked to it. Anything else — not configured,
+  // not linked, migration not run, instance down — falls through to the
+  // built-in pipeline, which still holds every pageview recorded before the
+  // swap. No site ever loses its history to a misconfigured analytics box.
+  try {
+    const { getAccessToken } = await import('@privy-io/react-auth');
+    const token = await getAccessToken().catch(() => null);
+    const res = await fetch(`/api/analytics/stats?site=${encodeURIComponent(siteId)}&days=${days}`, {
+      headers: token ? { authorization: `Bearer ${token}` } : {},
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body?.available && body.stats) {
+        const s = body.stats;
+        return {
+          pageviews: +s.pageviews || 0, visitors: +s.visitors || 0, live: +s.live || 0,
+          desktop: +s.desktop || 0, mobile: +s.mobile || 0,
+          series: Array.isArray(s.series) ? s.series : [],
+          top_pages: Array.isArray(s.top_pages) ? s.top_pages : [],
+          top_referrers: Array.isArray(s.top_referrers) ? s.top_referrers : [],
+          live_flag: true, source: 'umami',
+          bounce_rate: s.bounce_rate ?? null, avg_duration_s: s.avg_duration_s ?? null,
+          countries: Array.isArray(s.countries) ? s.countries : [],
+          browsers: Array.isArray(s.browsers) ? s.browsers : [],
+          snippet: body.snippet ?? null,
+        };
+      }
+    }
+  } catch { /* fall through to the built-in pipeline */ }
+
   try {
     const { data, error } = await rpc('get_site_stats', { p_privy: privyUserId, p_site: siteId, p_days: days });
     if (error || !data) return fallback();
@@ -567,7 +629,8 @@ export async function loadSiteStats(privyUserId: string | null, siteId: string |
       series: Array.isArray(d.series) ? d.series.map((p: any) => ({ day: p.day, label: p.label, pageviews: +p.pageviews || 0, visitors: +p.visitors || 0 })) : [],
       top_pages: Array.isArray(d.top_pages) ? d.top_pages : [],
       top_referrers: Array.isArray(d.top_referrers) ? d.top_referrers : [],
-      live_flag: true,
+      live_flag: true, source: 'builtin',
+      bounce_rate: null, avg_duration_s: null, countries: [], browsers: [],
     };
   } catch {
     return fallback();
