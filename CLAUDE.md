@@ -34,8 +34,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Workspace resolution:** new-platform pages resolve via the **`accounts`** table (`get_my_workspace`
   → `effective_workspace`, latest def in **0051**). The HR half uses `hr_company_id()` off
   `company_users`. `workspace_id == company_id` (same uuid, 0005 sync trigger).
-- **Never `.maybeSingle()` on `company_users` by `privy_user_id`** — a user can belong to several
-  companies, and it throws "multiple rows returned". Use `.limit(1)`. This broke sign-in once.
+- **Resolving a company from `company_users` by `privy_user_id` alone is wrong twice over.**
+  `.single()` throws "multiple rows returned" for anyone in two companies (broke sign-in once);
+  `.limit(1)` **without `ORDER BY`** silently returns an *arbitrary* company, which reads as
+  "my positions disappeared" while the careers page (resolving by slug) still shows them.
+  HR screens must use **`resolveHrCompany()` / `resolveHrCompanyId()` (`lib/hr/company.ts`)** —
+  it mirrors `hr_company_id()` (0051): active workspace first, else the OLDEST membership.
 - **CRUD monolith** (`list/get/create/update/delete_record`) is redefined IN FULL per migration —
   extend the latest def rather than adding a parallel one. New subsystems get **dedicated RPCs**.
 - **Migrations** are idempotent (`create or replace`, `add column if not exists`) and end with

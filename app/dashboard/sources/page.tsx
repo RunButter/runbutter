@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { rpc } from '@/lib/rpc';
 import { useDialog } from '@/components/ui/Dialog';
+import { resolveHrCompanyId } from '@/lib/hr/company';
 
 const CHANNELS = [
     { value: 'linkedin', label: 'LinkedIn' },
@@ -51,12 +52,11 @@ export default function SourcesPage() {
         try {
             await supabase.auth.getUser();
 
-            const { data: companyUser } = await supabase
-                .from('company_users').select('company_id').eq('privy_user_id', privyUserId).limit(1).maybeSingle();
+            const companyId = await resolveHrCompanyId(privyUserId);
 
             const [posRes, linksRes, attrRes] = await Promise.all([
-                companyUser
-                    ? supabase.from('positions').select('id, title').eq('company_id', companyUser.company_id).order('created_at', { ascending: false })
+                companyId
+                    ? supabase.from('positions').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false })
                     : Promise.resolve({ data: [] as any[] }),
                 rpc('get_tracking_links', { p_privy_user_id: privyUserId }),
                 rpc('get_source_attribution', { p_privy_user_id: privyUserId }),
