@@ -46,5 +46,9 @@ export async function POST(req: NextRequest) {
   if (!slug) return NextResponse.json({ ok: true, revalidated: false });
 
   revalidatePath(`/careers/${slug}`);
+  // Each role has its own cached page (0063), so purge the whole subtree —
+  // otherwise hiding a role clears it from the list but leaves its detail page
+  // live and linkable.
+  revalidatePath(`/careers/${slug}/[positionId]`, 'page');
   return NextResponse.json({ ok: true, revalidated: true, slug });
 }

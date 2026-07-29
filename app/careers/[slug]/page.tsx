@@ -143,7 +143,10 @@ export default async function CareersPage({ params }: { params: { slug: string }
                 <ul className="space-y-2">
                   {roles.map((p) => (
                     <li key={p.id}>
-                      <Link href={`/apply/${p.id}`}
+                      {/* Goes to the job page, not straight into the form —
+                          candidates were previously asked to apply before they
+                          could read the description. */}
+                      <Link href={`/careers/${company.slug}/${p.id}`}
                         className="group flex items-center gap-4 rounded-xl bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm hover:shadow-card transition-all px-4 py-3.5">
                         <div className="min-w-0 flex-1">
                           <p className="text-[14px] font-semibold text-primary truncate">{p.title}</p>
@@ -153,7 +156,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                           </div>
                         </div>
                         <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-semibold group-hover:gap-1.5 transition-all" style={{ color: accent }}>
-                          Apply <ArrowRight className="w-3.5 h-3.5" />
+                          View role <ArrowRight className="w-3.5 h-3.5" />
                         </span>
                       </Link>
                     </li>

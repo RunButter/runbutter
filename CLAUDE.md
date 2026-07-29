@@ -17,7 +17,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `origin` = `CasperCrypto/talent-insight` is a stale mirror.
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
-- **Migrations through 0062 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
+- **Migrations through 0063 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
   Supabase connector — don't report any of them as pending). 0062 went in via `apply_migration`, so
   it is recorded in `supabase_migrations`; 0058–0061 were run by hand and are not.
   Still outstanding as *actions*, not migrations: POST `/api/sanctions/refresh` once to ingest OFAC
@@ -52,6 +52,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 ## Information architecture (nav order is deliberate — `lib/crm/registry.ts`)
 - **HR** owns the **Careers page** (`/dashboard/careers`): the address, the copy, and which roles are
   public. It sits next to Positions because it is a hiring surface, not configuration.
+- **Public hiring funnel:** `/careers/<slug>` (all roles) → `/careers/<slug>/<positionId>` (job detail,
+  0063) → `/apply/<positionId>` → assessment. The list used to link straight into the form, so nobody
+  ever saw `description` — a field captured on every position. Each role having its own URL is also
+  what makes `JobPosting` structured data (and therefore Google Jobs) possible.
+  `get_careers_position` enforces the same visibility as the index: active AND published, else null,
+  so a hidden role can't be reached by guessing its id.
 - **Settings** = things that change the workspace for *everyone* (Branding, Members, Plans,
   Integrations, Reports). **Account** = things that are yours alone (AI keys, Assistant).
   **Team** stays people-only (My Team, Directory, Assets) — not settings.
