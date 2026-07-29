@@ -158,7 +158,8 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                     .from('company_users')
                     .select('company_id')
                     .eq('privy_user_id', user?.id)
-                    .single();
+                    .limit(1)
+                    .maybeSingle();
 
                 await supabase.from('assessment_templates').insert({
                     company_id: companyUser?.company_id,

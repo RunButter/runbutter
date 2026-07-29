@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   async function loadCompanyData() {
     try {
-      const { data } = await supabase.from('company_users').select('*, company:companies(*)').eq('privy_user_id', user!.id).single();
+      const { data } = await supabase.from('company_users').select('*, company:companies(*)').eq('privy_user_id', user!.id).limit(1).maybeSingle();
       if (data?.company) setCompany(data.company);
     } catch {
       /* non-fatal */

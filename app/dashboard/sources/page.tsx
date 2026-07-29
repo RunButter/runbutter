@@ -52,7 +52,7 @@ export default function SourcesPage() {
             await supabase.auth.getUser();
 
             const { data: companyUser } = await supabase
-                .from('company_users').select('company_id').eq('privy_user_id', privyUserId).single();
+                .from('company_users').select('company_id').eq('privy_user_id', privyUserId).limit(1).maybeSingle();
 
             const [posRes, linksRes, attrRes] = await Promise.all([
                 companyUser
