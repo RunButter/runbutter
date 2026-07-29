@@ -41,6 +41,7 @@ export async function GET(request: Request) {
             .from('company_users')
             .select('company_id')
             .eq('privy_user_id', userId)
+            .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
             .limit(1)
             .maybeSingle();
         const companyId = cu?.company_id || searchParams.get('companyId') || '';

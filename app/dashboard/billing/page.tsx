@@ -39,6 +39,7 @@ export default function BillingPage() {
                 .from('company_users')
                 .select('*, company:companies(*)')
                 .eq('privy_user_id', user.id)
+                .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
                 .limit(1);
             const row = data?.[0];
             if (row?.company) {

@@ -53,6 +53,7 @@ export async function GET(request: Request) {
             .from('company_users')
             .select('company_id')
             .eq('privy_user_id', v.userId)
+            .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
             .limit(1)
             .maybeSingle();
         if (!cu?.company_id) {
