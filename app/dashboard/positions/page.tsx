@@ -34,7 +34,8 @@ export default function PositionsPage() {
                 .from('company_users')
                 .select('company_id')
                 .eq('privy_user_id', privyUserId)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
             if (!companyUser) return;
 

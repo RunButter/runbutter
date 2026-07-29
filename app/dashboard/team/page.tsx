@@ -35,7 +35,8 @@ export default function TeamPage() {
                 .from('company_users')
                 .select('role, company:companies(*)')
                 .eq('privy_user_id', user.id)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
             if (me) {
                 const comp: any = Array.isArray(me.company) ? me.company[0] : me.company;

@@ -75,21 +75,36 @@ export default function NewPositionPage() {
 
         try {
 
-            const { data: companyUser } = await supabase
+            // .limit(1) is required, not stylistic: a user can belong to
+            // several companies, and .single() errors with "multiple rows
+            // returned" the moment they do — which killed this form outright.
+            const { data: companyUser, error: cuError } = await supabase
                 .from('company_users')
                 .select('company_id, id')
                 .eq('privy_user_id', user.id)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
-            if (!companyUser) throw new Error('Company user not found');
+            // The error used to be discarded, so every database failure here
+            // surfaced as "Company user not found" — the one message that is
+            // almost never the real reason.
+            if (cuError) throw new Error(`Could not load your company: ${cuError.message}`);
+            if (!companyUser) throw new Error('Your account is not linked to a company yet. Reload, or re-run onboarding.');
 
             // Enforce plan position limit
-            const { data: companyRow } = await supabase
-                .from('companies').select('plan').eq('id', companyUser.company_id).single();
-            const { count: positionCount } = await supabase
+            const { data: companyRow, error: planError } = await supabase
+                .from('companies').select('plan').eq('id', companyUser.company_id).maybeSingle();
+            // Also previously swallowed. A failed plan read fell through to
+            // getLimit(undefined) === the FREE limit of 1 position, so a paying
+            // customer got "your free plan allows 1 position" for no reason.
+            if (planError) throw new Error(`Could not check your plan: ${planError.message}`);
+
+            const { count: positionCount, error: countError } = await supabase
                 .from('positions')
                 .select('id', { count: 'exact', head: true })
                 .eq('company_id', companyUser.company_id);
+            if (countError) throw new Error(`Could not count existing positions: ${countError.message}`);
+
             const maxPositions = getLimit(companyRow?.plan, 'maxPositions');
             if ((positionCount ?? 0) >= maxPositions) {
                 throw new Error(`Your ${companyRow?.plan || 'free'} plan allows ${formatLimit(maxPositions)} position(s). Upgrade to add more.`);
@@ -122,7 +137,7 @@ export default function NewPositionPage() {
             ];
 
             // Create default assessment for this position
-            await supabase.from('assessment_templates').insert({
+            const { error: assessmentError } = await supabase.from('assessment_templates').insert({
                 company_id: companyUser.company_id,
                 position_id: position.id,
                 name: `${formData.title} Assessment`,
@@ -130,6 +145,13 @@ export default function NewPositionPage() {
                 questions: [...defaultQuestions, ...customQuestions],
                 is_default: true
             });
+
+            // The position is already saved at this point, so don't pretend it
+            // failed — but a position with no assessment breaks the candidate
+            // flow silently, which is worse than an ugly message here.
+            if (assessmentError) {
+                throw new Error(`Position "${formData.title}" was created, but its assessment could not be: ${assessmentError.message}`);
+            }
 
             router.push('/dashboard/positions');
         } catch (err: any) {

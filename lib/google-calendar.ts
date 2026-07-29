@@ -58,7 +58,8 @@ export async function handleOAuthCallback(code: string, userId: string, companyI
     .from('company_users')
     .select('id')
     .eq('privy_user_id', userId)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (!userData) throw new Error(`User not found for ID: ${userId}`);
 
@@ -87,7 +88,8 @@ async function getCalendarClient(userId: string) {
     .from('company_users')
     .select('id')
     .eq('privy_user_id', userId)
-    .single();
+    .limit(1)
+    .maybeSingle();
   if (!userData) return null;
 
   const { data: tokenData } = await supabase
