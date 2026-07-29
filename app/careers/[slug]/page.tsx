@@ -18,6 +18,7 @@ interface CareersPage {
     id: string; name: string; slug: string;
     headline: string | null; about: string | null;
     logo_url: string | null; accent_color: string | null; website: string | null;
+    cover_image_url: string | null; favicon_url: string | null; og_image_url: string | null;
   };
   positions: CareersPosition[];
 }
@@ -47,8 +48,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       title: `Careers at ${page.company.name}`,
       description: page.company.headline || undefined,
-      images: page.company.logo_url ? [page.company.logo_url] : undefined,
+      // Prefer the dedicated social image; a logo is square and crops badly in
+      // most link unfurls.
+      images: page.company.og_image_url
+        ? [page.company.og_image_url]
+        : page.company.logo_url ? [page.company.logo_url] : undefined,
     },
+    icons: page.company.favicon_url ? { icon: page.company.favicon_url } : undefined,
     // A careers page exists to be found. Nothing here is private.
     robots: { index: true, follow: true },
   };
@@ -78,6 +84,13 @@ export default async function CareersPage({ params }: { params: { slug: string }
   return (
     <main className="min-h-screen bg-surface-sunken" style={{ ['--brand' as any]: accent }}>
       <header className="border-b border-subtle bg-surface">
+        {company.cover_image_url && (
+          // Decorative: the heading right below carries the meaning, so an
+          // empty alt keeps screen readers from announcing a filename.
+          <div className="w-full h-40 sm:h-56 overflow-hidden bg-surface-sunken">
+            <img src={company.cover_image_url} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
         <div className="max-w-3xl mx-auto px-5 py-10 sm:py-14">
           <div className="flex items-center gap-3.5">
             {company.logo_url

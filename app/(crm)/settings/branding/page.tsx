@@ -3,19 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
 import { validateIban, formatIban } from '@/lib/finance/iban';
-import CareersPageCard from '@/components/crm/CareersPageCard';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
   tax_id: string; country: string; vat_id: string; reg_no: string; bdo: string; iban: string; bank_name: string;
+  // 0061 — the surfaces beyond invoices.
+  cover_image_url: string; apply_intro: string; favicon_url: string; og_image_url: string;
+  email_from_name: string; email_footer: string; document_footer: string;
 }
 const EMPTY: Form = {
   logo_url: '', legal_name: '', address: '', accent_color: '#4653CE', invoice_footer: '',
   tax_id: '', country: 'PL', vat_id: '', reg_no: '', bdo: '', iban: '', bank_name: '',
+  cover_image_url: '', apply_intro: '', favicon_url: '', og_image_url: '',
+  email_from_name: '', email_footer: '', document_footer: '',
 };
 
 // Which legal identifiers an invoice needs differs by country — the selector
@@ -43,6 +47,35 @@ const COUNTRY_IDENTITY: Record<string, IdField[]> = {
 const COUNTRIES = ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'OTHER'];
 const identityFields = (country: string) => COUNTRY_IDENTITY[country] || COUNTRY_IDENTITY.OTHER;
 
+
+// Shared image picker for the branding surfaces. Kept local: it only exists to
+// stop the cover / favicon / social-preview blocks being three copies of the
+// same markup.
+function ImageField({ label, hint, value, field, busy, onPick, onClear, wide = false }: {
+  label: string; hint?: string; value: string; field: string; busy: boolean;
+  onPick: (field: any, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onClear: () => void; wide?: boolean;
+}) {
+  return (
+    <div>
+      <label className="block text-[12px] font-semibold text-secondary mb-1">{label}</label>
+      <div className="flex items-center gap-2.5">
+        <div className={`${wide ? 'w-24 h-12' : 'w-12 h-12'} rounded-md ring-1 ring-subtle bg-surface-sunken overflow-hidden shrink-0 flex items-center justify-center`}>
+          {value
+            ? <img src={value} alt="" className="w-full h-full object-cover" />
+            : <ImageIcon className="w-4 h-4 text-tertiary" />}
+        </div>
+        <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
+          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => onPick(field, e)} />
+        </label>
+        {value && <button type="button" onClick={onClear} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
+      </div>
+      {hint && <p className="mt-1 text-[11px] text-tertiary">{hint}</p>}
+    </div>
+  );
+}
+
 export default function BrandingPage() {
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
@@ -67,6 +100,10 @@ export default function BrandingPage() {
         accent_color: b.accent_color || '#4653CE', invoice_footer: b.invoice_footer || '',
         tax_id: b.tax_id || '', country: b.country || 'PL', vat_id: b.vat_id || '',
         reg_no: b.reg_no || '', bdo: b.bdo || '', iban: b.iban || '', bank_name: b.bank_name || '',
+        cover_image_url: b.cover_image_url || '', apply_intro: b.apply_intro || '',
+        favicon_url: b.favicon_url || '', og_image_url: b.og_image_url || '',
+        email_from_name: b.email_from_name || '', email_footer: b.email_footer || '',
+        document_footer: b.document_footer || '',
       });
       setLoading(false);
     });
@@ -88,6 +125,19 @@ export default function BrandingPage() {
     if (upErr) { setError(upErr); setUploading(false); return; }
     set({ logo_url: url! });
     setUploading(false);
+  };
+
+  // Cover / favicon / OG all upload the same way; only the target field differs.
+  const [uploadingField, setUploadingField] = useState<keyof Form | null>(null);
+  const onImageFile = async (field: keyof Form, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !wsId) return;
+    if (!privy) { setError('Sign in to upload images.'); return; }
+    setUploadingField(field); setError('');
+    const { url, error: upErr } = await uploadImage(privy, wsId, file, String(field));
+    if (upErr) { setError(upErr); setUploadingField(null); return; }
+    set({ [field]: url! } as Partial<Form>);
+    setUploadingField(null);
   };
 
   const save = async () => {
@@ -216,6 +266,64 @@ export default function BrandingPage() {
                 </div>
               </div>
 
+              {/* ── Careers page & apply form ───────────────────────────
+                  Lives here, not in HR: this is how the brand LOOKS. HR owns
+                  the address, the copy and which roles are public. */}
+              <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Careers &amp; apply</span>
+                  <Link href="/dashboard/careers" className="text-[11px] font-medium text-accent hover:underline">Manage page →</Link>
+                </div>
+                <ImageField label="Cover image" hint="Wide hero across the top of your careers page."
+                  value={form.cover_image_url} field="cover_image_url" busy={uploadingField === 'cover_image_url'}
+                  onPick={onImageFile} onClear={() => set({ cover_image_url: '' })} wide />
+                <div>
+                  <label className="block text-[12px] font-semibold text-secondary mb-1">Apply form intro</label>
+                  <textarea value={form.apply_intro} onChange={(e) => set({ apply_intro: e.target.value })} rows={2}
+                    placeholder="One line candidates see above the application form."
+                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                </div>
+              </div>
+
+              {/* ── Link previews ─────────────────────────────────────────── */}
+              <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Link previews</span>
+                <p className="text-[11px] text-tertiary -mt-1">
+                  Used when your careers page, forms or apply links are shared or bookmarked.
+                </p>
+                <ImageField label="Favicon" hint="Square, 32px or larger."
+                  value={form.favicon_url} field="favicon_url" busy={uploadingField === 'favicon_url'}
+                  onPick={onImageFile} onClear={() => set({ favicon_url: '' })} />
+                <ImageField label="Social preview" hint="1200×630 works everywhere."
+                  value={form.og_image_url} field="og_image_url" busy={uploadingField === 'og_image_url'}
+                  onPick={onImageFile} onClear={() => set({ og_image_url: '' })} wide />
+              </div>
+
+              {/* ── Email ─────────────────────────────────────────────────── */}
+              <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Email</span>
+                <div>
+                  <label className="block text-[12px] font-semibold text-secondary mb-1">Sender name</label>
+                  <input value={form.email_from_name} onChange={(e) => set({ email_from_name: e.target.value })}
+                    placeholder={displayName}
+                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <p className="mt-1 text-[11px] text-tertiary">Shown as the "from" name on candidate and invoice emails.</p>
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-secondary mb-1">Email footer</label>
+                  <textarea value={form.email_footer} onChange={(e) => set({ email_footer: e.target.value })} rows={2}
+                    placeholder="Company name, address, unsubscribe note…"
+                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-secondary mb-1">Document footer</label>
+                <textarea value={form.document_footer} onChange={(e) => set({ document_footer: e.target.value })} rows={2}
+                  placeholder="Shown on contracts and signed documents."
+                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+              </div>
+
               <div>
                 <label className="block text-[12px] font-semibold text-secondary mb-1">Invoice footer / payment terms</label>
                 <textarea value={form.invoice_footer} onChange={(e) => set({ invoice_footer: e.target.value })} rows={3} placeholder="Payment within 14 days · bank details · VAT no…"
@@ -253,12 +361,6 @@ export default function BrandingPage() {
                 </div>
               </div>
               <p className="mt-2 text-[11px] text-tertiary">This is how your invoices and offers will look.</p>
-
-              {/* Same page as logo + accent colour, because the careers page is
-                  rendered from exactly those two values. */}
-              <div className="mt-4">
-                <CareersPageCard privyUserId={privy} workspaceId={wsId} />
-              </div>
             </div>
           </div>
         )}

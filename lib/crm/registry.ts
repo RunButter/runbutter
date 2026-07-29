@@ -258,6 +258,10 @@ export const NAV = [
     { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
     { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
     { slug: 'positions', label: 'Positions', icon: 'Briefcase', href: '/dashboard/positions' },
+    // Careers page lives in HR, next to the roles it publishes — it is a
+    // hiring surface, not a settings screen. Its look comes from Settings →
+    // Branding so there is still only one place to define the brand.
+    { slug: 'careers', label: 'Careers page', icon: 'Globe2', href: '/dashboard/careers' },
     { slug: 'treasury', label: 'Talent Treasury', icon: 'Sparkles', href: '/dashboard/treasury' },
     { slug: 'interviews', label: 'Interviews', icon: 'Calendar', href: '/dashboard/interviews' },
     { slug: 'templates', label: 'Email templates', icon: 'Mail', href: '/dashboard/templates' },
@@ -271,18 +275,26 @@ export const NAV = [
   ]},
   { group: 'Automate', items: [
     { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
-    { slug: 'assistant', label: 'Assistant', icon: 'MessageCircle', href: '/settings/assistant' },
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
+  ]},
+  // People, not configuration — kept out of Settings deliberately.
+  { group: 'Team', items: [
+    { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
+    { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
+    { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
+  ]},
+  // Settings splits by WHO a change affects: everything here changes the
+  // workspace for everyone in it…
+  { group: 'Settings', items: [
+    { slug: 'branding', label: 'Branding', icon: 'Palette', href: '/settings/branding' },
+    { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
+    { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
     { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
   ]},
-  { group: 'Team', items: [
-    { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
-    { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
-    { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
+  // …and everything here is yours alone.
+  { group: 'Account', items: [
     { slug: 'ai-keys', label: 'AI keys', icon: 'Sparkles', href: '/settings/ai' },
-    { slug: 'branding', label: 'Branding', icon: 'Palette', href: '/settings/branding' },
-    { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
-    { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
+    { slug: 'assistant', label: 'Assistant', icon: 'MessageCircle', href: '/settings/assistant' },
   ]},
 ];

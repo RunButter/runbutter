@@ -469,6 +469,13 @@ export interface WorkspaceBranding {
   address: string | null; accent_color: string; invoice_footer: string | null; tax_id: string | null;
   country: string | null; vat_id: string | null; reg_no: string | null; bdo: string | null;
   iban: string | null; bank_name: string | null;
+  // 0061 — the surfaces beyond invoices. Optional so a client running against
+  // a database without 0061 still type-checks and simply omits them; the RPC
+  // only writes keys that are present, so omitting is safe.
+  cover_image_url?: string | null; apply_intro?: string | null;
+  favicon_url?: string | null; og_image_url?: string | null;
+  email_from_name?: string | null; email_footer?: string | null;
+  document_footer?: string | null;
 }
 export async function loadBranding(privyUserId: string, workspaceId: string): Promise<WorkspaceBranding | null> {
   const { data, error } = await rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
@@ -478,6 +485,10 @@ export async function loadBranding(privyUserId: string, workspaceId: string): Pr
     name: d.name, logo_url: d.logo_url, legal_name: d.legal_name, address: d.address,
     accent_color: d.accent_color || '#4653CE', invoice_footer: d.invoice_footer, tax_id: d.tax_id,
     country: d.country, vat_id: d.vat_id, reg_no: d.reg_no, bdo: d.bdo, iban: d.iban, bank_name: d.bank_name,
+    cover_image_url: d.cover_image_url ?? null, apply_intro: d.apply_intro ?? null,
+    favicon_url: d.favicon_url ?? null, og_image_url: d.og_image_url ?? null,
+    email_from_name: d.email_from_name ?? null, email_footer: d.email_footer ?? null,
+    document_footer: d.document_footer ?? null,
   };
 }
 export async function saveBranding(privyUserId: string, workspaceId: string, data: Partial<WorkspaceBranding>): Promise<{ error?: string }> {
