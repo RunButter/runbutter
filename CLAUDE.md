@@ -17,13 +17,11 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `origin` = `CasperCrypto/talent-insight` is a stale mirror.
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
-- **Migrations through 0057 are applied** (confirmed 2026-07-24). Don't report them as pending.
-  **0058_sanctions.sql is PENDING** — run it in the SQL editor, then hit "Update list" once in a
-  company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
-  **0059_umami.sql is PENDING** — only needed if you deploy Umami (`docs/umami-analytics.md`).
-  **0060_careers_page.sql is PENDING** — public careers page + the slug that later becomes a subdomain.
-- **Migrations 0058–0062 are APPLIED** (confirmed 2026-07-29 against the live DB via the Supabase
-  connector). 0062 was applied with `apply_migration`, so it is in `supabase_migrations` too.
+- **Migrations through 0062 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
+  Supabase connector — don't report any of them as pending). 0062 went in via `apply_migration`, so
+  it is recorded in `supabase_migrations`; 0058–0061 were run by hand and are not.
+  Still outstanding as *actions*, not migrations: POST `/api/sanctions/refresh` once to ingest OFAC
+  (the table exists but is empty until then), and set `UMAMI_*` env vars only if you deploy Umami.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
