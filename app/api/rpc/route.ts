@@ -76,6 +76,9 @@ const ALLOWED = new Set([
   // deliberately not named get_*: lib/rpc must never serve it from cache.
   // The list refresh runs service-side in /api/sanctions/refresh.
   'screen_sanctions', 'get_sanctions_status', 'get_sanctions_screenings',
+  // Careers page (0060) — owner side. get_careers_page is public and is read
+  // server-side by the careers route, so it is deliberately NOT listed here.
+  'get_careers_settings', 'set_careers_page', 'set_position_published',
 ]);
 
 function db() {

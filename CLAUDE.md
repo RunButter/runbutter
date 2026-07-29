@@ -21,6 +21,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   **0058_sanctions.sql is PENDING** — run it in the SQL editor, then hit "Update list" once in a
   company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
   **0059_umami.sql is PENDING** — only needed if you deploy Umami (`docs/umami-analytics.md`).
+  **0060_careers_page.sql is PENDING** — public careers page + the slug that later becomes a subdomain.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
