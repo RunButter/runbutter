@@ -22,6 +22,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
   **0059_umami.sql is PENDING** — only needed if you deploy Umami (`docs/umami-analytics.md`).
   **0060_careers_page.sql is PENDING** — public careers page + the slug that later becomes a subdomain.
+  **0061_branding_expanded.sql is PENDING** — branding beyond invoices; also REVOKES the anon grant
+  0024 left on `get/save_workspace_branding`, so run it or branding stays anon-callable.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
@@ -44,6 +46,18 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   an RPC is missing → amber "Sample" badge.
 - Psychometrics: discrete int columns on the latest `assessment_results`
   (overall/personality/work_style/screening_score) + Big-5 in `personality_data` JSONB.
+
+## Information architecture (nav order is deliberate — `lib/crm/registry.ts`)
+- **HR** owns the **Careers page** (`/dashboard/careers`): the address, the copy, and which roles are
+  public. It sits next to Positions because it is a hiring surface, not configuration.
+- **Settings** = things that change the workspace for *everyone* (Branding, Members, Plans,
+  Integrations, Reports). **Account** = things that are yours alone (AI keys, Assistant).
+  **Team** stays people-only (My Team, Directory, Assets) — not settings.
+- **Branding is the single place a brand is defined** (`workspaces`, 0024 + 0061) and now covers
+  invoices/documents, the careers page + apply form, email, and favicon/social preview.
+  HR's careers screen links to it rather than duplicating any of it.
+- `save_workspace_branding` writes a key **only when present** in the payload (`p_data ? 'key'`) —
+  a partial save must never blank the fields it doesn't mention.
 
 ## Design system (see the `design-system` + `shadcn-adoption` memories)
 - **Semantic tokens only** — `bg-surface`, `text-secondary`, `border-subtle`, `bg-accent`, `bg-inverse`.
