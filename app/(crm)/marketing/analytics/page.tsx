@@ -293,10 +293,20 @@ export default function WebAnalytics() {
             <div className="grid md:grid-cols-2 gap-3">
               {([['Top pages', stats.top_pages.map((p) => ({ label: p.path, count: p.count }))],
                  ['Referrers', stats.top_referrers.map((r) => ({ label: r.ref, count: r.count }))],
-                 ...(stats.source === 'umami' ? [
-                   ['Countries', (stats.countries ?? []).map((c) => ({ label: c.code || 'Unknown', count: c.count }))],
-                   ['Browsers', (stats.browsers ?? []).map((b) => ({ label: b.name || 'Unknown', count: b.count }))],
-                 ] as const : [])] as const).map(([title, rows]) => {
+                 // Present whenever the data has them — the built-in pipeline
+                 // supplies these from 0062, Umami from its own metrics.
+                 ['Countries', (stats.countries ?? []).map((c) => ({ label: c.code || 'Unknown', count: c.count }))],
+                 ['Cities', (stats.cities ?? []).map((c) => ({ label: c.name, count: c.count }))],
+                 ['Browsers', (stats.browsers ?? []).map((b) => ({ label: b.name || 'Unknown', count: b.count }))],
+                 ['Operating systems', (stats.operating_systems ?? []).map((o) => ({ label: o.name, count: o.count }))],
+                 ['Campaigns', (stats.campaigns ?? []).map((c) => ({
+                   label: [c.source, c.medium, c.campaign].filter((x) => x && x !== '—').join(' · '), count: c.count,
+                 }))],
+                ] as const)
+                 // An empty panel teaches nothing; drop it rather than render
+                 // "No data yet" five times.
+                 .filter(([, rows]) => rows.length > 0)
+                 .map(([title, rows]) => {
                 const max = Math.max(1, ...rows.map((r) => r.count));
                 return (
                   <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">

@@ -22,8 +22,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   company's detail panel (or POST `/api/sanctions/refresh`) to ingest the OFAC data.
   **0059_umami.sql is PENDING** — only needed if you deploy Umami (`docs/umami-analytics.md`).
   **0060_careers_page.sql is PENDING** — public careers page + the slug that later becomes a subdomain.
-  **0061_branding_expanded.sql is PENDING** — branding beyond invoices; also REVOKES the anon grant
-  0024 left on `get/save_workspace_branding`, so run it or branding stays anon-callable.
+- **Migrations 0058–0062 are APPLIED** (confirmed 2026-07-29 against the live DB via the Supabase
+  connector). 0062 was applied with `apply_migration`, so it is in `supabase_migrations` too.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
@@ -99,7 +99,19 @@ Same rule as the cost rule above: prefer public/government data + local computat
   detection + MX/A lookup over `node:dns`, gating `/api/forms/submit`. **Fails OPEN** on DNS
   timeouts, accepts no-MX-but-has-A (RFC 5321 §5.1), and treats a typo suggestion as a question
   ("Use gmail.com" / "Keep what I typed") — a false positive must never lock someone out of a form.
-- **Web analytics — Umami (0059, optional)** — `docs/umami-analytics.md`. Chosen over Plausible
+- **Web analytics geo (0062)** — countries/cities/browsers/OS/UTM on the **built-in** pipeline.
+  Geo comes from **edge headers only** (`cf-ipcountry`, `x-vercel-ip-*` — see
+  `lib/marketing/request-context.ts`); there is no IP-geolocation API call, because every one of
+  them meters per lookup. `runbutter.app` is Cloudflare-proxied, so country arrives free; if it
+  stays empty, enable Cloudflare's *Add visitor location headers* managed transform.
+  `geo_coverage` reports the % of rows that actually have a country — "Unknown" is kept as its own
+  bucket rather than dropped, so the country list can't look authoritative when it isn't.
+  UA parsing order matters: Edge/Opera/Samsung all claim "Chrome", and iPadOS claims "Macintosh".
+- **Web analytics — Umami (0059, optional)** — `docs/umami-deploy.md` + `docs/umami-analytics.md`.
+  **Only worth deploying for SESSION metrics** (bounce rate, visit duration, funnels); 0062 already
+  covers countries/cities/browsers/OS locally. Umami's DB is the `runbutter-umami-db` Supabase
+  project — leave it EMPTY, Umami runs its own Prisma migrations, and use the **session pooler
+  (5432)**, never the transaction pooler (6543), or those migrations fail. Chosen over Plausible
   because Umami is **MIT** (Plausible CE is AGPL-3.0) and runs on Postgres + one Node process
   rather than Elixir + ClickHouse. The built-in `site_events` pipeline is **NOT removed**: it
   serves any site without `sites.umami_website_id`, keeps its history, and the swap is per-site
