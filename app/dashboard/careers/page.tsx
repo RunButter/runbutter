@@ -7,7 +7,9 @@ import { Globe2, Loader2, Eye, EyeOff, ExternalLink, Palette, Briefcase } from '
 import { getWorkspace } from '@/lib/crm/data';
 import { rpc } from '@/lib/rpc';
 import { supabase } from '@/lib/supabase';
+import { revalidateCareersPage } from '@/lib/hr/company';
 import CareersPageCard from '@/components/crm/CareersPageCard';
+import HrCompanyNotice from '@/components/crm/HrCompanyNotice';
 import EmptyState from '@/components/ui/EmptyState';
 
 interface Role { id: string; title: string; department: string | null; is_active: boolean; is_published: boolean }
@@ -58,6 +60,9 @@ export default function CareersAdminPage() {
     setBusyId(null);
     if (e) { setError(e.message); return; }
     setRoles((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_published: !x.is_published } : x)));
+    // Purge the cached public page so the change is visible on the live link
+    // straight away, not after the revalidate window expires.
+    if (wsId) await revalidateCareersPage(wsId);
   };
 
   const activeRoles = roles.filter((r) => r.is_active);
@@ -86,6 +91,7 @@ export default function CareersAdminPage() {
             </div>
           ) : (
             <>
+              <HrCompanyNotice privyUserId={privy} />
               <CareersPageCard privyUserId={privy} workspaceId={wsId} />
 
               <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">

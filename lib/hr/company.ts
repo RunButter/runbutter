@@ -66,3 +66,73 @@ export async function resolveHrCompany(privyUserId: string): Promise<HrCompany |
 export async function resolveHrCompanyId(privyUserId: string): Promise<string | null> {
   return (await resolveHrCompany(privyUserId))?.companyId ?? null;
 }
+
+/**
+ * Drop the cached public careers page immediately.
+ *
+ * Called after publishing or hiding a role. Without this the owner hides a role,
+ * opens the public link, and still sees it for up to five minutes — which reads
+ * as the toggle not working.
+ */
+export async function revalidateCareersPage(companyId: string): Promise<void> {
+  try {
+    const { getAccessToken } = await import('@privy-io/react-auth');
+    const token = await getAccessToken().catch(() => null);
+    await fetch('/api/careers/revalidate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ company: companyId }),
+    });
+  } catch {
+    // Best-effort: the page still refreshes on its own revalidate interval.
+  }
+}
+
+export interface HrCompanyOption {
+  companyId: string;
+  name: string;
+  role: string | null;
+  positions: number;
+  active: boolean;
+}
+
+/**
+ * Every company this person belongs to, with how many positions each holds.
+ *
+ * Exists to explain an empty Positions screen. HR follows the ACTIVE workspace,
+ * which is correct — but when that workspace happens to hold no roles while
+ * another membership holds six, a blank list is indistinguishable from data
+ * loss. This lets the UI say which company it is showing and where the roles
+ * actually are, instead of showing nothing and no reason.
+ */
+export async function listHrCompanies(privyUserId: string): Promise<HrCompanyOption[]> {
+  const active = await resolveHrCompanyId(privyUserId).catch(() => null);
+  const { data, error } = await supabase
+    .from('company_users')
+    .select('company_id, role, companies(name)')
+    .eq('privy_user_id', privyUserId)
+    .order('created_at', { ascending: true });
+  if (error || !Array.isArray(data)) return [];
+
+  const ids = data.map((r: any) => r.company_id).filter(Boolean);
+  if (ids.length === 0) return [];
+
+  // One row per open position, counted client-side: `head: true` with a group-by
+  // isn't expressible through the JS client, and this list is at most a handful
+  // of companies.
+  const { data: rows } = await supabase
+    .from('positions')
+    .select('company_id')
+    .in('company_id', ids)
+    .eq('is_active', true);
+  const counts = new Map<string, number>();
+  for (const r of (rows as any[]) || []) counts.set(r.company_id, (counts.get(r.company_id) ?? 0) + 1);
+
+  return data.map((r: any) => ({
+    companyId: r.company_id,
+    name: (Array.isArray(r.companies) ? r.companies[0]?.name : r.companies?.name) || 'Untitled company',
+    role: r.role ?? null,
+    positions: counts.get(r.company_id) ?? 0,
+    active: r.company_id === active,
+  }));
+}

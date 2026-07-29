@@ -9,6 +9,7 @@ import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { useDialog } from '@/components/ui/Dialog';
 import { resolveHrCompanyId } from '@/lib/hr/company';
+import HrCompanyNotice from '@/components/crm/HrCompanyNotice';
 
 export default function PositionsPage() {
   const { confirm: confirmDialog, notify } = useDialog();
@@ -93,7 +94,11 @@ export default function PositionsPage() {
                 </Link>
             </PageHeader>
 
-            <div className="p-6">
+            <div className="p-6 space-y-4">
+                {/* Only renders when it has something to explain: several
+                    companies, and the active one has no roles while another does. */}
+                <div className="max-w-6xl"><HrCompanyNotice privyUserId={authenticated && user ? user.id : null} /></div>
+
                 <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                     <table className="w-full text-[13px] border-separate border-spacing-0">
                         <thead>
