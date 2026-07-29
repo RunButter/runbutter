@@ -8,7 +8,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { useDialog } from '@/components/ui/Dialog';
-import { resolveHrCompanyId } from '@/lib/hr/company';
+import { resolveHrCompany } from '@/lib/hr/company';
 import HrCompanyNotice from '@/components/crm/HrCompanyNotice';
 
 export default function PositionsPage() {
@@ -18,6 +18,7 @@ export default function PositionsPage() {
     const [loading, setLoading] = useState(true);
     const [positions, setPositions] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (ready) {
@@ -30,26 +31,43 @@ export default function PositionsPage() {
     }, [ready, authenticated, user, router]);
 
     const loadPositions = async (privyUserId: string) => {
+        setError('');
         try {
-
             // Resolve via the ACTIVE workspace, not an arbitrary membership row
             // — see lib/hr/company.ts for why that distinction matters.
-            const companyId = await resolveHrCompanyId(privyUserId);
-            if (!companyId) return;
-
-            const { data, error } = await supabase
+            const company = await resolveHrCompany(privyUserId);
+            if (!company) {
+                setError('Your account is not linked to a company yet. Reload, or re-run onboarding.');
+                return;
+            }
+            // Candidate counts used to be an embedded `candidates:candidates(count)`
+            // select. That made one PostgREST join failure empty the entire
+            // positions list — and the catch below hid why. Positions are fetched
+            // on their own now, and the counts are a separate, non-fatal query.
+            const { data, error: posError } = await supabase
                 .from('positions')
-                .select(`
-          *,
-          candidates:candidates(count)
-        `)
-                .eq('company_id', companyId)
+                .select('*')
+                .eq('company_id', company.companyId)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setPositions(data || []);
-        } catch (error) {
-            console.error('Error loading positions:', error);
+            if (posError) throw posError;
+            const rows = data || [];
+
+            let counts = new Map<string, number>();
+            const { data: cand } = await supabase
+                .from('candidates')
+                .select('position_id')
+                .eq('company_id', company.companyId);
+            for (const c of (cand as any[]) || []) {
+                if (c.position_id) counts.set(c.position_id, (counts.get(c.position_id) ?? 0) + 1);
+            }
+
+            setPositions(rows.map((p: any) => ({ ...p, candidate_count: counts.get(p.id) ?? 0 })));
+        } catch (err: any) {
+            // Previously `console.error` only, so every failure looked like "you
+            // have no positions". Say what actually happened.
+            console.error('Error loading positions:', err);
+            setError(err?.message || 'Could not load positions.');
         } finally {
             setLoading(false);
         }
@@ -99,6 +117,12 @@ export default function PositionsPage() {
                     companies, and the active one has no roles while another does. */}
                 <div className="max-w-6xl"><HrCompanyNotice privyUserId={authenticated && user ? user.id : null} /></div>
 
+                {error && (
+                    <div className="max-w-6xl rounded-xl bg-danger/10 ring-1 ring-danger/30 px-4 py-3">
+                        <p className="text-[13px] text-danger">{error}</p>
+                    </div>
+                )}
+
                 <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                     <table className="w-full text-[13px] border-separate border-spacing-0">
                         <thead>
@@ -116,7 +140,7 @@ export default function PositionsPage() {
                                         <div className="text-[11px] text-tertiary">{pos.location}{pos.employment_type ? ` · ${pos.employment_type}` : ''}</div>
                                     </td>
                                     <td className="px-4 h-[52px] border-b border-subtle text-secondary">{pos.department || '—'}</td>
-                                    <td className="px-4 h-[52px] border-b border-subtle text-secondary tabular-nums">{pos.candidates?.[0]?.count || 0}</td>
+                                    <td className="px-4 h-[52px] border-b border-subtle text-secondary tabular-nums">{pos.candidate_count ?? 0}</td>
                                     <td className="px-4 h-[52px] border-b border-subtle">
                                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${pos.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-secondary ring-subtle'}`}>
                                             {pos.is_active ? 'Active' : 'Draft'}
