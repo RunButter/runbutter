@@ -12,11 +12,18 @@
     var p = location.pathname || '/';
     if (p === last) return; // dedupe SPA double-fires
     last = p;
+    // Campaign params are read from the URL that is CURRENTLY in the address
+    // bar, so an SPA navigation away from the tagged landing URL stops
+    // attributing — the first view carries the campaign, later ones don't.
+    var q = new URLSearchParams(location.search);
     var body = JSON.stringify({
       s: site,
       p: p,
       r: document.referrer || '',
       w: window.innerWidth || 0,
+      utm_source: q.get('utm_source') || '',
+      utm_medium: q.get('utm_medium') || '',
+      utm_campaign: q.get('utm_campaign') || '',
     });
     try {
       if (navigator.sendBeacon) navigator.sendBeacon(api, body);

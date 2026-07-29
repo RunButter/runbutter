@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { resolveHrCompanyServer } from '@/lib/hr/company-server';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { Resend } from 'resend';
@@ -36,13 +37,11 @@ export async function POST(req: NextRequest) {
 
         const supabaseAdmin = createAdminClient();
 
-        // 1. Caller's company + role, resolved server-side from the proven identity
-        const { data: caller } = await supabaseAdmin
-            .from('company_users')
-            .select('role, company_id')
-            .eq('privy_user_id', privyUserId)
-            .limit(1)
-            .maybeSingle();
+        // 1. Caller's company + role, resolved server-side from the proven identity.
+        //    Must be the ACTIVE workspace: this previously took an arbitrary
+        //    membership row (.limit(1) with no ORDER BY), so an owner of two
+        //    companies got a coin flip on which one received the invitation.
+        const caller = await resolveHrCompanyServer(privyUserId);
 
         if (!caller || (caller.role !== 'owner' && caller.role !== 'admin')) {
             return NextResponse.json({ error: 'Only owners and admins can invite people.' }, { status: 403 });
@@ -51,7 +50,7 @@ export async function POST(req: NextRequest) {
         if (role === 'owner' && caller.role !== 'owner') {
             return NextResponse.json({ error: 'Only an owner can invite another owner.' }, { status: 403 });
         }
-        const companyId = caller.company_id;
+        const companyId = caller.companyId;
 
         // 2. Enforce Pro limits
         const { data: company } = await supabaseAdmin

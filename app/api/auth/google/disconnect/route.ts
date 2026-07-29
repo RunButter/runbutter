@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     .from('company_users')
     .select('id')
     .eq('privy_user_id', v.userId)
+    .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
     .limit(1)
     .maybeSingle();
   if (!cu?.id) return NextResponse.json({ ok: true, alreadyDisconnected: true });

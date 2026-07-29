@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { requestContext, cleanUtm } from '@/lib/marketing/request-context';
 
 export const runtime = 'nodejs';
 
@@ -50,7 +51,18 @@ export async function POST(req: Request) {
     const path = String(b.p || '/').slice(0, 200) || '/';
     const device = Number(b.w) > 0 && Number(b.w) < 768 ? 'mobile' : /Mobi|Android/i.test(ua) ? 'mobile' : 'desktop';
 
-    await admin.from('site_events').insert({ site_id: siteId, path, referrer, visitor, device });
+    // Country/city come from edge headers when a proxy provides them, browser
+    // and OS from the UA. All null-safe: an absent value stays null instead of
+    // becoming a guess (see lib/marketing/request-context.ts).
+    const ctx = requestContext(req);
+    const utm = cleanUtm(b);
+
+    await admin.from('site_events').insert({
+      site_id: siteId, path, referrer, visitor, device,
+      country: ctx.country, region: ctx.region, city: ctx.city,
+      browser: ctx.browser, os: ctx.os,
+      ...utm,
+    });
     return new NextResponse(null, { status: 204, headers: CORS });
   } catch {
     return new NextResponse(null, { status: 204, headers: CORS }); // never error at the client

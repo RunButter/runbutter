@@ -568,6 +568,12 @@ export interface SiteStats {
   countries?: { code: string; count: number }[];
   browsers?: { name: string; count: number }[];
   snippet?: string | null;
+  // 0062 — available on the built-in pipeline (Umami supplies its own subset).
+  cities?: { name: string; count: number }[];
+  operating_systems?: { name: string; count: number }[];
+  campaigns?: { source: string; medium: string; campaign: string; count: number }[];
+  /** % of pageviews we have a country for — 0 means no geo proxy in front. */
+  geo_coverage?: number | null;
 }
 
 export async function loadSites(privyUserId: string | null): Promise<{ sites: Site[]; live: boolean }> {
@@ -641,7 +647,15 @@ export async function loadSiteStats(privyUserId: string | null, siteId: string |
       top_pages: Array.isArray(d.top_pages) ? d.top_pages : [],
       top_referrers: Array.isArray(d.top_referrers) ? d.top_referrers : [],
       live_flag: true, source: 'builtin',
-      bounce_rate: null, avg_duration_s: null, countries: [], browsers: [],
+      // The built-in pipeline has no session concept, so these stay null and the
+      // UI hides those panels rather than showing a fabricated 0% bounce rate.
+      bounce_rate: null, avg_duration_s: null,
+      countries: Array.isArray(d.countries) ? d.countries : [],
+      browsers: Array.isArray(d.browsers) ? d.browsers : [],
+      cities: Array.isArray(d.cities) ? d.cities : [],
+      operating_systems: Array.isArray(d.operating_systems) ? d.operating_systems : [],
+      campaigns: Array.isArray(d.campaigns) ? d.campaigns : [],
+      geo_coverage: d.geo_coverage == null ? null : Number(d.geo_coverage),
     };
   } catch {
     return fallback();
