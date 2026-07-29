@@ -5,9 +5,12 @@ import { MapPin, Briefcase, Building2, ArrowRight } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
-// Careers pages are read far more than they change, and they must survive a
-// burst of traffic from a job post. Revalidate rather than render per request.
-export const revalidate = 300;
+// Cached so a burst of traffic from a job post doesn't hit Postgres per view,
+// but only briefly: this page is also a visibility control, and an owner who
+// hides a role then checks the public link must not still see it. Publishing and
+// hiding additionally purge this path outright via /api/careers/revalidate, so
+// the window below only bounds staleness from edits made elsewhere.
+export const revalidate = 30;
 
 interface CareersPosition {
   id: string; title: string; department: string | null;
