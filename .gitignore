@@ -10,3 +10,6 @@ auth.sqlite
 
 # Brand design source (raw exports); shipped assets live in public/
 RunButter.app/
+
+# Copied from node_modules by scripts/copy-pdf-worker.mjs (see that file)
+/public/pdf.worker.min.mjs

@@ -126,6 +126,66 @@ export async function deletePages(file: LoadedPdf, indices: number[]): Promise<U
   return extractPages(file, keep);
 }
 
+/** One page in the visual editor: where it came from, and how it's been turned. */
+export interface ComposedPage {
+  /** Index into the `files` array passed to composePdf. */
+  fileIndex: number;
+  /** Zero-based page index within that file. */
+  pageIndex: number;
+  /** Extra rotation applied on top of the page's own, in degrees. */
+  rotation: number;
+}
+
+/**
+ * Build one document from an arbitrary, reordered selection of pages across
+ * several files.
+ *
+ * This is what the visual editor exports through, and it subsumes merge,
+ * split, extract, delete and reorder — all of those are just different page
+ * lists. Source documents are loaded once each rather than per page, because a
+ * 200-page reorder would otherwise re-parse the same file 200 times.
+ */
+export async function composePdf(files: LoadedPdf[], pages: ComposedPage[]): Promise<Uint8Array> {
+  if (pages.length === 0) throw new Error('No pages selected — an empty PDF cannot be opened.');
+  const out = await PDFDocument.create();
+
+  const sources = new Map<number, PDFDocument>();
+  for (const p of pages) {
+    if (!sources.has(p.fileIndex)) {
+      const f = files[p.fileIndex];
+      if (!f) throw new Error('A page refers to a file that is no longer loaded.');
+      sources.set(p.fileIndex, await PDFDocument.load(f.bytes, { ignoreEncryption: true }));
+    }
+  }
+
+  // copyPages is batched per source: pdf-lib dedupes shared resources (fonts,
+  // images) within a single call, so one call per file keeps the output from
+  // ballooning when many pages come from the same document.
+  const byFile = new Map<number, number[]>();
+  for (const p of pages) byFile.set(p.fileIndex, [...(byFile.get(p.fileIndex) || []), p.pageIndex]);
+
+  const copied = new Map<string, any>();
+  for (const [fileIndex, indices] of byFile) {
+    const pagesFromFile = await out.copyPages(sources.get(fileIndex)!, indices);
+    indices.forEach((pageIndex, i) => copied.set(`${fileIndex}:${pageIndex}:${i}`, pagesFromFile[i]));
+  }
+
+  // Walk the caller's order, taking each file's copies in the order they were
+  // requested — this is what allows the same page to appear twice.
+  const cursor = new Map<number, number>();
+  for (const p of pages) {
+    const i = cursor.get(p.fileIndex) ?? 0;
+    cursor.set(p.fileIndex, i + 1);
+    const page = copied.get(`${p.fileIndex}:${p.pageIndex}:${i}`);
+    if (!page) throw new Error('Internal error assembling the document.');
+    if (p.rotation % 360 !== 0) {
+      page.setRotation(degrees((page.getRotation().angle + p.rotation) % 360));
+    }
+    out.addPage(page);
+  }
+  return out.save();
+}
+
 export interface WatermarkOptions {
   text: string;
   /** 0.02–1. Low values are the point: readable, but not obscuring the content. */
