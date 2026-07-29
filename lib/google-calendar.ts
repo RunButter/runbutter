@@ -58,6 +58,7 @@ export async function handleOAuthCallback(code: string, userId: string, companyI
     .from('company_users')
     .select('id')
     .eq('privy_user_id', userId)
+    .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary row
     .limit(1)
     .maybeSingle();
 
@@ -88,6 +89,7 @@ async function getCalendarClient(userId: string) {
     .from('company_users')
     .select('id')
     .eq('privy_user_id', userId)
+    .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary row
     .limit(1)
     .maybeSingle();
   if (!userData) return null;

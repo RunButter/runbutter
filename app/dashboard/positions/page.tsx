@@ -8,6 +8,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { useDialog } from '@/components/ui/Dialog';
+import { resolveHrCompanyId } from '@/lib/hr/company';
 
 export default function PositionsPage() {
   const { confirm: confirmDialog, notify } = useDialog();
@@ -30,14 +31,10 @@ export default function PositionsPage() {
     const loadPositions = async (privyUserId: string) => {
         try {
 
-            const { data: companyUser } = await supabase
-                .from('company_users')
-                .select('company_id')
-                .eq('privy_user_id', privyUserId)
-                .limit(1)
-                .maybeSingle();
-
-            if (!companyUser) return;
+            // Resolve via the ACTIVE workspace, not an arbitrary membership row
+            // — see lib/hr/company.ts for why that distinction matters.
+            const companyId = await resolveHrCompanyId(privyUserId);
+            if (!companyId) return;
 
             const { data, error } = await supabase
                 .from('positions')
@@ -45,7 +42,7 @@ export default function PositionsPage() {
           *,
           candidates:candidates(count)
         `)
-                .eq('company_id', companyUser.company_id)
+                .eq('company_id', companyId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

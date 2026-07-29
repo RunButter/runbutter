@@ -35,6 +35,7 @@ export default function TeamPage() {
                 .from('company_users')
                 .select('role, company:companies(*)')
                 .eq('privy_user_id', user.id)
+                .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary row
                 .limit(1)
                 .maybeSingle();
 

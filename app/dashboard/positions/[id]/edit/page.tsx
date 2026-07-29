@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { resolveHrCompanyId } from '@/lib/hr/company';
 
 export default function EditPositionPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -154,15 +155,10 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                     .update({ questions: [...defaultQuestions, ...customQuestions] })
                     .eq('id', existingTmpl.id);
             } else {
-                const { data: companyUser } = await supabase
-                    .from('company_users')
-                    .select('company_id')
-                    .eq('privy_user_id', user?.id)
-                    .limit(1)
-                    .maybeSingle();
+                const companyId = user?.id ? await resolveHrCompanyId(user.id) : null;
 
                 await supabase.from('assessment_templates').insert({
-                    company_id: companyUser?.company_id,
+                    company_id: companyId,
                     position_id: params.id,
                     name: `${formData.title} Assessment`,
                     description: `Standard assessment for ${formData.title}`,

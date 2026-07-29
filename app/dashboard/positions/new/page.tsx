@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { resolveHrCompany } from '@/lib/hr/company';
 
 export default function NewPositionPage() {
     const router = useRouter();
@@ -75,21 +76,11 @@ export default function NewPositionPage() {
 
         try {
 
-            // .limit(1) is required, not stylistic: a user can belong to
-            // several companies, and .single() errors with "multiple rows
-            // returned" the moment they do — which killed this form outright.
-            const { data: companyUser, error: cuError } = await supabase
-                .from('company_users')
-                .select('company_id, id')
-                .eq('privy_user_id', user.id)
-                .limit(1)
-                .maybeSingle();
-
-            // The error used to be discarded, so every database failure here
-            // surfaced as "Company user not found" — the one message that is
-            // almost never the real reason.
-            if (cuError) throw new Error(`Could not load your company: ${cuError.message}`);
-            if (!companyUser) throw new Error('Your account is not linked to a company yet. Reload, or re-run onboarding.');
+            // Must resolve the SAME company the positions list reads, or a
+            // role is created into one company and listed from another.
+            const company = await resolveHrCompany(user.id);
+            if (!company) throw new Error('Your account is not linked to a company yet. Reload, or re-run onboarding.');
+            const companyUser = { company_id: company.companyId, id: company.membershipId };
 
             // Enforce plan position limit
             const { data: companyRow, error: planError } = await supabase
