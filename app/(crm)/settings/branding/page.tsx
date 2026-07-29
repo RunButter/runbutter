@@ -7,6 +7,7 @@ import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTrian
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
 import { validateIban, formatIban } from '@/lib/finance/iban';
+import CareersPageCard from '@/components/crm/CareersPageCard';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
@@ -252,6 +253,12 @@ export default function BrandingPage() {
                 </div>
               </div>
               <p className="mt-2 text-[11px] text-tertiary">This is how your invoices and offers will look.</p>
+
+              {/* Same page as logo + accent colour, because the careers page is
+                  rendered from exactly those two values. */}
+              <div className="mt-4">
+                <CareersPageCard privyUserId={privy} workspaceId={wsId} />
+              </div>
             </div>
           </div>
         )}
