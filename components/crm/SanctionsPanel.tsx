@@ -29,15 +29,15 @@ function MatchRow({ m }: { m: SanctionsMatch }) {
         {open ? <ChevronDown className="w-3.5 h-3.5 mt-0.5 text-tertiary shrink-0" />
               : <ChevronRight className="w-3.5 h-3.5 mt-0.5 text-tertiary shrink-0" />}
         <span className="flex-1 min-w-0">
-          <span className="block text-[13px] font-medium text-primary truncate group-hover:underline">{m.name}</span>
-          <span className="block text-[11px] text-tertiary truncate">
+          <span className="block text-sm font-medium text-primary truncate group-hover:underline">{m.name}</span>
+          <span className="block text-2xs text-tertiary truncate">
             {[m.entity_type, ...(m.programs || [])].filter(Boolean).join(' · ')}
           </span>
         </span>
-        <span className="text-[11px] font-semibold text-warning tabular-nums shrink-0">{pct}%</span>
+        <span className="text-2xs font-semibold text-warning tabular-nums shrink-0">{pct}%</span>
       </button>
       {open && (
-        <dl className="mt-1.5 ml-5 space-y-1 text-[11px]">
+        <dl className="mt-1.5 ml-5 space-y-1 text-2xs">
           {m.aliases?.length > 0 && (
             <div><dt className="inline text-tertiary">Also known as: </dt><dd className="inline text-secondary">{m.aliases.join(' · ')}</dd></div>
           )}
@@ -106,32 +106,32 @@ export default function SanctionsPanel({ privyUserId, workspaceId, name, object,
   return (
     <section className="mt-5 pt-4 border-t border-subtle">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-[10px] font-semibold uppercase tracking-widest text-tertiary">Sanctions screening</h3>
+        <h3 className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Sanctions screening</h3>
         <button onClick={refresh} disabled={refreshing || !privyUserId}
           title="Re-download the OFAC lists"
-          className="h-6 px-1.5 inline-flex items-center gap-1 rounded-md text-[11px] font-medium text-tertiary hover:bg-surface-hover disabled:opacity-40">
+          className="h-6 px-1.5 inline-flex items-center gap-1 rounded-md text-2xs font-medium text-tertiary hover:bg-surface-hover disabled:opacity-40">
           {refreshing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Update list
         </button>
       </div>
 
-      <p className="text-[11px] text-tertiary mb-2.5">
+      <p className="text-2xs text-tertiary mb-2.5">
         {empty
           ? 'No list imported yet. Update the list to screen against OFAC.'
           : `${status!.total.toLocaleString()} OFAC entries · list updated ${fmtDate(lastSync)}`}
       </p>
 
       <button onClick={run} disabled={busy || !privyUserId || !workspaceId}
-        className="w-full h-8 inline-flex items-center justify-center gap-1.5 rounded-md text-[12px] font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">
+        className="w-full h-8 inline-flex items-center justify-center gap-1.5 rounded-md text-xs font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
         Screen “{name}”
       </button>
 
-      {error && <p className="mt-2 text-[12px] text-danger">{error}</p>}
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
 
       {result?.status === 'no_data' && (
         <div className="mt-3 flex items-start gap-2 rounded-md bg-warning/10 p-2.5">
           <ShieldQuestion className="w-4 h-4 text-warning shrink-0 mt-px" />
-          <p className="text-[12px] text-warning">
+          <p className="text-xs text-warning">
             No sanctions list is loaded, so this name has <strong>not</strong> been checked. Update the list first.
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function SanctionsPanel({ privyUserId, workspaceId, name, object,
       {result?.status === 'clear' && (
         <div className="mt-3 flex items-start gap-2 rounded-md bg-success/10 p-2.5">
           <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-px" />
-          <p className="text-[12px] text-success">
+          <p className="text-xs text-success">
             No match in the OFAC lists as of {fmtDate(lastSync)}. Screened as “{result.normalized}”.
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function SanctionsPanel({ privyUserId, workspaceId, name, object,
         <div className="mt-3 rounded-md bg-warning/10 p-2.5">
           <div className="flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 text-warning shrink-0 mt-px" />
-            <p className="text-[12px] text-warning">
+            <p className="text-xs text-warning">
               {result.match_count} possible {result.match_count === 1 ? 'match' : 'matches'} — a name resemblance is not
               proof of identity. Review each before trading.
             </p>

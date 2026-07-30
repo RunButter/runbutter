@@ -57,11 +57,11 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
         <div className="flex-1 relative">
           {months.map((m) => (
             <div key={m.key} className="absolute top-0 h-full border-l border-subtle flex items-center" style={{ left: `${m.left}%`, width: `${m.width}%` }}>
-              <span className="pl-2 text-[11px] font-semibold text-tertiary">{m.label}</span>
+              <span className="pl-2 text-2xs font-semibold text-tertiary">{m.label}</span>
             </div>
           ))}
           <div className="absolute top-0 h-full" style={{ left: `${todayPct}%` }}>
-            <span className="absolute -translate-x-1/2 top-1.5 text-[9px] font-semibold uppercase tracking-wide text-accent bg-accent/10 rounded px-1">Today</span>
+            <span className="absolute -translate-x-1/2 top-1.5 text-3xs font-semibold uppercase tracking-wide text-accent bg-accent/10 rounded px-1">Today</span>
           </div>
         </div>
       </div>
@@ -80,10 +80,10 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
         return (
           <div key={p.id} className="flex items-stretch border-b border-subtle hover:bg-surface-sunken/40 transition-colors">
             <Link href={`/projects/${p.id}`} className="group w-52 shrink-0 px-3 py-3 border-r border-subtle flex flex-col justify-center min-w-0">
-              <span className="text-[13px] font-semibold text-primary truncate group-hover:text-accent">{p.name}</span>
+              <span className="text-sm font-semibold text-primary truncate group-hover:text-accent">{p.name}</span>
               <span className="mt-1 flex items-center gap-1.5">
-                {p.identifier && <span className="text-[9px] font-semibold uppercase tracking-wide text-tertiary bg-surface-hover rounded px-1 py-0.5">{p.identifier}</span>}
-                <span className="text-[11px] text-tertiary">{p.issues.length} {p.issues.length === 1 ? 'issue' : 'issues'}{undated ? ` · ${undated} undated` : ''}</span>
+                {p.identifier && <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary bg-surface-hover rounded px-1 py-0.5">{p.identifier}</span>}
+                <span className="text-2xs text-tertiary">{p.issues.length} {p.issues.length === 1 ? 'issue' : 'issues'}{undated ? ` · ${undated} undated` : ''}</span>
               </span>
             </Link>
 

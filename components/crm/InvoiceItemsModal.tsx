@@ -96,17 +96,17 @@ export default function InvoiceItemsModal({
             <div className="w-72">
               <SearchSelect value="" onChange={addProduct} clearOnPick placeholder="+ Add product / service…"
                 options={products.map((p) => ({ id: p.id, name: p.name, hint: money(p.unit_price), image: p.image }))}
-                buttonClassName="!h-8 !text-[12px]" />
+                buttonClassName="!h-8 !text-xs" />
             </div>
-            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Plus className="w-3.5 h-3.5" /> Custom line</button>
+            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Plus className="w-3.5 h-3.5" /> Custom line</button>
           </div>
 
           {/* Rows */}
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-tertiary">
+            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-3xs font-semibold uppercase tracking-wide text-tertiary">
               <span>Description</span><span className="text-right">Qty</span><span className="text-right">Unit</span><span className="text-right">Disc%</span><span className="text-right">VAT%</span><span className="text-right">Amount</span><span />
             </div>
-            {rows.length === 0 && <div className="py-8 text-center text-[13px] text-tertiary">No line items. Add a product or a custom line above.</div>}
+            {rows.length === 0 && <div className="py-8 text-center text-sm text-tertiary">No line items. Add a product or a custom line above.</div>}
             {rows.map((r, i) => {
               const amount = (Number(r.quantity) || 0) * (Number(r.unit_price) || 0) * (1 - (Number(r.discount_pct) || 0) / 100);
               return (
@@ -114,35 +114,35 @@ export default function InvoiceItemsModal({
                   <div className="flex items-center gap-2 min-w-0">
                     {r.image && <img src={r.image} alt="" className="w-8 h-8 rounded object-cover ring-1 ring-subtle shrink-0" />}
                     <input value={r.description} onChange={(e) => setRow(i, { description: e.target.value })} placeholder="Description"
-                      className="flex-1 min-w-0 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+                      className="flex-1 min-w-0 h-8 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
                   </div>
                   <input type="number" value={r.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
+                    className="h-8 px-1.5 text-sm text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.unit_price} onChange={(e) => setRow(i, { unit_price: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
+                    className="h-8 px-1.5 text-sm text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.discount_pct} onChange={(e) => setRow(i, { discount_pct: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
+                    className="h-8 px-1.5 text-sm text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
                   <input type="number" value={r.tax_rate} onChange={(e) => setRow(i, { tax_rate: e.target.value })}
-                    className="h-8 px-1.5 text-[13px] text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
-                  <div className="text-[13px] text-right tabular-nums font-semibold text-secondary">{money(amount)}</div>
+                    className="h-8 px-1.5 text-sm text-right rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 tabular-nums" />
+                  <div className="text-sm text-right tabular-nums font-semibold text-secondary">{money(amount)}</div>
                   <button onClick={() => removeRow(i)} aria-label="Remove" className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               );
             })}
           </div>
 
-          {error && <p className="mt-3 text-[12px] text-danger">{error}</p>}
+          {error && <p className="mt-3 text-xs text-danger">{error}</p>}
           </>)}
         </div>
 
         <div className="shrink-0 flex items-center gap-3 p-3 border-t border-subtle">
-          <div className="text-[12px] text-secondary">
+          <div className="text-xs text-secondary">
             Net <span className="font-semibold text-secondary tabular-nums">{money(totals.net)}</span>
             <span className="mx-1.5 text-tertiary">·</span>VAT <span className="font-semibold text-secondary tabular-nums">{money(totals.tax)}</span>
             <span className="mx-1.5 text-tertiary">·</span>Total <span className="font-semibold text-primary tabular-nums">{money(totals.total)}</span>
           </div>
-          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save items
           </button>
         </div>

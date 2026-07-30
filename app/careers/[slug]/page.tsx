@@ -102,26 +102,26 @@ export default async function CareersPage({ params }: { params: { slug: string }
                   {company.name.slice(0, 1).toUpperCase()}
                 </div>}
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Careers</p>
+              <p className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Careers</p>
               <h1 className="text-xl sm:text-2xl font-semibold text-primary tracking-tight truncate">{company.name}</h1>
             </div>
           </div>
 
           {company.headline && (
-            <p className="mt-5 text-[15px] sm:text-base text-secondary leading-relaxed max-w-2xl">{company.headline}</p>
+            <p className="mt-5 text-md sm:text-base text-secondary leading-relaxed max-w-2xl">{company.headline}</p>
           )}
           {company.about && (
-            <p className="mt-3 text-[13px] text-tertiary leading-relaxed max-w-2xl whitespace-pre-line">{company.about}</p>
+            <p className="mt-3 text-sm text-tertiary leading-relaxed max-w-2xl whitespace-pre-line">{company.about}</p>
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: accent }}>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: accent }}>
               <Briefcase className="w-3.5 h-3.5" />
               {positions.length} open {positions.length === 1 ? 'role' : 'roles'}
             </span>
             {company.website && (
               <a href={company.website} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-secondary hover:text-primary">
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-primary">
                 <Building2 className="w-3.5 h-3.5" /> Company website
               </a>
             )}
@@ -132,14 +132,14 @@ export default async function CareersPage({ params }: { params: { slug: string }
       <div className="max-w-3xl mx-auto px-5 py-8 sm:py-10">
         {positions.length === 0 ? (
           <div className="rounded-xl bg-surface ring-1 ring-subtle p-10 text-center">
-            <p className="text-[14px] font-medium text-primary">No open roles right now</p>
-            <p className="mt-1.5 text-[13px] text-tertiary">Check back soon — this page updates as new positions open.</p>
+            <p className="text-base font-medium text-primary">No open roles right now</p>
+            <p className="mt-1.5 text-sm text-tertiary">Check back soon — this page updates as new positions open.</p>
           </div>
         ) : (
           <div className="space-y-8">
             {ordered.map(([dept, roles]) => (
               <section key={dept}>
-                <h2 className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-2.5">{dept}</h2>
+                <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2.5">{dept}</h2>
                 <ul className="space-y-2">
                   {roles.map((p) => (
                     <li key={p.id}>
@@ -149,13 +149,13 @@ export default async function CareersPage({ params }: { params: { slug: string }
                       <Link href={`/careers/${company.slug}/${p.id}`}
                         className="group flex items-center gap-4 rounded-xl bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm hover:shadow-card transition-all px-4 py-3.5">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-semibold text-primary truncate">{p.title}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-tertiary">
+                          <p className="text-base font-semibold text-primary truncate">{p.title}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tertiary">
                             {p.location && <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" /> {p.location}</span>}
                             {p.employment_type && <span className="capitalize">{prettyType(p.employment_type)}</span>}
                           </div>
                         </div>
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-semibold group-hover:gap-1.5 transition-all" style={{ color: accent }}>
+                        <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-1.5 transition-all" style={{ color: accent }}>
                           View role <ArrowRight className="w-3.5 h-3.5" />
                         </span>
                       </Link>
@@ -167,7 +167,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
           </div>
         )}
 
-        <p className="mt-10 text-center text-[11px] text-tertiary">
+        <p className="mt-10 text-center text-2xs text-tertiary">
           Powered by <a href="https://runbutter.app" className="hover:text-secondary underline underline-offset-2">RunButter</a>
         </p>
       </div>

@@ -105,9 +105,9 @@ export default function PositionsPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search positions…"
-                        className="h-8 w-56 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-56 pl-8 pr-2 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
-                <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
+                <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> Create
                 </Link>
             </PageHeader>
@@ -119,16 +119,16 @@ export default function PositionsPage() {
 
                 {error && (
                     <div className="max-w-6xl rounded-xl bg-danger/10 ring-1 ring-danger/30 px-4 py-3">
-                        <p className="text-[13px] text-danger">{error}</p>
+                        <p className="text-sm text-danger">{error}</p>
                     </div>
                 )}
 
                 <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
-                    <table className="w-full text-[13px] border-separate border-spacing-0">
+                    <table className="w-full text-sm border-separate border-spacing-0">
                         <thead>
                             <tr>
                                 {['Position', 'Department', 'Candidates', 'Status', ''].map((h, i) => (
-                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-[11px] font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${i === 4 ? 'text-right' : 'text-left'}`}>{h}</th>
+                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${i === 4 ? 'text-right' : 'text-left'}`}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -137,12 +137,12 @@ export default function PositionsPage() {
                                 <tr key={pos.id} className="group hover:bg-surface-sunken/70 transition-colors">
                                     <td className="px-4 h-[52px] border-b border-subtle">
                                         <div className="font-semibold text-primary">{pos.title}</div>
-                                        <div className="text-[11px] text-tertiary">{pos.location}{pos.employment_type ? ` · ${pos.employment_type}` : ''}</div>
+                                        <div className="text-2xs text-tertiary">{pos.location}{pos.employment_type ? ` · ${pos.employment_type}` : ''}</div>
                                     </td>
                                     <td className="px-4 h-[52px] border-b border-subtle text-secondary">{pos.department || '—'}</td>
                                     <td className="px-4 h-[52px] border-b border-subtle text-secondary tabular-nums">{pos.candidate_count ?? 0}</td>
                                     <td className="px-4 h-[52px] border-b border-subtle">
-                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${pos.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-secondary ring-subtle'}`}>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 ${pos.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-secondary ring-subtle'}`}>
                                             {pos.is_active ? 'Active' : 'Draft'}
                                         </span>
                                     </td>

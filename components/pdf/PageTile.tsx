@@ -105,10 +105,10 @@ export default function PageTile({ page, index, selected, multiFile, onToggle, o
       </div>
 
       <div className="mt-1 flex items-baseline gap-1.5 px-0.5">
-        <span className={`text-[11px] tabular-nums ${selected ? 'text-accent font-medium' : 'text-tertiary'}`}>
+        <span className={`text-2xs tabular-nums ${selected ? 'text-accent font-medium' : 'text-tertiary'}`}>
           {index + 1}
         </span>
-        {multiFile && <span className="text-[11px] text-tertiary truncate">{page.sourceName}</span>}
+        {multiFile && <span className="text-2xs text-tertiary truncate">{page.sourceName}</span>}
       </div>
     </div>
   );

@@ -154,8 +154,8 @@ export default function AnalyticsPage() {
 
     return (
         <>
-            <PageHeader title="Analytics" badge={<span className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
-                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+            <PageHeader title="Analytics" badge={<span className="text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
+                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>
             </PageHeader>
@@ -172,8 +172,8 @@ export default function AnalyticsPage() {
                         <div className="grid lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><BarChart className="w-4 h-4 text-accent" /> Application volume by position</h3>
-                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
+                                    <h3 className="text-base font-semibold text-primary flex items-center gap-2"><BarChart className="w-4 h-4 text-accent" /> Application volume by position</h3>
+                                    <span className="text-3xs font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">
                                     <Bar options={axisOptions} data={barData} />
@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="mt-5 space-y-2">
                                     {pieData.labels.map((label: string, i: number) => (
-                                        <div key={label} className="flex items-center justify-between text-[13px]">
+                                        <div key={label} className="flex items-center justify-between text-sm">
                                             <div className="flex items-center gap-2 text-secondary">
                                                 <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: pieData.datasets[0].backgroundColor[i % 5] }} />
                                                 {label}

@@ -75,7 +75,17 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Semantic tokens only** — `bg-surface`, `text-secondary`, `border-subtle`, `bg-accent`, `bg-inverse`.
   **Never literal colors** (`bg-white`, `text-slate-800`, `shadow-slate-200/50`) — that's what breaks
   dark mode. Tokens live in `app/globals.css` (`:root` + `.dark`), mapped in `tailwind.config.js`.
-- Geist Sans/Mono, 13px base, **weights capped at 600**, `--radius: 0.75rem`.
+- Geist Sans/Mono, **weights capped at 600**, `--radius: 0.75rem`.
+- **Type comes from the scale in `tailwind.config.js`, never from `text-[13px]`.**
+  `text-3xs` 11 · `text-2xs` 12 · `text-xs` 13 · **`text-sm` 14 = default UI text** · `text-base` 15 ·
+  `text-md` 16 (page titles). `lg`+ are Tailwind defaults and belong to marketing.
+  The app was ~1000 arbitrary `text-[Npx]` values, so the scale was unchangeable and stayed a full step
+  too small (it read as 80% zoom on any desktop). Those are now tokens — **density is one config edit**.
+  Don't reintroduce arbitrary px sizes.
+- **Desktop rhythm:** page header `h-14` + `px-5` with a `text-base` `<h1>`; modal/drawer headers stay
+  `h-12`. Nav rail `w-64`. Table rows `h-11`, table head `h-10`. Page gutters `p-6 2xl:p-8`.
+- **App screens cap at `max-w-5xl`**; prose (terms/privacy/careers/landing), modals and document views
+  keep a reading measure — widening a paragraph to 1024px makes it worse, not better.
 - **Elevation rule:** cards and real form fields (h-9+) are raised — `ring-1 ring-subtle` +
   `shadow-card`/`shadow-sm`. **Compact inline controls stay flat** (filter chips, table-cell inputs,
   h-7 selectors). Deliberate — don't "fix" it.

@@ -68,10 +68,10 @@ export default function InterviewsPage() {
       </PageHeader>
 
       <div className="p-6">
-        <div className="max-w-3xl">
+        <div className="max-w-5xl">
           <div className="mb-5">
             <h2 className="text-lg font-medium text-primary tracking-tight">Upcoming interviews</h2>
-            <p className="text-[13px] text-secondary">
+            <p className="text-sm text-secondary">
               {googleReady
                 ? 'Scheduling creates a Google Meet link and emails it to the candidate.'
                 : 'Scheduling emails the candidate. Connect Google Calendar (Automate → Integrations) to auto-add a Meet link.'}
@@ -79,7 +79,7 @@ export default function InterviewsPage() {
           </div>
 
           {!googleReady && (
-            <Link href="/settings/integrations" className="mb-4 flex items-center gap-2 rounded-lg border border-subtle bg-surface-sunken px-3 py-2 text-[12px] text-secondary hover:border-strong">
+            <Link href="/settings/integrations" className="mb-4 flex items-center gap-2 rounded-lg border border-subtle bg-surface-sunken px-3 py-2 text-xs text-secondary hover:border-strong">
               <Info className="w-3.5 h-3.5 text-accent shrink-0" />
               Connect Google Calendar (Automate → Integrations) to generate Meet links and calendar invites automatically.
             </Link>
@@ -92,18 +92,18 @@ export default function InterviewsPage() {
                 <div key={iv.id} className="group flex items-center gap-4 rounded-xl bg-surface border border-subtle p-4 hover:border-strong transition-colors">
                   <div className="w-14 h-14 rounded-xl bg-surface-sunken border border-subtle flex flex-col items-center justify-center text-accent shrink-0">
                     <Calendar className="w-5 h-5" />
-                    <span className="text-[9px] font-medium uppercase tracking-tight mt-0.5">{t.day}</span>
+                    <span className="text-3xs font-medium uppercase tracking-tight mt-0.5">{t.day}</span>
                   </div>
                   <button onClick={() => router.push(`/dashboard/candidates/${iv.candidate_id}`)} className="min-w-0 flex-1 text-left">
                     <h3 className="text-sm font-medium text-primary truncate group-hover:text-accent transition-colors">{iv.candidate_name}</h3>
-                    <div className="flex items-center gap-3 mt-0.5 text-[12px] text-secondary">
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-secondary">
                       {iv.position_title && <span className="inline-flex items-center gap-1"><Briefcase className="w-3.5 h-3.5 text-tertiary" /> {iv.position_title}</span>}
                       <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-tertiary" /> {t.time} · {iv.duration_minutes}m</span>
                     </div>
-                    {iv.notes && <p className="text-[12px] text-tertiary mt-1 truncate">{iv.notes}</p>}
+                    {iv.notes && <p className="text-xs text-tertiary mt-1 truncate">{iv.notes}</p>}
                   </button>
                   {iv.meet_link && (
-                    <a href={iv.meet_link} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-[10px] text-tertiary hover:text-accent shrink-0"><Video className="w-3 h-3" /> Meet</a>
+                    <a href={iv.meet_link} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-3xs text-tertiary hover:text-accent shrink-0"><Video className="w-3 h-3" /> Meet</a>
                   )}
                   <button onClick={() => setEditing(iv)} aria-label="Edit interview"
                     className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover transition-colors shrink-0"><Pencil className="w-4 h-4" /></button>
@@ -118,7 +118,7 @@ export default function InterviewsPage() {
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <Calendar className="w-8 h-8 text-tertiary mx-auto mb-3" />
               <h3 className="text-sm font-medium text-secondary">No upcoming interviews</h3>
-              <p className="text-[12px] text-tertiary mt-1">Click Schedule to set one up.</p>
+              <p className="text-xs text-tertiary mt-1">Click Schedule to set one up.</p>
             </div>
           )}
         </div>
@@ -218,7 +218,7 @@ function InterviewModal({
             <span className="block text-xs font-medium text-secondary mb-1">Notes <span className="text-tertiary">(optional)</span></span>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="input-field !h-auto py-2 resize-y" placeholder="Technical screen, portfolio review…" />
           </label>
-          <p className="flex items-start gap-1.5 text-[11px] text-tertiary">
+          <p className="flex items-start gap-1.5 text-2xs text-tertiary">
             <Info className="w-3.5 h-3.5 shrink-0 mt-px text-accent" />
             {googleReady
               ? `A Google Meet link and calendar invite will be ${isEdit ? 'updated' : 'created'} and the candidate emailed.`

@@ -54,8 +54,8 @@ export default function AgentsPage() {
         </Button>
       </PageHeader>
 
-      <div className="flex-1 overflow-auto p-5 lg:p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
+        <div className="max-w-5xl mx-auto space-y-8">
           <p className="text-sm text-secondary max-w-2xl">
             Agents run on your own AI key and act through your workspace tools. Give one a role and
             instructions, scope which tools and objects it may touch, and choose whether it proposes

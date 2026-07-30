@@ -78,7 +78,7 @@ export default function BillingPage() {
                 {justPaid && (
                     <div className="mb-5 flex items-start gap-2.5 rounded-xl bg-success/10 ring-1 ring-success/30 px-4 py-3">
                         <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                        <p className="text-[13px] text-success">
+                        <p className="text-sm text-success">
                             Payment received. Your plan updates as soon as Stripe confirms the subscription; refresh in a moment if it still shows the old tier.
                         </p>
                     </div>
@@ -86,7 +86,7 @@ export default function BillingPage() {
                 {canceled && (
                     <div className="mb-5 flex items-start gap-2.5 rounded-xl bg-surface ring-1 ring-subtle px-4 py-3">
                         <XCircle className="w-4 h-4 text-tertiary shrink-0 mt-0.5" />
-                        <p className="text-[13px] text-secondary">Checkout canceled. Nothing was charged.</p>
+                        <p className="text-sm text-secondary">Checkout canceled. Nothing was charged.</p>
                     </div>
                 )}
 
@@ -96,7 +96,7 @@ export default function BillingPage() {
                         <CreditCard className="w-4 h-4 text-tertiary" />
                     </div>
                     <div className="min-w-0">
-                        <div className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">Current plan</div>
+                        <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">Current plan</div>
                         <div className="text-sm font-semibold text-primary">
                             {PLANS[current].name}
                             <span className="ml-2 font-normal text-secondary capitalize">
@@ -104,7 +104,7 @@ export default function BillingPage() {
                             </span>
                         </div>
                     </div>
-                    <div className="ml-auto flex items-center gap-2 text-[12px] text-secondary">
+                    <div className="ml-auto flex items-center gap-2 text-xs text-secondary">
                         <ShieldCheck className="w-3.5 h-3.5 text-tertiary" />
                         {seats} {seats === 1 ? 'seat' : 'seats'} in this workspace
                     </div>
@@ -125,24 +125,24 @@ export default function BillingPage() {
                             <div key={key}
                                 className={`relative rounded-xl bg-surface p-5 flex flex-col shadow-card ${popular ? 'ring-2 ring-accent/40' : 'ring-1 ring-subtle'}`}>
                                 {popular && (
-                                    <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-inverse px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-inverse-fg">
+                                    <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-inverse px-2 py-0.5 text-3xs font-semibold uppercase tracking-widest text-inverse-fg">
                                         <Sparkles className="w-3 h-3" /> Popular
                                     </span>
                                 )}
                                 {isCurrent && (
-                                    <span className="absolute -top-2.5 right-5 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-success">Current</span>
+                                    <span className="absolute -top-2.5 right-5 rounded-full bg-success/10 px-2 py-0.5 text-3xs font-semibold uppercase tracking-widest text-success">Current</span>
                                 )}
 
                                 <h3 className="text-sm font-semibold text-primary">{p.name}</h3>
                                 <div className="mt-1.5 flex items-baseline gap-1">
                                     <span className="text-3xl font-semibold text-primary tabular-nums">{p.price}</span>
                                     {p.priceValue > 0 && (
-                                        <span className="text-[12px] font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
+                                        <span className="text-xs font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
                                     )}
                                 </div>
-                                <p className="text-[12px] text-tertiary mb-4">{p.tagline}</p>
+                                <p className="text-xs text-tertiary mb-4">{p.tagline}</p>
 
-                                <div className="space-y-1.5 mb-4 text-[12px]">
+                                <div className="space-y-1.5 mb-4 text-xs">
                                     <Row label="Seats" value={formatLimit(p.limits.maxSeats)} />
                                     <Row label="Records" value={formatLimit(p.limits.maxRecords)} />
                                     <Row label="Automations" value={formatLimit(p.limits.maxAutomations)} />
@@ -150,19 +150,19 @@ export default function BillingPage() {
 
                                 <ul className="space-y-1.5 mb-5 flex-grow">
                                     {idx === 0 ? (
-                                        <li className="flex items-start gap-2 text-[12px] text-secondary">
+                                        <li className="flex items-start gap-2 text-xs text-secondary">
                                             <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Sales, finance, projects and hiring core
                                         </li>
                                     ) : (
                                         <>
-                                            <li className="text-[11px] font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
+                                            <li className="text-2xs font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
                                             {newFeats.length === 0 && (
-                                                <li className="flex items-start gap-2 text-[12px] text-secondary">
+                                                <li className="flex items-start gap-2 text-xs text-secondary">
                                                     <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Unlimited everything
                                                 </li>
                                             )}
                                             {newFeats.slice(0, 6).map((f) => (
-                                                <li key={f} className="flex items-start gap-2 text-[12px] text-secondary">
+                                                <li key={f} className="flex items-start gap-2 text-xs text-secondary">
                                                     <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />{FEATURE_LABELS[f]}
                                                 </li>
                                             ))}
@@ -171,9 +171,9 @@ export default function BillingPage() {
                                 </ul>
 
                                 {isCurrent ? (
-                                    <button disabled className="h-10 rounded-md bg-surface-hover text-[13px] font-semibold text-tertiary cursor-default">Current plan</button>
+                                    <button disabled className="h-10 rounded-md bg-surface-hover text-sm font-semibold text-tertiary cursor-default">Current plan</button>
                                 ) : key === 'enterprise' ? (
-                                    <Link href="/contact" className="h-10 inline-flex items-center justify-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-[13px] font-semibold shadow-sm hover:bg-inverse/90 transition-colors">
+                                    <Link href="/contact" className="h-10 inline-flex items-center justify-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-sm font-semibold shadow-sm hover:bg-inverse/90 transition-colors">
                                         Contact sales <ArrowRight className="w-3.5 h-3.5" />
                                     </Link>
                                 ) : isUpgrade && priceId ? (
@@ -187,14 +187,14 @@ export default function BillingPage() {
                                         variant={popular ? 'dark' : 'white'}
                                     />
                                 ) : (
-                                    <button disabled className="h-10 rounded-md bg-surface-sunken ring-1 ring-subtle text-[13px] font-semibold text-tertiary cursor-default">Included below your plan</button>
+                                    <button disabled className="h-10 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm font-semibold text-tertiary cursor-default">Included below your plan</button>
                                 )}
                             </div>
                         );
                     })}
                 </div>
 
-                <p className="mt-5 text-[12px] text-tertiary">
+                <p className="mt-5 text-xs text-tertiary">
                     Secure payments by Stripe. Cancel anytime, prices in USD. Seat count is taken from your workspace and can be adjusted at checkout.
                 </p>
             </div>

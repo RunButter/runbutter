@@ -128,21 +128,21 @@ export default function WebAnalytics() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Web analytics</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         {sites.length > 1 && (
           <select value={siteId || ''} onChange={(e) => { setSiteId(e.target.value); setJustAdded(null); }}
-            className="h-7 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30">
+            className="h-7 px-2 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30">
             {sites.map((s) => <option key={s.id} value={s.id}>{s.domain}</option>)}
           </select>
         )}
-        {sites.length === 1 && site && <span className="text-[12px] text-tertiary">{site.domain}</span>}
+        {sites.length === 1 && site && <span className="text-xs text-tertiary">{site.domain}</span>}
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {PERIODS.map((p) => (
               <button key={p.label} onClick={() => setDays(p.days)}
-                className={`h-6 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${days === p.days ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{p.label}</button>
+                className={`h-6 px-2.5 rounded-md text-2xs font-semibold transition-colors ${days === p.days ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{p.label}</button>
             ))}
           </div>
           <button onClick={refreshStats} title="Refresh"
@@ -152,21 +152,21 @@ export default function WebAnalytics() {
           {sites.length > 0 && (
             <>
               <button onClick={() => { setSnippetOpen((o) => !o); setJustAdded(null); }}
-                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                 <Code2 className="w-3.5 h-3.5" /> Snippet
               </button>
               <button onClick={() => setManaging(true)}
-                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                 <Settings2 className="w-3.5 h-3.5" /> Manage
               </button>
             </>
           )}
           <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
+            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!stats ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
@@ -179,26 +179,26 @@ export default function WebAnalytics() {
                 ) : (
                   <div className="flex items-center gap-2 mb-1"><Globe className="w-4 h-4 text-accent" /><h2 className="text-sm font-semibold text-primary">Track a website</h2></div>
                 )}
-                <p className="text-[12px] text-tertiary mb-4">
+                <p className="text-xs text-tertiary mb-4">
                   {justAdded
-                    ? <>Paste this line before <code className="text-[11px] bg-surface-hover px-1 rounded">&lt;/body&gt;</code> on your site — stats appear here within seconds of the first visit.</>
-                    : <>Add your domain, then paste one line before <code className="text-[11px] bg-surface-hover px-1 rounded">&lt;/body&gt;</code>. Cookieless — no consent banner needed.</>}
+                    ? <>Paste this line before <code className="text-2xs bg-surface-hover px-1 rounded">&lt;/body&gt;</code> on your site — stats appear here within seconds of the first visit.</>
+                    : <>Add your domain, then paste one line before <code className="text-2xs bg-surface-hover px-1 rounded">&lt;/body&gt;</code>. Cookieless — no consent banner needed.</>}
                 </p>
                 {!justAdded && (
                   <div className="flex items-center gap-2 mb-4">
                     <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="yourcompany.com"
                       onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                      className="h-9 w-64 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                      className="h-9 w-64 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     <button onClick={addSite} disabled={busy || !privy} title={!privy ? 'Sign in to add' : ''}
-                      className="h-9 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                      className="h-9 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                       {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Add
                     </button>
-                    {error && <span className="text-[12px] text-danger">{error}</span>}
+                    {error && <span className="text-xs text-danger">{error}</span>}
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 text-[12px] bg-inverse text-inverse-fg rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippet}</code>
-                  <button onClick={copySnippet} className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                  <code className="flex-1 text-xs bg-inverse text-inverse-fg rounded-lg px-3 py-2.5 overflow-x-auto whitespace-nowrap">{snippet}</code>
+                  <button onClick={copySnippet} className="h-9 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                     {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
@@ -209,24 +209,24 @@ export default function WebAnalytics() {
                 {canConnectUmami && (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button onClick={connectUmami} disabled={busy}
-                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">
+                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">
                       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Code2 className="w-3.5 h-3.5" />} Collect with Umami
                     </button>
-                    <span className="text-[11px] text-tertiary">
+                    <span className="text-2xs text-tertiary">
                       Sessions, bounce rate, countries and browsers. Swaps the snippet above — re-paste it after connecting.
                     </span>
                   </div>
                 )}
                 {site?.umami_website_id && (
-                  <p className="mt-3 text-[11px] text-tertiary inline-flex items-center gap-1.5">
+                  <p className="mt-3 text-2xs text-tertiary inline-flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-success" /> Collecting with Umami. Earlier pageviews stay in the built-in dashboard history.
                   </p>
                 )}
                 {justAdded && (
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[12px] text-warning inline-flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Waiting for the first pageview — this updates automatically.</span>
+                    <span className="text-xs text-warning inline-flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" /> Waiting for the first pageview — this updates automatically.</span>
                     <button onClick={() => { setJustAdded(null); setSnippetOpen(false); }}
-                      className="h-7 px-2.5 rounded-md text-[12px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Done</button>
+                      className="h-7 px-2.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Done</button>
                   </div>
                 )}
               </div>
@@ -236,7 +236,7 @@ export default function WebAnalytics() {
             {waiting && !showCard && (
               <div className="rounded-xl bg-warning/10 ring-1 ring-warning/30 px-4 py-3 flex items-center gap-2.5">
                 <Loader2 className="w-4 h-4 text-warning animate-spin" />
-                <p className="text-[13px] text-warning">No pageviews yet for <b>{site?.domain}</b> — install the snippet (button above) and visit your site. This page refreshes automatically.</p>
+                <p className="text-sm text-warning">No pageviews yet for <b>{site?.domain}</b> — install the snippet (button above) and visit your site. This page refreshes automatically.</p>
               </div>
             )}
 
@@ -256,7 +256,7 @@ export default function WebAnalytics() {
             {/* Daily traffic */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <h2 className="text-sm font-semibold text-primary mb-1">Traffic</h2>
-              <p className="text-[12px] text-tertiary mb-4">Pageviews per day · last {days} days</p>
+              <p className="text-xs text-tertiary mb-4">Pageviews per day · last {days} days</p>
               <div className="flex items-end gap-[2px] h-40">
                 {stats.series.map((p) => (
                   <div key={p.day} className="flex-1 group relative">
@@ -266,7 +266,7 @@ export default function WebAnalytics() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between mt-1.5 text-[10px] text-tertiary tabular-nums">
+              <div className="flex justify-between mt-1.5 text-3xs text-tertiary tabular-nums">
                 <span>{stats.series[0]?.label}</span>
                 <span>{stats.series[stats.series.length - 1]?.label}</span>
               </div>
@@ -312,14 +312,14 @@ export default function WebAnalytics() {
                   <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                     <h2 className="text-sm font-semibold text-primary mb-3">{title}</h2>
                     {rows.length === 0 ? (
-                      <p className="py-4 text-center text-[12px] text-tertiary">No data yet.</p>
+                      <p className="py-4 text-center text-xs text-tertiary">No data yet.</p>
                     ) : (
                       <div className="space-y-1">
                         {rows.map((r) => (
                           <div key={r.label} className="relative flex items-center justify-between px-2 py-1.5 rounded-md overflow-hidden">
                             <div className="absolute inset-y-0 left-0 bg-accent/10 rounded-md" style={{ width: `${(r.count / max) * 100}%` }} />
-                            <span className="relative text-[12px] font-medium text-secondary truncate pr-3">{r.label}</span>
-                            <span className="relative text-[12px] tabular-nums text-secondary shrink-0">{r.count.toLocaleString()}</span>
+                            <span className="relative text-xs font-medium text-secondary truncate pr-3">{r.label}</span>
+                            <span className="relative text-xs tabular-nums text-secondary shrink-0">{r.count.toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
@@ -341,16 +341,16 @@ export default function WebAnalytics() {
               <button onClick={() => setManaging(false)} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">
-              {sites.length === 0 && <p className="text-[13px] text-tertiary text-center py-4">No websites yet.</p>}
+              {sites.length === 0 && <p className="text-sm text-tertiary text-center py-4">No websites yet.</p>}
               {sites.map((s) => (
                 <div key={s.id} className="flex items-center gap-2.5 rounded-lg ring-1 ring-subtle px-3 py-2.5">
                   <Globe className="w-4 h-4 text-tertiary shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold text-primary truncate">{s.domain}</div>
-                    {s.created_at && <div className="text-[11px] text-tertiary">added {new Date(s.created_at).toLocaleDateString()}</div>}
+                    <div className="text-sm font-semibold text-primary truncate">{s.domain}</div>
+                    {s.created_at && <div className="text-2xs text-tertiary">added {new Date(s.created_at).toLocaleDateString()}</div>}
                   </div>
                   <button onClick={() => { setSiteId(s.id); setSnippetOpen(true); setManaging(false); }}
-                    className="h-7 px-2 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Snippet</button>
+                    className="h-7 px-2 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">Snippet</button>
                   <button onClick={() => removeSite(s)} disabled={removingId === s.id} aria-label="Remove"
                     className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40">
                     {removingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -361,13 +361,13 @@ export default function WebAnalytics() {
             <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">
               <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="add another domain…"
                 onKeyDown={(e) => { if (e.key === 'Enter') addSite(); }}
-                className="flex-1 h-8 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                className="flex-1 h-8 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               <button onClick={async () => { await addSite(); setManaging(false); }} disabled={busy || !privy}
-                className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add
               </button>
             </div>
-            {error && <p className="px-4 pb-3 text-[12px] text-danger">{error}</p>}
+            {error && <p className="px-4 pb-3 text-xs text-danger">{error}</p>}
           </div>
         </div>
       )}

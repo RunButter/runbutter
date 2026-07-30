@@ -58,20 +58,20 @@ export default function AcceptInvite({
 
   return (
     <div className="w-full max-w-md rounded-xl bg-surface border border-subtle p-8">
-      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-widest text-tertiary">
+      <div className="flex items-center gap-2 text-2xs font-medium uppercase tracking-widest text-tertiary">
         <ShieldCheck className="w-3.5 h-3.5 text-accent" /> Team invitation
       </div>
 
       <h1 className="mt-3 text-xl font-medium tracking-tight text-primary">
         Join {companyName} on RunButter
       </h1>
-      <p className="mt-2 text-[13px] text-secondary leading-relaxed">
+      <p className="mt-2 text-sm text-secondary leading-relaxed">
         You&rsquo;ve been invited as <span className="font-medium text-primary capitalize">{role}</span>
         {ROLE_COPY[role] ? ` — you'll be able to ${ROLE_COPY[role]}.` : '.'}
       </p>
 
       {error && (
-        <div className="mt-5 rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">
+        <div className="mt-5 rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">
           {error}
         </div>
       )}
@@ -102,7 +102,7 @@ export default function AcceptInvite({
         )}
       </div>
 
-      <p className="mt-4 text-[11px] text-tertiary text-center leading-relaxed">
+      <p className="mt-4 text-2xs text-tertiary text-center leading-relaxed">
         Sign in with any method — the invitation is tied to this link, not to how you sign in.
       </p>
     </div>

@@ -79,8 +79,8 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
         >
             <div className="flex justify-between items-start gap-2">
                 <div className="min-w-0 flex-1">
-                    <h4 className="text-[13px] font-semibold text-primary group-hover:text-accent transition-colors truncate">{candidate.full_name}</h4>
-                    <p className="text-[10px] text-tertiary font-semibold uppercase tracking-wide truncate">{candidate.position_title}</p>
+                    <h4 className="text-sm font-semibold text-primary group-hover:text-accent transition-colors truncate">{candidate.full_name}</h4>
+                    <p className="text-3xs text-tertiary font-semibold uppercase tracking-wide truncate">{candidate.position_title}</p>
                 </div>
                 <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 -mr-1 text-tertiary hover:text-secondary transition-colors">
                     <GripVertical className="w-4 h-4" />
@@ -89,11 +89,11 @@ function CandidateCard({ candidate, isOverlay = false }: { candidate: any, isOve
 
             <div className="flex items-center justify-between mt-3">
                 {candidate.assessment_results?.[0]?.overall_score ? (
-                    <div className="w-7 h-7 rounded-full bg-accent/10 ring-1 ring-accent/20 flex items-center justify-center text-[10px] font-semibold text-accent tabular-nums" title="Match score">
+                    <div className="w-7 h-7 rounded-full bg-accent/10 ring-1 ring-accent/20 flex items-center justify-center text-3xs font-semibold text-accent tabular-nums" title="Match score">
                         {candidate.assessment_results[0].overall_score}
                     </div>
                 ) : (
-                    <div className="w-7 h-7 rounded-full bg-surface-sunken ring-1 ring-subtle flex items-center justify-center text-[10px] font-semibold text-tertiary">?</div>
+                    <div className="w-7 h-7 rounded-full bg-surface-sunken ring-1 ring-subtle flex items-center justify-center text-3xs font-semibold text-tertiary">?</div>
                 )}
                 <Link href={`/dashboard/candidates/${candidate.id}`} onClick={(e) => e.stopPropagation()}
                     className="p-1.5 text-tertiary hover:text-accent hover:bg-surface-hover rounded-md transition-colors">
@@ -117,8 +117,8 @@ function KanbanColumn({ id, title, candidates }: { id: string, title: string, ca
     return (
         <div className="w-72 flex-shrink-0 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-2 px-1">
-                <h3 className="text-[11px] font-semibold text-secondary uppercase tracking-wider">{title}</h3>
-                <span className="bg-strong text-secondary text-[10px] font-semibold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
+                <h3 className="text-2xs font-semibold text-secondary uppercase tracking-wider">{title}</h3>
+                <span className="bg-strong text-secondary text-3xs font-semibold px-1.5 py-0.5 rounded-md min-w-[20px] text-center tabular-nums">{candidates.length}</span>
             </div>
 
             <div ref={setNodeRef} className="flex-1 bg-surface-sunken ring-1 ring-subtle rounded-xl p-2 overflow-y-auto no-scrollbar transition-colors">
@@ -128,7 +128,7 @@ function KanbanColumn({ id, title, candidates }: { id: string, title: string, ca
                     ))}
                 </SortableContext>
                 {candidates.length === 0 && (
-                    <div className="h-20 ring-1 ring-dashed ring-subtle rounded-lg flex items-center justify-center text-[11px] text-tertiary font-medium">Empty</div>
+                    <div className="h-20 ring-1 ring-dashed ring-subtle rounded-lg flex items-center justify-center text-2xs text-tertiary font-medium">Empty</div>
                 )}
             </div>
         </div>

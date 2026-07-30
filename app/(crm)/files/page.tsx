@@ -150,25 +150,25 @@ export default function FilesPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+        <h1 className="text-base font-semibold text-primary flex items-center gap-2">
           <FolderOpen className="w-4 h-4 text-accent" /> Files
         </h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {privy && ws && (
           <button
             onClick={open}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"
           >
             <Upload className="w-3.5 h-3.5" /> Upload
           </button>
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6" {...getRootProps()}>
+      <div className="flex-1 overflow-auto p-6 2xl:p-8" {...getRootProps()}>
         <input {...getInputProps()} />
-        <div className="max-w-3xl space-y-4">
-          <p className="text-[13px] text-secondary -mt-1">
+        <div className="max-w-5xl space-y-4">
+          <p className="text-sm text-secondary -mt-1">
             Contracts, invoices and CVs — stored privately and searched by what&apos;s <em>inside</em> them,
             not just by filename. {indexed > 0 && <span className="text-tertiary">{indexed} of {rows.length} indexed.</span>}
           </p>
@@ -180,7 +180,7 @@ export default function FilesPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search inside every file — try auto-renewal, or &quot;notice period&quot;"
-              className="w-full h-9 pl-9 pr-9 rounded-lg bg-surface text-[13px] text-primary placeholder:text-tertiary ring-1 ring-subtle shadow-sm focus:outline-none focus:ring-accent"
+              className="w-full h-9 pl-9 pr-9 rounded-lg bg-surface text-sm text-primary placeholder:text-tertiary ring-1 ring-subtle shadow-sm focus:outline-none focus:ring-accent"
             />
             {query && (
               <button
@@ -194,13 +194,13 @@ export default function FilesPage() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-lg bg-danger/10 text-danger px-3 py-2 text-[12px]">
+            <div className="flex items-start gap-2 rounded-lg bg-danger/10 text-danger px-3 py-2 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0 mt-px" /> <span>{error}</span>
             </div>
           )}
 
           {isDragActive && (
-            <div className="rounded-xl border-2 border-dashed border-accent bg-accent/5 px-4 py-8 text-center text-[13px] font-medium text-accent">
+            <div className="rounded-xl border-2 border-dashed border-accent bg-accent/5 px-4 py-8 text-center text-sm font-medium text-accent">
               Drop to upload
             </div>
           )}
@@ -208,7 +208,7 @@ export default function FilesPage() {
           {uploading.length > 0 && (
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card divide-y divide-subtle">
               {uploading.map((name) => (
-                <div key={name} className="flex items-center gap-2.5 px-3 py-2.5 text-[13px] text-secondary">
+                <div key={name} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-secondary">
                   <Loader2 className="w-4 h-4 animate-spin text-tertiary shrink-0" />
                   <span className="truncate">Uploading {name}…</span>
                 </div>
@@ -237,11 +237,11 @@ export default function FilesPage() {
                   >
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-tertiary shrink-0" />
-                      <span className="text-[13px] font-medium text-primary truncate">{hit.name}</span>
+                      <span className="text-sm font-medium text-primary truncate">{hit.name}</span>
                       <ExternalLink className="w-3 h-3 text-tertiary shrink-0" />
                     </div>
                     {hit.snippet && (
-                      <p className="mt-1 pl-6 text-[12px] text-secondary leading-relaxed">
+                      <p className="mt-1 pl-6 text-xs text-secondary leading-relaxed">
                         {splitSnippet(hit.snippet).map((part, i) =>
                           part.match
                             ? <mark key={i} className="bg-accent/15 text-primary rounded px-0.5">{part.text}</mark>
@@ -259,7 +259,7 @@ export default function FilesPage() {
               title="No files yet"
               description="Drop a contract, invoice or CV here. PDFs and Word documents are read and made searchable automatically."
               action={
-                <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+                <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
                   <Upload className="w-3.5 h-3.5" /> Choose a file
                 </button>
               }
@@ -273,8 +273,8 @@ export default function FilesPage() {
                   <div key={row.id} className="group flex items-center gap-3 px-3 py-2.5">
                     <Icon className="w-4 h-4 text-tertiary shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium text-primary truncate">{row.name}</p>
-                      <p className="text-[11px] text-tertiary tabular-nums truncate">
+                      <p className="text-sm font-medium text-primary truncate">{row.name}</p>
+                      <p className="text-2xs text-tertiary tabular-nums truncate">
                         {formatBytes(row.size_bytes)}
                         {row.page_count ? ` · ${row.page_count} page${row.page_count === 1 ? '' : 's'}` : ''}
                         {' · '}{new Date(row.created_at).toLocaleDateString('en-GB')}
@@ -318,7 +318,7 @@ export default function FilesPage() {
               in the product interface when it is used for OCR — see
               docs/file-extraction.md. */}
           {rows.length > 0 && !hits && (
-            <p className="text-[11px] text-tertiary leading-relaxed">
+            <p className="text-2xs text-tertiary leading-relaxed">
               Text is extracted locally with <span className="text-secondary">pdf-parse</span> and{' '}
               <span className="text-secondary">mammoth</span>, and indexed with Postgres full-text search — no
               per-page fees and nothing sent to a third party. Scans and photos need OCR, provided by a

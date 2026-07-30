@@ -247,7 +247,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-surface-sunken">
             <header className="bg-surface border-b">
-                <div className="max-w-4xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="max-w-5xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard" className="p-2 hover:bg-surface-hover rounded-full transition">
                             <ArrowLeft className="w-5 h-5 text-secondary" />
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                 </div>
             </header>
 
-            <main className="max-w-4xl px-6 py-8">
+            <main className="max-w-5xl px-6 py-8">
                 <div className="grid gap-6">
                     {/* Status Messages */}
                     {success && (
@@ -421,7 +421,7 @@ export default function SettingsPage() {
                                         <div className="space-y-2 mb-5">
                                             {webhooks.map((w) => (
                                                 <div key={w.id} className="flex items-center gap-3 p-3 bg-surface-sunken rounded-lg border border-subtle">
-                                                    <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-1 rounded-md bg-surface border border-subtle text-secondary shrink-0">{w.type}</span>
+                                                    <span className="text-3xs font-semibold uppercase tracking-widest px-2 py-1 rounded-md bg-surface border border-subtle text-secondary shrink-0">{w.type}</span>
                                                     <div className="min-w-0 flex-1">
                                                         <div className="text-sm font-semibold text-primary truncate">{w.label || w.type}</div>
                                                         <div className="text-xs text-tertiary truncate">{w.url}</div>

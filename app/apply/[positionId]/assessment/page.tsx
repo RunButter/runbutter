@@ -240,7 +240,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-accent-fg font-semibold text-sm">
                     {companyInfo?.name?.charAt(0) || 'C'}
                 </div>
-                <span className="font-medium text-primary text-[15px]">{companyInfo?.name}</span>
+                <span className="font-medium text-primary text-md">{companyInfo?.name}</span>
             </div>
         );
 
@@ -261,11 +261,11 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <CheckCircle2 className="w-8 h-8 text-success" />
                     </div>
                     <h1 className="text-2xl font-semibold tracking-tight text-primary mb-2">Assessment complete</h1>
-                    <p className="text-[15px] text-secondary">
+                    <p className="text-md text-secondary">
                         Your answers were sent to the recruitment team at {companyInfo?.name || 'the company'}.
                         They will review your profile and contact you about next steps.
                     </p>
-                    <p className="mt-6 text-[13px] text-tertiary">You can safely close this tab.</p>
+                    <p className="mt-6 text-sm text-tertiary">You can safely close this tab.</p>
                 </div>
             </div>
         );
@@ -282,7 +282,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                     <CompanyMark />
                     <div className="flex items-center gap-3 min-w-0">
                         {currentStep > 0 && (
-                            <span className="text-[12px] font-semibold text-secondary tabular-nums whitespace-nowrap">{answeredCount} / {totalQs}</span>
+                            <span className="text-xs font-semibold text-secondary tabular-nums whitespace-nowrap">{answeredCount} / {totalQs}</span>
                         )}
                         <div className="h-1.5 w-24 sm:w-36 bg-surface-hover rounded-full overflow-hidden">
                             <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -300,7 +300,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-primary mb-3">
                             Work style & personality
                         </h1>
-                        <p className="text-[15px] text-secondary leading-relaxed mb-7">
+                        <p className="text-md text-secondary leading-relaxed mb-7">
                             {candidate?.full_name ? `Hi ${String(candidate.full_name).split(' ')[0]} — this` : 'This'} short questionnaire
                             helps {companyInfo?.name || 'the team'} understand how you work, collaborate, and solve problems.
                             There are no right or wrong answers. Just be yourself.
@@ -314,15 +314,15 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             ].map((c) => (
                                 <div key={c.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3.5">
                                     <c.icon className="w-4 h-4 text-accent mb-1.5" />
-                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{c.label}</div>
-                                    <div className="text-[13px] font-medium text-secondary">{c.value}</div>
+                                    <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{c.label}</div>
+                                    <div className="text-sm font-medium text-secondary">{c.value}</div>
                                 </div>
                             ))}
                         </div>
 
                         <button
                             onClick={() => { setCurrentStep(1); setQIndex(0); }}
-                            className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition"
+                            className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-md font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition"
                         >
                             Start <ArrowRight className="w-4 h-4" />
                         </button>
@@ -331,7 +331,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
                 {currentStep === 1 && !personalityDone && activeQ && (
                     <div key={activeQ.id} className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="text-[12px] font-semibold text-tertiary mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
+                        <div className="text-xs font-semibold text-tertiary mb-3 tabular-nums">Question {qIndex + 1} of {personalityQs.length}</div>
                         <p className="text-lg sm:text-xl font-medium text-primary leading-snug mb-6">{activeQ.text}</p>
 
                         <div className="space-y-2">
@@ -341,7 +341,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                     <button
                                         key={opt}
                                         onClick={() => answerAndAdvance(activeQ.id, opt)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ring-1 text-left text-[15px] font-medium transition-all ${selected
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ring-1 text-left text-md font-medium transition-all ${selected
                                             ? 'ring-accent/30 bg-accent/10 text-accent'
                                             : 'ring-subtle text-secondary hover:ring-accent/30 hover:bg-surface-sunken'
                                             }`}
@@ -358,13 +358,13 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <div className="mt-7 flex items-center justify-between">
                             <button
                                 onClick={() => (qIndex === 0 ? setCurrentStep(0) : setQIndex(qIndex - 1))}
-                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-tertiary hover:text-secondary transition-colors"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-tertiary hover:text-secondary transition-colors"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" /> Back
                             </button>
                             {answers[activeQ.id] !== undefined && (
                                 <button onClick={() => setQIndex(qIndex + 1)}
-                                    className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent hover:text-accent transition-colors">
+                                    className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent transition-colors">
                                     Next <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                             )}
@@ -380,20 +380,20 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <h2 className="text-xl font-semibold tracking-tight text-primary mb-2">
                             {screeningQs.length > 0 ? 'Section complete' : 'All questions answered'}
                         </h2>
-                        <p className="text-[14px] text-secondary mb-7">
+                        <p className="text-base text-secondary mb-7">
                             {screeningQs.length > 0
                                 ? `${screeningQs.length} short question${screeningQs.length > 1 ? 's' : ''} from ${companyInfo?.name || 'the company'} left.`
                                 : 'Review is done in one click. Good luck!'}
                         </p>
                         <div className="flex items-center justify-center gap-3">
                             <button onClick={() => setQIndex(personalityQs.length - 1)}
-                                className="h-11 px-5 rounded-xl ring-1 ring-subtle text-secondary text-[14px] font-semibold hover:bg-surface-sunken transition-colors">
+                                className="h-11 px-5 rounded-xl ring-1 ring-subtle text-secondary text-base font-semibold hover:bg-surface-sunken transition-colors">
                                 Back
                             </button>
                             <button
                                 onClick={() => (screeningQs.length > 0 ? setCurrentStep(2) : handleComplete())}
                                 disabled={submitting}
-                                className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-60"
+                                className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-base font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-60"
                             >
                                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                     <>{screeningQs.length > 0 ? 'Continue' : 'Finish & submit'} <ArrowRight className="w-4 h-4" /></>
@@ -406,14 +406,14 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                 {currentStep === 2 && (
                     <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <h2 className="text-xl font-semibold tracking-tight text-primary mb-1.5">A few questions from {companyInfo?.name || 'the company'}</h2>
-                        <p className="text-[13px] text-tertiary mb-8">Specific to this role.</p>
+                        <p className="text-sm text-tertiary mb-8">Specific to this role.</p>
 
                         <div className="space-y-9 mb-9">
                             {screeningQs.map((q: any, idx: number) => (
                                 <div key={q.id}>
-                                    <p className="text-[15px] font-medium text-primary leading-snug mb-3.5">
+                                    <p className="text-md font-medium text-primary leading-snug mb-3.5">
                                         <span className="text-tertiary tabular-nums mr-1.5">{idx + 1}.</span>{q.text}
-                                        {q.type !== 'choice' && <span className="ml-2 text-[11px] font-medium text-tertiary">(optional)</span>}
+                                        {q.type !== 'choice' && <span className="ml-2 text-2xs font-medium text-tertiary">(optional)</span>}
                                     </p>
 
                                     {q.type === 'choice' ? (
@@ -424,7 +424,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                                     <button
                                                         key={opt}
                                                         onClick={() => handleAnswer(q.id, opt)}
-                                                        className={`px-4 py-3 rounded-xl ring-1 text-left text-[14px] font-medium transition-all ${selected
+                                                        className={`px-4 py-3 rounded-xl ring-1 text-left text-base font-medium transition-all ${selected
                                                             ? 'ring-accent/30 bg-accent/10 text-accent'
                                                             : 'ring-subtle text-secondary hover:ring-accent/30 hover:bg-surface-sunken'
                                                             }`}
@@ -436,7 +436,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                                         </div>
                                     ) : (
                                         <textarea
-                                            className="w-full p-3.5 rounded-xl ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow min-h-[110px] text-[14px] text-secondary placeholder:text-tertiary"
+                                            className="w-full p-3.5 rounded-xl ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow min-h-[110px] text-base text-secondary placeholder:text-tertiary"
                                             placeholder="Type your answer…"
                                             value={answers[q.id] || ''}
                                             onChange={(e) => handleAnswer(q.id, e.target.value)}
@@ -449,16 +449,16 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                         <div className="flex items-center justify-between pt-6 border-t border-subtle">
                             <button
                                 onClick={() => { setCurrentStep(1); setQIndex(personalityQs.length); }}
-                                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-tertiary hover:text-secondary transition-colors"
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-tertiary hover:text-secondary transition-colors"
                             >
                                 <ArrowLeft className="w-3.5 h-3.5" /> Back
                             </button>
                             <div className="flex items-center gap-3">
-                                {!screeningMcqsAnswered && <span className="text-[12px] text-tertiary hidden sm:block">Answer the multiple-choice questions to finish</span>}
+                                {!screeningMcqsAnswered && <span className="text-xs text-tertiary hidden sm:block">Answer the multiple-choice questions to finish</span>}
                                 <button
                                     onClick={handleComplete}
                                     disabled={submitting || !screeningMcqsAnswered}
-                                    className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-[14px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-50"
+                                    className="h-11 px-6 rounded-xl bg-inverse text-inverse-fg text-base font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 transition disabled:opacity-50"
                                 >
                                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (<>Finish & submit <CheckCircle2 className="w-4 h-4" /></>)}
                                 </button>

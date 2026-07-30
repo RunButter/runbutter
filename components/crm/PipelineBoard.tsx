@@ -21,11 +21,11 @@ function CardBody({ rec, dragging = false }: { rec: PipelineRecord; dragging?: b
       <div className="flex items-center gap-2">
         <CompanyLogo name={subject} domain={rec.company?.domain} size={24} />
         <div className="min-w-0">
-          <div className="text-[13px] font-semibold text-primary truncate">{subject}</div>
-          {sub && <div className="text-[11px] text-tertiary truncate">{sub}</div>}
+          <div className="text-sm font-semibold text-primary truncate">{subject}</div>
+          {sub && <div className="text-2xs text-tertiary truncate">{sub}</div>}
         </div>
       </div>
-      {rec.amount ? <div className="mt-2 text-[11px] font-semibold text-success tabular-nums">${rec.amount.toLocaleString()}</div> : null}
+      {rec.amount ? <div className="mt-2 text-2xs font-semibold text-success tabular-nums">${rec.amount.toLocaleString()}</div> : null}
     </div>
   );
 }
@@ -47,9 +47,9 @@ function Column({ stage, records }: { stage: PipelineStage; records: PipelineRec
     <div className="w-64 shrink-0 flex flex-col max-h-full">
       <div className="flex items-center gap-2 px-1 mb-2">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: stage.color }} />
-        <span className="text-[12px] font-semibold text-secondary">{stage.name}</span>
-        <span className="text-[11px] text-tertiary tabular-nums">{records.length}</span>
-        {sum > 0 && <span className="ml-auto text-[11px] font-semibold text-tertiary tabular-nums">${sum.toLocaleString()}</span>}
+        <span className="text-xs font-semibold text-secondary">{stage.name}</span>
+        <span className="text-2xs text-tertiary tabular-nums">{records.length}</span>
+        {sum > 0 && <span className="ml-auto text-2xs font-semibold text-tertiary tabular-nums">${sum.toLocaleString()}</span>}
       </div>
       <div ref={setNodeRef}
         className={`flex-1 overflow-y-auto rounded-xl p-2 ring-1 transition-colors duration-150 ${isOver ? 'bg-accent/10 ring-accent/30' : 'bg-surface-sunken/60 ring-subtle'}`}>

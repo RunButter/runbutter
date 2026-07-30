@@ -318,14 +318,14 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
     const WorkStyleBar = ({ label, left, right, value = 0 }: any) => (
         <div className="space-y-1.5">
             <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[12px] font-medium text-secondary truncate">{label}</span>
-                <span className="text-[12px] font-semibold text-primary tabular-nums shrink-0">{value || 0}%</span>
+                <span className="text-xs font-medium text-secondary truncate">{label}</span>
+                <span className="text-xs font-semibold text-primary tabular-nums shrink-0">{value || 0}%</span>
             </div>
             <div className="h-1.5 bg-surface-sunken rounded-full overflow-hidden ring-1 ring-subtle">
                 <div className="h-full bg-accent rounded-full transition-[width] duration-500"
                     style={{ width: `${value || 0}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] text-tertiary uppercase tracking-widest">
+            <div className="flex justify-between text-3xs text-tertiary uppercase tracking-widest">
                 <span className={(value || 0) <= 50 ? 'text-secondary font-semibold' : ''}>{left}</span>
                 <span className={(value || 0) > 50 ? 'text-secondary font-semibold' : ''}>{right}</span>
             </div>
@@ -411,7 +411,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         <div className="px-5 py-4 border-b border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="min-w-0">
                                 <h2 className="text-sm font-semibold text-primary">Assessment report</h2>
-                                <p className="mt-0.5 text-[12px] text-tertiary truncate">
+                                <p className="mt-0.5 text-xs text-tertiary truncate">
                                     {candidate.full_name}
                                     {candidate.position?.title && <> · {candidate.position.title}</>}
                                     {results.completed_at && <> · completed {new Date(results.completed_at).toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
@@ -419,7 +419,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button onClick={openFitSimulator}
-                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
+                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                                     <Users className="w-3.5 h-3.5" /> Simulate team fit
                                 </button>
                             </div>
@@ -435,7 +435,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
                                     <div className="text-2xl font-semibold text-primary tabular-nums leading-none">{stat.value}<span className="text-tertiary text-sm font-normal">%</span></div>
-                                    <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-tertiary">{stat.label}</div>
+                                    <div className="mt-1.5 text-3xs font-semibold uppercase tracking-widest text-tertiary">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -448,7 +448,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     <div className="h-[300px]">
                                         {radarData && <Radar data={radarData} options={radarOptions} />}
                                     </div>
-                                    <div className="mt-3 pt-3 border-t border-subtle flex items-center justify-center gap-5 text-[10px] font-semibold uppercase tracking-widest text-tertiary">
+                                    <div className="mt-3 pt-3 border-t border-subtle flex items-center justify-center gap-5 text-3xs font-semibold uppercase tracking-widest text-tertiary">
                                         <span className="flex items-center gap-1.5">
                                             <span className="w-2.5 h-2.5 rounded-sm bg-accent/30 ring-1 ring-accent" /> Candidate
                                         </span>
@@ -485,7 +485,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             ].filter((stat) => stat.value != null).map((stat) => (
                                                 <div key={stat.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
                                                     <div className="text-lg font-semibold text-primary tabular-nums leading-none">{stat.value}</div>
-                                                    <div className="mt-1 text-[10px] font-semibold text-tertiary uppercase tracking-widest leading-tight">{stat.label}</div>
+                                                    <div className="mt-1 text-3xs font-semibold text-tertiary uppercase tracking-widest leading-tight">{stat.label}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -497,7 +497,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                         <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
                                             <Target className="w-3.5 h-3.5 text-accent" /> Neuro-profile
                                         </h3>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
+                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
                                                 candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-warning/10 text-warning' :
                                                     candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-accent/10 text-accent' :
                                                         'bg-success/10 text-success'
@@ -506,7 +506,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                             </span>
                                     </div>
                                     <div className="rounded-xl bg-accent/5 ring-1 ring-accent/20 p-3">
-                                        <p className="text-[13px] text-secondary leading-relaxed">
+                                        <p className="text-sm text-secondary leading-relaxed">
                                             {results.summary || 'Analysis pending based on trait alignment.'}
                                         </p>
                                     </div>
@@ -522,16 +522,16 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     {results.screening_answers.map((sa: any, idx: number) => (
                                         <div key={idx} className="p-4 bg-surface-sunken">
                                             <div className="flex items-start justify-between gap-3">
-                                                <p className="text-[13px] font-medium text-primary">{sa.question}</p>
+                                                <p className="text-sm font-medium text-primary">{sa.question}</p>
                                                 {sa.is_correct !== null && (
-                                                    <span className={`shrink-0 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${sa.is_correct
+                                                    <span className={`shrink-0 text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${sa.is_correct
                                                         ? 'bg-success/10 text-success ring-success/30'
                                                         : 'bg-danger/10 text-danger ring-danger/30'}`}>
                                                         {sa.is_correct ? 'Match' : 'Mismatch'}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="mt-1.5 text-[13px] text-secondary leading-relaxed">{sa.answer}</p>
+                                            <p className="mt-1.5 text-sm text-secondary leading-relaxed">{sa.answer}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -543,11 +543,11 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         <Brain className="w-8 h-8 text-tertiary mx-auto mb-3" />
                         <div>
                             <h3 className="text-sm font-medium text-secondary">No assessment results</h3>
-                            <p className="text-[12px] text-tertiary mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
+                            <p className="text-xs text-tertiary mt-1 max-w-sm mx-auto">This candidate hasn&apos;t completed their personality and work style test yet.</p>
                         </div>
                         <div className="mt-4 flex items-center justify-center gap-2">
                             <button onClick={generateDemoResults}
-                                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+                                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                                 <TrendingUp className="w-3.5 h-3.5" /> Generate sample results
                             </button>
                         </div>
@@ -623,7 +623,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                     <div className="flex-1 flex flex-col">
                                         <div className="p-4 bg-surface-sunken/50 border-b flex justify-between items-center">
                                             <p className="text-xs font-semibold text-secondary uppercase tracking-widest">Interactive Preview</p>
-                                            <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-semibold uppercase">Secure Viewer</span>
+                                            <span className="text-3xs bg-success/10 text-success px-2 py-0.5 rounded-full font-semibold uppercase">Secure Viewer</span>
                                         </div>
                                         <iframe
                                             src={`${candidate.cv_url}#toolbar=0`}
@@ -693,7 +693,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                         </div>
                                         <div>
                                             <div className="text-sm font-semibold text-primary leading-tight capitalize">{act.action.replace(/_/g, ' ')}</div>
-                                            <div className="text-[10px] text-tertiary font-semibold uppercase tracking-wider mt-1">{new Date(act.created_at).toLocaleString()}</div>
+                                            <div className="text-3xs text-tertiary font-semibold uppercase tracking-wider mt-1">{new Date(act.created_at).toLocaleString()}</div>
                                             {act.details && (
                                                 <div className="text-xs text-secondary bg-surface-sunken p-3 rounded-xl border border-subtle mt-2 shadow-sm">
                                                     {renderActivityDetails(act)}

@@ -77,14 +77,14 @@ export default function TemplatesPage() {
     return (
         <>
             <PageHeader title="Email templates" count={templates.length}>
-                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
+                <button onClick={() => setEditing({ ...blank })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                     <Plus className="w-3.5 h-3.5" /> New template
                 </button>
             </PageHeader>
 
             <div className="p-6">
-                <div className="max-w-3xl">
-                    <p className="text-[13px] text-secondary mb-4">Reusable messages for inviting, rejecting, and updating candidates.</p>
+                <div className="max-w-5xl">
+                    <p className="text-sm text-secondary mb-4">Reusable messages for inviting, rejecting, and updating candidates.</p>
 
                     <div className="grid gap-2.5">
                         {templates.map((t) => (
@@ -92,20 +92,20 @@ export default function TemplatesPage() {
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold text-primary">{t.name}</span>
-                                        <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ring-1 capitalize ${CAT_STYLE[t.category] || CAT_STYLE.custom}`}>{t.category}</span>
+                                        <span className={`text-3xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ring-1 capitalize ${CAT_STYLE[t.category] || CAT_STYLE.custom}`}>{t.category}</span>
                                     </div>
-                                    <div className="text-[13px] text-secondary truncate">{t.subject}</div>
-                                    <div className="text-[12px] text-tertiary truncate mt-0.5">{t.body}</div>
+                                    <div className="text-sm text-secondary truncate">{t.subject}</div>
+                                    <div className="text-xs text-tertiary truncate mt-0.5">{t.body}</div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button onClick={() => setEditing({ id: t.id, name: t.name, subject: t.subject, body: t.body, category: t.category })}
-                                        className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
+                                        className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
                                     <button onClick={() => remove(t.id)} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))}
                         {templates.length === 0 && (
-                            <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center text-tertiary text-[13px]">No templates yet. Create your first one.</div>
+                            <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center text-tertiary text-sm">No templates yet. Create your first one.</div>
                         )}
                     </div>
                 </div>
@@ -122,34 +122,34 @@ export default function TemplatesPage() {
                         <div className="p-4 space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <label className="block">
-                                    <span className="block text-[12px] font-semibold text-secondary mb-1">Name</span>
+                                    <span className="block text-xs font-semibold text-secondary mb-1">Name</span>
                                     <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                                        className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" placeholder="Interview invitation" />
+                                        className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" placeholder="Interview invitation" />
                                 </label>
                                 <label className="block">
-                                    <span className="block text-[12px] font-semibold text-secondary mb-1">Category</span>
+                                    <span className="block text-xs font-semibold text-secondary mb-1">Category</span>
                                     <select value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-                                        className="w-full h-9 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 capitalize">
+                                        className="w-full h-9 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 capitalize">
                                         {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                                     </select>
                                 </label>
                             </div>
                             <label className="block">
-                                <span className="block text-[12px] font-semibold text-secondary mb-1">Subject</span>
+                                <span className="block text-xs font-semibold text-secondary mb-1">Subject</span>
                                 <input value={editing.subject} onChange={(e) => setEditing({ ...editing, subject: e.target.value })}
-                                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" />
+                                    className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30" />
                             </label>
                             <label className="block">
-                                <span className="block text-[12px] font-semibold text-secondary mb-1">Body</span>
+                                <span className="block text-xs font-semibold text-secondary mb-1">Body</span>
                                 <textarea value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} rows={9}
-                                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 font-mono" />
+                                    className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle outline-none shadow-sm focus:ring-2 focus:ring-accent/30 font-mono" />
                             </label>
-                            <p className="text-[11px] text-tertiary">
+                            <p className="text-2xs text-tertiary">
                                 Variables: {TEMPLATE_VARS.map((v) => <code key={v} className="mx-1 px-1 bg-surface-hover rounded">{`{{${v}}}`}</code>)}
                             </p>
                             <div className="flex justify-end gap-2 pt-1">
-                                <button onClick={() => setEditing(null)} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+                                <button onClick={() => setEditing(null)} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+                                <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
                                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
                                 </button>
                             </div>

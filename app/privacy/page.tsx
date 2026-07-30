@@ -73,7 +73,7 @@ export default function PrivacyPage() {
                             <p className="text-secondary leading-relaxed mb-4">
                                 Connecting Google Calendar is entirely optional and is initiated by a recruiter for their
                                 own Google account. If connected, we request a single permission—
-                                <code className="text-[13px]">calendar.events</code>—and use it strictly to schedule interviews.
+                                <code className="text-sm">calendar.events</code>—and use it strictly to schedule interviews.
                             </p>
                             <ul className="list-disc pl-5 space-y-2 text-secondary mb-4">
                                 <li><strong>What we do:</strong> create, update, and cancel the interview events you schedule in RunButter, attach a Google Meet link, and invite the candidate.</li>

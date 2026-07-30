@@ -21,8 +21,8 @@ export default function EmptyState({
           <Icon className="w-5 h-5 text-tertiary" />
         </div>
       )}
-      <p className="text-[13px] font-medium text-primary">{title}</p>
-      {description && <p className="mt-1 text-[12px] text-tertiary max-w-xs">{description}</p>}
+      <p className="text-sm font-medium text-primary">{title}</p>
+      {description && <p className="mt-1 text-xs text-tertiary max-w-xs">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

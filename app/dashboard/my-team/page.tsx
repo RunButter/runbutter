@@ -120,7 +120,7 @@ export default function MyTeamPage() {
                                         <span className="text-xs font-mono text-tertiary">{g.headcount} {g.headcount === 1 ? 'person' : 'people'}</span>
                                     </div>
                                     <div className="mt-1 text-xs text-accent font-semibold">{g.vibe}</div>
-                                    <div className="mt-2 text-[11px] text-tertiary">Avg match {g.avgMatch}%</div>
+                                    <div className="mt-2 text-2xs text-tertiary">Avg match {g.avgMatch}%</div>
                                 </div>
                             ))}
                         </div>
@@ -145,7 +145,7 @@ export default function MyTeamPage() {
                                         </div>
                                         <div className="text-center shrink-0">
                                             <div className={`text-2xl font-semibold ${scoreColor(m.overall_score)}`}>{m.overall_score ?? '—'}</div>
-                                            <div className="text-[9px] font-semibold uppercase tracking-widest text-tertiary">Match</div>
+                                            <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Match</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between pt-3 border-t border-subtle text-xs">

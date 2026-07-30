@@ -45,59 +45,59 @@ export default function AiKeysPage() {
   const toggle = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { enabled: !r.enabled }); reload(); } };
   const remove = async (r: AiProviderRow) => { if (privy && await confirmDialog(`Remove your ${providerLabel(r.provider)} key?`)) { await deleteAiProvider(privy, r.id); reload(); } };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> AI keys</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> AI keys</h1>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-start gap-2 text-[13px] text-secondary rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
+          <div className="flex items-start gap-2 text-sm text-secondary rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
             <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <p>Bring your <b>own</b> AI key — you pay your provider directly, RunButter adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>
           </div>
 
           {/* Add */}
           <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
+            <div className="text-2xs font-semibold uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
             <div className="grid sm:grid-cols-2 gap-2.5">
-              <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Provider</span>
+              <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Provider</span>
                 <select value={provider} onChange={(e) => { setProvider(e.target.value); setModel(''); }} className={inputCls}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
-                {def && <span className="text-[11px] text-tertiary mt-1 block">{def.help}</span>}
+                {def && <span className="text-2xs text-tertiary mt-1 block">{def.help}</span>}
               </label>
-              <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Model</span>
+              <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Model</span>
                 <input list="ai-models" value={model} onChange={(e) => setModel(e.target.value)} placeholder={def?.models[0] || 'model id'} className={inputCls} />
                 <datalist id="ai-models">{def?.models.map((m) => <option key={m} value={m} />)}</datalist>
               </label>
               {provider === 'custom' && (
-                <label className="block sm:col-span-2"><span className="block text-[12px] font-semibold text-secondary mb-1">Base URL</span>
-                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.groq.com/openai/v1" className={inputCls + ' font-mono text-[12px]'} />
-                  <span className="text-[11px] text-tertiary mt-1 block">The OpenAI-compatible root, usually ending in /v1. Works with Groq, Mistral, DeepSeek, Together, xAI, a local Ollama, or a LiteLLM proxy.</span></label>
+                <label className="block sm:col-span-2"><span className="block text-xs font-semibold text-secondary mb-1">Base URL</span>
+                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.groq.com/openai/v1" className={inputCls + ' font-mono text-xs'} />
+                  <span className="text-2xs text-tertiary mt-1 block">The OpenAI-compatible root, usually ending in /v1. Works with Groq, Mistral, DeepSeek, Together, xAI, a local Ollama, or a LiteLLM proxy.</span></label>
               )}
-              <label className="block sm:col-span-2"><span className="block text-[12px] font-semibold text-secondary mb-1">API key</span>
+              <label className="block sm:col-span-2"><span className="block text-xs font-semibold text-secondary mb-1">API key</span>
                 <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-… / paste your key" className={inputCls + ' font-mono'} autoComplete="off" /></label>
             </div>
-            {error && <p className="text-[12px] text-danger mt-2">{error}</p>}
-            <button onClick={add} disabled={!canEdit || saving} className="mt-3 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Save key</button>
+            {error && <p className="text-xs text-danger mt-2">{error}</p>}
+            <button onClick={add} disabled={!canEdit || saving} className="mt-3 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Save key</button>
           </div>
 
           {/* List */}
           <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
             {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
-              : rows.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No AI keys yet. Add one above to use the Docs assistant.</div>
+              : rows.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No AI keys yet. Add one above to use the Docs assistant.</div>
               : rows.map((r) => (
                 <div key={r.id} className={`flex items-center gap-3 px-4 h-14 border-b border-subtle last:border-0 ${r.enabled ? '' : 'opacity-50'}`}>
                   <Sparkles className="w-4 h-4 text-tertiary shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold text-primary flex items-center gap-1.5">{providerLabel(r.provider)}{r.is_default && <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-warning bg-warning/10 rounded px-1 py-0.5"><Star className="w-2.5 h-2.5" /> Default</span>}</div>
-                    <div className="text-[11px] text-tertiary font-mono truncate">{r.model || '—'} · key {r.key_hint}{r.base_url ? ` · ${r.base_url}` : ''}</div>
+                    <div className="text-sm font-semibold text-primary flex items-center gap-1.5">{providerLabel(r.provider)}{r.is_default && <span className="inline-flex items-center gap-0.5 text-3xs font-semibold text-warning bg-warning/10 rounded px-1 py-0.5"><Star className="w-2.5 h-2.5" /> Default</span>}</div>
+                    <div className="text-2xs text-tertiary font-mono truncate">{r.model || '—'} · key {r.key_hint}{r.base_url ? ` · ${r.base_url}` : ''}</div>
                   </div>
-                  {!r.is_default && <button onClick={() => makeDefault(r)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Make default</button>}
-                  <button onClick={() => toggle(r)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">{r.enabled ? 'Disable' : 'Enable'}</button>
+                  {!r.is_default && <button onClick={() => makeDefault(r)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Make default</button>}
+                  <button onClick={() => toggle(r)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">{r.enabled ? 'Disable' : 'Enable'}</button>
                   <button onClick={() => remove(r)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}

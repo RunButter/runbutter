@@ -39,20 +39,20 @@ export default function AssistantPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><MessageCircle className="w-4 h-4 text-accent" /> Assistant</h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><MessageCircle className="w-4 h-4 text-accent" /> Assistant</h1>
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setEditing({ platform: 'telegram', autonomy: 'auto', enabled: true, allowed_senders: [] })}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> Connect a bot
           </button>
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl space-y-4">
-          <p className="text-[13px] text-secondary -mt-1">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+        <div className="max-w-5xl space-y-4">
+          <p className="text-sm text-secondary -mt-1">
             Chat with your workspace from Telegram — ask questions and create offers, invoices or people right from a DM. Runs on your workspace AI key; only people you allow can use it.
           </p>
 
@@ -62,7 +62,7 @@ export default function AssistantPage() {
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <MessageCircle className="w-8 h-8 text-tertiary mx-auto mb-3" />
               <h3 className="text-sm font-medium text-secondary">No assistant connected</h3>
-              <p className="text-[12px] text-tertiary mt-1">Connect a Telegram bot to chat with your workspace.</p>
+              <p className="text-xs text-tertiary mt-1">Connect a Telegram bot to chat with your workspace.</p>
             </div>
           ) : (
             <div className="rounded-xl ring-1 ring-subtle bg-surface divide-y divide-subtle">
@@ -70,13 +70,13 @@ export default function AssistantPage() {
                 <div key={c.id} className="flex items-center gap-3 px-4 py-3">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${c.enabled && c.has_token ? 'bg-success' : 'bg-tertiary'}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold text-primary capitalize">{c.platform} {!c.has_token && <span className="text-warning font-normal text-[12px]">· token needed</span>}</div>
-                    <div className="text-[12px] text-tertiary truncate">
+                    <div className="text-sm font-semibold text-primary capitalize">{c.platform} {!c.has_token && <span className="text-warning font-normal text-xs">· token needed</span>}</div>
+                    <div className="text-xs text-tertiary truncate">
                       {c.allowed_senders.length} allowed sender{c.allowed_senders.length === 1 ? '' : 's'} · {c.autonomy === 'auto' ? 'can make changes' : 'read-only'}
                     </div>
                   </div>
                   {canManage && <>
-                    <button onClick={() => setEditing(c)} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
+                    <button onClick={() => setEditing(c)} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
                     <button onClick={() => remove(c)} aria-label="Disconnect" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
                   </>}
                 </div>
@@ -84,7 +84,7 @@ export default function AssistantPage() {
             </div>
           )}
 
-          <div className="rounded-lg border border-subtle bg-surface-sunken p-3 text-[12px] text-secondary">
+          <div className="rounded-lg border border-subtle bg-surface-sunken p-3 text-xs text-secondary">
             <div className="flex items-center gap-1.5 font-semibold text-primary mb-1"><Info className="w-3.5 h-3.5 text-accent" /> Slack &amp; WhatsApp</div>
             Slack is next (create an app + signing secret). WhatsApp needs a Meta Business account and app review — it&rsquo;ll follow. They use the same assistant under the hood.
           </div>
@@ -125,7 +125,7 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
     } finally { setBusy(false); }
   };
 
-  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
+  const input = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -135,9 +135,9 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-4">
+        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
           {!channel.id && (
-            <ol className="text-[12px] text-secondary space-y-1.5 rounded-lg bg-surface-sunken ring-1 ring-subtle p-3 list-decimal pl-5">
+            <ol className="text-xs text-secondary space-y-1.5 rounded-lg bg-surface-sunken ring-1 ring-subtle p-3 list-decimal pl-5">
               <li>In Telegram, message <span className="font-mono text-primary">@BotFather</span> → <span className="font-mono">/newbot</span>, pick a name.</li>
               <li>Copy the <b>bot token</b> it gives you and paste it below.</li>
               <li>Save — we register the webhook automatically.</li>
@@ -145,36 +145,36 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
               <li>Add that ID to <b>Allowed senders</b> here, save again — then chat.</li>
             </ol>
           )}
-          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">{err}</div>}
+          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{err}</div>}
 
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Bot token {channel.has_token && <span className="text-success">— set</span>}</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Bot token {channel.has_token && <span className="text-success">— set</span>}</span>
             <input value={botToken} onChange={(e) => setBotToken(e.target.value)} type="password"
-              placeholder={channel.has_token ? 'Leave blank to keep current' : '123456:ABC-DEF…'} className={input + ' font-mono text-[12px]'} />
+              placeholder={channel.has_token ? 'Leave blank to keep current' : '123456:ABC-DEF…'} className={input + ' font-mono text-xs'} />
           </label>
 
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Allowed senders <span className="text-tertiary">— Telegram IDs, comma-separated</span></span>
-            <input value={senders} onChange={(e) => setSenders(e.target.value)} placeholder="835192001, 274839120" className={input + ' font-mono text-[12px]'} />
-            <span className="block mt-1 text-[11px] text-tertiary">Only these people can use the assistant. Message the bot once to learn your ID.</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Allowed senders <span className="text-tertiary">— Telegram IDs, comma-separated</span></span>
+            <input value={senders} onChange={(e) => setSenders(e.target.value)} placeholder="835192001, 274839120" className={input + ' font-mono text-xs'} />
+            <span className="block mt-1 text-2xs text-tertiary">Only these people can use the assistant. Message the bot once to learn your ID.</span>
           </label>
 
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Permissions</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Permissions</span>
             <select value={autonomy} onChange={(e) => setAutonomy(e.target.value as any)} className={input}>
               <option value="auto">Can make changes — create offers, invoices, people…</option>
               <option value="suggest">Read-only — answer questions, never change data</option>
             </select>
           </label>
 
-          <label className="flex items-center gap-2 text-[12px] font-medium text-secondary">
+          <label className="flex items-center gap-2 text-xs font-medium text-secondary">
             <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="rounded border-subtle accent-accent" /> Active
           </label>
         </div>
 
         <div className="h-14 shrink-0 flex items-center justify-end gap-2 px-4 border-t border-subtle">
-          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
+          <button onClick={onClose} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {channel.id ? 'Save' : 'Connect'}
           </button>
         </div>

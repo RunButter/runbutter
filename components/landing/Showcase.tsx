@@ -33,10 +33,10 @@ function MiniCard({ title, sub, amount }: { title: string; sub?: string; amount?
     <div className="bg-surface rounded-lg border border-subtle p-2 mb-2">
       <div className="flex items-center gap-1.5">
         <span className="w-3.5 h-3.5 rounded-full bg-surface-hover border border-subtle shrink-0" />
-        <span className="text-[11px] font-medium text-primary truncate">{title}</span>
+        <span className="text-2xs font-medium text-primary truncate">{title}</span>
       </div>
-      {sub && <div className="text-[10px] text-tertiary mt-0.5 pl-5">{sub}</div>}
-      {amount && <div className="text-[10px] font-mono text-primary mt-1 pl-5">{amount}</div>}
+      {sub && <div className="text-3xs text-tertiary mt-0.5 pl-5">{sub}</div>}
+      {amount && <div className="text-3xs font-mono text-primary mt-1 pl-5">{amount}</div>}
     </div>
   );
 }
@@ -45,7 +45,7 @@ function MiniColumn({ name, children }: { name: string; children: React.ReactNod
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-1.5 mb-2 px-0.5">
-        <span className="text-[11px] font-medium text-primary">{name}</span>
+        <span className="text-2xs font-medium text-primary">{name}</span>
       </div>
       <div className="rounded-lg bg-surface-sunken border border-subtle p-2 min-h-[200px]">{children}</div>
     </div>
@@ -75,12 +75,12 @@ function FinanceMock() {
       <div className="grid grid-cols-3 gap-2 mb-4">
         {kpis.map((k) => (
           <div key={k.label} className="rounded-lg border border-subtle p-2.5">
-            <div className="text-[9px] font-medium uppercase tracking-wide text-tertiary">{k.label}</div>
+            <div className="text-3xs font-medium uppercase tracking-wide text-tertiary">{k.label}</div>
             <div className="text-base font-mono text-primary">{k.value}</div>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-3 mb-2 text-[10px] font-medium">
+      <div className="flex items-center gap-3 mb-2 text-3xs font-medium">
         <span className="inline-flex items-center gap-1 text-secondary"><span className="w-2 h-2 rounded-sm bg-inverse" /> Revenue</span>
         <span className="inline-flex items-center gap-1 text-secondary"><span className="w-2 h-2 rounded-sm bg-strong" /> Costs</span>
       </div>
@@ -93,7 +93,7 @@ function FinanceMock() {
               <div className="w-1/2 rounded-sm bg-inverse" style={{ height: `${(p.revenue / 40000) * 100}%` }} />
               <div className="w-1/2 rounded-sm bg-strong" style={{ height: `${(p.costs / 40000) * 100}%` }} />
             </div>
-            <span className="text-[9px] text-tertiary">{p.label}</span>
+            <span className="text-3xs text-tertiary">{p.label}</span>
           </div>
         ))}
       </div>
@@ -111,17 +111,17 @@ function RecruitingMock() {
   return (
     <MockWindow>
       <div className="rounded-lg border border-subtle overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-8 items-center bg-surface-sunken text-[10px] font-medium text-tertiary uppercase tracking-wide">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-8 items-center bg-surface-sunken text-3xs font-medium text-tertiary uppercase tracking-wide">
           <span>Candidate</span><span>Match</span><span>Status</span>
         </div>
         {rows.map((r) => (
           <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 h-[54px] items-center border-t border-subtle">
             <div className="min-w-0">
-              <div className="text-[11px] font-medium text-primary truncate">{r[0]}</div>
-              <div className="text-[10px] text-tertiary truncate">{r[1]}</div>
+              <div className="text-2xs font-medium text-primary truncate">{r[0]}</div>
+              <div className="text-3xs text-tertiary truncate">{r[1]}</div>
             </div>
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-hover text-[10px] font-mono text-primary">{r[2]}</span>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${r[3] === 'Offered' ? 'bg-inverse text-inverse-fg' : 'bg-surface-hover text-secondary'}`}>{r[3]}</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-hover text-3xs font-mono text-primary">{r[2]}</span>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium ${r[3] === 'Offered' ? 'bg-inverse text-inverse-fg' : 'bg-surface-hover text-secondary'}`}>{r[3]}</span>
           </div>
         ))}
       </div>
@@ -137,14 +137,14 @@ function MarketingDash() {
           <div className="grid grid-cols-3 gap-2">
             {[['Visitors', '2,480', 'text-primary'], ['Views', '6,120', 'text-primary'], ['Live', '7', 'text-primary']].map((k) => (
               <div key={k[0]} className="rounded-lg border border-subtle p-2">
-                <div className="text-[9px] font-medium uppercase tracking-wide text-tertiary">{k[0]}</div>
+                <div className="text-3xs font-medium uppercase tracking-wide text-tertiary">{k[0]}</div>
                 <div className={`text-base font-mono ${k[2]}`}>{k[1]}</div>
               </div>
             ))}
           </div>
           <div className="rounded-lg border border-subtle overflow-hidden">
             {[['/', '1,840'], ['/pricing', '920'], ['/blog/bus-covers-guide', '610'], ['/contact', '340']].map((r, i) => (
-              <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-[11px] ${i ? 'border-t border-subtle' : ''}`}>
+              <div key={r[0]} className={`flex items-center justify-between px-3 h-8 text-2xs ${i ? 'border-t border-subtle' : ''}`}>
                 <span className="font-medium text-secondary truncate">{r[0]}</span>
                 <span className="font-mono text-secondary">{r[1]}</span>
               </div>
@@ -152,7 +152,7 @@ function MarketingDash() {
           </div>
         </div>
         <div className="rounded-lg border border-subtle p-3 flex flex-col">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-tertiary mb-2">Visitors · last 14 days</div>
+          <div className="text-3xs font-medium uppercase tracking-wide text-tertiary mb-2">Visitors · last 14 days</div>
           <div className="flex-1 flex items-end gap-1.5 min-h-[150px]">
             {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70, 83, 92].map((h, i) => (
               <div key={i} className="flex-1 rounded-sm bg-inverse/75" style={{ height: `${h}%` }} />
@@ -175,7 +175,7 @@ function Row({ reverse, eyebrow, title, body, bullets, visual }: {
         <p className="mt-3 text-secondary leading-relaxed">{body}</p>
         <ul className="mt-5 space-y-2.5">
           {bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-[14px] text-secondary"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{b}</li>
+            <li key={b} className="flex items-start gap-2 text-base text-secondary"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{b}</li>
           ))}
         </ul>
       </div>
@@ -218,8 +218,8 @@ export default function Showcase() {
             ['Web analytics', 'Cookieless visitors, top pages & referrers'],
           ].map((c) => (
             <div key={c[0]} className="rounded-xl bg-surface border border-subtle p-3">
-              <div className="text-[13px] font-medium text-primary">{c[0]}</div>
-              <div className="text-[12px] text-secondary mt-0.5 leading-snug">{c[1]}</div>
+              <div className="text-sm font-medium text-primary">{c[0]}</div>
+              <div className="text-xs text-secondary mt-0.5 leading-snug">{c[1]}</div>
             </div>
           ))}
         </div>

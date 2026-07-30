@@ -47,22 +47,22 @@ export default function PostsPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Posts</h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
-        <span className="text-[12px] text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
         <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
-          className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
           {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New post
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : posts.length === 0 ? (
-          <div className="h-40 flex items-center justify-center text-[13px] text-tertiary">No posts yet — create your first one.</div>
+          <div className="h-40 flex items-center justify-center text-sm text-tertiary">No posts yet — create your first one.</div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
             {posts.map((p) => (
@@ -70,14 +70,14 @@ export default function PostsPage() {
                 className="text-left rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">
                 {p.image_url
                   ? <img src={p.image_url} alt="" className="w-full h-36 object-cover" />
-                  : <div className="w-full h-36 bg-surface-sunken flex items-center justify-center text-tertiary text-[12px] px-6 text-center line-clamp-3">{p.content || 'Text post'}</div>}
+                  : <div className="w-full h-36 bg-surface-sunken flex items-center justify-center text-tertiary text-xs px-6 text-center line-clamp-3">{p.content || 'Text post'}</div>}
                 <div className="p-3.5">
-                  <p className="text-[13px] text-secondary line-clamp-2 min-h-[2.4em]">{p.content || '—'}</p>
+                  <p className="text-sm text-secondary line-clamp-2 min-h-[2.4em]">{p.content || '—'}</p>
                   <div className="flex items-center gap-1.5 mt-3">
-                    <span className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 capitalize ${PLATFORM_CHIP[p.platform] || PLATFORM_CHIP.x}`}>{p.platform}</span>
-                    <span className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 capitalize ${STATUS_CHIP[p.status] || STATUS_CHIP.draft}`}>{p.status.replace('_', ' ')}</span>
+                    <span className={`px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 capitalize ${PLATFORM_CHIP[p.platform] || PLATFORM_CHIP.x}`}>{p.platform}</span>
+                    <span className={`px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 capitalize ${STATUS_CHIP[p.status] || STATUS_CHIP.draft}`}>{p.status.replace('_', ' ')}</span>
                     {p.comment_count > 0 && (
-                      <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-accent"><MessageCircle className="w-3.5 h-3.5" /> {p.comment_count}</span>
+                      <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-accent"><MessageCircle className="w-3.5 h-3.5" /> {p.comment_count}</span>
                     )}
                   </div>
                 </div>

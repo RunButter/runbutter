@@ -7,7 +7,7 @@ const Label = React.forwardRef<
   HTMLLabelElement,
   React.LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean }
 >(({ className, required, children, ...props }, ref) => (
-  <label ref={ref} className={cn('block text-[12px] font-semibold text-secondary mb-1', className)} {...props}>
+  <label ref={ref} className={cn('block text-xs font-semibold text-secondary mb-1', className)} {...props}>
     {children}
     {required && <span className="text-danger"> *</span>}
   </label>

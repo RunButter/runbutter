@@ -67,7 +67,7 @@ export default function SearchSelect({
   return (
     <div ref={rootRef} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)}
-        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm focus:ring-2 focus:ring-accent/30 outline-none text-left ${buttonClassName}`}>
+        className={`w-full h-9 px-2.5 inline-flex items-center gap-2 text-sm rounded-md bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm focus:ring-2 focus:ring-accent/30 outline-none text-left ${buttonClassName}`}>
         {selected?.image && <img src={selected.image} alt="" className="w-5 h-5 rounded object-cover shrink-0" />}
         <span className={`flex-1 truncate ${selected ? 'text-primary font-medium' : 'text-tertiary'}`}>
           {selected ? selected.name : placeholder}
@@ -85,25 +85,25 @@ export default function SearchSelect({
           <div className="flex items-center gap-1.5 px-2.5 h-9 border-b border-subtle">
             <Search className="w-3.5 h-3.5 text-tertiary shrink-0" />
             <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={onKey}
-              placeholder="Type to search…" className="flex-1 text-[13px] outline-none placeholder:text-tertiary" />
+              placeholder="Type to search…" className="flex-1 text-sm outline-none placeholder:text-tertiary" />
           </div>
           <div ref={listRef} className="max-h-56 overflow-y-auto py-1">
             {allowClear && !query && (
               <button type="button" onClick={() => pick('')}
-                className="w-full px-2.5 py-1.5 text-left text-[13px] text-tertiary hover:bg-surface-sunken">{emptyLabel}</button>
+                className="w-full px-2.5 py-1.5 text-left text-sm text-tertiary hover:bg-surface-sunken">{emptyLabel}</button>
             )}
-            {filtered.length === 0 && <div className="px-2.5 py-3 text-center text-[12px] text-tertiary">No matches for “{query}”.</div>}
+            {filtered.length === 0 && <div className="px-2.5 py-3 text-center text-xs text-tertiary">No matches for “{query}”.</div>}
             {filtered.map((o, i) => (
               <button key={o.id} type="button" onClick={() => pick(o.id)} onMouseEnter={() => setHi(i)}
-                className={`w-full px-2.5 py-1.5 flex items-center gap-2 text-left text-[13px] ${i === hi ? 'bg-accent/10' : ''}`}>
+                className={`w-full px-2.5 py-1.5 flex items-center gap-2 text-left text-sm ${i === hi ? 'bg-accent/10' : ''}`}>
                 {o.image && <img src={o.image} alt="" className="w-6 h-6 rounded object-cover shrink-0 ring-1 ring-subtle" />}
                 <span className="flex-1 truncate text-secondary">{o.name}</span>
-                {o.hint && <span className="text-[11px] text-tertiary tabular-nums shrink-0">{o.hint}</span>}
+                {o.hint && <span className="text-2xs text-tertiary tabular-nums shrink-0">{o.hint}</span>}
                 {o.id === value && <Check className="w-3.5 h-3.5 text-accent shrink-0" />}
               </button>
             ))}
             {options.length > 100 && filtered.length === 100 && (
-              <div className="px-2.5 py-1.5 text-[11px] text-tertiary border-t border-subtle">Showing first 100 — keep typing to narrow.</div>
+              <div className="px-2.5 py-1.5 text-2xs text-tertiary border-t border-subtle">Showing first 100 — keep typing to narrow.</div>
             )}
           </div>
         </div>

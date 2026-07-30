@@ -25,12 +25,12 @@ export default function RoadmapPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Roadmap</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
-        <div className="ml-auto hidden sm:flex items-center gap-3 text-[11px] font-semibold">
+        <div className="ml-auto hidden sm:flex items-center gap-3 text-2xs font-semibold">
           {PRIORITY.map(([label, color]) => (
             <span key={label} className="inline-flex items-center gap-1.5 text-secondary">
               <span className="w-2 h-2 rounded-full" style={{ background: color }} /> {label}
@@ -39,7 +39,7 @@ export default function RoadmapPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!projects ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : projects.length === 0 ? (

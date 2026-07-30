@@ -227,15 +227,15 @@ export default function SourcesPage() {
                                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/30">{titleize(l.source || 'other')}</span>
                                                 <span className="text-sm font-semibold text-primary truncate">{l.label || l.position_title || 'Untitled'}</span>
                                             </div>
-                                            <div className="text-[11px] text-tertiary truncate font-mono mt-0.5">{buildUrl(l)}</div>
+                                            <div className="text-2xs text-tertiary truncate font-mono mt-0.5">{buildUrl(l)}</div>
                                         </div>
                                         <div className="text-center shrink-0 px-2">
                                             <div className="text-sm font-semibold text-primary">{l.click_count || 0}</div>
-                                            <div className="text-[9px] uppercase tracking-widest text-tertiary font-semibold">clicks</div>
+                                            <div className="text-3xs uppercase tracking-widest text-tertiary font-semibold">clicks</div>
                                         </div>
                                         <div className="text-center shrink-0 px-2">
                                             <div className="text-sm font-semibold text-primary">{l.applicant_count || 0}</div>
-                                            <div className="text-[9px] uppercase tracking-widest text-tertiary font-semibold">applied</div>
+                                            <div className="text-3xs uppercase tracking-widest text-tertiary font-semibold">applied</div>
                                         </div>
                                         <button onClick={() => copy(l)}
                                             className="shrink-0 p-2 rounded-lg border border-subtle text-secondary hover:text-accent hover:border-accent/30 transition">
@@ -278,7 +278,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
         <div className="bg-surface rounded-xl ring-1 ring-subtle px-4 py-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-1">
+            <div className="flex items-center gap-1.5 text-3xs font-semibold uppercase tracking-widest text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
             <div className="text-xl font-semibold text-primary">{value}</div>

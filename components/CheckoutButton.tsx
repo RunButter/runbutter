@@ -78,7 +78,7 @@ export default function CheckoutButton({
         <button
             onClick={handleCheckout}
             disabled={loading}
-            className={`w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-md text-[13px] font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none ${variantStyles}`}
+            className={`w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none ${variantStyles}`}
         >
             {loading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Connecting…</>

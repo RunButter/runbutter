@@ -15,12 +15,12 @@ import { rpc } from '@/lib/rpc';
 
 function StatusPill({ status }: { status: string }) {
     const st = hrStatus(status);
-    return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${st.cls}`}>{st.label}</span>;
+    return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 ${st.cls}`}>{st.label}</span>;
 }
 
 function ScoreDot({ score }: { score?: number | null }) {
-    if (score === null || score === undefined) return <span className="text-tertiary text-[12px] italic">Pending</span>;
-    return <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 ring-1 ring-accent/20 text-[12px] font-semibold text-accent tabular-nums">{score || 0}</span>;
+    if (score === null || score === undefined) return <span className="text-tertiary text-xs italic">Pending</span>;
+    return <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 ring-1 ring-accent/20 text-xs font-semibold text-accent tabular-nums">{score || 0}</span>;
 }
 
 export default function CandidatesPage() {
@@ -105,7 +105,7 @@ export default function CandidatesPage() {
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder='Search resumes — react node -junior  or  "node.js"'
-                        className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     {searching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent animate-spin" />}
                 </div>
                 <Button size="sm" variant="primary" onClick={() => setAdding(true)} disabled={!user}>
@@ -114,7 +114,7 @@ export default function CandidatesPage() {
             </PageHeader>
 
             {/* Search-syntax hint */}
-            <div className="px-4 py-1.5 border-b border-subtle bg-surface-sunken/40 text-[11px] text-tertiary font-mono">
+            <div className="px-4 py-1.5 border-b border-subtle bg-surface-sunken/40 text-2xs text-tertiary font-mono">
                 space = AND · <span className="text-secondary">or</span> = OR · <span className="text-secondary">-term</span> = NOT · "quotes" = exact phrase
             </div>
 
@@ -127,7 +127,7 @@ export default function CandidatesPage() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="font-semibold text-primary truncate">{can.full_name}</div>
-                                    <div className="flex items-center gap-1 text-[12px] text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{can.email}</span></div>
+                                    <div className="flex items-center gap-1 text-xs text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{can.email}</span></div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <StatusPill status={can.status} />
@@ -135,23 +135,23 @@ export default function CandidatesPage() {
                                 </div>
                             </div>
                             <div className="mt-3 flex items-center justify-between gap-3">
-                                <span className="text-[13px] text-secondary truncate">{can.position?.title || '—'}</span>
+                                <span className="text-sm text-secondary truncate">{can.position?.title || '—'}</span>
                                 <ScoreDot score={can.assessment_results?.[0]?.overall_score} />
                             </div>
                         </Link>
                     ))}
                     {candidates.length === 0 && (
-                        <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center text-tertiary text-[13px]">{empty}</div>
+                        <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center text-tertiary text-sm">{empty}</div>
                     )}
                 </div>
 
                 {/* Desktop: table */}
                 <div className="hidden md:block rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
-                    <table className="w-full text-[13px] border-separate border-spacing-0">
+                    <table className="w-full text-sm border-separate border-spacing-0">
                         <thead>
                             <tr>
                                 {[['Candidate', 'left'], ['Position', 'left'], ['Score', 'center'], ['Screening', 'left'], ['Applied', 'left'], ['Status', 'left'], ['', 'right']].map(([h, a], i) => (
-                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-[11px] font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'}`}>{h}</th>
+                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'}`}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -163,25 +163,25 @@ export default function CandidatesPage() {
                                     <tr key={can.id} className="group hover:bg-surface-sunken/70 transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/candidates/${can.id}`)}>
                                         <td className="px-4 h-[56px] border-b border-subtle">
                                             <div className="font-semibold text-primary">{can.full_name}</div>
-                                            <div className="flex items-center gap-1 text-[11px] text-tertiary"><Mail className="w-3 h-3" /> {can.email}</div>
+                                            <div className="flex items-center gap-1 text-2xs text-tertiary"><Mail className="w-3 h-3" /> {can.email}</div>
                                         </td>
                                         <td className="px-4 h-[56px] border-b border-subtle text-secondary">{can.position?.title || '—'}</td>
                                         <td className="px-4 h-[56px] border-b border-subtle text-center"><ScoreDot score={ar?.overall_score} /></td>
                                         <td className="px-4 h-[56px] border-b border-subtle">
                                             {sc !== null && sc !== undefined ? (
                                                 <div className="flex flex-col gap-1">
-                                                    <div className="flex justify-between items-center text-[10px] font-semibold tracking-wider text-tertiary"><span>MATCH</span><span className="tabular-nums">{sc}%</span></div>
+                                                    <div className="flex justify-between items-center text-3xs font-semibold tracking-wider text-tertiary"><span>MATCH</span><span className="tabular-nums">{sc}%</span></div>
                                                     <div className="w-24 h-1.5 bg-surface-hover rounded-full overflow-hidden">
                                                         <div className={`h-full rounded-full transition-all duration-700 ${sc >= 66 ? 'bg-success' : sc >= 33 ? 'bg-warning' : 'bg-danger'}`} style={{ width: `${sc}%` }} />
                                                     </div>
                                                 </div>
-                                            ) : <span className="text-tertiary text-[12px] italic">N/A</span>}
+                                            ) : <span className="text-tertiary text-xs italic">N/A</span>}
                                         </td>
                                         <td className="px-4 h-[56px] border-b border-subtle text-secondary tabular-nums">{can.applied_at ? new Date(can.applied_at).toLocaleDateString() : '—'}</td>
                                         <td className="px-4 h-[56px] border-b border-subtle"><StatusPill status={can.status} /></td>
                                         <td className="px-4 h-[56px] border-b border-subtle text-right" onClick={(e) => e.stopPropagation()}>
                                             <div className="inline-flex items-center gap-1">
-                                                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-tertiary group-hover:text-accent transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/candidates/${can.id}`)}>View <ExternalLink className="w-3 h-3" /></span>
+                                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-tertiary group-hover:text-accent transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/candidates/${can.id}`)}>View <ExternalLink className="w-3 h-3" /></span>
                                                 <button onClick={(e) => removeCandidate(e, can)} aria-label="Delete candidate" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </td>

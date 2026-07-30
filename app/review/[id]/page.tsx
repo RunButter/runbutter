@@ -63,7 +63,7 @@ function ReviewInner() {
         <div className="max-w-sm w-full bg-surface rounded-xl ring-1 ring-subtle shadow-sm p-8 text-center">
           <div className="w-10 h-10 mx-auto rounded-full bg-surface-hover flex items-center justify-center mb-3"><Lock className="w-4 h-4 text-tertiary" /></div>
           <h1 className="text-sm font-medium text-primary">This review link isn’t valid</h1>
-          <p className="mt-1.5 text-[13px] text-secondary">It may have been replaced — ask the sender for a fresh link.</p>
+          <p className="mt-1.5 text-sm text-secondary">It may have been replaced — ask the sender for a fresh link.</p>
         </div>
       </div>
     );
@@ -78,12 +78,12 @@ function ReviewInner() {
       <div className="sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
           <div className="w-6 h-6 rounded-md bg-inverse" />
-          <span className="text-[13px] font-medium text-primary">Post review</span>
-          <span className={`text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded capitalize ${STATUS_CHIP[post.status] || STATUS_CHIP.draft}`}>{post.status.replace('_', ' ')}</span>
+          <span className="text-sm font-medium text-primary">Post review</span>
+          <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded capitalize ${STATUS_CHIP[post.status] || STATUS_CHIP.draft}`}>{post.status.replace('_', ' ')}</span>
           <div className="ml-auto flex items-center gap-2">
-            <label className="text-[12px] text-tertiary hidden sm:block">Commenting as</label>
+            <label className="text-xs text-tertiary hidden sm:block">Commenting as</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
-              className="h-8 w-36 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+              className="h-8 w-36 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
           </div>
         </div>
       </div>
@@ -93,26 +93,26 @@ function ReviewInner() {
         <div className="rounded-2xl bg-surface/80 ring-1 ring-subtle p-6 sm:p-10 flex flex-col items-center"
           style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--border-strong)) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
           <PostCanvas post={post} comments={post.comments} canComment onAddComment={onAddComment} />
-          <p className="text-center text-[11px] text-tertiary mt-4">Click anywhere on the post to pin a comment.</p>
+          <p className="text-center text-2xs text-tertiary mt-4">Click anywhere on the post to pin a comment.</p>
         </div>
 
         {/* Comments */}
         <aside className="rounded-2xl bg-surface ring-1 ring-subtle shadow-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
             <MessageCircle className="w-3.5 h-3.5 text-tertiary" />
-            <span className="text-[11px] font-medium uppercase tracking-widest text-tertiary">Comments</span>
-            <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded px-1.5 tabular-nums">{open.length}</span>
+            <span className="text-2xs font-medium uppercase tracking-widest text-tertiary">Comments</span>
+            <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded px-1.5 tabular-nums">{open.length}</span>
           </div>
-          {post.comments.length === 0 && <p className="text-[12px] text-tertiary">No comments yet — click the post to add the first one.</p>}
+          {post.comments.length === 0 && <p className="text-xs text-tertiary">No comments yet — click the post to add the first one.</p>}
           <div className="space-y-2.5">
             {post.comments.map((c) => (
               <div key={c.id} className={`rounded-lg ring-1 p-2.5 ${c.resolved ? 'ring-subtle bg-surface-sunken opacity-60' : 'ring-subtle'}`}>
-                <div className="text-[12px] font-medium text-secondary">{c.author}</div>
-                <p className={`mt-0.5 text-[12.5px] leading-snug ${c.resolved ? 'text-tertiary line-through' : 'text-secondary'}`}>{c.body}</p>
+                <div className="text-xs font-medium text-secondary">{c.author}</div>
+                <p className={`mt-0.5 text-xs leading-snug ${c.resolved ? 'text-tertiary line-through' : 'text-secondary'}`}>{c.body}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 pt-3 border-t border-subtle text-[10px] text-tertiary text-center">Powered by runbutter.app</p>
+          <p className="mt-4 pt-3 border-t border-subtle text-3xs text-tertiary text-center">Powered by runbutter.app</p>
         </aside>
       </div>
     </div>
