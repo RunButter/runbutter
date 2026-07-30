@@ -41,7 +41,7 @@ function Item({ it, active, count, onNavigate }: { it: any; active: boolean; cou
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={`flex items-center gap-2.5 h-10 px-3 rounded-lg text-sm transition-colors duration-100 ${
-        active ? 'bg-surface-hover text-primary font-medium ring-1 ring-subtle'
+        active ? 'bg-surface text-primary font-medium shadow-sm'
           : badge ? 'text-primary font-medium hover:bg-surface-hover'
             : 'text-secondary hover:text-primary hover:bg-surface-hover'
       }`}

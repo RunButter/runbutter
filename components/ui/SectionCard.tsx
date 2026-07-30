@@ -45,7 +45,7 @@ export default function SectionCard({
     <section className={cn('card-surface', flush && 'overflow-hidden', className)}>
       {hasHeader && (
         <div className={cn(
-          'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6',
+          'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-7',
           flush && 'pb-4 sm:pb-5 border-b border-subtle',
           !flush && 'pb-4 sm:pb-5',
         )}>
@@ -63,7 +63,7 @@ export default function SectionCard({
           </div>
         </div>
       )}
-      <div className={cn(!flush && 'px-5 pb-5 sm:px-6 sm:pb-6', bodyClassName)}>{children}</div>
+      <div className={cn(!flush && 'px-5 pb-5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-7', bodyClassName)}>{children}</div>
     </section>
   );
 }

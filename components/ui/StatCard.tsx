@@ -92,15 +92,14 @@ export default function StatCard({
             of cards showed a green badge on one and a grey box on the rest.
             Top-right is now real data or nothing.
 
-            Label is sentence case, not UPPERCASE + tracking: a grid of uppercase
-            KPI labels sat at the same level of the hierarchy as sentence-case
-            card titles elsewhere on the page, which is what made a screen read
-            as assorted widgets. Uppercase is also much wider, so "Candidates"
-            no longer truncates when six tiles go three-across on a phone — the
-            icon drops below sm for the same reason. */}
+            Small uppercase label over a large figure. Uppercase is noticeably
+            wider than sentence case, which is why the KPI grid drops to TWO
+            across on a phone rather than three — at three, "Candidates" and
+            "Interviews" truncated mid-word. The icon still drops below sm to buy
+            the label back some width. */}
         <span className="flex items-center gap-1.5 min-w-0">
           {Icon && <Icon className="w-3.5 h-3.5 shrink-0 text-tertiary hidden sm:block" />}
-          <span className="text-2xs font-medium text-tertiary truncate">{label}</span>
+          <span className="text-3xs font-semibold uppercase tracking-wider text-tertiary truncate">{label}</span>
         </span>
         {trend && (
           <span className={cn(
@@ -114,7 +113,7 @@ export default function StatCard({
 
       <div className="mt-2 sm:mt-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className={cn('text-2xl sm:text-stat font-semibold tabular-nums truncate', tone || 'text-primary')}>
+          <div className={cn('text-2xl sm:text-stat font-bold tracking-tight tabular-nums truncate', tone || 'text-primary')}>
             {value}
           </div>
           {sub && <div className="mt-1 text-xs font-medium text-tertiary truncate">{sub}</div>}

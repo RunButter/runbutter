@@ -45,7 +45,7 @@ export default function HrOverviewPage() {
     { label: 'Open roles', value: s?.activePositions, icon: Briefcase },
     { label: 'Assessed', value: s?.assessmentsCompleted, icon: CheckCircle2 },
     { label: 'Interviews', value: s?.upcomingInterviews, icon: Calendar },
-    { label: 'New (7d)', value: s?.newApplications, icon: TrendingUp },
+    { label: 'New', value: s?.newApplications, icon: TrendingUp, sub: 'last 7 days' },
     { label: 'Pending', value: s?.pendingReview, icon: Clock },
   ];
 
@@ -70,11 +70,9 @@ export default function HrOverviewPage() {
           }
         />
 
-        {/* Three across on a phone rather than two: six tiles in a 2-column grid
-            is three screenfuls of near-identical boxes before any real content. */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {kpis.map((k) => (
-            <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} />
+            <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} sub={(k as any).sub} />
           ))}
         </div>
 

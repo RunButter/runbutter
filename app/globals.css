@@ -15,7 +15,7 @@
     /* Light theme, shadcn-style elevation: the canvas is a soft grey so white
        cards visibly float on it (paired with shadow-card), the way the shadcn
        block gallery reads. */
-    --canvas:        240 6% 96%;    /* app background behind panels */
+    --canvas:        240 5% 96%;    /* app background behind panels (zinc-100) */
     --surface:       0 0% 100%;     /* panels, tables, cards        */
     --surface-hover: 240 5% 95.5%;  /* row / item hover             */
     --surface-sunken:240 5% 97%;    /* rails, headers, inputs       */
@@ -28,42 +28,43 @@
     --text-secondary:240 4% 34%;
     --text-tertiary: 240 4% 46%;
 
-    /* Deliberately NOT the 243° electric indigo every AI-built SaaS ships —
-       that hue is the single biggest "generic" tell. Pulled toward blue and
-       desaturated so it recedes next to the neutrals. Primary actions are the
-       monochrome inverse fill; this is for links, focus rings and tints. */
-    --accent:        234 58% 54%;
-    --accent-fg:     0 0% 100%;
-    --accent-soft:   234 58% 96%;
+    /* Emerald. Primary actions stay the monochrome inverse fill; this is for
+       links, focus rings and tints.
+       --accent-fg is NEAR-BLACK, not white: white on emerald-500 measures
+       2.56:1 and fails AA outright, where dark green on the same fill measures
+       ~7:1. Same correction already applied to the status fills below. */
+    --accent:        160 84% 39%;   /* emerald-500 #10b981 */
+    --accent-fg:     160 80% 8%;    /* 7.06 on --accent */
+    --accent-soft:   160 60% 95%;
 
     /* Neutral solid fill — the monochrome CTA. Near-black on light, near-white
        on dark. Lets a page go fully grayscale without touching the accent. */
     --inverse:       240 10% 10%;
     --inverse-fg:    0 0% 100%;
 
-    --success: 152 60% 36%;
+    --success: 152 62% 30%;
     --warning: 35 92% 42%;
     --danger:  0 72% 51%;
 
     /* Label on a SOLID status fill. White only clears AA on the light danger
        fill (4.80); on every other fill it fails (success 3.88, warning 3.24,
        and worse in dark where the fills lighten). These are measured to pass. */
-    --success-fg: 152 70% 6%;   /* 4.66 on --success */
+    --success-fg: 0 0% 100%;    /* 5.21 on the darkened --success */
     --warning-fg: 35 70% 6%;    /* 5.75 on --warning */
     --danger-fg:  0 0% 100%;    /* 4.80 on --danger  */
 
     /* A hue that works as a FILL is too light as small TEXT. These are the
        text-safe versions (used by text-accent / text-success / ...), so a
        label on a 10%-tint chip still clears AA. Fills keep the vars above. */
-    --accent-text:  234 62% 44%;
-    --success-text: 152 68% 26%;
+    --accent-text:  161 94% 27%;  /* AA on white and on --accent-soft */
+    --success-text: 152 70% 21%;
     --warning-text: 30 95% 30%;
     --danger-text:  0 74% 42%;
 
-    /* Rounder than the old 8px — the shadcn gallery reads at ~12–16px. This
-       feeds rounded-md/lg/xl in tailwind.config, so every control and card
-       gets rounder at once. */
-    --radius: 0.75rem;
+    /* Feeds rounded-md/lg/xl in tailwind.config, so every control and card gets
+       rounder at once. 1rem gives cards ~20px (rounded-xl) — the soft floating
+       look — while compact controls stay ~14px via rounded-md. */
+    --radius: 1rem;
   }
 
   .dark {
@@ -82,10 +83,12 @@
     --text-secondary:240 5% 72%;
     --text-tertiary: 240 4% 58%;
 
-    /* Dark accent stays dark enough for white accent-fg labels to clear AA. */
-    --accent:        234 56% 58%;
-    --accent-fg:     0 0% 100%;
-    --accent-soft:   234 50% 18%;
+    /* Emerald in dark is LIGHT, so its label goes dark like the status fills
+       below — white on it measures 2.02:1. The old indigo was dark enough for a
+       white label; emerald is not. */
+    --accent:        158 64% 52%;
+    --accent-fg:     160 80% 6%;    /* 8.97 on --accent */
+    --accent-soft:   160 40% 16%;
 
     --inverse:       0 0% 96%;
     --inverse-fg:    240 10% 8%;
@@ -100,7 +103,7 @@
     --warning-fg: 35 70% 6%;    /* 8.62 */
     --danger-fg:  0 70% 6%;     /* 5.48 */
 
-    --accent-text:  234 80% 76%;
+    --accent-text:  156 72% 67%;
     --success-text: 152 60% 62%;
     --warning-text: 40 95% 62%;
     --danger-text:  0 85% 72%;
