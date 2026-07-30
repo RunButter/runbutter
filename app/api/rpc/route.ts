@@ -79,6 +79,9 @@ const ALLOWED = new Set([
   // Careers page (0060) — owner side. get_careers_page is public and is read
   // server-side by the careers route, so it is deliberately NOT listed here.
   'get_careers_settings', 'set_careers_page', 'set_position_published',
+  // Invoice reminders (0064) — owner side. The send itself runs server-side in
+  // /api/finance/reminders/run, which holds the Resend key and the per-run cap.
+  'get_invoice_reminder_settings', 'save_invoice_reminder_settings', 'get_invoice_reminder_log',
 ]);
 
 function db() {
