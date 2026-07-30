@@ -55,17 +55,13 @@ export default function HrOverviewPage() {
         <PageHeader
           title="Recruiting"
           subtitle="Your hiring pipeline, candidates and open roles"
+          // Live/Sample earns its place — it tells you whether the numbers are
+          // real. The plan chip did not: which plan you are on is a Settings
+          // fact, not a hiring one, and it sat beside the title on every visit.
           badges={
-            <>
-              <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                {hr?.live ? 'Live' : 'Sample'}
-              </span>
-              {hr?.company?.plan && (
-                <span className="text-3xs font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">
-                  {hr.company.plan} plan
-                </span>
-              )}
-            </>
+            <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+              {hr?.live ? 'Live' : 'Sample'}
+            </span>
           }
           actions={
             <Link href="/dashboard/positions/new" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">

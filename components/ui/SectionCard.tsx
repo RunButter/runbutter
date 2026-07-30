@@ -45,9 +45,9 @@ export default function SectionCard({
     <section className={cn('rounded-xl bg-surface ring-1 ring-subtle shadow-card', flush && 'overflow-hidden', className)}>
       {hasHeader && (
         <div className={cn(
-          'flex items-start justify-between gap-3 px-5 pt-5',
-          flush && 'pb-4 border-b border-subtle',
-          !flush && 'pb-4',
+          'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6',
+          flush && 'pb-4 sm:pb-5 border-b border-subtle',
+          !flush && 'pb-4 sm:pb-5',
         )}>
           <div className="min-w-0">
             {title && <h2 className="text-base font-semibold text-primary truncate">{title}</h2>}
@@ -63,7 +63,7 @@ export default function SectionCard({
           </div>
         </div>
       )}
-      <div className={cn(!flush && 'px-5 pb-5', bodyClassName)}>{children}</div>
+      <div className={cn(!flush && 'px-5 pb-5 sm:px-6 sm:pb-6', bodyClassName)}>{children}</div>
     </section>
   );
 }
