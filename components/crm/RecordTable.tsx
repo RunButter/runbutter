@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Trash2, Download, X, Loader2, Inbox } from 'lucide-react';
+import { Trash2, Download, X, Loader2, Inbox, ChevronRight } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 import Badge, { toneFor, iconFor } from '@/components/ui/Badge';
@@ -102,6 +102,8 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
                 {f.label}
               </th>
             ))}
+            {/* Spacer for the row-open chevron below. */}
+            {onRowClick && <th className="sticky top-0 z-10 bg-surface-sunken w-9 border-b border-subtle" aria-hidden />}
           </tr>
         </thead>
         <tbody>
@@ -119,12 +121,22 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
                     <FieldValue field={f} row={r} />
                   </td>
                 ))}
+                {/* Rows have been clickable all along with nothing to say so —
+                    cursor:pointer is invisible until you are already hovering the
+                    right place. A chevron that fades in on hover or keyboard
+                    focus makes "this opens" discoverable without adding a column
+                    of permanent visual noise. */}
+                {onRowClick && (
+                  <td className="px-2 h-11 border-b border-subtle text-right">
+                    <ChevronRight className="w-4 h-4 text-tertiary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity inline-block" />
+                  </td>
+                )}
               </tr>
             );
           })}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={object.fields.length + 1}>
+              <td colSpan={object.fields.length + (onRowClick ? 2 : 1)}>
                 <EmptyState
                   icon={Inbox}
                   title={`No ${object.plural.toLowerCase()} yet`}

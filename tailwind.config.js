@@ -103,6 +103,9 @@ module.exports = {
         sm: ['14px', '20px'],      // DEFAULT UI text: rows, inputs, buttons, nav
         base: ['15px', '22px'],    // section titles, emphasised body
         md: ['16px', '24px'],      // page titles
+        // The one display size the product UI owns: a KPI figure. Named rather
+        // than written as text-[26px] so it moves with the rest of the scale.
+        stat: ['28px', '32px'],
         // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },

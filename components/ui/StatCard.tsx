@@ -78,29 +78,32 @@ export default function StatCard({
   const inner = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
-        {/* Top-right: the trend badge when we have real momentum (shadcn-admin
-            style), otherwise the icon chip. */}
-        {trend ? (
+        {/* The icon sits INLINE with the label as a quiet glyph. It used to be a
+            boxed chip floating top-right, which carried no information the label
+            didn't already give — and because the trend badge took that same slot
+            when momentum existed, a row of cards showed a green badge on one and
+            a grey box on the rest. Top-right is now reserved for real data, and
+            is simply empty when there is none. */}
+        <span className="flex items-center gap-1.5 min-w-0">
+          {Icon && <Icon className="w-3.5 h-3.5 shrink-0 text-tertiary" />}
+          <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+        </span>
+        {trend && (
           <span className={cn(
             'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-2xs font-semibold shrink-0',
             trendGood ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
           )}>
             <TrendArrow className="w-3 h-3" />{trend.label}
           </span>
-        ) : Icon ? (
-          <span className="w-7 h-7 -mr-0.5 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
-            <Icon className={cn('w-3.5 h-3.5', tone || 'text-tertiary')} />
-          </span>
-        ) : null}
+        )}
       </div>
 
-      <div className="mt-2.5 flex items-end justify-between gap-2">
+      <div className="mt-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className={cn('text-[26px] leading-none font-semibold tabular-nums truncate', tone || 'text-primary')}>
+          <div className={cn('text-stat font-semibold tabular-nums truncate', tone || 'text-primary')}>
             {value}
           </div>
-          {sub && <div className="mt-1.5 text-2xs font-medium text-tertiary truncate">{sub}</div>}
+          {sub && <div className="mt-1 text-xs font-medium text-tertiary truncate">{sub}</div>}
         </div>
         {spark && spark.length >= 2 && (
           <span className={cn('shrink-0 self-center', tone || 'text-tertiary')}><Sparkline data={spark} /></span>
