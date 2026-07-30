@@ -17,6 +17,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `origin` = `CasperCrypto/talent-insight` is a stale mirror.
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
+- **0064_invoice_reminders.sql is PENDING** (the Supabase connector dropped before it could be
+  applied). Reminders stay OFF per workspace until an owner enables them, so nothing mails on deploy.
 - **Migrations through 0063 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
   Supabase connector — don't report any of them as pending). 0062 went in via `apply_migration`, so
   it is recorded in `supabase_migrations`; 0058–0061 were run by hand and are not.
