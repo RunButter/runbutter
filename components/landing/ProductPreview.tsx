@@ -145,7 +145,7 @@ export default function ProductPreview() {
         </div>
       </div>
 
-      <div className="flex h-[500px] sm:h-[620px] lg:h-[700px]">
+      <div className="flex h-[380px] sm:h-[560px] lg:h-[680px]">
         {/* mini nav rail (hidden on phones so the content gets the full width) */}
         <div className="hidden sm:flex w-12 shrink-0 border-r border-subtle bg-surface-sunken flex-col items-center gap-2 py-4">
           <div className="w-5 h-5 rounded-md bg-inverse mb-1.5" />

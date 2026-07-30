@@ -199,7 +199,16 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
               </div>
             );
           }
-          const open = !collapsed[g.group];
+          // Groups start CLOSED unless they hold the page you are on.
+          //
+          // Every group open meant ~40 links and a scrollbar before you had
+          // done anything — the rail was the densest thing on screen and buried
+          // the page beside it. Opening only the section you are working in
+          // shows six to ten, and an explicit toggle is remembered from then on.
+          // Before hydration localStorage is unreadable, so the same
+          // active-section default renders on the server and no group flashes.
+          const hasActive = g.items.some((it: any) => isActive(it.href));
+          const open = hydrated && g.group in collapsed ? !collapsed[g.group] : hasActive;
           return (
             <div key={g.group} className="px-2 mb-3">
               <button
@@ -209,7 +218,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
                 <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${open ? 'rotate-90' : ''}`} />
                 {g.group}
               </button>
-              {(open || !hydrated) && (
+              {open && (
                 <div className="mt-1 space-y-1">
                   {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
                 </div>

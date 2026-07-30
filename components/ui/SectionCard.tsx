@@ -42,7 +42,7 @@ export default function SectionCard({
   const hasHeader = !!(title || subtitle || meta || action);
 
   return (
-    <section className={cn('rounded-xl bg-surface ring-1 ring-subtle shadow-card', flush && 'overflow-hidden', className)}>
+    <section className={cn('card-surface', flush && 'overflow-hidden', className)}>
       {hasHeader && (
         <div className={cn(
           'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6',

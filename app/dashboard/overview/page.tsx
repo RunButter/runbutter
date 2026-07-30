@@ -51,7 +51,7 @@ export default function HrOverviewPage() {
 
   return (
     <div className="p-5 sm:p-6 2xl:p-8">
-      <div className="max-w-6xl space-y-6">
+      <div className="max-w-7xl space-y-6">
         <PageHeader
           title="Recruiting"
           subtitle="Your hiring pipeline, candidates and open roles"
@@ -72,7 +72,7 @@ export default function HrOverviewPage() {
 
         {/* Three across on a phone rather than two: six tiles in a 2-column grid
             is three screenfuls of near-identical boxes before any real content. */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
           {kpis.map((k) => (
             <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} />
           ))}

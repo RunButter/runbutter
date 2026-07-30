@@ -179,6 +179,16 @@
   .btn-ghost     { @apply btn text-secondary hover:bg-surface-hover hover:text-primary; }
   .btn-danger    { @apply btn bg-danger text-danger-fg shadow-sm hover:bg-danger/90; }
 
+  /* Card surface.
+     The elevation rule still holds — cards are RAISED, not flat — but the lift
+     comes from a shadow in light mode rather than a hairline ring, which is
+     what made every card read as a drawn box rather than a floating sheet.
+     Dark mode keeps the ring: a shadow against a near-black canvas is invisible,
+     so the edge is the only thing separating a card from the page. */
+  .card-surface {
+    @apply rounded-xl bg-surface shadow-card ring-1 ring-transparent dark:ring-subtle;
+  }
+
   /* Inputs: raised shadcn field — subtle shadow, hairline border, accent focus
      ring. rounded-md now resolves to ~10px off the bumped --radius. */
   .input-field {

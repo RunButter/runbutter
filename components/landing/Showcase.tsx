@@ -43,11 +43,11 @@ function MiniCard({ title, sub, amount }: { title: string; sub?: string; amount?
 
 function MiniColumn({ name, children }: { name: string; children: React.ReactNode }) {
   return (
-    <div className="flex-1 min-w-0">
+    <div className="flex-1 min-w-[132px] sm:min-w-0">
       <div className="flex items-center gap-1.5 mb-2 px-0.5">
         <span className="text-2xs font-medium text-primary">{name}</span>
       </div>
-      <div className="rounded-lg bg-surface-sunken border border-subtle p-2 min-h-[200px]">{children}</div>
+      <div className="rounded-lg bg-surface-sunken border border-subtle p-2 min-h-[104px] sm:min-h-[180px]">{children}</div>
     </div>
   );
 }
@@ -55,7 +55,7 @@ function MiniColumn({ name, children }: { name: string; children: React.ReactNod
 function SalesMock() {
   return (
     <MockWindow>
-      <div className="flex gap-2.5">
+      <div className="flex gap-2.5 overflow-x-auto -mx-1 px-1 pb-1">
         <MiniColumn name="Lead"><MiniCard title="Northwind" sub="northwind.io" amount="$24,000" /><MiniCard title="Cobalt" amount="$8,000" /></MiniColumn>
         <MiniColumn name="Proposal"><MiniCard title="Vertex" sub="vertex.co" amount="$60,000" /></MiniColumn>
         <MiniColumn name="Won"><MiniCard title="Pulse" amount="$36,000" /></MiniColumn>

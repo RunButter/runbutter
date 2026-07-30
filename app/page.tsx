@@ -114,8 +114,8 @@ export default function HomePage() {
           interactive product window is the centrepiece and breaks into the
           page below. Monochrome ASCII drifts behind a canvas scrim. */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0"><AsciiField colors={MONO} baseAlpha={0.16} peakAlpha={0.6} /></div>
-        <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-canvas via-canvas/92 to-transparent pointer-events-none" />
+        <div className="absolute inset-0"><AsciiField colors={MONO} baseAlpha={0.09} peakAlpha={0.42} /></div>
+        <div className="absolute inset-x-0 top-0 h-[78%] bg-gradient-to-b from-canvas via-canvas/95 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto px-6 pt-24 md:pt-32 pb-14 text-center">
           <div className="inline-flex items-center gap-1.5 h-6 px-2.5 mb-6 rounded-full border border-subtle bg-surface text-2xs font-medium text-secondary">
@@ -129,7 +129,7 @@ export default function HomePage() {
             Plus AI agents that run on your own key.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <CopyCommand command={`git clone ${REPO_URL}.git`} />
+            <div className="hidden sm:block"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
             <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>

@@ -129,7 +129,7 @@ export default function StatCard({
   );
 
   const base = cn(
-    'block rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5 sm:p-4',
+    'block card-surface p-4 sm:p-5',
     interactive && 'group hover:ring-strong hover:shadow-elevated transition-all',
     className
   );
