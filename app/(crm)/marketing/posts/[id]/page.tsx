@@ -107,7 +107,7 @@ export default function PostStudio() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-2 px-5 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
         <button onClick={() => router.push('/marketing/posts')} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-3.5 h-3.5" /> Posts</button>
         <h1 className="text-sm font-semibold text-primary">Post studio</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${post.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{post.live ? 'Live' : 'Sample'}</span>

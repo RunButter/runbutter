@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
                         <div className="grid lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-base font-semibold text-primary flex items-center gap-2"><BarChart className="w-4 h-4 text-accent" /> Application volume by position</h3>
+                                    <h3 className="text-md font-semibold text-primary flex items-center gap-2"><BarChart className="w-4 h-4 text-accent" /> Application volume by position</h3>
                                     <span className="text-3xs font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">

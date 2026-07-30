@@ -98,7 +98,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
             </th>
             {object.fields.map((f) => (
               <th key={f.key} style={{ minWidth: f.width }}
-                className={`sticky top-0 z-10 bg-surface-sunken px-3.5 h-10 text-2xs font-semibold uppercase tracking-wide text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
+                className={`sticky top-0 z-10 bg-surface-sunken px-3.5 h-11 text-2xs font-semibold uppercase tracking-wide text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
                 {f.label}
               </th>
             ))}
@@ -112,12 +112,12 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
             return (
               <tr key={r.id} onClick={() => onRowClick?.(r)}
                 className={`group transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${on ? 'bg-accent/[0.06]' : 'hover:bg-surface-hover'}`}>
-                <td className="px-3.5 h-11 border-b border-subtle" onClick={(e) => e.stopPropagation()}>
+                <td className="px-3.5 h-12 border-b border-subtle" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={on} onChange={() => toggle(r.id)}
                     className={`rounded border-strong accent-accent cursor-pointer transition-opacity ${on ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                 </td>
                 {object.fields.map((f) => (
-                  <td key={f.key} className={`px-3.5 h-11 border-b border-subtle ${f.align === 'right' ? 'text-right' : ''}`}>
+                  <td key={f.key} className={`px-3.5 h-12 border-b border-subtle ${f.align === 'right' ? 'text-right' : ''}`}>
                     <FieldValue field={f} row={r} />
                   </td>
                 ))}
@@ -127,7 +127,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
                     focus makes "this opens" discoverable without adding a column
                     of permanent visual noise. */}
                 {onRowClick && (
-                  <td className="px-2 h-11 border-b border-subtle text-right">
+                  <td className="px-2 h-12 border-b border-subtle text-right">
                     <ChevronRight className="w-4 h-4 text-tertiary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity inline-block" />
                   </td>
                 )}

@@ -152,7 +152,7 @@ export default function BrandingPage() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Branding</h1>
         <span className="text-2xs text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
