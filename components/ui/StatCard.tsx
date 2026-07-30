@@ -78,12 +78,12 @@ export default function StatCard({
   const inner = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+        <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
         {/* Top-right: the trend badge when we have real momentum (shadcn-admin
             style), otherwise the icon chip. */}
         {trend ? (
           <span className={cn(
-            'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold shrink-0',
+            'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-2xs font-semibold shrink-0',
             trendGood ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
           )}>
             <TrendArrow className="w-3 h-3" />{trend.label}
@@ -100,7 +100,7 @@ export default function StatCard({
           <div className={cn('text-[26px] leading-none font-semibold tabular-nums truncate', tone || 'text-primary')}>
             {value}
           </div>
-          {sub && <div className="mt-1.5 text-[11px] font-medium text-tertiary truncate">{sub}</div>}
+          {sub && <div className="mt-1.5 text-2xs font-medium text-tertiary truncate">{sub}</div>}
         </div>
         {spark && spark.length >= 2 && (
           <span className={cn('shrink-0 self-center', tone || 'text-tertiary')}><Sparkline data={spark} /></span>

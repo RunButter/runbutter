@@ -55,10 +55,10 @@ export default function ProjectDashboard() {
         <div className="flex items-center gap-2">
           <Link href="/objects/projects" className="p-1.5 -ml-1 rounded-md text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></Link>
           <h1 className="text-sm font-semibold text-primary">{project?.name || 'Project'}</h1>
-          {project?.identifier && <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
-          {project?.status && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
-          <span className={`ml-1 text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
-          <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
+          {project?.identifier && <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
+          {project?.status && <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
+          <span className={`ml-1 text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+          <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
         </div>
       </header>
 
@@ -72,7 +72,7 @@ export default function ProjectDashboard() {
                 <div key={s.label} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
                   <s.icon className={`w-4 h-4 ${s.tone}`} />
                   <div className="mt-2 text-2xl font-semibold text-primary tabular-nums">{s.value}</div>
-                  <div className="text-[12px] font-medium text-tertiary">{s.label}</div>
+                  <div className="text-xs font-medium text-tertiary">{s.label}</div>
                 </div>
               ))}
             </div>

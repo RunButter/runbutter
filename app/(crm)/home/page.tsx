@@ -79,12 +79,12 @@ export default function WorkspaceHome() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Home</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Greeting */}
           <div>
@@ -115,9 +115,9 @@ export default function WorkspaceHome() {
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <h3 className="text-sm font-semibold text-primary">Cashflow</h3>
-                  <p className="text-[12px] text-tertiary">Revenue vs costs · last 12 months</p>
+                  <p className="text-xs text-tertiary">Revenue vs costs · last 12 months</p>
                 </div>
-                <div className="flex items-center gap-4 text-[11px] font-semibold">
+                <div className="flex items-center gap-4 text-2xs font-semibold">
                   <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-success" /> Revenue</span>
                   <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-strong" /> Costs</span>
                 </div>
@@ -133,9 +133,9 @@ export default function WorkspaceHome() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-primary">Hiring funnel</h3>
-                  <p className="text-[12px] text-tertiary">Candidates by stage</p>
+                  <p className="text-xs text-tertiary">Candidates by stage</p>
                 </div>
-                <Link href="/dashboard/pipeline" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
+                <Link href="/dashboard/pipeline" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
               </div>
               {loading || !hr ? (
                 <div className="flex-1 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -147,7 +147,7 @@ export default function WorkspaceHome() {
 
           {/* Explore pillars */}
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-3">Jump back in</div>
+            <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-3">Jump back in</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {pillars.map((p) => (
                 <Link key={p.label} href={p.href} className="group rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
@@ -155,7 +155,7 @@ export default function WorkspaceHome() {
                     <p.icon className={`w-4 h-4 ${p.tone}`} />
                   </div>
                   <div className="text-sm font-semibold text-primary flex items-center gap-1">{p.label}<ArrowUpRight className="w-3 h-3 text-tertiary group-hover:text-secondary transition-colors" /></div>
-                  <div className="text-[12px] text-tertiary truncate">{p.desc}</div>
+                  <div className="text-xs text-tertiary truncate">{p.desc}</div>
                 </Link>
               ))}
             </div>
@@ -166,8 +166,8 @@ export default function WorkspaceHome() {
             {/* Recent applications */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
-                <Link href="/dashboard/candidates" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
+                <h3 className="text-base font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
+                <Link href="/dashboard/candidates" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
                 {(hr?.recent || []).length === 0 ? (
@@ -177,14 +177,14 @@ export default function WorkspaceHome() {
                   const st = hrStatus(c.status);
                   return (
                     <Link key={c.id} href={`/dashboard/candidates/${c.id}`} className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-sunken/70 transition-colors">
-                      <div className="w-7 h-7 rounded-full bg-surface-hover text-secondary text-[10px] font-semibold flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-surface-hover text-secondary text-3xs font-semibold flex items-center justify-center shrink-0">
                         {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-[13px] font-semibold text-primary truncate">{c.full_name}</div>
-                        <div className="text-[11px] text-tertiary truncate">{c.position_title || '—'}</div>
+                        <div className="text-sm font-semibold text-primary truncate">{c.full_name}</div>
+                        <div className="text-2xs text-tertiary truncate">{c.position_title || '—'}</div>
                       </div>
-                      <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${st.cls}`}>{st.label}</span>
+                      <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 ${st.cls}`}>{st.label}</span>
                     </Link>
                   );
                 })}
@@ -194,8 +194,8 @@ export default function WorkspaceHome() {
             {/* Recent transactions */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-sm font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
-                <Link href="/finance/transactions" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
+                <h3 className="text-base font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
+                <Link href="/finance/transactions" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
                 {txns.length === 0 ? (
@@ -204,10 +204,10 @@ export default function WorkspaceHome() {
                 ) : txns.map((t) => (
                   <div key={t.id} className="flex items-center gap-3 px-5 py-2.5">
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-primary truncate">{t.description || '—'}</div>
-                      <div className="text-[11px] text-tertiary">{fmtDate(t.txn_date)}{t.category ? ` · ${t.category}` : ''}</div>
+                      <div className="text-sm font-semibold text-primary truncate">{t.description || '—'}</div>
+                      <div className="text-2xs text-tertiary">{fmtDate(t.txn_date)}{t.category ? ` · ${t.category}` : ''}</div>
                     </div>
-                    <span className={`shrink-0 text-[13px] font-semibold tabular-nums ${t.amount < 0 ? 'text-danger' : 'text-success'}`}>{money(t.amount)}</span>
+                    <span className={`shrink-0 text-sm font-semibold tabular-nums ${t.amount < 0 ? 'text-danger' : 'text-success'}`}>{money(t.amount)}</span>
                   </div>
                 ))}
               </div>

@@ -43,13 +43,13 @@ export default function PlansPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Plans &amp; billing</h1>
-        <span className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
-        <Link href="/dashboard/billing" className="ml-auto text-[12px] font-medium text-secondary hover:text-primary">Manage billing →</Link>
+        <span className="text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
+        <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
@@ -73,25 +73,25 @@ export default function PlansPage() {
                   <div key={key}
                     className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-accent/30 shadow-lg' : 'ring-1 ring-subtle'}`}>
                     {popular && (
-                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
+                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-3xs font-semibold uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
                         <Sparkles className="w-3 h-3" /> Popular
                       </div>
                     )}
                     {isCurrent && (
-                      <div className="absolute -top-2.5 right-5 text-[10px] font-semibold uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
+                      <div className="absolute -top-2.5 right-5 text-3xs font-semibold uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
                     )}
 
                     <h3 className="font-semibold text-primary">{p.name}</h3>
                     <div className="mt-1.5 flex items-baseline gap-1">
                       <span className="text-3xl font-semibold text-primary">{p.price}</span>
                       {p.priceValue > 0 && (
-                        <span className="text-[12px] font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
+                        <span className="text-xs font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
                       )}
                     </div>
-                    <p className="text-[12px] text-tertiary mb-4">{p.tagline}</p>
+                    <p className="text-xs text-tertiary mb-4">{p.tagline}</p>
 
                     {/* Hard limits — the Business-OS meters */}
-                    <div className="space-y-1.5 mb-4 text-[12px]">
+                    <div className="space-y-1.5 mb-4 text-xs">
                       <div className="flex justify-between"><span className="text-secondary">Seats</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxSeats)}</span></div>
                       <div className="flex justify-between"><span className="text-secondary">Records / object</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxRecords)}</span></div>
                       <div className="flex justify-between"><span className="text-secondary">Positions · candidates</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxPositions)} · {formatLimit(p.limits.maxCandidates)}</span></div>
@@ -100,15 +100,15 @@ export default function PlansPage() {
                     {/* Feature deltas */}
                     <ul className="space-y-1.5 mb-5 flex-grow">
                       {idx === 0 ? (
-                        <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Sales · Finance · Projects · HR core</li>
+                        <li className="flex items-start gap-2 text-xs text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Sales · Finance · Projects · HR core</li>
                       ) : (
                         <>
-                          <li className="text-[11px] font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
+                          <li className="text-2xs font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
                           {newFeats.length === 0 && key === 'enterprise' && (
-                            <li className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Unlimited everything</li>
+                            <li className="flex items-start gap-2 text-xs text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Unlimited everything</li>
                           )}
                           {newFeats.map((f) => (
-                            <li key={f} className="flex items-start gap-2 text-[12px] text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />{FEATURE_LABELS[f]}</li>
+                            <li key={f} className="flex items-start gap-2 text-xs text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />{FEATURE_LABELS[f]}</li>
                           ))}
                         </>
                       )}
@@ -116,11 +116,11 @@ export default function PlansPage() {
 
                     {/* CTA */}
                     {isCurrent ? (
-                      <button disabled className="h-10 rounded-xl text-[13px] font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
+                      <button disabled className="h-10 rounded-xl text-sm font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
                     ) : key === 'enterprise' ? (
-                      <Link href="/contact" className="h-10 rounded-xl text-[13px] font-semibold text-center inline-flex items-center justify-center bg-inverse text-inverse-fg hover:bg-inverse transition">Contact sales</Link>
+                      <Link href="/contact" className="h-10 rounded-xl text-sm font-semibold text-center inline-flex items-center justify-center bg-inverse text-inverse-fg hover:bg-inverse transition">Contact sales</Link>
                     ) : isUpgrade && PRICE_IDS[key] ? (
-                      <div className="[&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-[13px]">
+                      <div className="[&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-sm">
                         <CheckoutButton
                           companyId={company?.id || ''}
                           priceId={PRICE_IDS[key]!}
@@ -130,14 +130,14 @@ export default function PlansPage() {
                         />
                       </div>
                     ) : (
-                      <button disabled className="h-10 rounded-xl text-[13px] font-semibold text-tertiary bg-surface-sunken ring-1 ring-subtle cursor-default">Included below your plan</button>
+                      <button disabled className="h-10 rounded-xl text-sm font-semibold text-tertiary bg-surface-sunken ring-1 ring-subtle cursor-default">Included below your plan</button>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            <p className="mt-5 text-[12px] text-tertiary">Secure payments by Stripe · cancel anytime · prices in USD.</p>
+            <p className="mt-5 text-xs text-tertiary">Secure payments by Stripe · cancel anytime · prices in USD.</p>
           </div>
         )}
       </div>

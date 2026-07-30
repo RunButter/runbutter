@@ -50,17 +50,17 @@ export default function HrCompanyNotice({ privyUserId }: { privyUserId: string |
       <div className="flex items-start gap-2.5">
         <Building2 className="w-4 h-4 text-warning shrink-0 mt-0.5" />
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-warning">
+          <p className="text-sm font-medium text-warning">
             You’re viewing <strong>{active.name}</strong>, which has no open positions.
           </p>
-          <p className="mt-1 text-[12px] text-warning/90">
+          <p className="mt-1 text-xs text-warning/90">
             Your roles are in {elsewhere.length === 1 ? 'another company' : 'other companies'} you belong to.
             Nothing has been deleted — switch to see them.
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {elsewhere.map((c) => (
               <button key={c.companyId} onClick={() => switchTo(c.companyId)} disabled={!!switching}
-                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-warning ring-1 ring-warning/40 bg-warning/10 hover:bg-warning/20 disabled:opacity-50">
+                className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-warning ring-1 ring-warning/40 bg-warning/10 hover:bg-warning/20 disabled:opacity-50">
                 {switching === c.companyId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                 {c.name}
                 <span className="tabular-nums opacity-70">{c.positions}</span>

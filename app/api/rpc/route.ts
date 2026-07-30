@@ -82,6 +82,10 @@ const ALLOWED = new Set([
   // Invoice reminders (0064) — owner side. The send itself runs server-side in
   // /api/finance/reminders/run, which holds the Resend key and the per-run cap.
   'get_invoice_reminder_settings', 'save_invoice_reminder_settings', 'get_invoice_reminder_log',
+  // Files (0065) — reads only. create_file / set_file_content / delete_file are
+  // deliberately absent: each has to move a blob in the private bucket too, so
+  // they run server-side in /api/files/* where the service-role key lives.
+  'get_files', 'get_file', 'search_files',
 ]);
 
 function db() {

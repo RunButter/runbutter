@@ -49,7 +49,7 @@ function Centered({ title, body }: { title: string; body: string }) {
     <div className="flex-1 flex items-center justify-center px-6">
       <div className="w-full max-w-md rounded-xl bg-surface border border-subtle p-8 text-center">
         <h1 className="text-lg font-medium text-primary">{title}</h1>
-        <p className="mt-2 text-[13px] text-secondary leading-relaxed">{body}</p>
+        <p className="mt-2 text-sm text-secondary leading-relaxed">{body}</p>
         <Link href="/" className="mt-6 inline-flex h-10 items-center justify-center rounded-md bg-inverse px-5 text-sm font-medium text-inverse-fg hover:opacity-90">Go to RunButter</Link>
       </div>
     </div>

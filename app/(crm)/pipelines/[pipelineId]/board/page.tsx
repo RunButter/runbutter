@@ -35,17 +35,17 @@ export default function BoardPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">{pipeline.name}</h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{board.records.length}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{board.records.length}</span>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
         <div className="ml-1 flex items-center rounded-md ring-1 ring-subtle overflow-hidden">
-          <span className="h-7 px-2 inline-flex items-center gap-1.5 text-[12px] font-semibold bg-surface text-primary"><Columns3 className="w-3.5 h-3.5" /> Board</span>
-          <Link href={`/pipelines/${slug}/table`} className="h-7 px-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-tertiary hover:bg-surface-sunken"><Table2 className="w-3.5 h-3.5" /> Table</Link>
+          <span className="h-7 px-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-surface text-primary"><Columns3 className="w-3.5 h-3.5" /> Board</span>
+          <Link href={`/pipelines/${slug}/table`} className="h-7 px-2 inline-flex items-center gap-1.5 text-xs font-medium text-tertiary hover:bg-surface-sunken"><Table2 className="w-3.5 h-3.5" /> Table</Link>
         </div>
-        <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 transition-colors shadow-sm"><Plus className="w-3.5 h-3.5" /> New</button>
+        <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 transition-colors shadow-sm"><Plus className="w-3.5 h-3.5" /> New</button>
       </header>
       <div className="flex-1 overflow-hidden p-4">
         {loading ? (

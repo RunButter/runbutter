@@ -112,24 +112,24 @@ export default function IntegrationsPage() {
   };
   const revoke = async (k: ApiKey) => { if (!privy || !await confirmDialog('Revoke this key? Apps using it will stop working.')) return; await revokeApiKey(privy, k.id); reload(); };
 
-  const inputCls = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
+  const inputCls = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><Plug className="w-4 h-4 text-accent" /> Integrations</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><Plug className="w-4 h-4 text-accent" /> Integrations</h1>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <p className="text-[13px] text-secondary -mt-1">Connect RunButter to the tools you already use — no per-call cost. Bring your own webhook URL or API key.</p>
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <p className="text-sm text-secondary -mt-1">Connect RunButter to the tools you already use — no per-call cost. Bring your own webhook URL or API key.</p>
 
           {/* Native integrations (built-in, OAuth) */}
           <section>
             <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Calendar className="w-4 h-4 text-tertiary" /> Native integrations</h2>
             {googleMsg && (
-              <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] ring-1 ${googleMsg.ok ? 'bg-success/10 text-success ring-success/30' : 'bg-danger/10 text-danger ring-danger/30'}`}>
+              <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ring-1 ${googleMsg.ok ? 'bg-success/10 text-success ring-success/30' : 'bg-danger/10 text-danger ring-danger/30'}`}>
                 {googleMsg.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
                 <span>{googleMsg.text}</span>
               </div>
@@ -137,19 +137,19 @@ export default function IntegrationsPage() {
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><Calendar className="w-5 h-5" /></div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[13px] font-semibold text-primary">Google Calendar</h3>
-                <p className="text-[12px] text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
+                <h3 className="text-sm font-semibold text-primary">Google Calendar</h3>
+                <p className="text-xs text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
               </div>
               {googleConnected ? (
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success"><CheckCircle className="w-4 h-4" /> Connected</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><CheckCircle className="w-4 h-4" /> Connected</span>
                   <button onClick={disconnectGoogle} disabled={googleBusy}
-                    className="h-8 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40">
+                    className="h-8 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40">
                     {googleBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />} Disconnect
                   </button>
                 </div>
               ) : (
-                <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
+                <a href="/api/auth/google" className="h-9 px-3.5 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm shrink-0 disabled:opacity-40" aria-disabled={!canEdit}>
                   <Calendar className="w-3.5 h-3.5" /> Connect
                 </a>
               )}
@@ -169,8 +169,8 @@ export default function IntegrationsPage() {
               { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-warning bg-warning/10' },
             ].map((c) => (
               <div key={c.name} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
-                <div className={`inline-flex text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
-                <p className="text-[12px] text-secondary leading-relaxed">{c.body}</p>
+                <div className={`inline-flex text-2xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
+                <p className="text-xs text-secondary leading-relaxed">{c.body}</p>
               </div>
             ))}
           </div>
@@ -178,34 +178,34 @@ export default function IntegrationsPage() {
           {/* Outgoing webhooks / connections */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-semibold text-primary flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Outgoing webhooks</h2>
-              <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
-              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
+              <h2 className="text-base font-semibold text-primary flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Outgoing webhooks</h2>
+              <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
+              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
-                : connections.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
+                : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
                 : connections.map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0">
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ring-1 capitalize ${c.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-3xs font-semibold ring-1 capitalize ${c.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-primary truncate">{c.label || 'Webhook'}</div>
-                      <div className="text-[11px] text-tertiary font-mono truncate">{c.url}</div>
+                      <div className="text-sm font-semibold text-primary truncate">{c.label || 'Webhook'}</div>
+                      <div className="text-2xs text-tertiary font-mono truncate">{c.url}</div>
                     </div>
                     {testResult[c.id] && (
-                      <span className={`text-[11px] font-semibold shrink-0 ${testResult[c.id].ok ? 'text-success' : 'text-danger'}`}>{testResult[c.id].text}</span>
+                      <span className={`text-2xs font-semibold shrink-0 ${testResult[c.id].ok ? 'text-success' : 'text-danger'}`}>{testResult[c.id].text}</span>
                     )}
                     <button onClick={() => testConn(c)} disabled={!canEdit || testing === c.id} title="Send a signed sample payload"
-                      className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1 disabled:opacity-40">
+                      className="h-7 px-2 text-2xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1 disabled:opacity-40">
                       {testing === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />} Test
                     </button>
-                    {c.secret && <button onClick={() => copy(c.secret!, 'sec' + c.id)} title="Copy signing secret" className="h-7 px-2 text-[11px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1">{copied === 'sec' + c.id ? <Check className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />} Secret</button>}
-                    <button onClick={() => setEditConn(c)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Edit</button>
+                    {c.secret && <button onClick={() => copy(c.secret!, 'sec' + c.id)} title="Copy signing secret" className="h-7 px-2 text-2xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1">{copied === 'sec' + c.id ? <Check className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />} Secret</button>}
+                    <button onClick={() => setEditConn(c)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Edit</button>
                     <button onClick={() => delConn(c)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
             </div>
-            <p className="text-[11px] text-tertiary mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-surface-hover rounded px-1">X-RunButter-Signature</code> header (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>).</p>
+            <p className="text-2xs text-tertiary mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-surface-hover rounded px-1">X-RunButter-Signature</code> header (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>).</p>
           </section>
 
           {/* Recent webhook deliveries */}
@@ -214,7 +214,7 @@ export default function IntegrationsPage() {
               <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Recent deliveries</h2>
               <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                 {deliveries.map((d) => (
-                  <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-[12px]">
+                  <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-xs">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${d.status === 'ok' ? 'bg-success' : 'bg-danger'}`} />
                     <span className="font-mono text-secondary truncate flex-1">{d.url}</span>
                     <span className="text-tertiary shrink-0">{d.detail}</span>
@@ -227,16 +227,16 @@ export default function IntegrationsPage() {
           {/* API keys */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-semibold text-primary flex items-center gap-2"><KeyRound className="w-4 h-4 text-tertiary" /> API keys</h2>
-              <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{keys.length}</span>
+              <h2 className="text-base font-semibold text-primary flex items-center gap-2"><KeyRound className="w-4 h-4 text-tertiary" /> API keys</h2>
+              <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{keys.length}</span>
             </div>
 
             {freshKey && (
               <div className="rounded-xl ring-1 ring-success/30 bg-success/10 p-4 mb-3">
-                <div className="text-[12px] font-semibold text-success mb-1.5">Copy your key now — it won’t be shown again.</div>
+                <div className="text-xs font-semibold text-success mb-1.5">Copy your key now — it won’t be shown again.</div>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 text-[12px] font-mono text-primary bg-surface ring-1 ring-subtle rounded-md px-2.5 py-1.5 truncate">{freshKey}</code>
-                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-[12px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
+                  <code className="flex-1 text-xs font-mono text-primary bg-surface ring-1 ring-subtle rounded-md px-2.5 py-1.5 truncate">{freshKey}</code>
+                  <button onClick={() => copy(freshKey, 'fresh')} className="h-8 px-2.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse inline-flex items-center gap-1.5">{copied === 'fresh' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} Copy</button>
                   <button onClick={() => setFreshKey(null)} className="p-1.5 rounded-md text-tertiary hover:bg-surface"><X className="w-4 h-4" /></button>
                 </div>
               </div>
@@ -244,26 +244,26 @@ export default function IntegrationsPage() {
 
             <div className="flex items-center gap-2 mb-3">
               <input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Key name (e.g. Zapier)" className={inputCls + ' max-w-xs'} disabled={!canEdit} />
-              <button onClick={makeKey} disabled={!canEdit} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Create key</button>
+              <button onClick={makeKey} disabled={!canEdit} className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Create key</button>
             </div>
 
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
-              {keys.length === 0 ? <div className="px-5 py-8 text-center text-[13px] text-tertiary">No API keys yet.</div>
+              {keys.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No API keys yet.</div>
                 : keys.map((k) => (
                   <div key={k.id} className={`flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0 ${k.revoked ? 'opacity-50' : ''}`}>
                     <KeyRound className="w-4 h-4 text-tertiary shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-primary truncate">{k.name} {k.revoked && <span className="text-[11px] text-danger font-medium">· revoked</span>}</div>
-                      <div className="text-[11px] text-tertiary font-mono">{k.prefix}••••••••</div>
+                      <div className="text-sm font-semibold text-primary truncate">{k.name} {k.revoked && <span className="text-2xs text-danger font-medium">· revoked</span>}</div>
+                      <div className="text-2xs text-tertiary font-mono">{k.prefix}••••••••</div>
                     </div>
-                    <span className="text-[11px] text-tertiary tabular-nums hidden sm:block">last used {fmtDate(k.last_used_at)}</span>
-                    {!k.revoked && <button onClick={() => revoke(k)} disabled={!canEdit} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40"><Ban className="w-3.5 h-3.5" /> Revoke</button>}
+                    <span className="text-2xs text-tertiary tabular-nums hidden sm:block">last used {fmtDate(k.last_used_at)}</span>
+                    {!k.revoked && <button onClick={() => revoke(k)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10 inline-flex items-center gap-1.5 disabled:opacity-40"><Ban className="w-3.5 h-3.5" /> Revoke</button>}
                   </div>
                 ))}
             </div>
 
             {/* API reference */}
-            <div className="mt-3 rounded-xl bg-inverse text-inverse-fg p-4 font-mono text-[12px] overflow-x-auto">
+            <div className="mt-3 rounded-xl bg-inverse text-inverse-fg p-4 font-mono text-xs overflow-x-auto">
               <div className="text-tertiary mb-2"># Create a record</div>
               <div className="whitespace-pre">{`curl -X POST ${origin}/api/v1/records \\
   -H "Authorization: Bearer hb_your_key" \\
@@ -297,18 +297,18 @@ export default function IntegrationsPage() {
             </div>
             <div className="p-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Label</span>
+                <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Label</span>
                   <input value={editConn.label || ''} onChange={(e) => setEditConn({ ...editConn, label: e.target.value })} placeholder="Slack #finance" className={inputCls} /></label>
-                <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Type</span>
+                <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Type</span>
                   <select value={editConn.kind || 'generic'} onChange={(e) => setEditConn({ ...editConn, kind: e.target.value })} className={inputCls + ' capitalize'}>{KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select></label>
               </div>
-              <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Webhook URL *</span>
-                <input value={editConn.url || ''} onChange={(e) => setEditConn({ ...editConn, url: e.target.value })} placeholder="https://hooks.slack.com/…" className={inputCls + ' font-mono text-[12px]'} /></label>
-              <label className="flex items-center gap-2 text-[12px] font-medium text-secondary"><input type="checkbox" checked={editConn.is_active ?? true} onChange={(e) => setEditConn({ ...editConn, is_active: e.target.checked })} className="rounded border-subtle accent-accent" /> Active</label>
+              <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Webhook URL *</span>
+                <input value={editConn.url || ''} onChange={(e) => setEditConn({ ...editConn, url: e.target.value })} placeholder="https://hooks.slack.com/…" className={inputCls + ' font-mono text-xs'} /></label>
+              <label className="flex items-center gap-2 text-xs font-medium text-secondary"><input type="checkbox" checked={editConn.is_active ?? true} onChange={(e) => setEditConn({ ...editConn, is_active: e.target.checked })} className="rounded border-subtle accent-accent" /> Active</label>
             </div>
             <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
-              <button onClick={() => setEditConn(null)} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-              <button onClick={saveConn} disabled={!editConn.url} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">Save</button>
+              <button onClick={() => setEditConn(null)} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+              <button onClick={saveConn} disabled={!editConn.url} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">Save</button>
             </div>
           </div>
         </div>
@@ -360,40 +360,40 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><CalendarClock className="w-5 h-5" /></div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-[13px] font-semibold text-primary">Cal.com scheduling</h3>
-          <p className="text-[12px] text-secondary leading-relaxed">Share your Cal.com booking link, and have new bookings logged automatically. If the attendee matches a candidate, it also appears on the Interviews page.</p>
+          <h3 className="text-sm font-semibold text-primary">Cal.com scheduling</h3>
+          <p className="text-xs text-secondary leading-relaxed">Share your Cal.com booking link, and have new bookings logged automatically. If the attendee matches a candidate, it also appears on the Interviews page.</p>
         </div>
       </div>
 
       <div className="mt-3 space-y-3">
         <label className="block">
-          <span className="block text-[12px] font-semibold text-secondary mb-1">Your Cal.com booking link</span>
+          <span className="block text-xs font-semibold text-secondary mb-1">Your Cal.com booking link</span>
           <input value={bookingUrl} onChange={(e) => setBookingUrl(e.target.value)} disabled={!canEdit}
-            placeholder="https://cal.com/you/intro" className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+            placeholder="https://cal.com/you/intro" className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
         </label>
 
         <div>
-          <span className="block text-[12px] font-semibold text-secondary mb-1">Webhook URL <span className="text-tertiary">— paste into Cal.com → Settings → Webhooks</span></span>
+          <span className="block text-xs font-semibold text-secondary mb-1">Webhook URL <span className="text-tertiary">— paste into Cal.com → Settings → Webhooks</span></span>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-[11px] font-mono text-secondary bg-surface-sunken ring-1 ring-subtle rounded-md px-2.5 py-2 truncate">{webhookUrl || '…'}</code>
+            <code className="flex-1 text-2xs font-mono text-secondary bg-surface-sunken ring-1 ring-subtle rounded-md px-2.5 py-2 truncate">{webhookUrl || '…'}</code>
             <button onClick={() => { navigator.clipboard?.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-              disabled={!webhookUrl} className="h-8 px-2.5 rounded-md text-[12px] font-semibold ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1.5">
+              disabled={!webhookUrl} className="h-8 px-2.5 rounded-md text-xs font-semibold ring-1 ring-subtle text-secondary hover:bg-surface-sunken inline-flex items-center gap-1.5">
               {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} Copy
             </button>
           </div>
         </div>
 
         <label className="block">
-          <span className="block text-[12px] font-semibold text-secondary mb-1">Webhook signing secret {conn?.has_secret && <span className="text-success">— set</span>}</span>
+          <span className="block text-xs font-semibold text-secondary mb-1">Webhook signing secret {conn?.has_secret && <span className="text-success">— set</span>}</span>
           <input value={secret} onChange={(e) => setSecret(e.target.value)} disabled={!canEdit} type="password"
             placeholder={conn?.has_secret ? 'Leave blank to keep current' : 'Paste the secret from Cal.com'}
-            className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
-          <span className="block mt-1 text-[11px] text-tertiary">Cal.com signs each webhook with this; we verify it before recording anything.</span>
+            className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none font-mono" />
+          <span className="block mt-1 text-2xs text-tertiary">Cal.com signs each webhook with this; we verify it before recording anything.</span>
         </label>
 
-        {msg && <div className="text-[12px] text-secondary">{msg}</div>}
+        {msg && <div className="text-xs text-secondary">{msg}</div>}
         {canEdit && (
-          <button onClick={save} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
+          <button onClick={save} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Cal.com settings
           </button>
         )}

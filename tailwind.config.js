@@ -86,11 +86,24 @@ module.exports = {
         popover: '0 8px 24px -6px hsl(240 10% 10% / 0.12), 0 2px 6px -2px hsl(240 10% 10% / 0.08)',
       },
       fontSize: {
-        // Compact product scale.
-        '2xs': ['11px', '14px'],
-        xs: ['12px', '16px'],
-        sm: ['13px', '18px'],
-        base: ['14px', '20px'],
+        // THE product type scale. Compact, but one step up from where it was:
+        // at 13px body on a 1440px-and-wider desktop the whole app read as if
+        // it had been zoomed to 80%.
+        //
+        // Every size in app/ and components/ must come from this scale. The UI
+        // used to be ~1000 arbitrary `text-[13px]` values, which meant the scale
+        // could not be changed at all without a thousand-line diff — that is the
+        // actual reason it stayed too small. Adjust density HERE now.
+        //
+        // Leading is generous relative to the size: line-height is what makes
+        // small text readable, and it was the tighter of the two problems.
+        '3xs': ['11px', '15px'],   // legal/footnote only — not for UI labels
+        '2xs': ['12px', '16px'],   // meta lines, table sub-values, counts
+        xs: ['13px', '18px'],      // secondary labels, filter chips
+        sm: ['14px', '20px'],      // DEFAULT UI text: rows, inputs, buttons, nav
+        base: ['15px', '22px'],    // section titles, emphasised body
+        md: ['16px', '24px'],      // page titles
+        // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },
   },

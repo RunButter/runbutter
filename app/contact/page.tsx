@@ -55,10 +55,10 @@ export default function ContactPage() {
                         <CheckCircle2 className="w-6 h-6 text-success" />
                     </div>
                     <h1 className="text-lg font-semibold text-primary">Message received</h1>
-                    <p className="mt-1.5 text-[13px] text-secondary leading-relaxed">
+                    <p className="mt-1.5 text-sm text-secondary leading-relaxed">
                         Thanks for reaching out. We reply from <strong className="font-medium text-primary">hello@runbutter.app</strong>, usually within one business day.
                     </p>
-                    <Link href="/" className="mt-5 inline-flex items-center justify-center h-10 w-full rounded-md bg-inverse text-inverse-fg text-[13px] font-semibold shadow-sm hover:bg-inverse/90 transition-colors">
+                    <Link href="/" className="mt-5 inline-flex items-center justify-center h-10 w-full rounded-md bg-inverse text-inverse-fg text-sm font-semibold shadow-sm hover:bg-inverse/90 transition-colors">
                         Back to home
                     </Link>
                 </div>
@@ -90,18 +90,18 @@ export default function ContactPage() {
 
                         <div className="mt-8 space-y-3">
                             <InfoRow icon={Mail} label="Email us directly">
-                                <a href="mailto:hello@runbutter.app" className="text-[13px] font-medium text-accent hover:underline">hello@runbutter.app</a>
+                                <a href="mailto:hello@runbutter.app" className="text-sm font-medium text-accent hover:underline">hello@runbutter.app</a>
                             </InfoRow>
                             <InfoRow icon={Clock} label="Response time">
-                                <span className="text-[13px] text-secondary">Usually within one business day</span>
+                                <span className="text-sm text-secondary">Usually within one business day</span>
                             </InfoRow>
                             <InfoRow icon={ShieldCheck} label="Your data">
-                                <span className="text-[13px] text-secondary">Open source, self-hostable, GDPR controls built in</span>
+                                <span className="text-sm text-secondary">Open source, self-hostable, GDPR controls built in</span>
                             </InfoRow>
                         </div>
 
                         <a href={REPO_URL} target="_blank" rel="noopener noreferrer"
-                            className="mt-6 inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-surface text-primary text-[13px] font-medium ring-1 ring-subtle shadow-sm hover:bg-surface-hover transition-colors">
+                            className="mt-6 inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-surface text-primary text-sm font-medium ring-1 ring-subtle shadow-sm hover:bg-surface-hover transition-colors">
                             <Github className="w-4 h-4" /> Read the code on GitHub
                         </a>
                     </div>
@@ -138,14 +138,14 @@ export default function ContactPage() {
                             </div>
 
                             {error && (
-                                <p className="rounded-md bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">{error}</p>
+                                <p className="rounded-md bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{error}</p>
                             )}
 
                             <button type="submit" disabled={loading}
-                                className="w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-[13px] font-semibold shadow-sm hover:bg-inverse/90 transition-colors disabled:opacity-50 disabled:pointer-events-none">
+                                className="w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-sm font-semibold shadow-sm hover:bg-inverse/90 transition-colors disabled:opacity-50 disabled:pointer-events-none">
                                 {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</> : <>Send message <Send className="w-4 h-4" /></>}
                             </button>
-                            <p className="text-center text-[11px] text-tertiary">
+                            <p className="text-center text-2xs text-tertiary">
                                 By sending this you agree to our <Link href="/privacy" className="underline hover:text-secondary">privacy policy</Link>.
                             </p>
                         </form>
@@ -163,7 +163,7 @@ function InfoRow({ icon: Icon, label, children }: { icon: any; label: string; ch
                 <Icon className="w-4 h-4 text-tertiary" />
             </div>
             <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-tertiary">{label}</div>
+                <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{label}</div>
                 <div className="mt-0.5">{children}</div>
             </div>
         </div>

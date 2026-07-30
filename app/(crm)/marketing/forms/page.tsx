@@ -73,19 +73,19 @@ export default function FormsPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary flex items-center gap-2"><FileInput className="w-4 h-4 text-accent" /> Forms</h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><FileInput className="w-4 h-4 text-accent" /> Forms</h1>
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
-          <button onClick={() => edit()} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+          <button onClick={() => edit()} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> New form
           </button>
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl space-y-4">
-          <p className="text-[13px] text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+        <div className="max-w-5xl space-y-4">
+          <p className="text-sm text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
 
           {loading ? (
             <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
@@ -93,7 +93,7 @@ export default function FormsPage() {
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <FileInput className="w-8 h-8 text-tertiary mx-auto mb-3" />
               <h3 className="text-sm font-medium text-secondary">No forms yet</h3>
-              <p className="text-[12px] text-tertiary mt-1">Build a contact or lead form and share its link anywhere.</p>
+              <p className="text-xs text-tertiary mt-1">Build a contact or lead form and share its link anywhere.</p>
             </div>
           ) : (
             <div className="rounded-xl ring-1 ring-subtle bg-surface divide-y divide-subtle">
@@ -101,13 +101,13 @@ export default function FormsPage() {
                 <div key={f.id} className="flex items-center gap-3 px-4 py-3">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${f.enabled ? 'bg-success' : 'bg-tertiary'}`} title={f.enabled ? 'Live' : 'Off'} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold text-primary truncate">{f.name}</div>
-                    <div className="text-[12px] text-tertiary truncate font-mono">/f/{f.slug}</div>
+                    <div className="text-sm font-semibold text-primary truncate">{f.name}</div>
+                    <div className="text-xs text-tertiary truncate font-mono">/f/{f.slug}</div>
                   </div>
-                  <button onClick={() => setViewing(f)} className="text-[12px] font-semibold text-secondary hover:text-primary inline-flex items-center gap-1"><Inbox className="w-3.5 h-3.5" /> {f.submissions}</button>
+                  <button onClick={() => setViewing(f)} className="text-xs font-semibold text-secondary hover:text-primary inline-flex items-center gap-1"><Inbox className="w-3.5 h-3.5" /> {f.submissions}</button>
                   <button onClick={() => copyLink(f.slug)} title="Copy public link" className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover">{copied === f.slug ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}</button>
                   <a href={`${origin}/f/${f.slug}`} target="_blank" rel="noreferrer" title="Open" className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover"><ExternalLink className="w-4 h-4" /></a>
-                  <button onClick={() => edit(f.id)} className="h-7 px-2.5 text-[12px] font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
+                  <button onClick={() => edit(f.id)} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken">Edit</button>
                   <button onClick={() => remove(f)} aria-label="Delete" className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}
@@ -154,7 +154,7 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
     onSaved();
   };
 
-  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
+  const input = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -164,31 +164,31 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">{err}</div>}
+        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
+          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{err}</div>}
 
           <div className="grid grid-cols-2 gap-3">
-            <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Internal name</span>
+            <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Internal name</span>
               <input value={f.name} onChange={(e) => set({ name: e.target.value })} className={input} /></label>
-            <label className="flex items-end gap-2 pb-1"><input type="checkbox" checked={f.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="rounded border-subtle accent-accent" /><span className="text-[13px] text-secondary">Live (accepting submissions)</span></label>
+            <label className="flex items-end gap-2 pb-1"><input type="checkbox" checked={f.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="rounded border-subtle accent-accent" /><span className="text-sm text-secondary">Live (accepting submissions)</span></label>
           </div>
-          <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Public heading</span>
+          <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Public heading</span>
             <input value={f.title} onChange={(e) => set({ title: e.target.value })} className={input} /></label>
-          <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Description</span>
+          <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Description</span>
             <textarea value={f.description} onChange={(e) => set({ description: e.target.value })} rows={2} className={input + ' h-auto py-2 resize-y'} /></label>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-semibold text-secondary">Fields</span>
-              <button onClick={addField} className="text-[12px] font-semibold text-accent hover:underline">+ Add field</button>
+              <span className="text-xs font-semibold text-secondary">Fields</span>
+              <button onClick={addField} className="text-xs font-semibold text-accent hover:underline">+ Add field</button>
             </div>
             <div className="space-y-2">
               {f.fields.map((fld, i) => (
                 <div key={fld.key} className="rounded-lg ring-1 ring-subtle bg-surface-sunken p-2.5 space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col text-tertiary">
-                      <button onClick={() => move(i, -1)} className="hover:text-primary leading-none text-[10px]">▲</button>
-                      <button onClick={() => move(i, 1)} className="hover:text-primary leading-none text-[10px]">▼</button>
+                      <button onClick={() => move(i, -1)} className="hover:text-primary leading-none text-3xs">▲</button>
+                      <button onClick={() => move(i, 1)} className="hover:text-primary leading-none text-3xs">▼</button>
                     </div>
                     <input value={fld.label} onChange={(e) => setField(i, { label: e.target.value })} placeholder="Label" className={input + ' flex-1'} />
                     <button onClick={() => removeField(i)} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10"><Trash2 className="w-4 h-4" /></button>
@@ -200,7 +200,7 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
                     <select value={fld.map || ''} onChange={(e) => setField(i, { map: e.target.value as FieldMap })} className={input + ' flex-1'} title="Where this answer is stored on the lead">
                       {MAPS.map((m) => <option key={m.v} value={m.v}>{m.label}</option>)}
                     </select>
-                    <label className="flex items-center gap-1.5 text-[12px] text-secondary shrink-0"><input type="checkbox" checked={!!fld.required} onChange={(e) => setField(i, { required: e.target.checked })} className="rounded border-subtle accent-accent" /> Req</label>
+                    <label className="flex items-center gap-1.5 text-xs text-secondary shrink-0"><input type="checkbox" checked={!!fld.required} onChange={(e) => setField(i, { required: e.target.checked })} className="rounded border-subtle accent-accent" /> Req</label>
                   </div>
                   {fld.type === 'select' && (
                     <input value={(fld.options || []).join(', ')} onChange={(e) => setField(i, { options: e.target.value.split(',').map((o) => o.trim()).filter(Boolean) })}
@@ -211,13 +211,13 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
             </div>
           </div>
 
-          <label className="block"><span className="block text-[12px] font-semibold text-secondary mb-1">Confirmation message</span>
+          <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Confirmation message</span>
             <input value={f.submit_message} onChange={(e) => set({ submit_message: e.target.value })} className={input} /></label>
         </div>
 
         <div className="h-14 shrink-0 flex items-center justify-end gap-2 px-4 border-t border-subtle">
-          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
+          <button onClick={onClose} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={submit} disabled={busy} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save form
           </button>
         </div>
@@ -237,17 +237,17 @@ function Submissions({ form, privy, wsId, onClose }: { form: FormRow; privy: str
           <h3 className="text-sm font-semibold text-primary truncate">Submissions · {form.name}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
-        <div className="flex-1 overflow-auto p-4 space-y-3">
+        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-3">
           {rows === null ? (
             <div className="h-24 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
           ) : rows.length === 0 ? (
-            <p className="text-[13px] text-tertiary text-center py-8">No submissions yet. Share <span className="font-mono">/f/{form.slug}</span>.</p>
+            <p className="text-sm text-tertiary text-center py-8">No submissions yet. Share <span className="font-mono">/f/{form.slug}</span>.</p>
           ) : rows.map((s) => (
             <div key={s.id} className="rounded-lg ring-1 ring-subtle bg-surface-sunken p-3">
-              <div className="text-[11px] text-tertiary mb-1.5">{new Date(s.created_at).toLocaleString()}</div>
+              <div className="text-2xs text-tertiary mb-1.5">{new Date(s.created_at).toLocaleString()}</div>
               <dl className="space-y-1">
                 {Object.entries(s.data).map(([k, v]) => (
-                  <div key={k} className="flex gap-2 text-[12px]">
+                  <div key={k} className="flex gap-2 text-xs">
                     <dt className="text-tertiary shrink-0 min-w-[90px] truncate">{k}</dt>
                     <dd className="text-primary break-words">{String(v)}</dd>
                   </div>

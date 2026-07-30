@@ -144,7 +144,7 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
                                             <div className={`text-5xl font-semibold ${synergyColor}`}>
                                                 {analysis ? analysis.synergy : 0}<span className="text-2xl">%</span>
                                             </div>
-                                            <div className="text-[10px] font-semibold uppercase tracking-widest text-tertiary">Synergy</div>
+                                            <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Synergy</div>
                                         </div>
                                         {analysis && (
                                             <p className="text-sm text-secondary flex-1">
@@ -165,7 +165,7 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
                                     </div>
                                 </div>
                             </div>
-                            <p className="mt-5 text-[11px] text-tertiary">
+                            <p className="mt-5 text-2xs text-tertiary">
                                 Synergy reflects overall personality proximity to the team average. &quot;Complementary&quot; gaps can be healthy — diversity of traits often strengthens a team.
                             </p>
                         </>

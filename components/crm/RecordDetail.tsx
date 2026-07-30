@@ -23,11 +23,11 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose, ex
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-md max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-tertiary">{object.singular}</h2>
+          <h2 className="text-3xs font-semibold uppercase tracking-widest text-tertiary">{object.singular}</h2>
           <div className="flex items-center gap-1">
             {extraActions}
             {canEdit && (
-              <button onClick={onEdit} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-[12px] font-semibold text-secondary hover:bg-surface-hover"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+              <button onClick={onEdit} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-secondary hover:bg-surface-hover"><Pencil className="w-3.5 h-3.5" /> Edit</button>
             )}
             <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
           </div>
@@ -41,8 +41,8 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose, ex
           <dl className="divide-y divide-subtle">
             {rest.map((f) => (
               <div key={f.key} className="flex items-center justify-between gap-4 py-2.5">
-                <dt className="text-[12px] font-semibold text-secondary">{f.label}</dt>
-                <dd className="text-[13px] text-right"><FieldValue field={f} row={row} /></dd>
+                <dt className="text-xs font-semibold text-secondary">{f.label}</dt>
+                <dd className="text-sm text-right"><FieldValue field={f} row={row} /></dd>
               </div>
             ))}
           </dl>

@@ -65,7 +65,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
       <main className="flex-1 flex flex-col overflow-hidden bg-surface lg:border-l lg:border-subtle">
-        <header className="lg:hidden h-12 shrink-0 flex items-center gap-2 px-3 border-b border-subtle">
+        <header className="lg:hidden h-14 shrink-0 flex items-center gap-2 px-5 border-b border-subtle">
           <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-md">
             <Menu className="w-5 h-5" />
           </button>

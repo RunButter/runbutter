@@ -49,9 +49,9 @@ export default function HrOverviewPage() {
         {/* Title */}
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-semibold text-primary tracking-tight">Recruiting</h1>
-          <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
-          {hr?.company?.plan && <span className="text-[11px] font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">{hr.company.plan} plan</span>}
-          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
+          <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{hr?.live ? 'Live' : 'Sample'}</span>
+          {hr?.company?.plan && <span className="text-2xs font-semibold text-secondary bg-surface-hover rounded-md px-2 py-0.5 capitalize">{hr.company.plan} plan</span>}
+          <Link href="/dashboard/positions/new" className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
             <Plus className="w-3.5 h-3.5" /> New position
           </Link>
         </div>
@@ -69,22 +69,22 @@ export default function HrOverviewPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-semibold text-primary">Hiring funnel</h2>
-                <p className="text-[12px] text-tertiary">Candidates by stage</p>
+                <p className="text-xs text-tertiary">Candidates by stage</p>
               </div>
-              <Link href="/dashboard/pipeline" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">Open pipeline <ArrowRight className="w-3 h-3" /></Link>
+              <Link href="/dashboard/pipeline" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">Open pipeline <ArrowRight className="w-3 h-3" /></Link>
             </div>
             {!hr ? <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div> : <HiringFunnel stages={hr.funnel} />}
           </div>
 
           <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
-            <div className="px-2 pt-1.5 pb-2 text-[11px] font-semibold uppercase tracking-widest text-tertiary">Quick actions</div>
+            <div className="px-2 pt-1.5 pb-2 text-2xs font-semibold uppercase tracking-widest text-tertiary">Quick actions</div>
             <div className="space-y-0.5">
               {QUICK.slice(0, 4).map((q) => (
                 <Link key={q.label} href={q.href} className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-sunken transition-colors">
                   <div className="w-8 h-8 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0"><q.icon className={`w-4 h-4 ${q.tone}`} /></div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold text-primary">{q.label}</div>
-                    <div className="text-[11px] text-tertiary truncate">{q.desc}</div>
+                    <div className="text-sm font-semibold text-primary">{q.label}</div>
+                    <div className="text-2xs text-tertiary truncate">{q.desc}</div>
                   </div>
                   <ArrowUpRight className="w-3.5 h-3.5 text-tertiary group-hover:text-secondary transition-colors" />
                 </Link>
@@ -97,15 +97,15 @@ export default function HrOverviewPage() {
         <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
           <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
             <h2 className="text-sm font-semibold text-primary">Recent applications</h2>
-            <Link href="/dashboard/candidates" className="text-[12px] font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All candidates <ArrowRight className="w-3 h-3" /></Link>
+            <Link href="/dashboard/candidates" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All candidates <ArrowRight className="w-3 h-3" /></Link>
           </div>
           {!hr ? (
             <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
           ) : hr.recent.length === 0 ? (
             <div className="px-5 py-12 text-center">
               <Users className="w-10 h-10 text-tertiary mx-auto mb-3" />
-              <p className="text-[13px] text-secondary mb-3">No candidates yet.</p>
-              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Create your first position</Link>
+              <p className="text-sm text-secondary mb-3">No candidates yet.</p>
+              <Link href="/dashboard/positions/new" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Create your first position</Link>
             </div>
           ) : (
             <div className="divide-y divide-subtle">
@@ -113,15 +113,15 @@ export default function HrOverviewPage() {
                 const st = hrStatus(c.status);
                 return (
                   <Link key={c.id} href={`/dashboard/candidates/${c.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-sunken/70 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-surface-hover text-secondary text-[11px] font-semibold flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-surface-hover text-secondary text-2xs font-semibold flex items-center justify-center shrink-0">
                       {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold text-primary truncate">{c.full_name}</div>
-                      <div className="text-[11px] text-tertiary truncate">{c.email}{c.position_title ? ` · ${c.position_title}` : ''}</div>
+                      <div className="text-sm font-semibold text-primary truncate">{c.full_name}</div>
+                      <div className="text-2xs text-tertiary truncate">{c.email}{c.position_title ? ` · ${c.position_title}` : ''}</div>
                     </div>
-                    <span className="hidden sm:block text-[11px] text-tertiary tabular-nums">{fmtDate(c.applied_at)}</span>
-                    <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold ring-1 ${st.cls}`}>{st.label}</span>
+                    <span className="hidden sm:block text-2xs text-tertiary tabular-nums">{fmtDate(c.applied_at)}</span>
+                    <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 ${st.cls}`}>{st.label}</span>
                   </Link>
                 );
               })}

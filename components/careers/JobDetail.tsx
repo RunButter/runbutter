@@ -61,7 +61,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
         )}
         <div className="max-w-3xl mx-auto px-5 py-8 sm:py-10">
           <Link href={`/careers/${company.slug}`}
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-tertiary hover:text-secondary mb-5">
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-tertiary hover:text-secondary mb-5">
             <ArrowLeft className="w-3.5 h-3.5" /> All roles at {company.name}
           </Link>
 
@@ -72,12 +72,12 @@ export default function JobDetail({ job }: { job: JobPageData }) {
                   {company.name.slice(0, 1).toUpperCase()}
                 </div>}
             <div className="min-w-0">
-              <p className="text-[12px] font-medium text-tertiary">{company.name}</p>
+              <p className="text-xs font-medium text-tertiary">{company.name}</p>
               <h1 className="text-xl sm:text-3xl font-semibold text-primary tracking-tight">{position.title}</h1>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-secondary">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-secondary">
             {position.department && (
               <span className="inline-flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-tertiary" /> {position.department}</span>
             )}
@@ -90,37 +90,37 @@ export default function JobDetail({ job }: { job: JobPageData }) {
           </div>
 
           <Link href={`/apply/${position.id}`}
-            className="mt-6 inline-flex items-center gap-2 h-11 px-5 rounded-xl text-[14px] font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
+            className="mt-6 inline-flex items-center gap-2 h-11 px-5 rounded-xl text-base font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
             style={{ background: accent }}>
             Apply for this role <ArrowRight className="w-4 h-4" />
           </Link>
           {company.apply_intro && (
-            <p className="mt-2.5 text-[12px] text-tertiary max-w-lg">{company.apply_intro}</p>
+            <p className="mt-2.5 text-xs text-tertiary max-w-lg">{company.apply_intro}</p>
           )}
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-5 py-8 sm:py-10 space-y-8">
         <section className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-6 sm:p-8">
-          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-3">About this role</h2>
+          <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-3">About this role</h2>
           {position.description?.trim() ? (
             // Descriptions are plain text today, so preserve the author's line
             // breaks instead of collapsing everything into one block.
-            <div className="text-[14px] text-secondary leading-relaxed whitespace-pre-line">
+            <div className="text-base text-secondary leading-relaxed whitespace-pre-line">
               {position.description}
             </div>
           ) : (
-            <p className="text-[13px] text-tertiary">
+            <p className="text-sm text-tertiary">
               No description was added for this role. Apply and we’ll be in touch with the details.
             </p>
           )}
         </section>
 
         <section className="rounded-xl p-6 text-center ring-1 ring-subtle bg-surface">
-          <p className="text-[14px] font-medium text-primary">Interested?</p>
-          <p className="mt-1 text-[13px] text-tertiary">Takes a few minutes — CV plus a short assessment.</p>
+          <p className="text-base font-medium text-primary">Interested?</p>
+          <p className="mt-1 text-sm text-tertiary">Takes a few minutes — CV plus a short assessment.</p>
           <Link href={`/apply/${position.id}`}
-            className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-xl text-[13px] font-semibold text-white hover:opacity-90"
+            className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-white hover:opacity-90"
             style={{ background: accent }}>
             Apply now <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -128,7 +128,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
 
         {others.length > 0 && (
           <section>
-            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-tertiary mb-2.5">
+            <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2.5">
               Other open roles
             </h2>
             <ul className="space-y-2">
@@ -137,8 +137,8 @@ export default function JobDetail({ job }: { job: JobPageData }) {
                   <Link href={`/careers/${company.slug}/${o.id}`}
                     className="group flex items-center gap-4 rounded-xl bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm hover:shadow-card transition-all px-4 py-3">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold text-primary truncate">{o.title}</p>
-                      <p className="text-[11px] text-tertiary truncate">
+                      <p className="text-sm font-semibold text-primary truncate">{o.title}</p>
+                      <p className="text-2xs text-tertiary truncate">
                         {[o.department, o.location].filter(Boolean).join(' · ') || '—'}
                       </p>
                     </div>
@@ -150,7 +150,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
           </section>
         )}
 
-        <p className="text-center text-[11px] text-tertiary">
+        <p className="text-center text-2xs text-tertiary">
           {company.website && (
             <>
               <a href={company.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-secondary">

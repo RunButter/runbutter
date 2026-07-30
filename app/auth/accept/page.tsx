@@ -36,7 +36,7 @@ export default async function AcceptInvitePage({
       ) : (
         <div className="w-full max-w-md rounded-xl bg-surface border border-subtle p-8 text-center">
           <h1 className="text-lg font-medium text-primary">This invitation isn&rsquo;t valid</h1>
-          <p className="mt-2 text-[13px] text-secondary leading-relaxed">
+          <p className="mt-2 text-sm text-secondary leading-relaxed">
             The link may have already been used, or it was cancelled. Ask whoever invited you to send a new one.
           </p>
           <Link

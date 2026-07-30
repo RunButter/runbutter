@@ -52,22 +52,22 @@ export default function FinanceOverview() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Finance</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
         <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
           {PERIODS.map((p) => (
             <button key={p.label} onClick={() => setMonths(p.months)}
-              className={`h-6 px-2.5 rounded-md text-[11px] font-semibold transition-colors ${months === p.months ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
+              className={`h-6 px-2.5 rounded-md text-2xs font-semibold transition-colors ${months === p.months ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
               {p.label}
             </button>
           ))}
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!fin ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
@@ -85,9 +85,9 @@ export default function FinanceOverview() {
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <h2 className="text-sm font-semibold text-primary">Revenue vs costs</h2>
-                  <p className="text-[12px] text-tertiary">Last {months} {months === 1 ? 'month' : 'months'} · money in vs money out</p>
+                  <p className="text-xs text-tertiary">Last {months} {months === 1 ? 'month' : 'months'} · money in vs money out</p>
                 </div>
-                <div className="flex items-center gap-4 text-[11px] font-semibold">
+                <div className="flex items-center gap-4 text-2xs font-semibold">
                   <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-success" /> Revenue</span>
                   <span className="inline-flex items-center gap-1.5 text-secondary"><span className="w-2.5 h-2.5 rounded-sm bg-strong" /> Costs</span>
                 </div>
@@ -113,7 +113,7 @@ export default function FinanceOverview() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-primary">{q.label}</div>
-                    <div className="text-[12px] text-tertiary truncate">{q.desc}</div>
+                    <div className="text-xs text-tertiary truncate">{q.desc}</div>
                   </div>
                   <ArrowUpRight className="w-3.5 h-3.5 text-tertiary group-hover:text-secondary ml-auto transition-colors" />
                 </Link>

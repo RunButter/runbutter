@@ -41,7 +41,7 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
                             Upgrade to unlock
                             <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-0.5 transition-transform" />
                         </Link>
-                        <p className="text-[11px] text-tertiary">
+                        <p className="text-2xs text-tertiary">
                             Instant activation · Billed annually or monthly
                         </p>
                     </div>

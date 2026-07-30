@@ -19,6 +19,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
 - **0064_invoice_reminders.sql is PENDING** (the Supabase connector dropped before it could be
   applied). Reminders stay OFF per workspace until an owner enables them, so nothing mails on deploy.
+- **0065_files.sql is PENDING** — company files + FTS. Verified against a scratch PG 16, not yet run
+  on the live DB. Until it is, `/files` shows "run migration 0065" instead of failing opaquely.
 - **Migrations through 0063 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
   Supabase connector — don't report any of them as pending). 0062 went in via `apply_migration`, so
   it is recorded in `supabase_migrations`; 0058–0061 were run by hand and are not.
@@ -73,7 +75,17 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Semantic tokens only** — `bg-surface`, `text-secondary`, `border-subtle`, `bg-accent`, `bg-inverse`.
   **Never literal colors** (`bg-white`, `text-slate-800`, `shadow-slate-200/50`) — that's what breaks
   dark mode. Tokens live in `app/globals.css` (`:root` + `.dark`), mapped in `tailwind.config.js`.
-- Geist Sans/Mono, 13px base, **weights capped at 600**, `--radius: 0.75rem`.
+- Geist Sans/Mono, **weights capped at 600**, `--radius: 0.75rem`.
+- **Type comes from the scale in `tailwind.config.js`, never from `text-[13px]`.**
+  `text-3xs` 11 · `text-2xs` 12 · `text-xs` 13 · **`text-sm` 14 = default UI text** · `text-base` 15 ·
+  `text-md` 16 (page titles). `lg`+ are Tailwind defaults and belong to marketing.
+  The app was ~1000 arbitrary `text-[Npx]` values, so the scale was unchangeable and stayed a full step
+  too small (it read as 80% zoom on any desktop). Those are now tokens — **density is one config edit**.
+  Don't reintroduce arbitrary px sizes.
+- **Desktop rhythm:** page header `h-14` + `px-5` with a `text-base` `<h1>`; modal/drawer headers stay
+  `h-12`. Nav rail `w-64`. Table rows `h-11`, table head `h-10`. Page gutters `p-6 2xl:p-8`.
+- **App screens cap at `max-w-5xl`**; prose (terms/privacy/careers/landing), modals and document views
+  keep a reading measure — widening a paragraph to 1024px makes it worse, not better.
 - **Elevation rule:** cards and real form fields (h-9+) are raised — `ring-1 ring-subtle` +
   `shadow-card`/`shadow-sm`. **Compact inline controls stay flat** (filter chips, table-cell inputs,
   h-7 selectors). Deliberate — don't "fix" it.
@@ -87,6 +99,22 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Never use browser `confirm()`/`alert()`** — use `useDialog()` from `components/ui/Dialog.tsx`.
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
+
+## MCP / agent tools (`lib/agents/tools.ts`)
+- ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
+  MCP client and an agent take the identical, tenancy-safe path. **19 tools**, not just CRUD:
+  finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
+  analytics, positions, candidate FTS, pipeline boards.
+- **Tenancy looks inconsistent and isn't.** `list_records`/`create_record` take `p_workspace`;
+  `get_record`/`update_record` derive the caller's workspaces from `p_privy` in SQL
+  (`workspace_id = any(my)`). Don't "fix" the latter by inventing an argument.
+- `get_pipeline_board` takes a **pipeline id, not a user** — resolve via `get_pipeline_by_kind` first.
+- `screen_sanctions` is classified READ despite appending an audit row: it mutates no business
+  data, and gating it behind write-approval would stop agents running compliance checks. Its
+  `no_data` result is returned with an explicit warning so a model can't report it as "clear".
+- The HR RPCs (`search_candidates_for_recruiter`, `get_candidate_details`) are **not in the
+  migrations folder** — they live in the DB from the legacy ATS. Verify arg names against real
+  call sites in `app/dashboard/candidates/*`, not against the migrations.
 
 ## Free-data features (no key, no per-call cost)
 Same rule as the cost rule above: prefer public/government data + local computation over metered APIs.
@@ -129,6 +157,20 @@ Same rule as the cost rule above: prefer public/government data + local computat
 - **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts`) — merge/split/extract/delete/rotate/watermark/images→PDF
   on the already-installed `pdf-lib`, **in the browser**, so files never upload. pdf-lib restructures
   documents but does not re-encode streams, so **compression is not offered** — don't add it here.
+- **Files that become data (0065)** — `docs/file-extraction.md`. `/files` uploads to a **private**
+  bucket, extracts text, and indexes it with Postgres FTS *in the same database as the ledger*, which
+  is the entire pitch: "which contracts auto-renew, for clients who owe us money" is one join.
+  - **Never use `pdf-parse`.** It bundles pdf.js 1.10, which throws `Invalid PDF structure` on any PDF
+    with **object streams** — the default for pdf-lib and for current Word/Pages/Acrobat. Use
+    **`lib/pdf/server-text.ts`** (`pdfjs-dist`, already a dep). `lib/extract-text.ts` was switched over
+    for the same reason: modern PDF CVs were being stored with empty `resume_raw_text`.
+  - OCR for scans is **opt-in, self-hosted MinerU** (`MINERU_URL`), never a metered OCR API. MinerU's
+    licence **requires** the credit rendered on the Files screen — keep it.
+  - `extract_status='skipped'` is an honest answer with a reason, never collapsed into success; the
+    `search_files` agent tool warns when nothing is indexed so an agent can't report a clause absent
+    from a file it never read.
+  - `search_files` uses the **`simple`** tsvector config (PL/DE/EN in one workspace) and returns
+    `ts_headline` snippets delimited with `«»` — rendered as React nodes, never as HTML.
 
 ## Verifying changes
 - `npx tsc --noEmit` for types; **`npm run build` is the definitive check** (it's what Render runs).

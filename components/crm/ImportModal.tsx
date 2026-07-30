@@ -70,7 +70,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-sm font-semibold text-primary flex items-center gap-2">
+          <h2 className="text-base font-semibold text-primary flex items-center gap-2">
             {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
             Import {object.plural}
           </h2>
@@ -80,43 +80,43 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
         <div className="flex-1 overflow-y-auto p-4">
           {step === 'source' && (
             <div className="space-y-4">
-              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-strong text-[13px] text-secondary cursor-pointer hover:ring-strong hover:bg-surface-sunken">
+              <label className="flex items-center justify-center gap-2 h-20 rounded-lg ring-1 ring-dashed ring-strong text-sm text-secondary cursor-pointer hover:ring-strong hover:bg-surface-sunken">
                 <Upload className="w-4 h-4" /> Upload a .csv file
                 <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => readFile(e.target.files?.[0])} />
               </label>
 
               <div>
-                <span className="block text-[12px] font-semibold text-secondary mb-1 flex items-center gap-1.5"><FileSpreadsheet className="w-3.5 h-3.5" /> …or a Google Sheet (Publish to web → CSV)</span>
+                <span className="block text-xs font-semibold text-secondary mb-1 flex items-center gap-1.5"><FileSpreadsheet className="w-3.5 h-3.5" /> …or a Google Sheet (Publish to web → CSV)</span>
                 <div className="flex gap-2">
                   <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://docs.google.com/…/pub?output=csv"
-                    className="flex-1 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                  <button onClick={fetchUrl} disabled={busy} className="h-9 px-3 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch'}</button>
+                    className="flex-1 h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <button onClick={fetchUrl} disabled={busy} className="h-9 px-3 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch'}</button>
                 </div>
               </div>
 
               <div>
-                <span className="block text-[12px] font-semibold text-secondary mb-1">…or paste CSV</span>
+                <span className="block text-xs font-semibold text-secondary mb-1">…or paste CSV</span>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} placeholder="name,domain,industry&#10;Acme,acme.com,SaaS"
-                  className="w-full px-2.5 py-2 text-[12px] font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-xs font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
-              {error && <p className="text-[12px] text-danger">{error}</p>}
+              {error && <p className="text-xs text-danger">{error}</p>}
             </div>
           )}
 
           {step === 'map' && (
             <div className="space-y-3">
-              <p className="text-[12px] text-secondary">{rows.length} rows detected. Map your columns to {object.singular} fields:</p>
+              <p className="text-xs text-secondary">{rows.length} rows detected. Map your columns to {object.singular} fields:</p>
               {fields.map((f) => (
                 <div key={f.key} className="flex items-center gap-3">
-                  <span className="w-32 shrink-0 text-[13px] font-medium text-secondary">{f.label}{f.required && <span className="text-danger"> *</span>}</span>
+                  <span className="w-32 shrink-0 text-sm font-medium text-secondary">{f.label}{f.required && <span className="text-danger"> *</span>}</span>
                   <select value={mapping[f.key] ?? -1} onChange={(e) => setMapping((m) => ({ ...m, [f.key]: Number(e.target.value) }))}
-                    className="flex-1 h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
+                    className="flex-1 h-8 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
                     <option value={-1}>— skip —</option>
                     {headers.map((h, i) => <option key={i} value={i}>{h}</option>)}
                   </select>
                 </div>
               ))}
-              {error && <p className="text-[12px] text-danger">{error}</p>}
+              {error && <p className="text-xs text-danger">{error}</p>}
             </div>
           )}
 
@@ -124,7 +124,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
             <div className="py-8 text-center">
               <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-3" />
               <p className="text-sm font-semibold text-primary">Imported {count} {object.plural.toLowerCase()}</p>
-              <p className="text-[12px] text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (missing required fields).` : 'All rows imported.'}</p>
+              <p className="text-xs text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (missing required fields).` : 'All rows imported.'}</p>
             </div>
           )}
         </div>
@@ -132,17 +132,17 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
         <div className="shrink-0 flex items-center justify-end gap-2 p-3 border-t border-subtle">
           {step === 'source' && (
             <>
-              <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-              <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Continue</button>
+              <button onClick={onClose} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+              <button onClick={parse} disabled={!text.trim()} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Continue</button>
             </>
           )}
           {step === 'map' && (
-            <button onClick={runImport} disabled={busy} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+            <button onClick={runImport} disabled={busy} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
               {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows
             </button>
           )}
           {step === 'done' && (
-            <button onClick={onImported} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Done</button>
+            <button onClick={onImported} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Done</button>
           )}
         </div>
       </div>

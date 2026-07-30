@@ -62,49 +62,49 @@ export default function MembersPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Members &amp; roles</h1>
-        <span className="text-[11px] font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{members.length}</span>
-        {ws && <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
+        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{members.length}</span>
+        {ws && <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
         {canManage && (
           <button onClick={() => { setInviting(true); setError(''); setSent(''); }}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
             <UserPlus className="w-3.5 h-3.5" /> Invite
           </button>
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 2xl:p-6">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : !privy ? (
           <p className="text-sm text-tertiary">Sign in to manage members.</p>
         ) : (
           <div className="max-w-2xl">
-            {!canManage && <p className="mb-3 text-[12px] text-tertiary flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Only owners and admins can change roles.</p>}
-            {error && <p className="mb-3 text-[12px] text-danger">{error}</p>}
+            {!canManage && <p className="mb-3 text-xs text-tertiary flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> Only owners and admins can change roles.</p>}
+            {error && <p className="mb-3 text-xs text-danger">{error}</p>}
             <div className="rounded-xl ring-1 ring-subtle bg-surface divide-y divide-subtle">
               {members.map((m) => (
                 <div key={m.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 rounded-full text-accent-fg text-[11px] font-semibold flex items-center justify-center ${m.pending ? 'bg-surface-hover text-tertiary ring-1 ring-subtle ring-dashed' : 'bg-accent'}`}>
+                  <div className={`w-8 h-8 rounded-full text-accent-fg text-2xs font-semibold flex items-center justify-center ${m.pending ? 'bg-surface-hover text-tertiary ring-1 ring-subtle ring-dashed' : 'bg-accent'}`}>
                     {m.pending ? <Clock className="w-4 h-4" /> : (m.name || '?').slice(0, 1).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[13px] font-semibold text-primary truncate flex items-center gap-1.5">
+                    <div className="text-sm font-semibold text-primary truncate flex items-center gap-1.5">
                       {m.name}
                       {m.privy_user_id === privy && <span className="text-tertiary font-normal"> · you</span>}
-                      {m.pending && <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-warning/10 text-warning ring-1 ring-warning/30">Invited</span>}
+                      {m.pending && <span className="text-3xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-warning/10 text-warning ring-1 ring-warning/30">Invited</span>}
                     </div>
-                    <div className="text-[12px] text-tertiary truncate">{m.email}</div>
+                    <div className="text-xs text-tertiary truncate">{m.email}</div>
                   </div>
                   <div className="ml-auto flex items-center gap-2">
                     {canManage && !m.pending ? (
                       <select value={m.role} onChange={(e) => changeRole(m.id, e.target.value)}
-                        className="h-8 px-2 text-[12px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none capitalize">
+                        className="h-8 px-2 text-xs rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none capitalize">
                         {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                       </select>
                     ) : (
-                      <span className={`text-[11px] font-semibold capitalize px-2 py-1 rounded-md ring-1 ${ROLE_TONE[m.role] || ROLE_TONE.member}`}>{m.role}</span>
+                      <span className={`text-2xs font-semibold capitalize px-2 py-1 rounded-md ring-1 ${ROLE_TONE[m.role] || ROLE_TONE.member}`}>{m.role}</span>
                     )}
                     {canManage && m.privy_user_id !== privy && (
                       <button onClick={() => remove(m)}
@@ -119,7 +119,7 @@ export default function MembersPage() {
               ))}
               {members.length === 0 && <div className="px-4 py-10 text-center text-tertiary text-sm">No members yet.</div>}
             </div>
-            <p className="mt-3 text-[12px] text-tertiary">
+            <p className="mt-3 text-xs text-tertiary">
               Invited people get a single-use link. They appear above as <span className="text-secondary font-medium">Invited</span> until they accept, and you can cancel the invitation any time.
             </p>
           </div>
@@ -138,7 +138,7 @@ export default function MembersPage() {
         />
       )}
       {sent && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-success/10 ring-1 ring-success/30 px-3 py-2 text-[12px] text-success shadow-popover">
+        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-success/10 ring-1 ring-success/30 px-3 py-2 text-xs text-success shadow-popover">
           {sent}
         </div>
       )}
@@ -165,7 +165,7 @@ function InviteModal({
     onSent(email.trim());
   };
 
-  const input = 'w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
+  const input = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -175,29 +175,29 @@ function InviteModal({
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
-          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-[12px] text-danger">{err}</div>}
+          {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{err}</div>}
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Full name *</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Full name *</span>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" className={input} />
           </label>
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Email *</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Email *</span>
             <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="ada@company.com" className={input} />
           </label>
           <label className="block">
-            <span className="block text-[12px] font-semibold text-secondary mb-1">Role</span>
+            <span className="block text-xs font-semibold text-secondary mb-1">Role</span>
             <select value={role} onChange={(e) => setRole(e.target.value)} className={input + ' capitalize'}>
               {ROLES.filter((r) => r !== 'owner' || canGrantOwner).map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </label>
-          <p className="text-[11px] text-tertiary leading-relaxed">
+          <p className="text-2xs text-tertiary leading-relaxed">
             They get an email with a single-use link. Signing in through it joins them to this workspace at the role above.
           </p>
         </div>
         <div className="flex items-center justify-end gap-2 p-3 border-t border-subtle">
-          <button onClick={onClose} className="h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={onClose} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
           <button onClick={submit} disabled={busy || !name.trim() || !email.trim()}
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-50">
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Send invitation
           </button>
         </div>

@@ -77,7 +77,7 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
   };
 
   if (loading) {
-    return <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex items-center gap-2 text-[13px] text-tertiary">
+    return <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex items-center gap-2 text-sm text-tertiary">
       <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading careers page…
     </div>;
   }
@@ -88,59 +88,59 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
         <Globe2 className="w-4 h-4 text-accent" />
         <h2 className="text-sm font-semibold text-primary">Public careers page</h2>
       </div>
-      <p className="text-[12px] text-tertiary">
+      <p className="text-xs text-tertiary">
         One branded page listing every open role, using the logo and accent colour above.
         Nothing is public until you set an address here.
       </p>
 
       <div>
-        <label className="block text-[12px] font-semibold text-secondary mb-1">Address</label>
+        <label className="block text-xs font-semibold text-secondary mb-1">Address</label>
         <div className="flex items-stretch">
-          <span className="inline-flex items-center px-2.5 rounded-l-md bg-surface-sunken ring-1 ring-subtle text-[12px] text-tertiary">
+          <span className="inline-flex items-center px-2.5 rounded-l-md bg-surface-sunken ring-1 ring-subtle text-xs text-tertiary">
             {origin.replace(/^https?:\/\//, '')}/careers/
           </span>
           <input value={slug} onChange={(e) => { setSlug(e.target.value.toLowerCase().trim()); setError(''); }}
             placeholder="your-company"
-            className={`flex-1 h-9 px-2.5 text-[13px] rounded-r-md bg-surface ring-1 shadow-sm outline-none focus:ring-2 ${
+            className={`flex-1 h-9 px-2.5 text-sm rounded-r-md bg-surface ring-1 shadow-sm outline-none focus:ring-2 ${
               problem ? 'ring-danger/40 focus:ring-danger/30' : 'ring-subtle focus:ring-accent/30'
             }`} />
         </div>
         {problem && (
-          <p className="mt-1.5 flex items-start gap-1.5 text-[12px] text-danger">
+          <p className="mt-1.5 flex items-start gap-1.5 text-xs text-danger">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" /><span>{problem}</span>
           </p>
         )}
-        <p className="mt-1.5 text-[11px] text-tertiary">
+        <p className="mt-1.5 text-2xs text-tertiary">
           Leave empty to take the page offline. This also becomes your subdomain
           (<span className="tabular-nums">{slug || 'your-company'}.runbutter.app</span>) once we enable those, so it follows domain-name rules.
         </p>
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-secondary mb-1">Headline</label>
+        <label className="block text-xs font-semibold text-secondary mb-1">Headline</label>
         <input value={headline} onChange={(e) => setHeadline(e.target.value)}
           placeholder="Build the tools companies actually run on."
-          className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+          className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-secondary mb-1">About</label>
+        <label className="block text-xs font-semibold text-secondary mb-1">About</label>
         <textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3}
           placeholder="A short paragraph about the team, how you work, where you're based…"
-          className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+          className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
       </div>
 
-      {error && <p className="text-[12px] text-danger">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
 
       <div className="flex items-center gap-2">
         <button onClick={save} disabled={saving || !!problem || !privyUserId}
-          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null}
           {saved ? 'Saved' : 'Save careers page'}
         </button>
         {savedSlug && (
           <a href={`/careers/${savedSlug}`} target="_blank" rel="noopener noreferrer"
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
             <ExternalLink className="w-3.5 h-3.5" /> View page
           </a>
         )}

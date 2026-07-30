@@ -29,7 +29,7 @@ function Chip({ label }: { label: string }) {
   const meta = CHIP[label.toLowerCase()] ?? { icon: CircleDashed };
   const Icon = meta.icon;
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium capitalize ${
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs font-medium capitalize ${
       meta.solid ? 'bg-inverse text-inverse-fg' : 'bg-surface-hover text-secondary'}`}>
       <Icon className="w-2.5 h-2.5" /> {label}
     </span>
@@ -60,7 +60,7 @@ function Stat({ label, value, icon: Icon, trend, spark }: {
   return (
     <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+        <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
         <span className="w-5 h-5 rounded-md bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
           <Icon className="w-2.5 h-2.5 text-tertiary" />
         </span>
@@ -70,7 +70,7 @@ function Stat({ label, value, icon: Icon, trend, spark }: {
         {spark && <Spark points={spark} />}
       </div>
       {trend && (
-        <span className="mt-2 inline-flex items-center gap-0.5 rounded-md bg-surface-hover px-1 py-0.5 text-[9px] font-semibold text-secondary">
+        <span className="mt-2 inline-flex items-center gap-0.5 rounded-md bg-surface-hover px-1 py-0.5 text-3xs font-semibold text-secondary">
           <ArrowUpRight className="w-2.5 h-2.5" />{trend}
         </span>
       )}
@@ -83,10 +83,10 @@ function DealCard({ title, sub, amount }: { title: string; sub?: string; amount?
     <div className="bg-surface rounded-lg ring-1 ring-subtle shadow-sm p-2.5 mb-2">
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded-full bg-surface-hover ring-1 ring-subtle shrink-0" />
-        <span className="text-[11px] font-medium text-primary truncate">{title}</span>
+        <span className="text-2xs font-medium text-primary truncate">{title}</span>
       </div>
-      {sub && <div className="text-[10px] text-tertiary mt-1 pl-7">{sub}</div>}
-      {amount && <div className="text-[11px] font-mono text-primary mt-1.5 pl-7">{amount}</div>}
+      {sub && <div className="text-3xs text-tertiary mt-1 pl-7">{sub}</div>}
+      {amount && <div className="text-2xs font-mono text-primary mt-1.5 pl-7">{amount}</div>}
     </div>
   );
 }
@@ -95,8 +95,8 @@ function Column({ name, count, children }: { name: string; count: number; childr
   return (
     <div className="w-[210px] shrink-0">
       <div className="flex items-center gap-1.5 mb-2 px-0.5">
-        <span className="text-[11px] font-medium text-primary">{name}</span>
-        <span className="text-[10px] font-mono text-tertiary">{count}</span>
+        <span className="text-2xs font-medium text-primary">{name}</span>
+        <span className="text-3xs font-mono text-tertiary">{count}</span>
       </div>
       {/* Fills the window rather than a fixed height, so the columns can't
           overflow the shorter phone layout. */}
@@ -131,14 +131,14 @@ export default function ProductPreview() {
           <span className="w-2.5 h-2.5 rounded-full bg-strong" />
           <span className="w-2.5 h-2.5 rounded-full bg-strong" />
         </div>
-        <div className="hidden md:flex items-center gap-1.5 h-6 px-2.5 rounded-md bg-surface ring-1 ring-subtle shadow-sm text-tertiary text-[11px] min-w-[180px]">
+        <div className="hidden md:flex items-center gap-1.5 h-6 px-2.5 rounded-md bg-surface ring-1 ring-subtle shadow-sm text-tertiary text-2xs min-w-[180px]">
           <Search className="w-3 h-3" /> Search the workspace
-          <span className="ml-auto font-mono text-[10px]">⌘K</span>
+          <span className="ml-auto font-mono text-3xs">⌘K</span>
         </div>
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar ml-auto">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`h-6 px-2.5 shrink-0 rounded-md text-[11px] font-medium transition-colors ${tab === t.id ? 'bg-inverse text-inverse-fg' : 'text-tertiary hover:text-primary'}`}>
+              className={`h-6 px-2.5 shrink-0 rounded-md text-2xs font-medium transition-colors ${tab === t.id ? 'bg-inverse text-inverse-fg' : 'text-tertiary hover:text-primary'}`}>
               {t.label}
             </button>
           ))}
@@ -159,8 +159,8 @@ export default function ProductPreview() {
         {/* content */}
         <div className="flex-1 overflow-hidden">
           <div className="h-10 flex items-center px-4 border-b border-subtle">
-            <span className="text-[12px] font-medium text-primary capitalize">{tab === 'hr' ? 'Recruiting' : tab}</span>
-            <span className="ml-2 text-[10px] font-mono text-tertiary">workspace</span>
+            <span className="text-xs font-medium text-primary capitalize">{tab === 'hr' ? 'Recruiting' : tab}</span>
+            <span className="ml-2 text-3xs font-mono text-tertiary">workspace</span>
           </div>
           <div className="p-4 overflow-hidden">
           {tab === 'sales' && (
@@ -179,7 +179,7 @@ export default function ProductPreview() {
                 <Stat label="Outstanding" value="$24k" icon={Clock} />
               </div>
               <Panel>
-                <div className="grid grid-cols-3 gap-2 px-3.5 h-9 items-center bg-surface-sunken text-[10px] font-semibold text-tertiary uppercase tracking-wide">
+                <div className="grid grid-cols-3 gap-2 px-3.5 h-9 items-center bg-surface-sunken text-3xs font-semibold text-tertiary uppercase tracking-wide">
                   <span>Invoice</span><span className="text-right">Amount</span><span className="text-right">Status</span>
                 </div>
                 {[['INV-1001', '$24,000', 'paid'],
@@ -187,7 +187,7 @@ export default function ProductPreview() {
                   ['INV-1003', '$36,000', 'overdue'],
                   ['INV-1004', '$4,500', 'draft'],
                   ['INV-1005', '$18,200', 'paid']].map((r) => (
-                  <div key={r[0]} className="grid grid-cols-3 gap-2 px-3.5 h-11 items-center border-t border-subtle text-[11px]">
+                  <div key={r[0]} className="grid grid-cols-3 gap-2 px-3.5 h-11 items-center border-t border-subtle text-2xs">
                     <span className="font-medium text-secondary">{r[0]}</span>
                     <span className="text-right font-mono text-primary">{r[1]}</span>
                     <span className="text-right"><Chip label={r[2]} /></span>
@@ -206,7 +206,7 @@ export default function ProductPreview() {
                 <Stat label="Live now" value="7" icon={Activity} />
               </div>
               <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-tertiary mb-3">Visitors, last 14 days</div>
+                <div className="text-3xs font-semibold uppercase tracking-wide text-tertiary mb-3">Visitors, last 14 days</div>
                 <div className="flex items-end gap-1.5 h-28">
                   {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70, 83, 92].map((h, i) => (
                     <div key={i} className="flex-1 rounded-sm bg-inverse/75" style={{ height: `${h}%` }} />
@@ -226,7 +226,7 @@ export default function ProductPreview() {
 
           {tab === 'hr' && (
             <Panel>
-              <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3.5 h-9 items-center bg-surface-sunken text-[10px] font-semibold text-tertiary uppercase tracking-wide">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3.5 h-9 items-center bg-surface-sunken text-3xs font-semibold text-tertiary uppercase tracking-wide">
                 <span>Candidate</span><span>Match</span><span>Status</span>
               </div>
               {[['Anna Kowalski', 'Senior Engineer', '92', 'Interview'],
@@ -236,10 +236,10 @@ export default function ProductPreview() {
                 ['Lena Fischer', 'Account Exec', '68', 'Applied']].map((r) => (
                 <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3.5 h-[58px] items-center border-t border-subtle">
                   <div className="min-w-0">
-                    <div className="text-[11px] font-medium text-primary truncate">{r[0]}</div>
-                    <div className="text-[10px] text-tertiary truncate">{r[1]}</div>
+                    <div className="text-2xs font-medium text-primary truncate">{r[0]}</div>
+                    <div className="text-3xs text-tertiary truncate">{r[1]}</div>
                   </div>
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-hover ring-1 ring-subtle text-[11px] font-mono text-primary">{r[2]}</span>
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-hover ring-1 ring-subtle text-2xs font-mono text-primary">{r[2]}</span>
                   <Chip label={r[3]} />
                 </div>
               ))}

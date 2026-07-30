@@ -58,20 +58,20 @@ function ImageField({ label, hint, value, field, busy, onPick, onClear, wide = f
 }) {
   return (
     <div>
-      <label className="block text-[12px] font-semibold text-secondary mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-secondary mb-1">{label}</label>
       <div className="flex items-center gap-2.5">
         <div className={`${wide ? 'w-24 h-12' : 'w-12 h-12'} rounded-md ring-1 ring-subtle bg-surface-sunken overflow-hidden shrink-0 flex items-center justify-center`}>
           {value
             ? <img src={value} alt="" className="w-full h-full object-cover" />
             : <ImageIcon className="w-4 h-4 text-tertiary" />}
         </div>
-        <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
+        <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
           <input type="file" accept="image/*" className="hidden" onChange={(e) => onPick(field, e)} />
         </label>
-        {value && <button type="button" onClick={onClear} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
+        {value && <button type="button" onClick={onClear} className="text-xs text-tertiary hover:text-danger">Remove</button>}
       </div>
-      {hint && <p className="mt-1 text-[11px] text-tertiary">{hint}</p>}
+      {hint && <p className="mt-1 text-2xs text-tertiary">{hint}</p>}
     </div>
   );
 }
@@ -152,16 +152,16 @@ export default function BrandingPage() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Branding</h1>
-        <span className="text-[11px] text-tertiary">Logo &amp; details on your invoices and offers</span>
+        <span className="text-2xs text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
-          className="ml-auto h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+          className="ml-auto h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : privy && !wsId ? (
@@ -172,70 +172,70 @@ export default function BrandingPage() {
               <Building2 className="w-6 h-6 text-accent" />
             </div>
             <h2 className="text-lg font-semibold text-primary">Finish setting up your company</h2>
-            <p className="mt-1.5 text-[13px] text-secondary">Create your workspace first — then you can add your logo, legal details and bank info here.</p>
-            <Link href="/auth/register" className="mt-5 inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+            <p className="mt-1.5 text-sm text-secondary">Create your workspace first — then you can add your logo, legal details and bank info here.</p>
+            <Link href="/auth/register" className="mt-5 inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
               Set up company <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         ) : (
-          <div className="max-w-4xl grid lg:grid-cols-2 gap-6">
+          <div className="max-w-5xl grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1.5">Logo</label>
+                <label className="block text-xs font-semibold text-secondary mb-1.5">Logo</label>
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-lg ring-1 ring-subtle flex items-center justify-center overflow-hidden bg-surface-sunken shrink-0">
                     {form.logo_url ? <img src={form.logo_url} alt="" className="w-full h-full object-contain" /> : <div className="w-7 h-7 rounded" style={{ background: form.accent_color }} />}
                   </div>
-                  <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
+                  <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
                     {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
                     <input type="file" accept="image/*" className="hidden" onChange={onLogoFile} disabled={!privy || uploading} />
                   </label>
-                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
+                  {form.logo_url && <button onClick={() => set({ logo_url: '' })} className="text-xs text-tertiary hover:text-danger">Remove</button>}
                 </div>
                 <input value={form.logo_url} onChange={(e) => set({ logo_url: e.target.value })} placeholder="…or paste a logo image URL"
-                  className="mt-2 w-full h-9 px-2.5 text-[12px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="mt-2 w-full h-9 px-2.5 text-xs rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1">Legal company name</label>
+                <label className="block text-xs font-semibold text-secondary mb-1">Legal company name</label>
                 <input value={form.legal_name} onChange={(e) => set({ legal_name: e.target.value })} placeholder={wsName}
-                  className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               {/* Country-driven legal identity */}
               <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Legal identity — shown on invoices</span>
+                  <span className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Legal identity — shown on invoices</span>
                   <select value={form.country} onChange={(e) => set({ country: e.target.value })}
-                    className="h-8 px-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
+                    className="h-8 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none">
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 {identityFields(form.country).map((f) => (
                   <div key={f.key}>
-                    <label className="block text-[12px] font-semibold text-secondary mb-1">{f.label}</label>
+                    <label className="block text-xs font-semibold text-secondary mb-1">{f.label}</label>
                     <input value={form[f.key]} onChange={(e) => set({ [f.key]: e.target.value } as any)} placeholder={f.placeholder}
-                      className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
+                      className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
                   </div>
                 ))}
               </div>
 
               {/* Bank details (universal) */}
               <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Bank — for payment on invoices</span>
+                <span className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Bank — for payment on invoices</span>
                 <div>
-                  <label className="block text-[12px] font-semibold text-secondary mb-1">IBAN / account number</label>
+                  <label className="block text-xs font-semibold text-secondary mb-1">IBAN / account number</label>
                   <input value={form.iban} onChange={(e) => set({ iban: e.target.value })}
                     onBlur={() => form.iban && set({ iban: formatIban(form.iban) })}
                     placeholder="PL00 0000 0000 0000 0000 0000 0000"
-                    className={`w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 shadow-sm outline-none tabular-nums focus:ring-2 ${
+                    className={`w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 shadow-sm outline-none tabular-nums focus:ring-2 ${
                       ibanCheck.reason === 'empty' ? 'ring-subtle focus:ring-accent/30'
                         : ibanCheck.valid ? 'ring-success/40 focus:ring-success/30'
                         : 'ring-danger/40 focus:ring-danger/30'
                     }`} />
                   {ibanCheck.reason !== 'empty' && (
-                    <p className={`mt-1.5 flex items-start gap-1.5 text-[12px] ${ibanCheck.valid ? 'text-success' : 'text-danger'}`}>
+                    <p className={`mt-1.5 flex items-start gap-1.5 text-xs ${ibanCheck.valid ? 'text-success' : 'text-danger'}`}>
                       {ibanCheck.valid
                         ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-px" />
                         : <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />}
@@ -244,25 +244,25 @@ export default function BrandingPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-secondary mb-1">Bank name</label>
+                  <label className="block text-xs font-semibold text-secondary mb-1">Bank name</label>
                   <input value={form.bank_name} onChange={(e) => set({ bank_name: e.target.value })}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                    className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1">Address</label>
+                <label className="block text-xs font-semibold text-secondary mb-1">Address</label>
                 <textarea value={form.address} onChange={(e) => set({ address: e.target.value })} rows={2} placeholder="Street, city, country"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1">Accent color</label>
+                <label className="block text-xs font-semibold text-secondary mb-1">Accent color</label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
                     className="w-9 h-9 rounded-md ring-1 ring-subtle cursor-pointer bg-surface" />
                   <input value={form.accent_color} onChange={(e) => set({ accent_color: e.target.value })}
-                    className="w-28 h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
+                    className="w-28 h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none tabular-nums" />
                 </div>
               </div>
 
@@ -271,24 +271,24 @@ export default function BrandingPage() {
                   the address, the copy and which roles are public. */}
               <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Careers &amp; apply</span>
-                  <Link href="/dashboard/careers" className="text-[11px] font-medium text-accent hover:underline">Manage page →</Link>
+                  <span className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Careers &amp; apply</span>
+                  <Link href="/dashboard/careers" className="text-2xs font-medium text-accent hover:underline">Manage page →</Link>
                 </div>
                 <ImageField label="Cover image" hint="Wide hero across the top of your careers page."
                   value={form.cover_image_url} field="cover_image_url" busy={uploadingField === 'cover_image_url'}
                   onPick={onImageFile} onClear={() => set({ cover_image_url: '' })} wide />
                 <div>
-                  <label className="block text-[12px] font-semibold text-secondary mb-1">Apply form intro</label>
+                  <label className="block text-xs font-semibold text-secondary mb-1">Apply form intro</label>
                   <textarea value={form.apply_intro} onChange={(e) => set({ apply_intro: e.target.value })} rows={2}
                     placeholder="One line candidates see above the application form."
-                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                    className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
               </div>
 
               {/* ── Link previews ─────────────────────────────────────────── */}
               <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Link previews</span>
-                <p className="text-[11px] text-tertiary -mt-1">
+                <span className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Link previews</span>
+                <p className="text-2xs text-tertiary -mt-1">
                   Used when your careers page, forms or apply links are shared or bookmarked.
                 </p>
                 <ImageField label="Favicon" hint="Square, 32px or larger."
@@ -301,42 +301,42 @@ export default function BrandingPage() {
 
               {/* ── Email ─────────────────────────────────────────────────── */}
               <div className="rounded-xl ring-1 ring-subtle p-3.5 space-y-3">
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-tertiary">Email</span>
+                <span className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Email</span>
                 <div>
-                  <label className="block text-[12px] font-semibold text-secondary mb-1">Sender name</label>
+                  <label className="block text-xs font-semibold text-secondary mb-1">Sender name</label>
                   <input value={form.email_from_name} onChange={(e) => set({ email_from_name: e.target.value })}
                     placeholder={displayName}
-                    className="w-full h-9 px-2.5 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                  <p className="mt-1 text-[11px] text-tertiary">Shown as the "from" name on candidate and invoice emails.</p>
+                    className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <p className="mt-1 text-2xs text-tertiary">Shown as the "from" name on candidate and invoice emails.</p>
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-secondary mb-1">Email footer</label>
+                  <label className="block text-xs font-semibold text-secondary mb-1">Email footer</label>
                   <textarea value={form.email_footer} onChange={(e) => set({ email_footer: e.target.value })} rows={2}
                     placeholder="Company name, address, unsubscribe note…"
-                    className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                    className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1">Document footer</label>
+                <label className="block text-xs font-semibold text-secondary mb-1">Document footer</label>
                 <textarea value={form.document_footer} onChange={(e) => set({ document_footer: e.target.value })} rows={2}
                   placeholder="Shown on contracts and signed documents."
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-secondary mb-1">Invoice footer / payment terms</label>
+                <label className="block text-xs font-semibold text-secondary mb-1">Invoice footer / payment terms</label>
                 <textarea value={form.invoice_footer} onChange={(e) => set({ invoice_footer: e.target.value })} rows={3} placeholder="Payment within 14 days · bank details · VAT no…"
-                  className="w-full px-2.5 py-2 text-[13px] rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
-              {!privy && <p className="text-[12px] text-warning">Sign in to upload a logo and save branding.</p>}
-              {error && <p className="text-[12px] text-danger">{error}</p>}
+              {!privy && <p className="text-xs text-warning">Sign in to upload a logo and save branding.</p>}
+              {error && <p className="text-xs text-danger">{error}</p>}
             </div>
 
             {/* Live preview */}
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-tertiary mb-2">Preview</div>
+              <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary mb-2">Preview</div>
               <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card shadow-sm overflow-hidden">
                 <div className="h-1.5" style={{ background: form.accent_color }} />
                 <div className="p-6">
@@ -344,23 +344,23 @@ export default function BrandingPage() {
                     <div className="flex items-center gap-3">
                       {form.logo_url ? <img src={form.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain" /> : <div className="w-10 h-10 rounded-lg" style={{ background: form.accent_color }} />}
                       <div>
-                        <div className="text-[15px] font-semibold text-primary">{displayName}</div>
-                        <div className="text-[11px] text-tertiary whitespace-pre-line">{form.address || 'runbutter.app'}</div>
+                        <div className="text-md font-semibold text-primary">{displayName}</div>
+                        <div className="text-2xs text-tertiary whitespace-pre-line">{form.address || 'runbutter.app'}</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold text-primary">Invoice</div>
-                      <div className="text-[12px] text-tertiary">INV-1001</div>
+                      <div className="text-xs text-tertiary">INV-1001</div>
                     </div>
                   </div>
-                  <div className="mt-6 flex justify-between text-[14px] font-semibold border-t border-subtle pt-3">
+                  <div className="mt-6 flex justify-between text-base font-semibold border-t border-subtle pt-3">
                     <span className="text-primary">Total due</span>
                     <span style={{ color: form.accent_color }}>$4,150.00</span>
                   </div>
-                  {form.invoice_footer && <div className="mt-4 pt-3 border-t border-subtle text-[11px] text-secondary whitespace-pre-line">{form.invoice_footer}</div>}
+                  {form.invoice_footer && <div className="mt-4 pt-3 border-t border-subtle text-2xs text-secondary whitespace-pre-line">{form.invoice_footer}</div>}
                 </div>
               </div>
-              <p className="mt-2 text-[11px] text-tertiary">This is how your invoices and offers will look.</p>
+              <p className="mt-2 text-2xs text-tertiary">This is how your invoices and offers will look.</p>
             </div>
           </div>
         )}

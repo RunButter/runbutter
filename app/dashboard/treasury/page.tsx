@@ -173,12 +173,12 @@ export default function TreasuryPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
-                        className="h-8 w-52 pl-8 pr-2 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                        className="h-8 w-52 pl-8 pr-2 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
                 <div className="relative">
                     <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary pointer-events-none" />
                     <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}
-                        className="h-8 pl-8 pr-7 text-[13px] rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none appearance-none cursor-pointer">
+                        className="h-8 pl-8 pr-7 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none appearance-none cursor-pointer">
                         {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                 </div>
@@ -189,11 +189,11 @@ export default function TreasuryPage() {
                 <aside className="w-64 shrink-0 border-r border-subtle bg-surface overflow-y-auto hidden md:block">
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-tertiary">
+                            <h3 className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-tertiary">
                                 <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
                             </h3>
                             {chips.length > 0 && (
-                                <button onClick={resetAll} className="flex items-center gap-1 text-[11px] font-semibold text-accent hover:text-accent">
+                                <button onClick={resetAll} className="flex items-center gap-1 text-2xs font-semibold text-accent hover:text-accent">
                                     <RotateCcw className="w-3 h-3" /> Reset
                                 </button>
                             )}
@@ -204,8 +204,8 @@ export default function TreasuryPage() {
                             {DIMS.map((d) => (
                                 <div key={d.key}>
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[12px] font-semibold text-secondary">{d.label}</span>
-                                        <span className="text-[11px] font-mono text-tertiary tabular-nums">min {mins[d.key]}</span>
+                                        <span className="text-xs font-semibold text-secondary">{d.label}</span>
+                                        <span className="text-2xs font-mono text-tertiary tabular-nums">min {mins[d.key]}</span>
                                     </div>
                                     <input type="range" min={0} max={100} step={1} value={mins[d.key]}
                                         onChange={(e) => setMins((m) => ({ ...m, [d.key]: Number(e.target.value) }))}
@@ -253,7 +253,7 @@ export default function TreasuryPage() {
                             <div className="flex flex-wrap items-center gap-2 mb-4">
                                 {chips.map((chip, i) => (
                                     <button key={i} onClick={chip.clear}
-                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-accent/10 ring-1 ring-accent/30 text-accent text-[12px] font-semibold hover:bg-accent/10 transition-colors">
+                                        className="group flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-md bg-accent/10 ring-1 ring-accent/30 text-accent text-xs font-semibold hover:bg-accent/10 transition-colors">
                                         {chip.label}
                                         <X className="w-3 h-3 text-accent group-hover:text-accent" />
                                     </button>
@@ -277,12 +277,12 @@ export default function TreasuryPage() {
                                             <div className="flex items-start justify-between gap-3 mb-3">
                                                 <div className="min-w-0">
                                                     <div className="font-semibold text-primary truncate group-hover:text-accent transition-colors">{c.full_name}</div>
-                                                    <div className="flex items-center gap-1 text-[11px] text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> {c.email}</div>
-                                                    <div className="text-[12px] text-secondary mt-0.5 truncate">{c.position_title || '—'}</div>
+                                                    <div className="flex items-center gap-1 text-2xs text-tertiary truncate"><Mail className="w-3 h-3 shrink-0" /> {c.email}</div>
+                                                    <div className="text-xs text-secondary mt-0.5 truncate">{c.position_title || '—'}</div>
                                                 </div>
                                                 <div className="text-center shrink-0">
                                                     <div className={`text-2xl font-semibold tabular-nums ${scoreColor(c.overall_score)}`}>{c.overall_score ?? '—'}</div>
-                                                    <div className="text-[9px] font-semibold uppercase tracking-widest text-tertiary">Match</div>
+                                                    <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Match</div>
                                                 </div>
                                             </div>
 
@@ -292,11 +292,11 @@ export default function TreasuryPage() {
                                                     const v = c[d.key] as number | null;
                                                     return (
                                                         <div key={d.key} className="flex items-center gap-2">
-                                                            <span className="w-20 text-[10px] font-semibold text-tertiary shrink-0">{d.label}</span>
+                                                            <span className="w-20 text-3xs font-semibold text-tertiary shrink-0">{d.label}</span>
                                                             <div className="flex-1 h-1.5 bg-surface-hover rounded-full overflow-hidden">
                                                                 <div className={`h-full rounded-full ${d.accent} transition-all duration-500`} style={{ width: `${v ?? 0}%` }} />
                                                             </div>
-                                                            <span className="w-7 text-right text-[10px] font-mono text-secondary tabular-nums">{v ?? '–'}</span>
+                                                            <span className="w-7 text-right text-3xs font-mono text-secondary tabular-nums">{v ?? '–'}</span>
                                                         </div>
                                                     );
                                                 })}
@@ -304,10 +304,10 @@ export default function TreasuryPage() {
 
                                             <div className="flex items-center justify-between pt-3 border-t border-subtle">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded-md ring-1 ${st.cls}`}>{st.label}</span>
-                                                    <span className="text-[10px] text-tertiary">{titleize(c.source || 'direct')}</span>
+                                                    <span className={`inline-flex items-center px-1.5 py-0.5 text-3xs font-semibold rounded-md ring-1 ${st.cls}`}>{st.label}</span>
+                                                    <span className="text-3xs text-tertiary">{titleize(c.source || 'direct')}</span>
                                                 </div>
-                                                <span className="flex items-center gap-1 text-[11px] font-semibold text-tertiary group-hover:text-accent transition-colors">View <ExternalLink className="w-3 h-3" /></span>
+                                                <span className="flex items-center gap-1 text-2xs font-semibold text-tertiary group-hover:text-accent transition-colors">View <ExternalLink className="w-3 h-3" /></span>
                                             </div>
                                         </Link>
                                     );
@@ -326,7 +326,7 @@ export default function TreasuryPage() {
 function FacetGroup({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div className="mb-4 border-t border-subtle pt-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-1.5">{title}</div>
+            <div className="text-3xs font-semibold uppercase tracking-wider text-tertiary mb-1.5">{title}</div>
             <div className="space-y-0.5 max-h-44 overflow-y-auto pr-1">{children}</div>
         </div>
     );
@@ -336,8 +336,8 @@ function FacetRow({ label, count, checked, onChange }: { label: string; count: n
     return (
         <label className="flex items-center gap-2 py-0.5 cursor-pointer group">
             <input type="checkbox" checked={checked} onChange={onChange} className="w-3.5 h-3.5 rounded border-subtle accent-accent cursor-pointer" />
-            <span className={`flex-1 text-[12px] truncate ${checked ? 'text-primary font-semibold' : 'text-secondary'} group-hover:text-primary`}>{label}</span>
-            <span className="text-[10px] font-mono text-tertiary tabular-nums">{count}</span>
+            <span className={`flex-1 text-xs truncate ${checked ? 'text-primary font-semibold' : 'text-secondary'} group-hover:text-primary`}>{label}</span>
+            <span className="text-3xs font-mono text-tertiary tabular-nums">{count}</span>
         </label>
     );
 }
@@ -345,7 +345,7 @@ function FacetRow({ label, count, checked, onChange }: { label: string; count: n
 function Insight({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
         <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card px-4 py-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-1">
+            <div className="flex items-center gap-1.5 text-3xs font-semibold uppercase tracking-wider text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
             <div className="text-lg font-semibold text-primary truncate">{value}</div>

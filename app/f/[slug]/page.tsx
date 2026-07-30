@@ -27,7 +27,7 @@ export default async function FormPage({ params }: { params: { slug: string } })
         ) : (
           <div className="w-full max-w-md rounded-xl bg-surface border border-subtle p-8 text-center mt-8">
             <h1 className="text-lg font-medium text-primary">This form isn&rsquo;t available</h1>
-            <p className="mt-2 text-[13px] text-secondary">The link may be wrong, or the form is closed. Check with whoever shared it.</p>
+            <p className="mt-2 text-sm text-secondary">The link may be wrong, or the form is closed. Check with whoever shared it.</p>
           </div>
         )}
       </div>

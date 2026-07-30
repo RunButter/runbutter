@@ -18,7 +18,7 @@ interface Row { product_id: string; description: string; quantity: string; unit_
 interface Opt { id: string; name: string }
 interface Prod { id: string; name: string; unit_price: number; image?: string | null }
 
-const cellInput = 'w-full bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-1 text-[13px] outline-none focus:ring-1 focus:ring-accent/30 tabular-nums';
+const cellInput = 'w-full bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-1 text-sm outline-none focus:ring-1 focus:ring-accent/30 tabular-nums';
 
 export default function DocumentBuilder() {
   const { notify } = useDialog();
@@ -128,21 +128,21 @@ export default function DocumentBuilder() {
       {/* Toolbar */}
       <div className="sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-2">
-          <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /> Back</button>
+          <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /> Back</button>
           <span className="text-sm font-medium text-secondary">{title} builder</span>
-          <span className={`text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{doc.live ? 'Live' : 'Sample'}</span>
+          <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{doc.live ? 'Live' : 'Sample'}</span>
           <div className="ml-auto flex items-center gap-2">
-            <button onClick={() => router.push(`/documents/${id}`)} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Eye className="w-3.5 h-3.5" /> Preview</button>
-            <button onClick={exportKsef} title="Download FA(3) e-invoice XML" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /> KSeF XML</button>
+            <button onClick={() => router.push(`/documents/${id}`)} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Eye className="w-3.5 h-3.5" /> Preview</button>
+            <button onClick={exportKsef} title="Download FA(3) e-invoice XML" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /> KSeF XML</button>
             {isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in' : ''}
-                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-success-fg bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-success-fg bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
                 {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
               </button>
             )}
-            <button onClick={() => setSendOpen(true)} disabled={!privy} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[13px] font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
+            <button onClick={() => setSendOpen(true)} disabled={!privy} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
             <button onClick={save} disabled={!privy || saving} title={!privy ? 'Sign in to save' : ''}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
+              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null} {saved ? 'Saved' : 'Save'}
             </button>
           </div>
@@ -158,16 +158,16 @@ export default function DocumentBuilder() {
               {doc.seller?.logo_url ? <img src={doc.seller.logo_url} alt="" className="w-11 h-11 rounded-lg object-contain" /> : <div className="w-11 h-11 rounded-lg" style={{ background: accent }} />}
               <div>
                 <div className="text-lg font-semibold tracking-tight">{doc.seller?.name || 'Your company'}</div>
-                <div className="text-[12px] text-tertiary whitespace-pre-line">{doc.seller?.address || 'runbutter.app'}</div>
+                <div className="text-xs text-tertiary whitespace-pre-line">{doc.seller?.address || 'runbutter.app'}</div>
               </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-semibold tracking-tight">{title}</div>
               <input value={header.number} onChange={(e) => setH({ number: e.target.value })} placeholder={`${isOffer ? 'OFF' : 'INV'}-0001`}
-                className="text-[13px] font-semibold text-secondary text-right bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent/30 w-28" />
+                className="text-sm font-semibold text-secondary text-right bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent/30 w-28" />
               <div className="mt-1">
                 <select value={header.status} onChange={(e) => setH({ status: e.target.value })}
-                  className="text-[11px] font-medium uppercase tracking-widest text-secondary bg-surface-sunken rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent/30 capitalize">
+                  className="text-2xs font-medium uppercase tracking-widest text-secondary bg-surface-sunken rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent/30 capitalize">
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -177,25 +177,25 @@ export default function DocumentBuilder() {
           {/* Parties + dates */}
           <div className="grid sm:grid-cols-3 gap-6 py-6">
             <div>
-              <div className="text-[10px] font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Prepared for' : 'Bill to'}</div>
+              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Prepared for' : 'Bill to'}</div>
               <SearchSelect options={companies} value={header.organization_id} onChange={(id) => setH({ organization_id: id })}
                 placeholder={doc.buyer?.name || 'Search client…'} allowClear
-                buttonClassName="!ring-0 hover:!bg-surface-sunken !font-medium !text-[14px]" />
+                buttonClassName="!ring-0 hover:!bg-surface-sunken !font-medium !text-base" />
             </div>
             <div>
-              <div className="text-[10px] font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Issued' : 'Invoice date'}</div>
+              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Issued' : 'Invoice date'}</div>
               <input type="date" value={header.issued_at || ''} onChange={(e) => setH({ issued_at: e.target.value })} className={cellInput} />
             </div>
             <div>
-              <div className="text-[10px] font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Valid until' : 'Due date'}</div>
+              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Valid until' : 'Due date'}</div>
               <input type="date" value={header.due_at || ''} onChange={(e) => setH({ due_at: e.target.value })} className={cellInput} />
             </div>
           </div>
 
           {/* Positions */}
-          <table className="w-full text-[13px]">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] font-medium uppercase tracking-widest text-tertiary border-b border-subtle">
+              <tr className="text-3xs font-medium uppercase tracking-widest text-tertiary border-b border-subtle">
                 <th className="text-left py-2">Description</th>
                 <th className="text-right py-2 w-16">Qty</th>
                 <th className="text-right py-2 w-28">Unit price</th>
@@ -236,29 +236,29 @@ export default function DocumentBuilder() {
             <div className="w-72">
               <SearchSelect value="" onChange={addProduct} clearOnPick placeholder="+ Add product / service…"
                 options={products.map((p) => ({ id: p.id, name: p.name, hint: fmt(p.unit_price, doc.currency), image: p.image }))}
-                buttonClassName="!h-8 !text-[12px]" />
+                buttonClassName="!h-8 !text-xs" />
             </div>
-            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Plus className="w-3.5 h-3.5" /> Custom line</button>
+            <button onClick={addCustom} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><Plus className="w-3.5 h-3.5" /> Custom line</button>
           </div>
 
           {/* Totals */}
           <div className="flex justify-end pt-5">
             <div className="w-full sm:w-72 space-y-1.5">
-              <div className="flex justify-between text-[13px] text-secondary"><span>Subtotal</span><span className="tabular-nums">{fmt(totals.subtotal, doc.currency)}</span></div>
-              {totals.discount > 0 && <div className="flex justify-between text-[13px] text-success"><span>Discount</span><span className="tabular-nums">−{fmt(totals.discount, doc.currency)}</span></div>}
-              {totals.tax > 0 && <div className="flex justify-between text-[13px] text-secondary"><span>VAT</span><span className="tabular-nums">{fmt(totals.tax, doc.currency)}</span></div>}
-              <div className="flex justify-between text-[15px] font-semibold pt-2 border-t border-subtle"><span>{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(totals.total, doc.currency)}</span></div>
+              <div className="flex justify-between text-sm text-secondary"><span>Subtotal</span><span className="tabular-nums">{fmt(totals.subtotal, doc.currency)}</span></div>
+              {totals.discount > 0 && <div className="flex justify-between text-sm text-success"><span>Discount</span><span className="tabular-nums">−{fmt(totals.discount, doc.currency)}</span></div>}
+              {totals.tax > 0 && <div className="flex justify-between text-sm text-secondary"><span>VAT</span><span className="tabular-nums">{fmt(totals.tax, doc.currency)}</span></div>}
+              <div className="flex justify-between text-md font-semibold pt-2 border-t border-subtle"><span>{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(totals.total, doc.currency)}</span></div>
             </div>
           </div>
 
           {/* Notes */}
           <div className="mt-8 pt-6 border-t border-subtle">
-            <div className="text-[10px] font-medium uppercase tracking-widest text-tertiary mb-1.5">Notes</div>
+            <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">Notes</div>
             <textarea value={header.notes} onChange={(e) => setH({ notes: e.target.value })} rows={2} placeholder="Payment terms, delivery, thanks…"
-              className="w-full text-[13px] text-secondary bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-1 outline-none focus:ring-1 focus:ring-accent/30 resize-none" />
+              className="w-full text-sm text-secondary bg-transparent hover:bg-surface-sunken focus:bg-surface rounded px-1.5 py-1 outline-none focus:ring-1 focus:ring-accent/30 resize-none" />
           </div>
         </div>
-        {!privy && <p className="text-center text-[12px] text-warning mt-3">Sign in to save — this is a sample preview.</p>}
+        {!privy && <p className="text-center text-xs text-warning mt-3">Sign in to save — this is a sample preview.</p>}
       </div>
 
       {sendOpen && privy && (

@@ -25,8 +25,8 @@ function Node({ icon: Icon, title, sub, tone, ring, onClick }: {
     <button onClick={onClick} disabled={!onClick}
       className={`shrink-0 text-left rounded-xl bg-surface ring-1 ${ring} shadow-sm px-3 py-2 min-w-[130px] transition-all ${onClick ? 'hover:shadow-md hover:-translate-y-[1px] cursor-pointer' : 'cursor-default'}`}>
       <span className={`inline-flex w-6 h-6 rounded-md items-center justify-center mb-1 ${tone}`}><Icon className="w-3.5 h-3.5" /></span>
-      <div className="text-[12px] font-semibold text-primary leading-tight">{title}</div>
-      {sub && <div className="text-[11px] text-tertiary leading-tight truncate max-w-[160px]">{sub}</div>}
+      <div className="text-xs font-semibold text-primary leading-tight">{title}</div>
+      {sub && <div className="text-2xs text-tertiary leading-tight truncate max-w-[160px]">{sub}</div>}
     </button>
   );
 }

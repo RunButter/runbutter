@@ -218,7 +218,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     }
   };
 
-  const inputCls = 'w-full h-11 px-3.5 text-[15px] rounded-xl bg-surface ring-1 ring-subtle shadow-card placeholder:text-tertiary shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
+  const inputCls = 'w-full h-11 px-3.5 text-md rounded-xl bg-surface ring-1 ring-subtle shadow-card placeholder:text-tertiary shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
 
   // Shared brand header: the company applying to, not RunButter.
   const CompanyMark = ({ big = false }: { big?: boolean }) =>
@@ -247,14 +247,14 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
               <CheckCircle2 className="w-8 h-8 text-success" />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-primary mb-2">Application submitted</h1>
-            <p className="text-[15px] text-secondary mb-6">
+            <p className="text-md text-secondary mb-6">
               Thanks for applying. We received your details and CV.
             </p>
 
             <div className="rounded-xl bg-accent/10 ring-1 ring-accent/30 p-5 mb-5 text-left">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-accent mb-1">One more step</div>
+              <div className="text-2xs font-medium uppercase tracking-wide text-accent mb-1">One more step</div>
               <h3 className="font-medium text-primary mb-1">Take the assessment</h3>
-              <p className="text-[13px] text-secondary mb-4">
+              <p className="text-sm text-secondary mb-4">
                 A 10-15 minute work-style questionnaire completes your application. No right or wrong answers.
               </p>
               <Link
@@ -265,7 +265,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
               </Link>
             </div>
 
-            <p className="text-[12px] text-tertiary">
+            <p className="text-xs text-tertiary">
               This link was also emailed to <strong className="text-secondary">{formData.email}</strong>
             </p>
           </div>
@@ -283,13 +283,13 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
             {positionInfo?.title || 'Apply'}
           </h1>
           {positionInfo?.companyName && (
-            <p className="mt-1.5 text-[15px] text-secondary">Application for {positionInfo.companyName}</p>
+            <p className="mt-1.5 text-md text-secondary">Application for {positionInfo.companyName}</p>
           )}
         </div>
 
         <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-6 sm:p-8">
           {error && (
-            <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-danger/10 ring-1 ring-danger/30 text-danger text-[14px]">
+            <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-danger/10 ring-1 ring-danger/30 text-danger text-base">
               <X className="w-4 h-4 mt-0.5 shrink-0" /> {error}
             </div>
           )}
@@ -297,29 +297,29 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="block sm:col-span-2">
-                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Full name <span className="text-danger">*</span></span>
+                <span className="block text-sm font-semibold text-secondary mb-1.5">Full name <span className="text-danger">*</span></span>
                 <input type="text" className={inputCls} placeholder="Ada Nowak"
                   value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
               </label>
               <label className="block sm:col-span-2">
-                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Email <span className="text-danger">*</span></span>
+                <span className="block text-sm font-semibold text-secondary mb-1.5">Email <span className="text-danger">*</span></span>
                 <input type="email" className={inputCls} placeholder="ada@example.com"
                   value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
               </label>
               <label className="block">
-                <span className="block text-[13px] font-semibold text-secondary mb-1.5">Phone</span>
+                <span className="block text-sm font-semibold text-secondary mb-1.5">Phone</span>
                 <input type="tel" className={inputCls} placeholder="+48 600 000 000"
                   value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
               </label>
               <label className="block">
-                <span className="block text-[13px] font-semibold text-secondary mb-1.5">LinkedIn</span>
+                <span className="block text-sm font-semibold text-secondary mb-1.5">LinkedIn</span>
                 <input type="url" className={inputCls} placeholder="linkedin.com/in/ada"
                   value={formData.linkedinUrl} onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })} />
               </label>
             </div>
 
             <div>
-              <span className="block text-[13px] font-semibold text-secondary mb-1.5">CV / Resume <span className="text-danger">*</span></span>
+              <span className="block text-sm font-semibold text-secondary mb-1.5">CV / Resume <span className="text-danger">*</span></span>
               <div
                 {...getRootProps()}
                 className={`rounded-xl ring-1 ring-dashed p-7 text-center cursor-pointer transition-colors ${isDragActive
@@ -337,17 +337,17 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
                       <FileText className="w-5 h-5 text-success" />
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-primary text-[14px]">{cvFile.name}</p>
-                      <p className="text-[12px] text-secondary">{(cvFile.size / 1024 / 1024).toFixed(2)} MB · click to replace</p>
+                      <p className="font-semibold text-primary text-base">{cvFile.name}</p>
+                      <p className="text-xs text-secondary">{(cvFile.size / 1024 / 1024).toFixed(2)} MB · click to replace</p>
                     </div>
                   </div>
                 ) : (
                   <div>
                     <Upload className="w-8 h-8 text-tertiary mx-auto mb-2.5" />
-                    <p className="text-[14px] font-semibold text-secondary">
+                    <p className="text-base font-semibold text-secondary">
                       {isDragActive ? 'Drop your file here' : 'Drag & drop your CV, or click to browse'}
                     </p>
-                    <p className="text-[12px] text-tertiary mt-1">PDF, DOC or DOCX · max 5 MB</p>
+                    <p className="text-xs text-tertiary mt-1">PDF, DOC or DOCX · max 5 MB</p>
                   </div>
                 )}
               </div>
@@ -355,12 +355,12 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-[15px] font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition disabled:opacity-60"
+              className="w-full h-12 rounded-xl bg-inverse text-inverse-fg text-md font-medium inline-flex items-center justify-center gap-2 hover:bg-inverse/90 active:scale-[0.99] transition disabled:opacity-60"
               disabled={loading}
             >
               {loading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Submitting…</>) : (<>Submit application <ArrowRight className="w-4 h-4" /></>)}
             </button>
-            <p className="text-center text-[12px] text-tertiary">Takes under a minute. The assessment comes after.</p>
+            <p className="text-center text-xs text-tertiary">Takes under a minute. The assessment comes after.</p>
           </form>
         </div>
       </div>

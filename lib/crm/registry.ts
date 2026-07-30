@@ -228,6 +228,10 @@ export const NAV = [
   { group: 'Workspace', pinned: true, items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
     { slug: 'docs', label: 'Docs', icon: 'FileText', href: '/docs' },
+    // Files sits beside Docs, not under Settings: it is a place to work, and
+    // its whole value is that uploaded documents become searchable rows in the
+    // same database as the ledger.
+    { slug: 'files', label: 'Files', icon: 'FolderOpen', href: '/files' },
     { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
   ]},
   { group: 'Sales', items: [

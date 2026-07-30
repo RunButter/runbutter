@@ -51,14 +51,14 @@ export default function MarketingOverview() {
 
   return (
     <>
-      <header className="h-12 shrink-0 flex items-center gap-3 px-4 border-b border-subtle">
+      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Marketing</h1>
-        <span className={`text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
       </header>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
@@ -73,19 +73,19 @@ export default function MarketingOverview() {
             {/* Spend by channel */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
               <h2 className="text-sm font-semibold text-primary mb-1">Spend by channel</h2>
-              <p className="text-[12px] text-tertiary mb-4">Where the budget goes, and what it brings back.</p>
+              <p className="text-xs text-tertiary mb-4">Where the budget goes, and what it brings back.</p>
               {stats.byChannel.length === 0 ? (
-                <p className="py-6 text-center text-[13px] text-tertiary">No campaigns yet — create your first one.</p>
+                <p className="py-6 text-center text-sm text-tertiary">No campaigns yet — create your first one.</p>
               ) : (
                 <div className="space-y-3">
                   {stats.byChannel.map(([channel, v]) => (
                     <div key={channel} className="flex items-center gap-3">
-                      <span className="w-16 text-[12px] font-semibold text-secondary capitalize shrink-0">{channel}</span>
+                      <span className="w-16 text-xs font-semibold text-secondary capitalize shrink-0">{channel}</span>
                       <div className="flex-1 h-2.5 rounded-full bg-surface-hover overflow-hidden">
                         <div className={`h-full rounded-full ${CHANNEL_TONE[channel] || CHANNEL_TONE.other}`} style={{ width: `${(v.spend / maxSpend) * 100}%` }} />
                       </div>
-                      <span className="w-20 text-right text-[12px] tabular-nums text-secondary shrink-0">{money(v.spend)}</span>
-                      <span className="w-16 text-right text-[12px] tabular-nums text-tertiary shrink-0">{v.leads} leads</span>
+                      <span className="w-20 text-right text-xs tabular-nums text-secondary shrink-0">{money(v.spend)}</span>
+                      <span className="w-16 text-right text-xs tabular-nums text-tertiary shrink-0">{v.leads} leads</span>
                     </div>
                   ))}
                 </div>
@@ -105,7 +105,7 @@ export default function MarketingOverview() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-primary">{q.label}</div>
-                    <div className="text-[12px] text-tertiary truncate">{q.desc}</div>
+                    <div className="text-xs text-tertiary truncate">{q.desc}</div>
                   </div>
                   <ArrowUpRight className="w-3.5 h-3.5 text-tertiary group-hover:text-secondary ml-auto transition-colors" />
                 </Link>

@@ -128,7 +128,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                 {f.input !== 'lookup' && <Label required={f.required}>{f.label}</Label>}
                 {f.input === 'lookup' ? (
                   <button type="button" onClick={runLookup} disabled={lookupBusy}
-                    className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-[13px] font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
+                    className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
                     {lookupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />} {f.label || 'Fetch company details'}
                   </button>
                 ) : f.input === 'image' ? (
@@ -136,11 +136,11 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                     {values[f.key]
                       ? <img src={values[f.key]} alt="" className="w-12 h-12 rounded-md object-cover ring-1 ring-subtle" />
                       : <div className="w-12 h-12 rounded-md bg-surface-hover ring-1 ring-subtle" />}
-                    <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-[12px] font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
+                    <label className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken cursor-pointer">
                       {uploading === f.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadFieldImage(f, file); }} />
                     </label>
-                    {values[f.key] && <button type="button" onClick={() => set(f.key, '')} className="text-[12px] text-tertiary hover:text-danger">Remove</button>}
+                    {values[f.key] && <button type="button" onClick={() => set(f.key, '')} className="text-xs text-tertiary hover:text-danger">Remove</button>}
                   </div>
                 ) : f.input === 'relation' ? (
                   <SearchSelect options={relOptions[f.key] || []} value={values[f.key] ?? ''} onChange={(id) => set(f.key, id)}
@@ -165,16 +165,16 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
               </div>
             ))}
           </div>
-          {error && <p className="mt-3 text-[12px] text-danger">{error}</p>}
-          {lookupNote && <p className="mt-3 text-[12px] text-warning">{lookupNote}</p>}
+          {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+          {lookupNote && <p className="mt-3 text-xs text-warning">{lookupNote}</p>}
         </div>
 
         <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">
           {editing && (
             <button onClick={remove} disabled={saving} className="p-2 rounded-md text-tertiary hover:text-danger hover:bg-danger/10" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>
           )}
-          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-[13px] font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-[13px] font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
+          <button onClick={onClose} className="ml-auto h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {editing ? 'Save' : 'Create'}
           </button>
         </div>
