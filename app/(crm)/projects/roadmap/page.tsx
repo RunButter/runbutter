@@ -26,7 +26,7 @@ export default function RoadmapPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Roadmap</h1>
+        <h1 className="text-md font-semibold text-primary">Roadmap</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
@@ -45,7 +45,7 @@ export default function RoadmapPage() {
         ) : projects.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No projects yet. Create one to see it on the roadmap.</div>
         ) : (
-          <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-x-auto">
+          <div className="max-w-6xl card-surface overflow-x-auto">
             <RoadmapTimeline projects={projects} />
           </div>
         )}

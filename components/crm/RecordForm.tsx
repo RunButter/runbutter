@@ -117,7 +117,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
         onClick={(e) => e.stopPropagation()}
       >
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-sm font-semibold text-primary">{editing ? `Edit ${object.singular}` : `New ${object.singular}`}</h2>
+          <h2 className="text-base font-semibold text-primary">{editing ? `Edit ${object.singular}` : `New ${object.singular}`}</h2>
           <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 

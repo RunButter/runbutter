@@ -88,7 +88,7 @@ export default function TemplatesPage() {
 
                     <div className="grid gap-2.5">
                         {templates.map((t) => (
-                            <div key={t.id} className="group flex items-start justify-between gap-4 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong transition-all">
+                            <div key={t.id} className="group flex items-start justify-between gap-4 card-surface p-4 hover:ring-strong transition-all">
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold text-primary">{t.name}</span>
@@ -116,7 +116,7 @@ export default function TemplatesPage() {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setEditing(null)}>
                     <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
                         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-                            <h3 className="text-sm font-semibold text-primary">{editing.id ? 'Edit template' : 'New template'}</h3>
+                            <h3 className="text-base font-semibold text-primary">{editing.id ? 'Edit template' : 'New template'}</h3>
                             <button onClick={() => setEditing(null)} className="p-1.5 rounded-md hover:bg-surface-hover text-tertiary"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="p-4 space-y-3">

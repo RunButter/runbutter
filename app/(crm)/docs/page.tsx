@@ -63,7 +63,7 @@ export default function DocsPage() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-3">
               {rows.map((d) => (
-                <div key={d.id} onClick={() => router.push(`/docs/${d.id}`)} className="group cursor-pointer rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
+                <div key={d.id} onClick={() => router.push(`/docs/${d.id}`)} className="group cursor-pointer card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="flex items-start justify-between gap-2">
                     <div className="text-base font-semibold text-primary truncate">{d.title || 'Untitled'}</div>
                     <button onClick={(e) => remove(e, d)} disabled={!canEdit} className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden"><Trash2 className="w-3.5 h-3.5" /></button>

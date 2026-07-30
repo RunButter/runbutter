@@ -62,7 +62,7 @@ export default function AiKeysPage() {
           </div>
 
           {/* Add */}
-          <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
+          <div className="card-surface p-4">
             <div className="text-2xs font-semibold uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
             <div className="grid sm:grid-cols-2 gap-2.5">
               <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Provider</span>
@@ -86,7 +86,7 @@ export default function AiKeysPage() {
           </div>
 
           {/* List */}
-          <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+          <div className="card-surface overflow-hidden">
             {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
               : rows.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No AI keys yet. Add one above to use the Docs assistant.</div>
               : rows.map((r) => (

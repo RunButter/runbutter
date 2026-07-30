@@ -77,16 +77,16 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
   };
 
   if (loading) {
-    return <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex items-center gap-2 text-sm text-tertiary">
+    return <div className="card-surface p-5 flex items-center gap-2 text-sm text-tertiary">
       <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading careers page…
     </div>;
   }
 
   return (
-    <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 space-y-3.5">
+    <div className="card-surface p-5 space-y-3.5">
       <div className="flex items-center gap-2">
         <Globe2 className="w-4 h-4 text-accent" />
-        <h2 className="text-sm font-semibold text-primary">Public careers page</h2>
+        <h2 className="text-base font-semibold text-primary">Public careers page</h2>
       </div>
       <p className="text-xs text-tertiary">
         One branded page listing every open role, using the logo and accent colour above.

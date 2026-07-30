@@ -91,7 +91,7 @@ export default function BillingPage() {
                 )}
 
                 {/* Current subscription */}
-                <div className="mb-6 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex flex-wrap items-center gap-4">
+                <div className="mb-6 card-surface p-5 flex flex-wrap items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
                         <CreditCard className="w-4 h-4 text-tertiary" />
                     </div>
@@ -133,7 +133,7 @@ export default function BillingPage() {
                                     <span className="absolute -top-2.5 right-5 rounded-full bg-success/10 px-2 py-0.5 text-3xs font-semibold uppercase tracking-widest text-success">Current</span>
                                 )}
 
-                                <h3 className="text-sm font-semibold text-primary">{p.name}</h3>
+                                <h3 className="text-base font-semibold text-primary">{p.name}</h3>
                                 <div className="mt-1.5 flex items-baseline gap-1">
                                     <span className="text-3xl font-semibold text-primary tabular-nums">{p.price}</span>
                                     {p.priceValue > 0 && (

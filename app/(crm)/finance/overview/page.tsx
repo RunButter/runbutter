@@ -53,7 +53,7 @@ export default function FinanceOverview() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Finance</h1>
+        <h1 className="text-md font-semibold text-primary">Finance</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
@@ -81,10 +81,10 @@ export default function FinanceOverview() {
             </div>
 
             {/* Revenue vs costs chart */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
+            <div className="card-surface p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h2 className="text-sm font-semibold text-primary">Revenue vs costs</h2>
+                  <h2 className="text-base font-semibold text-primary">Revenue vs costs</h2>
                   <p className="text-xs text-tertiary">Last {months} {months === 1 ? 'month' : 'months'} · money in vs money out</p>
                 </div>
                 <div className="flex items-center gap-4 text-2xs font-semibold">
@@ -107,7 +107,7 @@ export default function FinanceOverview() {
                 { label: 'Expenses', desc: 'Money out — accounts payable', icon: Wallet, href: '/objects/expenses', tone: 'text-danger' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
-                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
+                  className="group flex items-center gap-3 card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center">
                     <q.icon className={`w-4 h-4 ${q.tone}`} />
                   </div>

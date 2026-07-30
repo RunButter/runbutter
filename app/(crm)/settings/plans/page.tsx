@@ -44,7 +44,7 @@ export default function PlansPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Plans &amp; billing</h1>
+        <h1 className="text-md font-semibold text-primary">Plans &amp; billing</h1>
         <span className="text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
         <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
       </header>

@@ -153,7 +153,7 @@ export default function BrandingPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Branding</h1>
+        <h1 className="text-md font-semibold text-primary">Branding</h1>
         <span className="text-2xs text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
           className="ml-auto h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
@@ -167,7 +167,7 @@ export default function BrandingPage() {
         ) : privy && !wsId ? (
           // Signed in but no workspace yet — send them to finish company setup
           // instead of the misleading "Sign in to save" dead-end.
-          <div className="max-w-md mx-auto mt-10 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-8 text-center">
+          <div className="max-w-md mx-auto mt-10 card-surface p-8 text-center">
             <div className="w-12 h-12 rounded-xl bg-accent-soft ring-1 ring-subtle flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-6 h-6 text-accent" />
             </div>
@@ -337,7 +337,7 @@ export default function BrandingPage() {
             {/* Live preview */}
             <div>
               <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary mb-2">Preview</div>
-              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card shadow-sm overflow-hidden">
+              <div className="card-surface shadow-sm overflow-hidden">
                 <div className="h-1.5" style={{ background: form.accent_color }} />
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-4">

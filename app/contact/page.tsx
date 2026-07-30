@@ -50,7 +50,7 @@ export default function ContactPage() {
     if (submitted) {
         return (
             <div className="min-h-screen bg-canvas flex items-center justify-center px-6">
-                <div className="max-w-md w-full rounded-xl bg-surface ring-1 ring-subtle shadow-card p-8 text-center">
+                <div className="max-w-md w-full card-surface p-8 text-center">
                     <div className="w-12 h-12 rounded-xl bg-success/10 ring-1 ring-success/30 flex items-center justify-center mx-auto mb-4">
                         <CheckCircle2 className="w-6 h-6 text-success" />
                     </div>
@@ -107,7 +107,7 @@ export default function ContactPage() {
                     </div>
 
                     {/* Right: form */}
-                    <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-6 md:p-7">
+                    <div className="card-surface p-6 md:p-7">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
@@ -158,7 +158,7 @@ export default function ContactPage() {
 
 function InfoRow({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) {
     return (
-        <div className="flex items-start gap-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
+        <div className="flex items-start gap-3 card-surface p-4">
             <div className="w-8 h-8 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
                 <Icon className="w-4 h-4 text-tertiary" />
             </div>

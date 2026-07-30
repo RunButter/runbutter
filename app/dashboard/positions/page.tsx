@@ -123,7 +123,7 @@ export default function PositionsPage() {
                     </div>
                 )}
 
-                <div className="max-w-6xl rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+                <div className="max-w-6xl card-surface overflow-hidden">
                     <table className="w-full text-sm border-separate border-spacing-0">
                         <thead>
                             <tr>

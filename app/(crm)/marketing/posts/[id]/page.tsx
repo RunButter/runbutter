@@ -97,7 +97,7 @@ export default function PostStudio() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-sm w-full bg-surface rounded-xl ring-1 ring-subtle shadow-sm p-8 text-center">
           <div className="w-10 h-10 mx-auto rounded-full bg-surface-hover flex items-center justify-center mb-3"><Lock className="w-4 h-4 text-tertiary" /></div>
-          <h1 className="text-sm font-semibold text-primary">This post isn’t available</h1>
+          <h1 className="text-md font-semibold text-primary">This post isn’t available</h1>
           <p className="mt-1.5 text-sm text-secondary">Open it from your workspace, or sign in first.</p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function PostStudio() {
     <>
       <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
         <button onClick={() => router.push('/marketing/posts')} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-3.5 h-3.5" /> Posts</button>
-        <h1 className="text-sm font-semibold text-primary">Post studio</h1>
+        <h1 className="text-md font-semibold text-primary">Post studio</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${post.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{post.live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-2">
           <select value={post.status} onChange={(e) => set({ status: e.target.value })}

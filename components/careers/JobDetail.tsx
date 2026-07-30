@@ -101,7 +101,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
       </header>
 
       <div className="max-w-3xl mx-auto px-5 py-8 sm:py-10 space-y-8">
-        <section className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-6 sm:p-8">
+        <section className="card-surface p-6 sm:p-8">
           <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-3">About this role</h2>
           {position.description?.trim() ? (
             // Descriptions are plain text today, so preserve the author's line

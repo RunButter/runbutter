@@ -119,7 +119,7 @@ export default function TransactionsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Transactions</h1>
+        <h1 className="text-md font-semibold text-primary">Transactions</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="relative">
@@ -168,7 +168,7 @@ export default function TransactionsPage() {
           { label: 'Net', value: money(summary.net), tone: summary.net >= 0 ? 'text-success' : 'text-danger', icon: ArrowLeftRightGlyph },
           { label: 'To reconcile', value: String(summary.unreconciled), tone: summary.unreconciled > 0 ? 'text-warning' : 'text-tertiary', icon: Link2 },
         ].map((c) => (
-          <div key={c.label} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5">
+          <div key={c.label} className="card-surface p-3.5">
             <div className="flex items-center justify-between">
               <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
               <c.icon className="w-4 h-4 text-tertiary" />
@@ -183,7 +183,7 @@ export default function TransactionsPage() {
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : (
-          <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+          <div className="card-surface overflow-hidden">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
                 <tr>
@@ -366,7 +366,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
     <div className="fixed inset-0 z-[60] flex justify-end bg-black/50 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-sm h-full bg-surface shadow-popover ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-sm font-semibold text-primary">Transaction</h2>
+          <h2 className="text-base font-semibold text-primary">Transaction</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
@@ -464,7 +464,7 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-sm font-semibold text-primary">New bank account</h2>
+          <h2 className="text-base font-semibold text-primary">New bank account</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
@@ -563,7 +563,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-md font-semibold text-primary flex items-center gap-2">
+          <h2 className="text-base font-semibold text-primary flex items-center gap-2">
             {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
             Import transactions
           </h2>

@@ -204,7 +204,7 @@ export default function FilesPage() {
           )}
 
           {uploading.length > 0 && (
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card divide-y divide-subtle">
+            <div className="card-surface divide-y divide-subtle">
               {uploading.map((name) => (
                 <div key={name} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-secondary">
                   <Loader2 className="w-4 h-4 animate-spin text-tertiary shrink-0" />
@@ -226,7 +226,7 @@ export default function FilesPage() {
                 description="Only files that were indexed can be searched by content — scans need OCR."
               />
             ) : (
-              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card divide-y divide-subtle">
+              <div className="card-surface divide-y divide-subtle">
                 {hits.map((hit) => (
                   <button
                     key={hit.id}
@@ -263,7 +263,7 @@ export default function FilesPage() {
               }
             />
           ) : (
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card divide-y divide-subtle">
+            <div className="card-surface divide-y divide-subtle">
               {rows.map((row) => {
                 const Icon = iconFor(row.name, row.mime_type);
                 const spinning = busy.has(row.id);

@@ -170,9 +170,9 @@ export default function AnalyticsPage() {
                         </div>
 
                         <div className="grid lg:grid-cols-3 gap-4">
-                            <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
+                            <div className="lg:col-span-2 card-surface p-5">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-md font-semibold text-primary">Application volume by position</h3>
+                                    <h3 className="text-base font-semibold text-primary">Application volume by position</h3>
                                     <span className="text-3xs font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">
@@ -180,8 +180,8 @@ export default function AnalyticsPage() {
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-                                <h3 className="text-sm font-semibold text-primary mb-5">Candidate sources</h3>
+                            <div className="card-surface p-5">
+                                <h3 className="text-base font-semibold text-primary mb-5">Candidate sources</h3>
                                 <div className="h-[220px] relative">
                                     <Pie options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={pieData} />
                                 </div>

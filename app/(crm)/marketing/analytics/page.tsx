@@ -129,7 +129,7 @@ export default function WebAnalytics() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Web analytics</h1>
+        <h1 className="text-md font-semibold text-primary">Web analytics</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         {sites.length > 1 && (
           <select value={siteId || ''} onChange={(e) => { setSiteId(e.target.value); setJustAdded(null); }}
@@ -175,9 +175,9 @@ export default function WebAnalytics() {
             {showCard && (
               <div className={`rounded-xl bg-surface p-5 ${justAdded ? 'ring-2 ring-success/30' : 'ring-1 ring-subtle'}`}>
                 {justAdded ? (
-                  <div className="flex items-center gap-2 mb-1"><CheckCircle2 className="w-4 h-4 text-success" /><h2 className="text-sm font-semibold text-primary">{justAdded} added — one step left</h2></div>
+                  <div className="flex items-center gap-2 mb-1"><CheckCircle2 className="w-4 h-4 text-success" /><h2 className="text-base font-semibold text-primary">{justAdded} added — one step left</h2></div>
                 ) : (
-                  <div className="flex items-center gap-2 mb-1"><Globe className="w-4 h-4 text-accent" /><h2 className="text-sm font-semibold text-primary">Track a website</h2></div>
+                  <div className="flex items-center gap-2 mb-1"><Globe className="w-4 h-4 text-accent" /><h2 className="text-base font-semibold text-primary">Track a website</h2></div>
                 )}
                 <p className="text-xs text-tertiary mb-4">
                   {justAdded
@@ -254,8 +254,8 @@ export default function WebAnalytics() {
             </div>
 
             {/* Daily traffic */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-              <h2 className="text-sm font-semibold text-primary mb-1">Traffic</h2>
+            <div className="card-surface p-5">
+              <h2 className="text-base font-semibold text-primary mb-1">Traffic</h2>
               <p className="text-xs text-tertiary mb-4">Pageviews per day · last {days} days</p>
               <div className="flex items-end gap-[2px] h-40">
                 {stats.series.map((p) => (
@@ -309,8 +309,8 @@ export default function WebAnalytics() {
                  .map(([title, rows]) => {
                 const max = Math.max(1, ...rows.map((r) => r.count));
                 return (
-                  <div key={title} className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-                    <h2 className="text-sm font-semibold text-primary mb-3">{title}</h2>
+                  <div key={title} className="card-surface p-5">
+                    <h2 className="text-base font-semibold text-primary mb-3">{title}</h2>
                     {rows.length === 0 ? (
                       <p className="py-4 text-center text-xs text-tertiary">No data yet.</p>
                     ) : (
@@ -337,7 +337,7 @@ export default function WebAnalytics() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setManaging(false)}>
           <div className="w-full max-w-md flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
             <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-              <h2 className="text-sm font-semibold text-primary">Websites</h2>
+              <h2 className="text-base font-semibold text-primary">Websites</h2>
               <button onClick={() => setManaging(false)} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-4 space-y-2 max-h-[50vh] overflow-y-auto">

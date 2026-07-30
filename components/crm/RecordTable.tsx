@@ -89,7 +89,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
   };
 
   return (
-    <div className="h-full overflow-auto rounded-xl bg-surface ring-1 ring-subtle shadow-card">
+    <div className="h-full overflow-auto card-surface">
       <table className="w-full text-sm border-separate border-spacing-0">
         <thead>
           <tr>

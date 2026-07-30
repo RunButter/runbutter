@@ -273,7 +273,7 @@ export default function TreasuryPage() {
                                     const st = hrStatus(c.status);
                                     return (
                                         <Link key={c.id} href={`/dashboard/candidates/${c.id}`}
-                                            className="group rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all duration-200">
+                                            className="group card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all duration-200">
                                             <div className="flex items-start justify-between gap-3 mb-3">
                                                 <div className="min-w-0">
                                                     <div className="font-semibold text-primary truncate group-hover:text-accent transition-colors">{c.full_name}</div>
@@ -344,7 +344,7 @@ function FacetRow({ label, count, checked, onChange }: { label: string; count: n
 
 function Insight({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card px-4 py-3">
+        <div className="card-surface px-4 py-3">
             <div className="flex items-center gap-1.5 text-3xs font-semibold uppercase tracking-wider text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>

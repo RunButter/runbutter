@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 // resting card uses ring-1 ring-subtle, not a shadow.
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('rounded-xl bg-surface ring-1 ring-subtle shadow-card text-primary', className)} {...props} />
+    <div ref={ref} className={cn('card-surface text-primary', className)} {...props} />
   )
 );
 Card.displayName = 'Card';

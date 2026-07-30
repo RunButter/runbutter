@@ -169,7 +169,7 @@ function ScheduleModal({ initial, onClose, onSave }: { initial: ReportSchedule; 
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-sm font-semibold text-primary">{s.id ? 'Edit report' : 'New scheduled report'}</h3>
+          <h3 className="text-base font-semibold text-primary">{s.id ? 'Edit report' : 'New scheduled report'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 

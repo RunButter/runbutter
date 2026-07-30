@@ -52,7 +52,7 @@ export default function MarketingOverview() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Marketing</h1>
+        <h1 className="text-md font-semibold text-primary">Marketing</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
@@ -71,8 +71,8 @@ export default function MarketingOverview() {
             </div>
 
             {/* Spend by channel */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-              <h2 className="text-sm font-semibold text-primary mb-1">Spend by channel</h2>
+            <div className="card-surface p-5">
+              <h2 className="text-base font-semibold text-primary mb-1">Spend by channel</h2>
               <p className="text-xs text-tertiary mb-4">Where the budget goes, and what it brings back.</p>
               {stats.byChannel.length === 0 ? (
                 <p className="py-6 text-center text-sm text-tertiary">No campaigns yet — create your first one.</p>
@@ -99,7 +99,7 @@ export default function MarketingOverview() {
                 { label: 'Source tracking', desc: 'UTM links — see where people come from', icon: Radio, href: '/dashboard/sources', tone: 'text-accent' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
-                  className="group flex items-center gap-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
+                  className="group flex items-center gap-3 card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center">
                     <q.icon className={`w-4 h-4 ${q.tone}`} />
                   </div>

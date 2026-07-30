@@ -48,7 +48,7 @@ export default function PostsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Posts</h1>
+        <h1 className="text-md font-semibold text-primary">Posts</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
@@ -67,7 +67,7 @@ export default function PostsPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
             {posts.map((p) => (
               <button key={p.id} onClick={() => router.push(`/marketing/posts/${p.id}`)}
-                className="text-left rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">
+                className="text-left card-surface overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">
                 {p.image_url
                   ? <img src={p.image_url} alt="" className="w-full h-36 object-cover" />
                   : <div className="w-full h-36 bg-surface-sunken flex items-center justify-center text-tertiary text-xs px-6 text-center line-clamp-3">{p.content || 'Text post'}</div>}

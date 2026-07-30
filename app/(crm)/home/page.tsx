@@ -80,7 +80,7 @@ export default function WorkspaceHome() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-sm font-semibold text-primary">Home</h1>
+        <h1 className="text-md font-semibold text-primary">Home</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
@@ -111,10 +111,10 @@ export default function WorkspaceHome() {
 
           {/* Cashflow + hiring funnel */}
           <div className="grid lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
+            <div className="lg:col-span-2 card-surface p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h3 className="text-sm font-semibold text-primary">Cashflow</h3>
+                  <h3 className="text-base font-semibold text-primary">Cashflow</h3>
                   <p className="text-xs text-tertiary">Revenue vs costs · last 12 months</p>
                 </div>
                 <div className="flex items-center gap-4 text-2xs font-semibold">
@@ -129,10 +129,10 @@ export default function WorkspaceHome() {
               )}
             </div>
 
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 flex flex-col">
+            <div className="card-surface p-5 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-primary">Hiring funnel</h3>
+                  <h3 className="text-base font-semibold text-primary">Hiring funnel</h3>
                   <p className="text-xs text-tertiary">Candidates by stage</p>
                 </div>
                 <Link href="/dashboard/pipeline" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
@@ -150,7 +150,7 @@ export default function WorkspaceHome() {
             <h2 className="text-base font-semibold text-primary mb-3">Jump back in</h2>
             <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
               {pillars.map((p) => (
-                <Link key={p.label} href={p.href} className="group rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
+                <Link key={p.label} href={p.href} className="group card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mb-3">
                     <p.icon className="w-4 h-4 text-secondary" />
                   </div>
@@ -164,9 +164,9 @@ export default function WorkspaceHome() {
           {/* Recent activity */}
           <div className="grid lg:grid-cols-2 gap-4">
             {/* Recent applications */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+            <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-md font-semibold text-primary">Recent applications</h3>
+                <h3 className="text-base font-semibold text-primary">Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
@@ -192,9 +192,9 @@ export default function WorkspaceHome() {
             </div>
 
             {/* Recent transactions */}
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+            <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-md font-semibold text-primary">Recent transactions</h3>
+                <h3 className="text-base font-semibold text-primary">Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">

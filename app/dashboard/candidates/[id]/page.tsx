@@ -407,10 +407,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             <main className="max-w-7xl px-6 py-6 flex flex-col gap-6">
                 {/* Assessment Report Hero Section (Only shows if results exist) */}
                 {results ? (
-                    <section className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+                    <section className="card-surface overflow-hidden">
                         <div className="px-5 py-4 border-b border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="min-w-0">
-                                <h2 className="text-sm font-semibold text-primary">Assessment report</h2>
+                                <h2 className="text-base font-semibold text-primary">Assessment report</h2>
                                 <p className="mt-0.5 text-xs text-tertiary truncate">
                                     {candidate.full_name}
                                     {candidate.position?.title && <> · {candidate.position.title}</>}
@@ -443,7 +443,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Big 5 radar */}
                             <div>
-                                <h3 className="text-sm font-semibold text-primary mb-3">Big 5 personality</h3>
+                                <h3 className="text-base font-semibold text-primary mb-3">Big 5 personality</h3>
                                 <div className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-4">
                                     <div className="h-[300px]">
                                         {radarData && <Radar data={radarData} options={radarOptions} />}
@@ -461,7 +461,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-sm font-semibold text-primary mb-3">Work style</h3>
+                                    <h3 className="text-base font-semibold text-primary mb-3">Work style</h3>
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <WorkStyleBar label="Collaboration vs Independent" left="Individualist" right="Collaborative" value={results.work_style_data.collaboration} />
@@ -476,7 +476,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                                 {results.cognitive_data && (
                                     <div>
-                                        <h3 className="text-sm font-semibold text-primary mb-3">Cognitive</h3>
+                                        <h3 className="text-base font-semibold text-primary mb-3">Cognitive</h3>
                                         <div className="grid grid-cols-3 gap-3">
                                             {[
                                                 { label: 'Logic', value: results.cognitive_data?.logic },
@@ -494,7 +494,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
-                                        <h3 className="text-sm font-semibold text-primary flex items-center gap-1.5">
+                                        <h3 className="text-base font-semibold text-primary flex items-center gap-1.5">
                                             <Target className="w-3.5 h-3.5 text-accent" /> Neuro-profile
                                         </h3>
                                             <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
@@ -517,7 +517,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         {/* Screening — full width, its own band */}
                         {results.screening_answers && results.screening_answers.length > 0 && (
                             <div className="px-5 pb-5">
-                                <h3 className="text-sm font-semibold text-primary mb-3">Screening answers</h3>
+                                <h3 className="text-base font-semibold text-primary mb-3">Screening answers</h3>
                                 <div className="rounded-xl ring-1 ring-subtle divide-y divide-subtle overflow-hidden">
                                     {results.screening_answers.map((sa: any, idx: number) => (
                                         <div key={idx} className="p-4 bg-surface-sunken">
@@ -558,8 +558,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Left Column: Basic Info & Resume */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Profile Info */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-                            <h3 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
+                        <div className="card-surface p-5">
+                            <h3 className="text-base font-semibold text-primary mb-3 flex items-center gap-2">
                                 <User className="w-5 h-5 text-accent" />
                                 Contact Details
                             </h3>
@@ -604,7 +604,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* CV Viewer */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
+                        <div className="card-surface overflow-hidden">
                             <div className="p-6 border-b bg-surface-sunken flex items-center justify-between">
                                 <h3 className="font-semibold text-primary flex items-center gap-2">
                                     <FileText className="w-5 h-5 text-accent" />
@@ -649,7 +649,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     {/* Right Column: Mini Stats & activity */}
                     <div className="space-y-8">
                         {/* Status Card */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
+                        <div className="card-surface p-5">
                             <h3 className="font-semibold text-primary mb-6 flex items-center gap-2">
                                 <Target className="w-5 h-5 text-accent" />
                                 Pipeline Status
@@ -680,8 +680,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
 
                         {/* Activity Timeline */}
-                        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
-                            <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
+                        <div className="card-surface p-5">
+                            <h3 className="text-base font-semibold text-primary mb-4 flex items-center gap-2">
                                 <BarChart className="w-5 h-5 text-accent" />
                                 Hiring Activity
                             </h3>
@@ -735,7 +735,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             {showScheduleModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
                     <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-md p-5 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-sm font-semibold text-primary mb-2">Schedule Interview</h3>
+                        <h3 className="text-base font-semibold text-primary mb-2">Schedule Interview</h3>
                         <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
 
                         <div className="mb-6">

@@ -58,7 +58,7 @@ function Stat({ label, value, icon: Icon, trend, spark }: {
   label: string; value: string; icon: LucideIcon; trend?: string; spark?: number[];
 }) {
   return (
-    <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3">
+    <div className="card-surface p-3">
       <div className="flex items-center justify-between">
         <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
         <span className="w-5 h-5 rounded-md bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
@@ -108,7 +108,7 @@ function Column({ name, count, children }: { name: string; count: number; childr
 // Elevated card wrapper for the table tabs — mirrors RecordTable's new carded,
 // shadowed container with a sunken header row.
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">{children}</div>;
+  return <div className="card-surface overflow-hidden">{children}</div>;
 }
 
 export default function ProductPreview() {
@@ -205,7 +205,7 @@ export default function ProductPreview() {
                 <Stat label="Signups" value="184" icon={ArrowUpRight} spark={[20, 28, 24, 36, 44, 40, 52]} />
                 <Stat label="Live now" value="7" icon={Activity} />
               </div>
-              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5">
+              <div className="card-surface p-3.5">
                 <div className="text-3xs font-semibold uppercase tracking-wide text-tertiary mb-3">Visitors, last 14 days</div>
                 <div className="flex items-end gap-1.5 h-28">
                   {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70, 83, 92].map((h, i) => (

@@ -92,10 +92,10 @@ export default function CareersAdminPage() {
               <HrCompanyNotice privyUserId={privy} />
               <CareersPageCard privyUserId={privy} workspaceId={wsId} />
 
-              <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5">
+              <div className="card-surface p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <Briefcase className="w-4 h-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-primary">Which roles are public</h2>
+                  <h2 className="text-base font-semibold text-primary">Which roles are public</h2>
                 </div>
                 <p className="text-xs text-tertiary mb-3.5">
                   Hiding a role removes it from the careers page but keeps it open internally — its
