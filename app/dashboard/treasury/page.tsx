@@ -193,7 +193,7 @@ export default function TreasuryPage() {
                                 <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
                             </h3>
                             {chips.length > 0 && (
-                                <button onClick={resetAll} className="flex items-center gap-1 text-2xs font-semibold text-accent hover:text-accent">
+                                <button onClick={resetAll} className="flex items-center gap-1 text-2xs font-medium text-secondary hover:text-primary transition-colors">
                                     <RotateCcw className="w-3 h-3" /> Reset
                                 </button>
                             )}

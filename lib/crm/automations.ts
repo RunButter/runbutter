@@ -24,19 +24,19 @@ export interface Template { key: string; name: string; desc: string; tone: strin
 // Popular starter recipes (Activepieces/Zapier style). Cover event, incoming
 // webhook, and schedule triggers × webhook / email / create-record actions.
 export const TEMPLATES: Template[] = [
-  { key: 'new-person', name: 'New contact → Slack/Zapier', desc: 'When a person is added, POST them to a webhook.', tone: 'text-cyan-600 bg-cyan-50',
+  { key: 'new-person', name: 'New contact → Slack/Zapier', desc: 'When a person is added, POST them to a webhook.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'New contact → webhook', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'invoice-paid', name: 'Invoice paid → notify', desc: 'When an invoice is marked paid, ping your team.', tone: 'text-emerald-600 bg-emerald-50',
+  { key: 'invoice-paid', name: 'Invoice paid → notify', desc: 'When an invoice is marked paid, ping your team.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'Invoice paid → notify', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'invoice-overdue', name: 'Overdue invoice → email', desc: 'Email a reminder when an invoice goes overdue.', tone: 'text-rose-600 bg-rose-50',
+  { key: 'invoice-overdue', name: 'Overdue invoice → email', desc: 'Email a reminder when an invoice goes overdue.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'Overdue → email reminder', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'overdue' }], actions: [{ type: 'send_email', config: { subject: 'Invoice {{number}} is overdue', body: 'Hi — invoice {{number}} for {{amount}} is now overdue.' } }] } },
-  { key: 'big-txn', name: 'Large transaction → alert', desc: 'Get pinged when a big transaction lands.', tone: 'text-amber-600 bg-amber-50',
+  { key: 'big-txn', name: 'Large transaction → alert', desc: 'Get pinged when a big transaction lands.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'Large transaction alert', trigger_type: 'event', object: 'transactions', event: 'created', conditions: [{ field: 'amount', op: 'gt', value: '10000' }], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'inbound-lead', name: 'Incoming webhook → new contact', desc: 'Give a form or tool a URL that creates a person.', tone: 'text-indigo-600 bg-indigo-50',
+  { key: 'inbound-lead', name: 'Incoming webhook → new contact', desc: 'Give a form or tool a URL that creates a person.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'Inbound lead → create contact', trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], actions: [{ type: 'create_record', config: { object: 'people', data: { first_name: '{{first_name}}', last_name: '{{last_name}}', email: '{{email}}' }, _data: '{\n  "first_name": "{{first_name}}",\n  "last_name": "{{last_name}}",\n  "email": "{{email}}"\n}' } }] } },
-  { key: 'daily-digest', name: 'Daily schedule → webhook', desc: 'Fire a webhook every day — e.g. a digest to Slack.', tone: 'text-violet-600 bg-violet-50',
+  { key: 'daily-digest', name: 'Daily schedule → webhook', desc: 'Fire a webhook every day — e.g. a digest to Slack.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'Daily digest', trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'ai-brief', name: 'New contact → AI brief → Slack', desc: 'AI writes a two-line brief on each new contact, then posts it.', tone: 'text-fuchsia-600 bg-fuchsia-50',
+  { key: 'ai-brief', name: 'New contact → AI brief → Slack', desc: 'AI writes a two-line brief on each new contact, then posts it.', tone: 'text-secondary bg-surface-sunken',
     automation: { name: 'AI brief on new contact', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [
       { type: 'ask_ai', config: { prompt: 'Write a two-sentence brief on {{first_name}} {{last_name}} ({{title}}, source: {{source}}) for the team.' } },
       { type: 'send_webhook', config: {} },

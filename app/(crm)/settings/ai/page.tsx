@@ -50,7 +50,7 @@ export default function AiKeysPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> AI keys</h1>
+        <h1 className="text-md font-semibold text-primary">AI keys</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 

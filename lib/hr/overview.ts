@@ -26,19 +26,33 @@ const FUNNEL: { key: string; label: string; match: (s: string) => boolean }[] = 
   { key: 'hired', label: 'Hired', match: (s) => s === 'hired' },
 ];
 
-// Status → pill style + label, shared by the Home + HR Overview recent lists.
+// Status → chip style + label, shared by the Home + HR Overview recent lists.
+//
+// THREE tones, not nine. Each status used to carry its own literal palette
+// colour (bg-blue-50, amber, violet, indigo, orange, emerald, rose, teal), which
+// broke twice: those are raw Tailwind palette values, so in dark mode a chip
+// rendered as a near-white blob with dark text; and nine hues for what is really
+// one ordered pipeline meant the eye read nine unrelated categories.
+//
+// Only three distinctions actually carry meaning to someone scanning a list:
+// this one ended well, this one ended badly, this one is still in progress.
+// Everything mid-pipeline is neutral — the LABEL says which stage it is.
+const IN_PROGRESS = 'bg-surface-hover text-secondary ring-subtle';
+const GOOD = 'bg-success/10 text-success ring-success/20';
+const BAD = 'bg-danger/10 text-danger ring-danger/20';
+
 export const HR_STATUS: Record<string, { label: string; cls: string }> = {
-  applied: { label: 'Applied', cls: 'bg-blue-50 text-blue-700 ring-blue-200/60' },
-  screening: { label: 'Screening', cls: 'bg-amber-50 text-amber-700 ring-amber-200/60' },
-  assessment_sent: { label: 'Assessment', cls: 'bg-violet-50 text-violet-700 ring-violet-200/60' },
-  assessment_completed: { label: 'Assessed', cls: 'bg-indigo-50 text-indigo-700 ring-indigo-200/60' },
-  interview_scheduled: { label: 'Interview', cls: 'bg-orange-50 text-orange-700 ring-orange-200/60' },
-  interviewed: { label: 'Interviewed', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60' },
-  offered: { label: 'Offered', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60' },
-  rejected: { label: 'Rejected', cls: 'bg-rose-50 text-rose-700 ring-rose-200/60' },
-  hired: { label: 'Hired', cls: 'bg-teal-50 text-teal-700 ring-teal-200/60' },
+  applied: { label: 'Applied', cls: IN_PROGRESS },
+  screening: { label: 'Screening', cls: IN_PROGRESS },
+  assessment_sent: { label: 'Assessment', cls: IN_PROGRESS },
+  assessment_completed: { label: 'Assessed', cls: IN_PROGRESS },
+  interview_scheduled: { label: 'Interview', cls: IN_PROGRESS },
+  interviewed: { label: 'Interviewed', cls: IN_PROGRESS },
+  offered: { label: 'Offered', cls: GOOD },
+  rejected: { label: 'Rejected', cls: BAD },
+  hired: { label: 'Hired', cls: GOOD },
 };
-export const hrStatus = (s: string) => HR_STATUS[s] || { label: s?.replace(/_/g, ' ') || '—', cls: 'bg-slate-50 text-slate-600 ring-slate-200/60' };
+export const hrStatus = (s: string) => HR_STATUS[s] || { label: s?.replace(/_/g, ' ') || '—', cls: IN_PROGRESS };
 
 function mockOverview(): HrOverview {
   const funnel = [

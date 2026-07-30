@@ -78,7 +78,7 @@ export default function AutomationsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Automations</h1>
+        <h1 className="text-md font-semibold text-primary">Automations</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
@@ -253,7 +253,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                       <button onClick={() => set({ conditions: a.conditions.filter((_, k) => k !== i) })} className="p-1 rounded text-tertiary hover:text-danger"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
-                  <button onClick={() => set({ conditions: [...a.conditions, { field: '', op: 'eq', value: '' }] })} className="text-xs font-semibold text-accent hover:text-accent">+ Add filter</button>
+                  <button onClick={() => set({ conditions: [...a.conditions, { field: '', op: 'eq', value: '' }] })} className="text-xs font-medium text-secondary hover:text-primary transition-colors">+ Add filter</button>
                 </div>
               )}
               {a.trigger_type === 'webhook' && (

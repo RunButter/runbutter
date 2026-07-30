@@ -70,11 +70,11 @@ export default function WorkspaceHome() {
   ];
 
   const pillars = [
-    { label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board', tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview', tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview', tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview', tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board', tone: 'text-accent', bg: 'bg-accent/10' },
+    { label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board' },
+    { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview' },
+    { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview' },
+    { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview' },
+    { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board' },
   ];
 
   return (
@@ -135,7 +135,7 @@ export default function WorkspaceHome() {
                   <h3 className="text-sm font-semibold text-primary">Hiring funnel</h3>
                   <p className="text-xs text-tertiary">Candidates by stage</p>
                 </div>
-                <Link href="/dashboard/pipeline" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
+                <Link href="/dashboard/pipeline" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
               </div>
               {loading || !hr ? (
                 <div className="flex-1 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -147,14 +147,14 @@ export default function WorkspaceHome() {
 
           {/* Explore pillars */}
           <div>
-            <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-3">Jump back in</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <h2 className="text-base font-semibold text-primary mb-3">Jump back in</h2>
+            <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
               {pillars.map((p) => (
                 <Link key={p.label} href={p.href} className="group rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 hover:ring-strong hover:shadow-elevated transition-all">
-                  <div className={`w-9 h-9 rounded-lg ${p.bg} ring-1 ring-subtle flex items-center justify-center mb-3`}>
-                    <p.icon className={`w-4 h-4 ${p.tone}`} />
+                  <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mb-3">
+                    <p.icon className="w-4 h-4 text-secondary" />
                   </div>
-                  <div className="text-sm font-semibold text-primary flex items-center gap-1">{p.label}<ArrowUpRight className="w-3 h-3 text-tertiary group-hover:text-secondary transition-colors" /></div>
+                  <div className="text-sm font-medium text-primary truncate">{p.label}</div>
                   <div className="text-xs text-tertiary truncate">{p.desc}</div>
                 </Link>
               ))}
@@ -166,8 +166,8 @@ export default function WorkspaceHome() {
             {/* Recent applications */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-md font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
-                <Link href="/dashboard/candidates" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
+                <h3 className="text-md font-semibold text-primary">Recent applications</h3>
+                <Link href="/dashboard/candidates" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
                 {(hr?.recent || []).length === 0 ? (
@@ -194,8 +194,8 @@ export default function WorkspaceHome() {
             {/* Recent transactions */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-md font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
-                <Link href="/finance/transactions" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
+                <h3 className="text-md font-semibold text-primary">Recent transactions</h3>
+                <Link href="/finance/transactions" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
                 {txns.length === 0 ? (

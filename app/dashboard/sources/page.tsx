@@ -153,9 +153,7 @@ export default function SourcesPage() {
                 {/* Generator */}
                 <div className="lg:col-span-2">
                     <div className="bg-surface rounded-2xl ring-1 ring-subtle p-5 sticky top-4">
-                        <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
-                            <Plus className="w-4 h-4 text-accent" /> New tracking link
-                        </h3>
+                        <h3 className="font-semibold text-primary mb-4">New tracking link</h3>
                         {positions.length === 0 ? (
                             <p className="text-sm text-secondary">Create a position first to generate links.</p>
                         ) : (

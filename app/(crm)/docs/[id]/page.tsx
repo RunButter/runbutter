@@ -77,7 +77,7 @@ export default function DocEditor() {
   if (!doc) return (
     <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-6">
       <p className="text-base font-semibold text-secondary">This document couldn’t be loaded.</p>
-      <Link href="/docs" className="text-sm font-semibold text-accent hover:text-accent">← Back to Docs</Link>
+      <Link href="/docs" className="text-sm font-medium text-secondary hover:text-primary transition-colors">← Back to Docs</Link>
     </div>
   );
 

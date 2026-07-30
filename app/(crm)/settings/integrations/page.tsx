@@ -117,7 +117,7 @@ export default function IntegrationsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><Plug className="w-4 h-4 text-accent" /> Integrations</h1>
+        <h1 className="text-md font-semibold text-primary">Integrations</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
@@ -127,7 +127,7 @@ export default function IntegrationsPage() {
 
           {/* Native integrations (built-in, OAuth) */}
           <section>
-            <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Calendar className="w-4 h-4 text-tertiary" /> Native integrations</h2>
+            <h2 className="text-sm font-semibold text-primary mb-3">Native integrations</h2>
             {googleMsg && (
               <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ring-1 ${googleMsg.ok ? 'bg-success/10 text-success ring-success/30' : 'bg-danger/10 text-danger ring-danger/30'}`}>
                 {googleMsg.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
@@ -178,7 +178,7 @@ export default function IntegrationsPage() {
           {/* Outgoing webhooks / connections */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-md font-semibold text-primary flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Outgoing webhooks</h2>
+              <h2 className="text-md font-semibold text-primary">Outgoing webhooks</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
               <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
@@ -211,7 +211,7 @@ export default function IntegrationsPage() {
           {/* Recent webhook deliveries */}
           {deliveries.length > 0 && (
             <section>
-              <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2"><Webhook className="w-4 h-4 text-tertiary" /> Recent deliveries</h2>
+              <h2 className="text-sm font-semibold text-primary mb-3">Recent deliveries</h2>
               <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
                 {deliveries.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-xs">
@@ -227,7 +227,7 @@ export default function IntegrationsPage() {
           {/* API keys */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-md font-semibold text-primary flex items-center gap-2"><KeyRound className="w-4 h-4 text-tertiary" /> API keys</h2>
+              <h2 className="text-md font-semibold text-primary">API keys</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{keys.length}</span>
             </div>
 
