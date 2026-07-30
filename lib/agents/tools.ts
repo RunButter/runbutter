@@ -60,6 +60,14 @@ export const TOOLS = [
   { name: 'search_candidates', description: 'Full-text search the candidate database (resumes included). Postgres FTS, no AI cost.', inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
   { name: 'get_candidate', description: 'Full detail for one candidate including assessment scores.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
   { name: 'get_hiring_pipeline', description: 'A pipeline board with its stages and the records in each. kind defaults to the hiring pipeline.', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['recruitment', 'sales'] } } } },
+
+  // Files are the reason an agent can answer questions about documents at all:
+  // search_files reaches INSIDE uploaded contracts and invoices, and the results
+  // carry linked_object/linked_id, so a hit can be joined back to the company or
+  // invoice it belongs to using the CRUD tools above.
+  { name: 'search_files', description: 'Full-text search the CONTENTS of uploaded files (contracts, invoices, CVs). Returns matching files with highlighted snippets. Postgres FTS, no AI cost. Only files that were text-extracted are searchable.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Supports quoted phrases and OR.' } }, required: ['query'] } },
+  { name: 'list_files', description: 'Files in the workspace, optionally only those attached to one record. Reports each file\'s extraction status but not its text — use get_file_text for that.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Filter by linked record type, e.g. companies.' }, id: { type: 'string', description: 'Filter by linked record id.' } } } },
+  { name: 'get_file_text', description: 'The full extracted text of one file. Can be long — prefer search_files when looking for a passage.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
 ] as const;
 
 export const READ_TOOLS = [
@@ -72,6 +80,7 @@ export const READ_TOOLS = [
   'validate_iban', 'parse_invoice_text',
   'list_sites', 'get_site_stats',
   'list_positions', 'search_candidates', 'get_candidate', 'get_hiring_pipeline',
+  'search_files', 'list_files', 'get_file_text',
 ];
 export const WRITE_TOOLS = ['create_record', 'update_record'];
 export const isWriteTool = (name: string) => WRITE_TOOLS.includes(name);
@@ -222,6 +231,45 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       });
       if (!pipelineId) return { stages: [], records: [], note: `No ${kind} pipeline exists in this workspace yet.` };
       return rpc(ctx, 'get_pipeline_board', { p_privy: ctx.privy, p_pipeline: pipelineId });
+    }
+
+    // ── Files ───────────────────────────────────────────────────────────────
+    case 'search_files': {
+      const q = String(args?.query || '').trim();
+      if (!q) throw new Error('Provide a search query.');
+      const hits = await rpc(ctx, 'search_files', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_query: q });
+      const list = Array.isArray(hits) ? hits : [];
+      if (list.length === 0) {
+        // "No results" and "nothing is indexed" are different answers, and an
+        // agent that conflates them will confidently report that a clause is
+        // absent from a contract it never read.
+        const all = await rpc(ctx, 'get_files', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_limit: 500 });
+        const rows = Array.isArray(all) ? all : [];
+        const indexed = rows.filter((r: any) => r.has_content).length;
+        if (rows.length > 0 && indexed === 0) {
+          return { results: [], warning: `No file in this workspace has extracted text yet (${rows.length} stored), so nothing can be searched by content. This is NOT evidence that the term is absent.` };
+        }
+        return { results: [], searched_files: indexed };
+      }
+      return list;
+    }
+    case 'list_files':
+      return rpc(ctx, 'get_files', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_object: args?.object || null, p_linked: args?.id || null,
+      });
+    case 'get_file_text': {
+      if (!args?.id) throw new Error('id is required — call list_files or search_files first.');
+      const row = await rpc(ctx, 'get_file', { p_privy: ctx.privy, p_file: args.id });
+      if (!row) return { error: 'Not found' };
+      if (!row.content) {
+        return {
+          id: row.id, name: row.name, extract_status: row.extract_status,
+          content: null,
+          note: row.extract_error || 'This file has no extracted text, so its contents cannot be read.',
+        };
+      }
+      return row;
     }
 
     default:
