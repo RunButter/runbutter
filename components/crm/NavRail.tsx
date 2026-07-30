@@ -210,10 +210,10 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           const hasActive = g.items.some((it: any) => isActive(it.href));
           const open = hydrated && g.group in collapsed ? !collapsed[g.group] : hasActive;
           return (
-            <div key={g.group} className="px-2 mb-3">
+            <div key={g.group} className="px-2 mb-1">
               <button
                 onClick={() => toggle(g.group)}
-                className="w-full flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium uppercase tracking-widest text-tertiary hover:text-secondary transition-colors"
+                className="w-full flex items-center gap-1 px-2.5 py-2 text-3xs font-medium uppercase tracking-widest text-tertiary hover:text-secondary transition-colors"
               >
                 <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${open ? 'rotate-90' : ''}`} />
                 {g.group}
@@ -228,7 +228,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-subtle p-2 flex items-center gap-2">
+      <div className="m-2 p-2 rounded-xl bg-surface shadow-sm flex items-center gap-2">
         {logo ? (
           <img src={logo} alt="" className="w-6 h-6 rounded-full object-cover border border-subtle shrink-0" />
         ) : (
