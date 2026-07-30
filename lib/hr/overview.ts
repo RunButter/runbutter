@@ -9,7 +9,7 @@ export interface HrStats {
   totalCandidates: number; activePositions: number; assessmentsCompleted: number;
   upcomingInterviews: number; newApplications: number; pendingReview: number; hired: number;
 }
-export interface HrFunnelStage { key: string; label: string; count: number; tone: string }
+export interface HrFunnelStage { key: string; label: string; count: number }
 export interface HrCandidate { id: string; full_name: string; email: string; status: string; applied_at: string | null; position_title: string | null }
 export interface HrOverview {
   company: { name: string; plan: string } | null;
@@ -17,13 +17,13 @@ export interface HrOverview {
 }
 
 // Ordered hiring funnel — maps the many candidate statuses onto 6 clean stages.
-const FUNNEL: { key: string; label: string; tone: string; match: (s: string) => boolean }[] = [
-  { key: 'applied', label: 'Applied', tone: '#60a5fa', match: (s) => s === 'applied' },
-  { key: 'screening', label: 'Screening', tone: '#fbbf24', match: (s) => s === 'screening' },
-  { key: 'assessment', label: 'Assessment', tone: '#a78bfa', match: (s) => s === 'assessment_sent' || s === 'assessment_completed' },
-  { key: 'interview', label: 'Interview', tone: '#f59e0b', match: (s) => s === 'interview_scheduled' || s === 'interviewed' },
-  { key: 'offered', label: 'Offer', tone: '#34d399', match: (s) => s === 'offered' },
-  { key: 'hired', label: 'Hired', tone: '#10b981', match: (s) => s === 'hired' },
+const FUNNEL: { key: string; label: string; match: (s: string) => boolean }[] = [
+  { key: 'applied', label: 'Applied', match: (s) => s === 'applied' },
+  { key: 'screening', label: 'Screening', match: (s) => s === 'screening' },
+  { key: 'assessment', label: 'Assessment', match: (s) => s === 'assessment_sent' || s === 'assessment_completed' },
+  { key: 'interview', label: 'Interview', match: (s) => s === 'interview_scheduled' || s === 'interviewed' },
+  { key: 'offered', label: 'Offer', match: (s) => s === 'offered' },
+  { key: 'hired', label: 'Hired', match: (s) => s === 'hired' },
 ];
 
 // Status → pill style + label, shared by the Home + HR Overview recent lists.
@@ -42,12 +42,12 @@ export const hrStatus = (s: string) => HR_STATUS[s] || { label: s?.replace(/_/g,
 
 function mockOverview(): HrOverview {
   const funnel = [
-    { key: 'applied', label: 'Applied', tone: '#60a5fa', count: 42 },
-    { key: 'screening', label: 'Screening', tone: '#fbbf24', count: 28 },
-    { key: 'assessment', label: 'Assessment', tone: '#a78bfa', count: 19 },
-    { key: 'interview', label: 'Interview', tone: '#f59e0b', count: 11 },
-    { key: 'offered', label: 'Offer', tone: '#34d399', count: 4 },
-    { key: 'hired', label: 'Hired', tone: '#10b981', count: 3 },
+    { key: 'applied', label: 'Applied', count: 42 },
+    { key: 'screening', label: 'Screening', count: 28 },
+    { key: 'assessment', label: 'Assessment', count: 19 },
+    { key: 'interview', label: 'Interview', count: 11 },
+    { key: 'offered', label: 'Offer', count: 4 },
+    { key: 'hired', label: 'Hired', count: 3 },
   ];
   const recent: HrCandidate[] = [
     { id: 'c1', full_name: 'Anna Kowalski', email: 'anna.k@northwind.io', status: 'interview_scheduled', applied_at: '2026-07-02', position_title: 'Senior Engineer' },
@@ -74,7 +74,7 @@ export async function loadHrOverview(privyUserId: string | null): Promise<HrOver
 
     const rows = (data.status_rows || []) as { status: string; applied_at: string | null }[];
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const funnel = FUNNEL.map((f) => ({ key: f.key, label: f.label, tone: f.tone, count: rows.filter((r) => f.match(r.status)).length }));
+    const funnel = FUNNEL.map((f) => ({ key: f.key, label: f.label, count: rows.filter((r) => f.match(r.status)).length }));
     const stats: HrStats = {
       totalCandidates: rows.length,
       activePositions: data.active_positions || 0,

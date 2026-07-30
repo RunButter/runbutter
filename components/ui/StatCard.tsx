@@ -34,7 +34,15 @@ type StatCardProps = {
   value: React.ReactNode;
   sub?: string;
   icon?: LucideIcon;
-  /** Value color, e.g. 'text-success' | 'text-danger'. Defaults to text-primary. */
+  /**
+   * Value color — ONLY when the number itself carries that meaning, e.g.
+   * 'text-danger' on an overdue balance. Not decoration.
+   *
+   * A dashboard used to pass a different tone per card just to add variety, so
+   * "3 candidates" was blue, "3 assessed" green and "0 interviews" amber. None
+   * of it meant anything, and six tinted numbers in a grid is the single loudest
+   * source of visual noise on a screen. Default is text-primary; leave it there.
+   */
   tone?: string;
   trend?: StatTrend;
   /** Raw series for a mini sparkline; drawn only if 2+ points. */
@@ -78,15 +86,21 @@ export default function StatCard({
   const inner = (
     <>
       <div className="flex items-center justify-between gap-2">
-        {/* The icon sits INLINE with the label as a quiet glyph. It used to be a
-            boxed chip floating top-right, which carried no information the label
-            didn't already give — and because the trend badge took that same slot
-            when momentum existed, a row of cards showed a green badge on one and
-            a grey box on the rest. Top-right is now reserved for real data, and
-            is simply empty when there is none. */}
+        {/* Icon inline with the label as a quiet glyph — it used to be a boxed
+            chip floating top-right, carrying no information the label didn't
+            already give, and it shared that slot with the trend badge so a row
+            of cards showed a green badge on one and a grey box on the rest.
+            Top-right is now real data or nothing.
+
+            Label is sentence case, not UPPERCASE + tracking: a grid of uppercase
+            KPI labels sat at the same level of the hierarchy as sentence-case
+            card titles elsewhere on the page, which is what made a screen read
+            as assorted widgets. Uppercase is also much wider, so "Candidates"
+            no longer truncates when six tiles go three-across on a phone — the
+            icon drops below sm for the same reason. */}
         <span className="flex items-center gap-1.5 min-w-0">
-          {Icon && <Icon className="w-3.5 h-3.5 shrink-0 text-tertiary" />}
-          <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+          {Icon && <Icon className="w-3.5 h-3.5 shrink-0 text-tertiary hidden sm:block" />}
+          <span className="text-2xs font-medium text-tertiary truncate">{label}</span>
         </span>
         {trend && (
           <span className={cn(
@@ -98,9 +112,9 @@ export default function StatCard({
         )}
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-2">
+      <div className="mt-2 sm:mt-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className={cn('text-stat font-semibold tabular-nums truncate', tone || 'text-primary')}>
+          <div className={cn('text-2xl sm:text-stat font-semibold tabular-nums truncate', tone || 'text-primary')}>
             {value}
           </div>
           {sub && <div className="mt-1 text-xs font-medium text-tertiary truncate">{sub}</div>}
@@ -115,7 +129,7 @@ export default function StatCard({
   );
 
   const base = cn(
-    'block rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4',
+    'block rounded-xl bg-surface ring-1 ring-subtle shadow-card p-3.5 sm:p-4',
     interactive && 'group hover:ring-strong hover:shadow-elevated transition-all',
     className
   );
