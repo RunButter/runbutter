@@ -88,6 +88,22 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
 
+## MCP / agent tools (`lib/agents/tools.ts`)
+- ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
+  MCP client and an agent take the identical, tenancy-safe path. **19 tools**, not just CRUD:
+  finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
+  analytics, positions, candidate FTS, pipeline boards.
+- **Tenancy looks inconsistent and isn't.** `list_records`/`create_record` take `p_workspace`;
+  `get_record`/`update_record` derive the caller's workspaces from `p_privy` in SQL
+  (`workspace_id = any(my)`). Don't "fix" the latter by inventing an argument.
+- `get_pipeline_board` takes a **pipeline id, not a user** — resolve via `get_pipeline_by_kind` first.
+- `screen_sanctions` is classified READ despite appending an audit row: it mutates no business
+  data, and gating it behind write-approval would stop agents running compliance checks. Its
+  `no_data` result is returned with an explicit warning so a model can't report it as "clear".
+- The HR RPCs (`search_candidates_for_recruiter`, `get_candidate_details`) are **not in the
+  migrations folder** — they live in the DB from the legacy ATS. Verify arg names against real
+  call sites in `app/dashboard/candidates/*`, not against the migrations.
+
 ## Free-data features (no key, no per-call cost)
 Same rule as the cost rule above: prefer public/government data + local computation over metered APIs.
 - **Company lookup** — PL Biała lista + EU VIES (`/api/company-lookup`). Both keyless.
