@@ -92,7 +92,7 @@ export default function TemplatesPage() {
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-semibold text-primary">{t.name}</span>
-                                        <span className={`text-3xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ring-1 capitalize ${CAT_STYLE[t.category] || CAT_STYLE.custom}`}>{t.category}</span>
+                                        <span className={`text-3xs font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md ring-1 capitalize ${CAT_STYLE[t.category] || CAT_STYLE.custom}`}>{t.category}</span>
                                     </div>
                                     <div className="text-sm text-secondary truncate">{t.subject}</div>
                                     <div className="text-xs text-tertiary truncate mt-0.5">{t.body}</div>
@@ -116,7 +116,7 @@ export default function TemplatesPage() {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setEditing(null)}>
                     <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
                         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-                            <h3 className="text-base font-semibold text-primary">{editing.id ? 'Edit template' : 'New template'}</h3>
+                            <h3 className="text-base font-medium text-primary">{editing.id ? 'Edit template' : 'New template'}</h3>
                             <button onClick={() => setEditing(null)} className="p-1.5 rounded-md hover:bg-surface-hover text-tertiary"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="p-4 space-y-3">

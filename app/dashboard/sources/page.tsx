@@ -276,7 +276,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
         <div className="bg-surface rounded-xl ring-1 ring-subtle px-4 py-3">
-            <div className="flex items-center gap-1.5 text-3xs font-semibold uppercase tracking-widest text-tertiary mb-1">
+            <div className="flex items-center gap-1.5 text-3xs font-medium uppercase tracking-widest text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
             <div className="text-xl font-semibold text-primary">{value}</div>

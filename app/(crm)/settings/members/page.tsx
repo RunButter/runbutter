@@ -63,9 +63,9 @@ export default function MembersPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Members &amp; roles</h1>
+        <h1 className="text-md font-medium text-primary">Members &amp; roles</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{members.length}</span>
-        {ws && <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
+        {ws && <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}
         {canManage && (
           <button onClick={() => { setInviting(true); setError(''); setSent(''); }}
             className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
@@ -93,7 +93,7 @@ export default function MembersPage() {
                     <div className="text-sm font-semibold text-primary truncate flex items-center gap-1.5">
                       {m.name}
                       {m.privy_user_id === privy && <span className="text-tertiary font-normal"> · you</span>}
-                      {m.pending && <span className="text-3xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-warning/10 text-warning ring-1 ring-warning/30">Invited</span>}
+                      {m.pending && <span className="text-3xs font-medium uppercase tracking-wide px-1.5 py-0.5 rounded bg-warning/10 text-warning ring-1 ring-warning/30">Invited</span>}
                     </div>
                     <div className="text-xs text-tertiary truncate">{m.email}</div>
                   </div>
@@ -171,7 +171,7 @@ function InviteModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-md bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary">Invite a teammate</h3>
+          <h3 className="text-base font-medium text-primary">Invite a teammate</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">

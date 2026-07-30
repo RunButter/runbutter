@@ -46,7 +46,7 @@ export default function SignPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Signatures</h1>
+        <h1 className="text-md font-medium text-primary">Signatures</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setCreating(true)} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
@@ -80,7 +80,7 @@ export default function SignPage() {
                       {d.signed}/{d.total} signed · {d.recipients.map((r) => r.name).join(', ')}
                     </div>
                   </div>
-                  <span className={`text-3xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md ring-1 shrink-0 ${STATUS_TONE[d.status] || STATUS_TONE.sent}`}>{d.status}</span>
+                  <span className={`text-3xs font-medium uppercase tracking-wide px-2 py-0.5 rounded-md ring-1 shrink-0 ${STATUS_TONE[d.status] || STATUS_TONE.sent}`}>{d.status}</span>
                   {d.status === 'signed' && (
                     <button onClick={() => downloadSignDocument(d.id, 'signed')} title="Download signed PDF"
                       className="p-1.5 rounded-md text-tertiary hover:text-accent hover:bg-surface-hover"><Download className="w-4 h-4" /></button>
@@ -136,7 +136,7 @@ function CreateModal({ onClose, onDone, notify }: { onClose: () => void; onDone:
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary">Send a document for signing</h3>
+          <h3 className="text-base font-medium text-primary">Send a document for signing</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 

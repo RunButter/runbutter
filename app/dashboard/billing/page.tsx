@@ -69,7 +69,7 @@ export default function BillingPage() {
         <div className="p-6">
             <div className="max-w-6xl mx-auto">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold text-primary tracking-tight">Plans &amp; billing</h1>
+                    <h1 className="text-2xl font-medium text-primary tracking-tight">Plans &amp; billing</h1>
                     <p className="text-sm text-secondary mt-1">
                         Priced per seat, so it scales with your team. Self-hosting is free and always includes everything.
                     </p>
@@ -96,7 +96,7 @@ export default function BillingPage() {
                         <CreditCard className="w-4 h-4 text-tertiary" />
                     </div>
                     <div className="min-w-0">
-                        <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">Current plan</div>
+                        <div className="text-2xs font-medium uppercase tracking-wide text-tertiary">Current plan</div>
                         <div className="text-sm font-semibold text-primary">
                             {PLANS[current].name}
                             <span className="ml-2 font-normal text-secondary capitalize">
@@ -125,15 +125,15 @@ export default function BillingPage() {
                             <div key={key}
                                 className={`relative rounded-xl bg-surface p-5 flex flex-col shadow-card ${popular ? 'ring-2 ring-accent/40' : 'ring-1 ring-subtle'}`}>
                                 {popular && (
-                                    <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-inverse px-2 py-0.5 text-3xs font-semibold uppercase tracking-widest text-inverse-fg">
+                                    <span className="absolute -top-2.5 left-5 inline-flex items-center gap-1 rounded-full bg-inverse px-2 py-0.5 text-3xs font-medium uppercase tracking-widest text-inverse-fg">
                                         <Sparkles className="w-3 h-3" /> Popular
                                     </span>
                                 )}
                                 {isCurrent && (
-                                    <span className="absolute -top-2.5 right-5 rounded-full bg-success/10 px-2 py-0.5 text-3xs font-semibold uppercase tracking-widest text-success">Current</span>
+                                    <span className="absolute -top-2.5 right-5 rounded-full bg-success/10 px-2 py-0.5 text-3xs font-medium uppercase tracking-widest text-success">Current</span>
                                 )}
 
-                                <h3 className="text-base font-semibold text-primary">{p.name}</h3>
+                                <h3 className="text-base font-medium text-primary">{p.name}</h3>
                                 <div className="mt-1.5 flex items-baseline gap-1">
                                     <span className="text-3xl font-semibold text-primary tabular-nums">{p.price}</span>
                                     {p.priceValue > 0 && (

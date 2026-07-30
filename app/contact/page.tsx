@@ -163,7 +163,7 @@ function InfoRow({ icon: Icon, label, children }: { icon: any; label: string; ch
                 <Icon className="w-4 h-4 text-tertiary" />
             </div>
             <div className="min-w-0">
-                <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{label}</div>
+                <div className="text-2xs font-medium uppercase tracking-wide text-tertiary">{label}</div>
                 <div className="mt-0.5">{children}</div>
             </div>
         </div>

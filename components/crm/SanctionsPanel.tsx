@@ -106,7 +106,7 @@ export default function SanctionsPanel({ privyUserId, workspaceId, name, object,
   return (
     <section className="mt-5 pt-4 border-t border-subtle">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Sanctions screening</h3>
+        <h3 className="text-3xs font-medium uppercase tracking-widest text-tertiary">Sanctions screening</h3>
         <button onClick={refresh} disabled={refreshing || !privyUserId}
           title="Re-download the OFAC lists"
           className="h-6 px-1.5 inline-flex items-center gap-1 rounded-md text-2xs font-medium text-tertiary hover:bg-surface-hover disabled:opacity-40">

@@ -345,7 +345,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             <div className="min-h-screen bg-surface-sunken flex items-center justify-center flex-col gap-6 p-6 text-center">
                 <div className="flex flex-col items-center">
                     <AlertCircle className="w-16 h-16 text-danger mb-4" />
-                    <h2 className="text-2xl font-semibold text-primary">Candidate not found</h2>
+                    <h2 className="text-2xl font-medium text-primary">Candidate not found</h2>
                     <p className="text-secondary mt-2 max-w-sm">We couldn&apos;t retrieve this candidate. They may have been deleted or you may not have permission to view them.</p>
                 </div>
 
@@ -410,7 +410,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     <section className="card-surface overflow-hidden">
                         <div className="px-5 py-4 border-b border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="min-w-0">
-                                <h2 className="text-base font-semibold text-primary">Assessment report</h2>
+                                <h2 className="text-base font-medium text-primary">Assessment report</h2>
                                 <p className="mt-0.5 text-xs text-tertiary truncate">
                                     {candidate.full_name}
                                     {candidate.position?.title && <> · {candidate.position.title}</>}
@@ -434,8 +434,8 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                                 { label: 'Work style', value: results.work_style_score },
                             ].filter((stat) => stat.value != null).map((stat) => (
                                 <div key={stat.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
-                                    <div className="text-2xl font-semibold text-primary tabular-nums leading-none">{stat.value}<span className="text-tertiary text-sm font-normal">%</span></div>
-                                    <div className="mt-1.5 text-3xs font-semibold uppercase tracking-widest text-tertiary">{stat.label}</div>
+                                    <div className="text-2xl font-medium text-primary tabular-nums leading-none">{stat.value}<span className="text-tertiary text-sm font-normal">%</span></div>
+                                    <div className="mt-1.5 text-3xs font-medium uppercase tracking-widest text-tertiary">{stat.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -443,12 +443,12 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Big 5 radar */}
                             <div>
-                                <h3 className="text-base font-semibold text-primary mb-3">Big 5 personality</h3>
+                                <h3 className="text-base font-medium text-primary mb-3">Big 5 personality</h3>
                                 <div className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-4">
                                     <div className="h-[300px]">
                                         {radarData && <Radar data={radarData} options={radarOptions} />}
                                     </div>
-                                    <div className="mt-3 pt-3 border-t border-subtle flex items-center justify-center gap-5 text-3xs font-semibold uppercase tracking-widest text-tertiary">
+                                    <div className="mt-3 pt-3 border-t border-subtle flex items-center justify-center gap-5 text-3xs font-medium uppercase tracking-widest text-tertiary">
                                         <span className="flex items-center gap-1.5">
                                             <span className="w-2.5 h-2.5 rounded-sm bg-accent/30 ring-1 ring-accent" /> Candidate
                                         </span>
@@ -461,7 +461,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                             <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-base font-semibold text-primary mb-3">Work style</h3>
+                                    <h3 className="text-base font-medium text-primary mb-3">Work style</h3>
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <WorkStyleBar label="Collaboration vs Independent" left="Individualist" right="Collaborative" value={results.work_style_data.collaboration} />
@@ -476,7 +476,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                                 {results.cognitive_data && (
                                     <div>
-                                        <h3 className="text-base font-semibold text-primary mb-3">Cognitive</h3>
+                                        <h3 className="text-base font-medium text-primary mb-3">Cognitive</h3>
                                         <div className="grid grid-cols-3 gap-3">
                                             {[
                                                 { label: 'Logic', value: results.cognitive_data?.logic },
@@ -494,10 +494,10 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                                 <div>
                                     <div className="flex items-center justify-between gap-2 mb-2">
-                                        <h3 className="text-base font-semibold text-primary flex items-center gap-1.5">
+                                        <h3 className="text-base font-medium text-primary flex items-center gap-1.5">
                                             <Target className="w-3.5 h-3.5 text-accent" /> Neuro-profile
                                         </h3>
-                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-semibold uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
+                                            <span className={`px-2 py-0.5 rounded-full text-3xs font-medium uppercase tracking-widest ${candidate?.position?.neuro_profile === 'hard-tech' ? 'bg-accent/10 text-accent' :
                                                 candidate?.position?.neuro_profile === 'aggressive-sales' ? 'bg-warning/10 text-warning' :
                                                     candidate?.position?.neuro_profile === 'creative-chaos' ? 'bg-accent/10 text-accent' :
                                                         'bg-success/10 text-success'
@@ -517,14 +517,14 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         {/* Screening — full width, its own band */}
                         {results.screening_answers && results.screening_answers.length > 0 && (
                             <div className="px-5 pb-5">
-                                <h3 className="text-base font-semibold text-primary mb-3">Screening answers</h3>
+                                <h3 className="text-base font-medium text-primary mb-3">Screening answers</h3>
                                 <div className="rounded-xl ring-1 ring-subtle divide-y divide-subtle overflow-hidden">
                                     {results.screening_answers.map((sa: any, idx: number) => (
                                         <div key={idx} className="p-4 bg-surface-sunken">
                                             <div className="flex items-start justify-between gap-3">
                                                 <p className="text-sm font-medium text-primary">{sa.question}</p>
                                                 {sa.is_correct !== null && (
-                                                    <span className={`shrink-0 text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${sa.is_correct
+                                                    <span className={`shrink-0 text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${sa.is_correct
                                                         ? 'bg-success/10 text-success ring-success/30'
                                                         : 'bg-danger/10 text-danger ring-danger/30'}`}>
                                                         {sa.is_correct ? 'Match' : 'Mismatch'}
@@ -559,7 +559,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     <div className="lg:col-span-2 space-y-6">
                         {/* Profile Info */}
                         <div className="card-surface p-5">
-                            <h3 className="text-base font-semibold text-primary mb-3 flex items-center gap-2">
+                            <h3 className="text-base font-medium text-primary mb-3 flex items-center gap-2">
                                 <User className="w-5 h-5 text-accent" />
                                 Contact Details
                             </h3>
@@ -681,7 +681,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
                         {/* Activity Timeline */}
                         <div className="card-surface p-5">
-                            <h3 className="text-base font-semibold text-primary mb-4 flex items-center gap-2">
+                            <h3 className="text-base font-medium text-primary mb-4 flex items-center gap-2">
                                 <BarChart className="w-5 h-5 text-accent" />
                                 Hiring Activity
                             </h3>
@@ -735,7 +735,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
             {showScheduleModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
                     <div className="bg-surface rounded-xl ring-1 ring-subtle shadow-popover w-full max-w-md p-5 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-base font-semibold text-primary mb-2">Schedule Interview</h3>
+                        <h3 className="text-base font-medium text-primary mb-2">Schedule Interview</h3>
                         <p className="text-secondary text-sm mb-6">Select a date and time. An automated invite will be sent to the candidate with a generated Google Meet link.</p>
 
                         <div className="mb-6">

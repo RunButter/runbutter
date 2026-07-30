@@ -23,7 +23,7 @@ export default function RecordDetail({ object, row, canEdit, onEdit, onClose, ex
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-md max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-3xs font-semibold uppercase tracking-widest text-tertiary">{object.singular}</h2>
+          <h2 className="text-3xs font-medium uppercase tracking-widest text-tertiary">{object.singular}</h2>
           <div className="flex items-center gap-1">
             {extraActions}
             {canEdit && (

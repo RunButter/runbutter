@@ -151,7 +151,7 @@ export default function FilesPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Files</h1>
+        <h1 className="text-md font-medium text-primary">Files</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {privy && ws && (
           <button

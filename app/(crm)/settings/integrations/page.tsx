@@ -117,8 +117,8 @@ export default function IntegrationsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Integrations</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <h1 className="text-md font-medium text-primary">Integrations</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
@@ -127,7 +127,7 @@ export default function IntegrationsPage() {
 
           {/* Native integrations (built-in, OAuth) */}
           <section>
-            <h2 className="text-base font-semibold text-primary mb-3">Native integrations</h2>
+            <h2 className="text-base font-medium text-primary mb-3">Native integrations</h2>
             {googleMsg && (
               <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ring-1 ${googleMsg.ok ? 'bg-success/10 text-success ring-success/30' : 'bg-danger/10 text-danger ring-danger/30'}`}>
                 {googleMsg.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
@@ -137,7 +137,7 @@ export default function IntegrationsPage() {
             <div className="card-surface p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><Calendar className="w-5 h-5" /></div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-base font-semibold text-primary">Google Calendar</h3>
+                <h3 className="text-base font-medium text-primary">Google Calendar</h3>
                 <p className="text-xs text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
               </div>
               {googleConnected ? (
@@ -169,7 +169,7 @@ export default function IntegrationsPage() {
               { name: 'MCP', body: 'Claude & AI agents read + write your workspace over Model Context Protocol — endpoint + config below.', tone: 'text-warning bg-warning/10' },
             ].map((c) => (
               <div key={c.name} className="card-surface p-4">
-                <div className={`inline-flex text-2xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
+                <div className={`inline-flex text-2xs font-medium uppercase tracking-wide px-2 py-0.5 rounded-md mb-2 ${c.tone}`}>{c.name}</div>
                 <p className="text-xs text-secondary leading-relaxed">{c.body}</p>
               </div>
             ))}
@@ -178,7 +178,7 @@ export default function IntegrationsPage() {
           {/* Outgoing webhooks / connections */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-base font-semibold text-primary">Outgoing webhooks</h2>
+              <h2 className="text-base font-medium text-primary">Outgoing webhooks</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
               <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
@@ -211,7 +211,7 @@ export default function IntegrationsPage() {
           {/* Recent webhook deliveries */}
           {deliveries.length > 0 && (
             <section>
-              <h2 className="text-base font-semibold text-primary mb-3">Recent deliveries</h2>
+              <h2 className="text-base font-medium text-primary mb-3">Recent deliveries</h2>
               <div className="card-surface overflow-hidden">
                 {deliveries.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 px-4 h-10 border-b border-subtle last:border-0 text-xs">
@@ -227,7 +227,7 @@ export default function IntegrationsPage() {
           {/* API keys */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-base font-semibold text-primary">API keys</h2>
+              <h2 className="text-base font-medium text-primary">API keys</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{keys.length}</span>
             </div>
 
@@ -292,7 +292,7 @@ export default function IntegrationsPage() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={() => setEditConn(null)}>
           <div className="w-full max-w-md bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
             <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-              <h3 className="text-base font-semibold text-primary">{editConn.id ? 'Edit connection' : 'New connection'}</h3>
+              <h3 className="text-base font-medium text-primary">{editConn.id ? 'Edit connection' : 'New connection'}</h3>
               <button onClick={() => setEditConn(null)} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-4 space-y-3">
@@ -360,7 +360,7 @@ function CalConnect({ privy, canEdit, origin }: { privy: string | null; canEdit:
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><CalendarClock className="w-5 h-5" /></div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-primary">Cal.com scheduling</h3>
+          <h3 className="text-base font-medium text-primary">Cal.com scheduling</h3>
           <p className="text-xs text-secondary leading-relaxed">Share your Cal.com booking link, and have new bookings logged automatically. If the attendee matches a candidate, it also appears on the Interviews page.</p>
         </div>
       </div>

@@ -151,7 +151,7 @@ export default function CandidatesPage() {
                         <thead>
                             <tr>
                                 {[['Candidate', 'left'], ['Position', 'left'], ['Score', 'center'], ['Screening', 'left'], ['Applied', 'left'], ['Status', 'left'], ['', 'right']].map(([h, a], i) => (
-                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'}`}>{h}</th>
+                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-medium uppercase tracking-wider text-tertiary border-b border-subtle ${a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'}`}>{h}</th>
                                 ))}
                             </tr>
                         </thead>

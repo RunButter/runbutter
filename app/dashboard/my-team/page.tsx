@@ -145,7 +145,7 @@ export default function MyTeamPage() {
                                         </div>
                                         <div className="text-center shrink-0">
                                             <div className={`text-2xl font-semibold ${scoreColor(m.overall_score)}`}>{m.overall_score ?? '—'}</div>
-                                            <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Match</div>
+                                            <div className="text-3xs font-medium uppercase tracking-widest text-tertiary">Match</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between pt-3 border-t border-subtle text-xs">

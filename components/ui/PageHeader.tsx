@@ -29,7 +29,7 @@ export default function PageHeader({
     <div className={cn('flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between', className)}>
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-semibold text-primary tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-medium text-primary tracking-tight">{title}</h1>
           {badges}
         </div>
         {subtitle && <p className="mt-1 text-sm text-tertiary">{subtitle}</p>}

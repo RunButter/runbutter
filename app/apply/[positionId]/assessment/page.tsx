@@ -314,7 +314,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
                             ].map((c) => (
                                 <div key={c.label} className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-3.5">
                                     <c.icon className="w-4 h-4 text-accent mb-1.5" />
-                                    <div className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{c.label}</div>
+                                    <div className="text-2xs font-medium uppercase tracking-wide text-tertiary">{c.label}</div>
                                     <div className="text-sm font-medium text-secondary">{c.value}</div>
                                 </div>
                             ))}

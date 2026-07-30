@@ -270,7 +270,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                         </div>
 
                         <div className="pt-6 border-t font-sans">
-                            <label className="block text-3xs font-semibold uppercase tracking-[0.2em] text-tertiary mb-4">
+                            <label className="block text-3xs font-medium uppercase tracking-[0.2em] text-tertiary mb-4">
                                 [ SELECT NEURO-PROFILE ]
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -297,7 +297,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                                 </div>
                                             )}
                                         </div>
-                                        <p className={`text-3xs font-semibold uppercase tracking-widest ${formData.neuro_profile === profile.id ? 'opacity-80' : 'text-tertiary opacity-60'}`}>
+                                        <p className={`text-3xs font-medium uppercase tracking-widest ${formData.neuro_profile === profile.id ? 'opacity-80' : 'text-tertiary opacity-60'}`}>
                                             {profile.focus}
                                         </p>
                                     </button>

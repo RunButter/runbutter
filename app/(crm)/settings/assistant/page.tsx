@@ -40,7 +40,7 @@ export default function AssistantPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Assistant</h1>
+        <h1 className="text-md font-medium text-primary">Assistant</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setEditing({ platform: 'telegram', autonomy: 'auto', enabled: true, allowed_senders: [] })}
@@ -131,7 +131,7 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary">{channel.id ? 'Edit assistant' : 'Connect a Telegram bot'}</h3>
+          <h3 className="text-base font-medium text-primary">{channel.id ? 'Edit assistant' : 'Connect a Telegram bot'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 

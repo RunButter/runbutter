@@ -213,7 +213,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
             <div key={g.group} className="px-2 mb-3">
               <button
                 onClick={() => toggle(g.group)}
-                className="w-full flex items-center gap-1 px-2.5 py-1.5 text-2xs font-semibold uppercase tracking-widest text-tertiary hover:text-secondary transition-colors"
+                className="w-full flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium uppercase tracking-widest text-tertiary hover:text-secondary transition-colors"
               >
                 <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${open ? 'rotate-90' : ''}`} />
                 {g.group}

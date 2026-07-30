@@ -81,7 +81,10 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Semantic tokens only** — `bg-surface`, `text-secondary`, `border-subtle`, `bg-accent`, `bg-inverse`.
   **Never literal colors** (`bg-white`, `text-slate-800`, `shadow-slate-200/50`) — that's what breaks
   dark mode. Tokens live in `app/globals.css` (`:root` + `.dark`), mapped in `tailwind.config.js`.
-- Geist Sans/Mono, **weights capped at 600**, `--radius: 0.75rem`.
+- Geist Sans/Mono, `--radius: 1rem`. **Hierarchy comes from SIZE and COLOUR, not weight.**
+  Page and card titles are **`font-medium` (500)**; 600 everywhere read as heavy and flat, because
+  when every rank is bold none of them is. `font-semibold` is for small emphasis inside a row (a
+  status chip, a button); **`font-bold` is not used in the product UI at all**.
 - **Type comes from the scale in `tailwind.config.js`, never from `text-[13px]`.**
   `text-3xs` 11 · `text-2xs` 12 · `text-xs` 13 · **`text-sm` 14 = default UI text** · `text-base` 15 ·
   `text-md` 16 (page titles). `lg`+ are Tailwind defaults and belong to marketing.

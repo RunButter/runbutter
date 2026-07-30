@@ -74,7 +74,7 @@ export default function FormsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Forms</h1>
+        <h1 className="text-md font-medium text-primary">Forms</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => edit()} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
@@ -160,7 +160,7 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-xl max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary">{f.id ? 'Edit form' : 'New form'}</h3>
+          <h3 className="text-base font-medium text-primary">{f.id ? 'Edit form' : 'New form'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
@@ -234,7 +234,7 @@ function Submissions({ form, privy, wsId, onClose }: { form: FormRow; privy: str
     <div className="fixed inset-0 z-[60] flex items-center justify-end bg-black/50 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-md h-full bg-surface ring-1 ring-subtle shadow-popover flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary truncate">Submissions · {form.name}</h3>
+          <h3 className="text-base font-medium text-primary truncate">Submissions · {form.name}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-3">

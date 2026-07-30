@@ -102,8 +102,8 @@ export default async function CareersPage({ params }: { params: { slug: string }
                   {company.name.slice(0, 1).toUpperCase()}
                 </div>}
             <div className="min-w-0">
-              <p className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Careers</p>
-              <h1 className="text-xl sm:text-2xl font-semibold text-primary tracking-tight truncate">{company.name}</h1>
+              <p className="text-2xs font-medium uppercase tracking-widest text-tertiary">Careers</p>
+              <h1 className="text-xl sm:text-2xl font-medium text-primary tracking-tight truncate">{company.name}</h1>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
           <div className="space-y-8">
             {ordered.map(([dept, roles]) => (
               <section key={dept}>
-                <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2.5">{dept}</h2>
+                <h2 className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2.5">{dept}</h2>
                 <ul className="space-y-2">
                   {roles.map((p) => (
                     <li key={p.id}>
@@ -149,7 +149,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                       <Link href={`/careers/${company.slug}/${p.id}`}
                         className="group flex items-center gap-4 rounded-xl bg-surface ring-1 ring-subtle hover:ring-strong shadow-sm hover:shadow-card transition-all px-4 py-3.5">
                         <div className="min-w-0 flex-1">
-                          <p className="text-base font-semibold text-primary truncate">{p.title}</p>
+                          <p className="text-base font-medium text-primary truncate">{p.title}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-tertiary">
                             {p.location && <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" /> {p.location}</span>}
                             {p.employment_type && <span className="capitalize">{prettyType(p.employment_type)}</span>}

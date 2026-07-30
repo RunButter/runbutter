@@ -180,7 +180,7 @@ export default function PdfToolsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">PDF editor</h1>
+        <h1 className="text-md font-medium text-primary">PDF editor</h1>
         <span className="inline-flex items-center gap-1.5 text-2xs font-semibold text-success bg-success/10 rounded-md px-2 py-0.5">
           <ShieldCheck className="w-3 h-3" /> Runs in your browser
         </span>

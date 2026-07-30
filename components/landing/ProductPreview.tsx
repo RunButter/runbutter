@@ -60,7 +60,7 @@ function Stat({ label, value, icon: Icon, trend, spark }: {
   return (
     <div className="card-surface p-3">
       <div className="flex items-center justify-between">
-        <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary truncate">{label}</span>
+        <span className="text-3xs font-medium uppercase tracking-wide text-tertiary truncate">{label}</span>
         <span className="w-5 h-5 rounded-md bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
           <Icon className="w-2.5 h-2.5 text-tertiary" />
         </span>
@@ -206,7 +206,7 @@ export default function ProductPreview() {
                 <Stat label="Live now" value="7" icon={Activity} />
               </div>
               <div className="card-surface p-3.5">
-                <div className="text-3xs font-semibold uppercase tracking-wide text-tertiary mb-3">Visitors, last 14 days</div>
+                <div className="text-3xs font-medium uppercase tracking-wide text-tertiary mb-3">Visitors, last 14 days</div>
                 <div className="flex items-end gap-1.5 h-28">
                   {[38, 52, 44, 63, 58, 72, 66, 80, 61, 74, 88, 70, 83, 92].map((h, i) => (
                     <div key={i} className="flex-1 rounded-sm bg-inverse/75" style={{ height: `${h}%` }} />

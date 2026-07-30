@@ -83,7 +83,7 @@ export default function InvoiceItemsModal({
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-3xl max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-base font-semibold text-primary">Line items</h2>
+          <h2 className="text-base font-medium text-primary">Line items</h2>
           <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
@@ -103,7 +103,7 @@ export default function InvoiceItemsModal({
 
           {/* Rows */}
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-3xs font-semibold uppercase tracking-wide text-tertiary">
+            <div className="grid grid-cols-[1fr_52px_84px_56px_56px_92px_24px] gap-2 px-1 text-3xs font-medium uppercase tracking-wide text-tertiary">
               <span>Description</span><span className="text-right">Qty</span><span className="text-right">Unit</span><span className="text-right">Disc%</span><span className="text-right">VAT%</span><span className="text-right">Amount</span><span />
             </div>
             {rows.length === 0 && <div className="py-8 text-center text-sm text-tertiary">No line items. Add a product or a custom line above.</div>}

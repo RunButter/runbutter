@@ -78,9 +78,9 @@ export default function AutomationsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Automations</h1>
+        <h1 className="text-md font-medium text-primary">Automations</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {([['board', Workflow, 'Board'], ['list', List, 'List']] as const).map(([v, Icon, label]) => (
@@ -100,12 +100,12 @@ export default function AutomationsPage() {
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Templates */}
           <div>
-            <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2">Start from a template</div>
+            <div className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2">Start from a template</div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {TEMPLATES.map((t) => (
                 <button key={t.key} onClick={() => fromTemplate(t.automation)} disabled={!canEdit}
                   className="group text-left card-surface p-3 hover:ring-strong hover:shadow-elevated transition-all disabled:opacity-50">
-                  <div className={`inline-flex text-3xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md mb-1.5 ${t.tone}`}>{t.name}</div>
+                  <div className={`inline-flex text-3xs font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md mb-1.5 ${t.tone}`}>{t.name}</div>
                   <p className="text-xs text-secondary leading-snug">{t.desc}</p>
                   <span className="mt-1.5 inline-flex items-center gap-0.5 text-2xs font-semibold text-accent opacity-0 group-hover:opacity-100 transition-opacity">Use template <ArrowRight className="w-3 h-3" /></span>
                 </button>
@@ -131,7 +131,7 @@ export default function AutomationsPage() {
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface shadow transition-all ${a.enabled ? 'left-4' : 'left-0.5'}`} />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className="text-base font-semibold text-primary truncate flex items-center gap-1.5"><TI className="w-3.5 h-3.5 text-tertiary" /> {a.name || 'Untitled automation'}</div>
+                      <div className="text-base font-medium text-primary truncate flex items-center gap-1.5"><TI className="w-3.5 h-3.5 text-tertiary" /> {a.name || 'Untitled automation'}</div>
                       <div className="text-xs text-secondary truncate">
                         {a.trigger_type === 'webhook' ? <>On <b className="text-secondary">incoming webhook</b></>
                           : a.trigger_type === 'schedule' ? <>Every <b className="text-secondary">{a.schedule?.every || 'day'}</b></>
@@ -155,7 +155,7 @@ export default function AutomationsPage() {
 
           {/* Run log */}
           <div>
-            <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2">Recent runs</div>
+            <div className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2">Recent runs</div>
             <div className="card-surface overflow-hidden">
               {runs.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No runs yet.</div>
                 : runs.map((r) => (
@@ -337,7 +337,7 @@ function Step({ badge, label, tone, children }: { badge: string; label: string; 
     <div className="relative pb-4">
       <span className={`absolute -left-[22px] top-0 w-6 h-6 -translate-x-0 rounded-full ${tone} text-accent-fg text-2xs font-semibold flex items-center justify-center ring-4 ring-canvas`}>{badge}</span>
       <div className="rounded-xl ring-1 ring-subtle bg-surface p-3">
-        <div className="text-3xs font-semibold uppercase tracking-wider text-tertiary mb-2">{label}</div>
+        <div className="text-3xs font-medium uppercase tracking-wider text-tertiary mb-2">{label}</div>
         {children}
       </div>
     </div>

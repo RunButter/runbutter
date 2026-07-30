@@ -83,7 +83,7 @@ export default function ReportsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Reports</h1>
+        <h1 className="text-md font-medium text-primary">Reports</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setEditing(blank())}
@@ -169,7 +169,7 @@ function ScheduleModal({ initial, onClose, onSave }: { initial: ReportSchedule; 
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[88vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-base font-semibold text-primary">{s.id ? 'Edit report' : 'New scheduled report'}</h3>
+          <h3 className="text-base font-medium text-primary">{s.id ? 'Edit report' : 'New scheduled report'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
@@ -223,7 +223,7 @@ function ScheduleModal({ initial, onClose, onSave }: { initial: ReportSchedule; 
             <div className="space-y-3">
               {GROUPS.map((g) => (
                 <div key={g}>
-                  <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary mb-1">{g}</div>
+                  <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1">{g}</div>
                   <div className="space-y-1">
                     {SECTION_CATALOG.filter((sec) => sec.group === g).map((sec) => (
                       <label key={sec.id} className="flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-surface-hover cursor-pointer">

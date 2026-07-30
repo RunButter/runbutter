@@ -44,8 +44,8 @@ export default function PlansPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Plans &amp; billing</h1>
-        <span className="text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
+        <h1 className="text-md font-medium text-primary">Plans &amp; billing</h1>
+        <span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
         <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
       </header>
 
@@ -73,12 +73,12 @@ export default function PlansPage() {
                   <div key={key}
                     className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-accent/30 shadow-lg' : 'ring-1 ring-subtle'}`}>
                     {popular && (
-                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-3xs font-semibold uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
+                      <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-3xs font-medium uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
                         <Sparkles className="w-3 h-3" /> Popular
                       </div>
                     )}
                     {isCurrent && (
-                      <div className="absolute -top-2.5 right-5 text-3xs font-semibold uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
+                      <div className="absolute -top-2.5 right-5 text-3xs font-medium uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
                     )}
 
                     <h3 className="font-semibold text-primary">{p.name}</h3>

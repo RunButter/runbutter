@@ -52,8 +52,8 @@ export default function MarketingOverview() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Marketing</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <h1 className="text-md font-medium text-primary">Marketing</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
       </header>
@@ -72,7 +72,7 @@ export default function MarketingOverview() {
 
             {/* Spend by channel */}
             <div className="card-surface p-5">
-              <h2 className="text-base font-semibold text-primary mb-1">Spend by channel</h2>
+              <h2 className="text-base font-medium text-primary mb-1">Spend by channel</h2>
               <p className="text-xs text-tertiary mb-4">Where the budget goes, and what it brings back.</p>
               {stats.byChannel.length === 0 ? (
                 <p className="py-6 text-center text-sm text-tertiary">No campaigns yet — create your first one.</p>

@@ -59,7 +59,7 @@ export default function HrOverviewPage() {
           // real. The plan chip did not: which plan you are on is a Settings
           // fact, not a hiring one, and it sat beside the title on every visit.
           badges={
-            <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+            <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
               {hr?.live ? 'Live' : 'Sample'}
             </span>
           }

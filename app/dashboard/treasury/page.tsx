@@ -189,7 +189,7 @@ export default function TreasuryPage() {
                 <aside className="w-64 shrink-0 border-r border-subtle bg-surface overflow-y-auto hidden md:block">
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-tertiary">
+                            <h3 className="flex items-center gap-1.5 text-2xs font-medium uppercase tracking-wider text-tertiary">
                                 <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
                             </h3>
                             {chips.length > 0 && (
@@ -282,7 +282,7 @@ export default function TreasuryPage() {
                                                 </div>
                                                 <div className="text-center shrink-0">
                                                     <div className={`text-2xl font-semibold tabular-nums ${scoreColor(c.overall_score)}`}>{c.overall_score ?? '—'}</div>
-                                                    <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Match</div>
+                                                    <div className="text-3xs font-medium uppercase tracking-widest text-tertiary">Match</div>
                                                 </div>
                                             </div>
 
@@ -326,7 +326,7 @@ export default function TreasuryPage() {
 function FacetGroup({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div className="mb-4 border-t border-subtle pt-3">
-            <div className="text-3xs font-semibold uppercase tracking-wider text-tertiary mb-1.5">{title}</div>
+            <div className="text-3xs font-medium uppercase tracking-wider text-tertiary mb-1.5">{title}</div>
             <div className="space-y-0.5 max-h-44 overflow-y-auto pr-1">{children}</div>
         </div>
     );
@@ -345,7 +345,7 @@ function FacetRow({ label, count, checked, onChange }: { label: string; count: n
 function Insight({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
         <div className="card-surface px-4 py-3">
-            <div className="flex items-center gap-1.5 text-3xs font-semibold uppercase tracking-wider text-tertiary mb-1">
+            <div className="flex items-center gap-1.5 text-3xs font-medium uppercase tracking-wider text-tertiary mb-1">
                 <Icon className="w-3 h-3" /> {label}
             </div>
             <div className="text-lg font-semibold text-primary truncate">{value}</div>

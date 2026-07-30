@@ -80,15 +80,15 @@ export default function WorkspaceHome() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Home</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <h1 className="text-md font-medium text-primary">Home</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Greeting */}
           <div>
-            <h2 className="text-2xl font-semibold text-primary tracking-tight">{greeting()}{ws?.name ? `, ${ws.name}` : ''}</h2>
+            <h2 className="text-2xl font-medium text-primary tracking-tight">{greeting()}{ws?.name ? `, ${ws.name}` : ''}</h2>
             <p className="text-sm text-secondary mt-0.5">Here’s what’s happening across your company today.</p>
           </div>
 
@@ -114,7 +114,7 @@ export default function WorkspaceHome() {
             <div className="lg:col-span-2 card-surface p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h3 className="text-base font-semibold text-primary">Cashflow</h3>
+                  <h3 className="text-base font-medium text-primary">Cashflow</h3>
                   <p className="text-xs text-tertiary">Revenue vs costs · last 12 months</p>
                 </div>
                 <div className="flex items-center gap-4 text-2xs font-semibold">
@@ -132,7 +132,7 @@ export default function WorkspaceHome() {
             <div className="card-surface p-5 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-base font-semibold text-primary">Hiring funnel</h3>
+                  <h3 className="text-base font-medium text-primary">Hiring funnel</h3>
                   <p className="text-xs text-tertiary">Candidates by stage</p>
                 </div>
                 <Link href="/dashboard/pipeline" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
@@ -147,7 +147,7 @@ export default function WorkspaceHome() {
 
           {/* Explore pillars */}
           <div>
-            <h2 className="text-base font-semibold text-primary mb-3">Jump back in</h2>
+            <h2 className="text-base font-medium text-primary mb-3">Jump back in</h2>
             <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
               {pillars.map((p) => (
                 <Link key={p.label} href={p.href} className="group card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
@@ -166,7 +166,7 @@ export default function WorkspaceHome() {
             {/* Recent applications */}
             <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-base font-semibold text-primary">Recent applications</h3>
+                <h3 className="text-base font-medium text-primary">Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
@@ -194,7 +194,7 @@ export default function WorkspaceHome() {
             {/* Recent transactions */}
             <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-base font-semibold text-primary">Recent transactions</h3>
+                <h3 className="text-base font-medium text-primary">Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">

@@ -86,7 +86,7 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
     <div className="card-surface p-5 space-y-3.5">
       <div className="flex items-center gap-2">
         <Globe2 className="w-4 h-4 text-accent" />
-        <h2 className="text-base font-semibold text-primary">Public careers page</h2>
+        <h2 className="text-base font-medium text-primary">Public careers page</h2>
       </div>
       <p className="text-xs text-tertiary">
         One branded page listing every open role, using the logo and accent colour above.

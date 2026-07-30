@@ -27,7 +27,7 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
                         <Lock className="w-8 h-8 text-accent" />
                     </div>
 
-                    <h2 className="text-2xl font-semibold text-primary mb-2 tracking-tight">Premium feature</h2>
+                    <h2 className="text-2xl font-medium text-primary mb-2 tracking-tight">Premium feature</h2>
                     <p className="text-secondary mb-6 text-sm">
                         {featureName} is included from the <span className="font-medium text-primary">Professional</span> plan. Upgrade to unlock it.
                     </p>

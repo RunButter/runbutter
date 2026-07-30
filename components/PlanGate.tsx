@@ -29,7 +29,7 @@ export default function PlanGate({ plan, feature, label, children }: Props) {
                     <div className="w-16 h-16 bg-accent-soft rounded-2xl flex items-center justify-center mx-auto mb-5 border border-subtle">
                         <Lock className="w-8 h-8 text-accent" />
                     </div>
-                    <h2 className="text-2xl font-semibold text-primary mb-2 tracking-tight">{label || 'Premium feature'}</h2>
+                    <h2 className="text-2xl font-medium text-primary mb-2 tracking-tight">{label || 'Premium feature'}</h2>
                     <p className="text-secondary mb-6 text-sm">
                         This is included from the <span className="font-medium text-primary">{neededName}</span> plan. Upgrade to unlock it.
                     </p>

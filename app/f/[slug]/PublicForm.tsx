@@ -65,7 +65,7 @@ export default function PublicForm({ slug, form }: { slug: string; form: PublicF
   return (
     <div className="w-full max-w-md rounded-xl bg-surface border border-subtle p-6 sm:p-8">
       <div className="mb-5">
-        <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary">{form.workspace_name}</div>
+        <div className="text-2xs font-medium uppercase tracking-widest text-tertiary">{form.workspace_name}</div>
         <h1 className="mt-1 text-xl font-medium text-primary tracking-tight">{form.title}</h1>
         {form.description && <p className="mt-1 text-sm text-secondary leading-relaxed">{form.description}</p>}
       </div>

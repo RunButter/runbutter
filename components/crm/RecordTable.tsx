@@ -98,7 +98,7 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
             </th>
             {object.fields.map((f) => (
               <th key={f.key} style={{ minWidth: f.width }}
-                className={`sticky top-0 z-10 bg-surface-sunken px-3.5 h-11 text-2xs font-semibold uppercase tracking-wide text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
+                className={`sticky top-0 z-10 bg-surface-sunken px-3.5 h-11 text-2xs font-medium uppercase tracking-wide text-tertiary border-b border-subtle ${f.align === 'right' ? 'text-right' : 'text-left'}`}>
                 {f.label}
               </th>
             ))}

@@ -92,7 +92,7 @@ export default function Signer({ token, title, signerName, docUrl }: {
       {/* Signing panel */}
       <div className="border-l border-subtle p-6 flex flex-col gap-4 overflow-auto">
         <div>
-          <div className="text-2xs font-semibold uppercase tracking-widest text-tertiary">Signature requested</div>
+          <div className="text-2xs font-medium uppercase tracking-widest text-tertiary">Signature requested</div>
           <h1 className="mt-1 text-lg font-medium text-primary tracking-tight">{title}</h1>
           <p className="text-sm text-secondary">Signing as <span className="font-medium text-primary">{signerName}</span></p>
         </div>

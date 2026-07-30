@@ -61,7 +61,7 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
             </div>
           ))}
           <div className="absolute top-0 h-full" style={{ left: `${todayPct}%` }}>
-            <span className="absolute -translate-x-1/2 top-1.5 text-3xs font-semibold uppercase tracking-wide text-accent bg-accent/10 rounded px-1">Today</span>
+            <span className="absolute -translate-x-1/2 top-1.5 text-3xs font-medium uppercase tracking-wide text-accent bg-accent/10 rounded px-1">Today</span>
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function RoadmapTimeline({ projects }: { projects: RoadmapProject
             <Link href={`/projects/${p.id}`} className="group w-52 shrink-0 px-3 py-3 border-r border-subtle flex flex-col justify-center min-w-0">
               <span className="text-sm font-semibold text-primary truncate group-hover:text-accent">{p.name}</span>
               <span className="mt-1 flex items-center gap-1.5">
-                {p.identifier && <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary bg-surface-hover rounded px-1 py-0.5">{p.identifier}</span>}
+                {p.identifier && <span className="text-3xs font-medium uppercase tracking-wide text-tertiary bg-surface-hover rounded px-1 py-0.5">{p.identifier}</span>}
                 <span className="text-2xs text-tertiary">{p.issues.length} {p.issues.length === 1 ? 'issue' : 'issues'}{undated ? ` · ${undated} undated` : ''}</span>
               </span>
             </Link>

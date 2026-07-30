@@ -53,8 +53,8 @@ export default function FinanceOverview() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Finance</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+        <h1 className="text-md font-medium text-primary">Finance</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}
         </span>
         <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
@@ -84,7 +84,7 @@ export default function FinanceOverview() {
             <div className="card-surface p-5">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h2 className="text-base font-semibold text-primary">Revenue vs costs</h2>
+                  <h2 className="text-base font-medium text-primary">Revenue vs costs</h2>
                   <p className="text-xs text-tertiary">Last {months} {months === 1 ? 'month' : 'months'} · money in vs money out</p>
                 </div>
                 <div className="flex items-center gap-4 text-2xs font-semibold">

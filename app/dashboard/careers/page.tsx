@@ -71,7 +71,7 @@ export default function CareersAdminPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Careers page</h1>
+        <h1 className="text-md font-medium text-primary">Careers page</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">
           {publicCount} public
         </span>
@@ -95,7 +95,7 @@ export default function CareersAdminPage() {
               <div className="card-surface p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <Briefcase className="w-4 h-4 text-accent" />
-                  <h2 className="text-base font-semibold text-primary">Which roles are public</h2>
+                  <h2 className="text-base font-medium text-primary">Which roles are public</h2>
                 </div>
                 <p className="text-xs text-tertiary mb-3.5">
                   Hiding a role removes it from the careers page but keeps it open internally — its

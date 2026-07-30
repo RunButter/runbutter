@@ -50,7 +50,7 @@ export default function SectionCard({
           !flush && 'pb-4 sm:pb-5',
         )}>
           <div className="min-w-0">
-            {title && <h2 className="text-base font-semibold text-primary truncate">{title}</h2>}
+            {title && <h2 className="text-base font-medium text-primary truncate">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-xs text-tertiary">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-3 shrink-0">

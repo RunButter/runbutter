@@ -43,9 +43,9 @@ export default function DocsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Docs</h1>
+        <h1 className="text-md font-medium text-primary">Docs</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>
       </header>
 
@@ -65,7 +65,7 @@ export default function DocsPage() {
               {rows.map((d) => (
                 <div key={d.id} onClick={() => router.push(`/docs/${d.id}`)} className="group cursor-pointer card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="text-base font-semibold text-primary truncate">{d.title || 'Untitled'}</div>
+                    <div className="text-base font-medium text-primary truncate">{d.title || 'Untitled'}</div>
                     <button onClick={(e) => remove(e, d)} disabled={!canEdit} className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                   <p className="text-xs text-secondary mt-1 line-clamp-2 whitespace-pre-wrap">{d.snippet || 'Empty document'}</p>

@@ -50,8 +50,8 @@ export default function AiKeysPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">AI keys</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <h1 className="text-md font-medium text-primary">AI keys</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
@@ -63,7 +63,7 @@ export default function AiKeysPage() {
 
           {/* Add */}
           <div className="card-surface p-4">
-            <div className="text-2xs font-semibold uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
+            <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
             <div className="grid sm:grid-cols-2 gap-2.5">
               <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Provider</span>
                 <select value={provider} onChange={(e) => { setProvider(e.target.value); setModel(''); }} className={inputCls}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>

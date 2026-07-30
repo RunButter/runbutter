@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
 
     return (
         <>
-            <PageHeader title="Analytics" badge={<span className="text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
+            <PageHeader title="Analytics" badge={<span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
                 <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>
@@ -172,8 +172,8 @@ export default function AnalyticsPage() {
                         <div className="grid lg:grid-cols-3 gap-4">
                             <div className="lg:col-span-2 card-surface p-5">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-base font-semibold text-primary">Application volume by position</h3>
-                                    <span className="text-3xs font-semibold uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
+                                    <h3 className="text-base font-medium text-primary">Application volume by position</h3>
+                                    <span className="text-3xs font-medium uppercase tracking-widest text-tertiary bg-surface-hover rounded px-1.5 py-0.5">All time</span>
                                 </div>
                                 <div className="h-[300px]">
                                     <Bar options={axisOptions} data={barData} />
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
                             </div>
 
                             <div className="card-surface p-5">
-                                <h3 className="text-base font-semibold text-primary mb-5">Candidate sources</h3>
+                                <h3 className="text-base font-medium text-primary mb-5">Candidate sources</h3>
                                 <div className="h-[220px] relative">
                                     <Pie options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }} data={pieData} />
                                 </div>

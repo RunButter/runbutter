@@ -144,7 +144,7 @@ export default function TeamFitModal({ candidate, results, treasury, loading, on
                                             <div className={`text-5xl font-semibold ${synergyColor}`}>
                                                 {analysis ? analysis.synergy : 0}<span className="text-2xl">%</span>
                                             </div>
-                                            <div className="text-3xs font-semibold uppercase tracking-widest text-tertiary">Synergy</div>
+                                            <div className="text-3xs font-medium uppercase tracking-widest text-tertiary">Synergy</div>
                                         </div>
                                         {analysis && (
                                             <p className="text-sm text-secondary flex-1">

@@ -119,8 +119,8 @@ export default function TransactionsPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
-        <h1 className="text-md font-semibold text-primary">Transactions</h1>
-        <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <h1 className="text-md font-medium text-primary">Transactions</h1>
+        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
@@ -170,7 +170,7 @@ export default function TransactionsPage() {
         ].map((c) => (
           <div key={c.label} className="card-surface p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-2xs font-semibold uppercase tracking-wide text-tertiary">{c.label}</span>
+              <span className="text-2xs font-medium uppercase tracking-wide text-tertiary">{c.label}</span>
               <c.icon className="w-4 h-4 text-tertiary" />
             </div>
             <div className={`mt-1 text-xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
@@ -191,7 +191,7 @@ export default function TransactionsPage() {
                     <input type="checkbox" checked={allShownSelected} onChange={toggleAll} className="rounded border-subtle accent-accent cursor-pointer" />
                   </th>
                   {['Date', 'Description', 'Category', 'Account', 'Status', 'Reconciled', 'Amount'].map((h, i) => (
-                    <th key={h} className={`px-3 h-9 bg-surface-sunken/60 text-2xs font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${i === 6 ? 'text-right' : 'text-left'}`}>{h}</th>
+                    <th key={h} className={`px-3 h-9 bg-surface-sunken/60 text-2xs font-medium uppercase tracking-wider text-tertiary border-b border-subtle ${i === 6 ? 'text-right' : 'text-left'}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -366,13 +366,13 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
     <div className="fixed inset-0 z-[60] flex justify-end bg-black/50 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-sm h-full bg-surface shadow-popover ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-base font-semibold text-primary">Transaction</h2>
+          <h2 className="text-base font-medium text-primary">Transaction</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 2xl:p-6 space-y-5">
           <div>
-            <div className="text-md font-semibold text-primary">{txn.description || '—'}</div>
+            <div className="text-md font-medium text-primary">{txn.description || '—'}</div>
             <div className={`text-2xl font-semibold tabular-nums ${out ? 'text-danger' : 'text-success'}`}>{money(txn.amount)}</div>
             <div className="text-xs text-tertiary mt-0.5">{fmtDate(txn.txn_date)} · {txn.account || 'No account'} · {txn.method.replace(/_/g, ' ')}</div>
           </div>
@@ -402,7 +402,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
 
           {/* Reconciliation */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2 text-2xs font-semibold uppercase tracking-wider text-tertiary">
+            <div className="flex items-center gap-1.5 mb-2 text-2xs font-medium uppercase tracking-wider text-tertiary">
               <Sparkles className="w-3.5 h-3.5" /> Reconciliation
             </div>
             {txn.match ? (
@@ -464,7 +464,7 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-base font-semibold text-primary">New bank account</h2>
+          <h2 className="text-base font-medium text-primary">New bank account</h2>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
@@ -563,7 +563,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
-          <h2 className="text-base font-semibold text-primary flex items-center gap-2">
+          <h2 className="text-base font-medium text-primary flex items-center gap-2">
             {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
             Import transactions
           </h2>
@@ -599,7 +599,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
                 <div key={k} className="flex items-center gap-3"><span className="w-32 shrink-0 text-sm font-medium text-secondary">{label}</span>{sel(k)}</div>
               ))}
               <div className="h-px bg-surface-hover my-1" />
-              <p className="text-2xs font-semibold uppercase tracking-wider text-tertiary">Amount — one signed column, or separate debit/credit</p>
+              <p className="text-2xs font-medium uppercase tracking-wider text-tertiary">Amount — one signed column, or separate debit/credit</p>
               <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-sm font-medium text-secondary">Amount (signed)</span>{sel('amount')}</div>
               <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-sm font-medium text-secondary">Money out (debit)</span>{sel('debit')}</div>
               <div className="flex items-center gap-3"><span className="w-32 shrink-0 text-sm font-medium text-secondary">Money in (credit)</span>{sel('credit')}</div>

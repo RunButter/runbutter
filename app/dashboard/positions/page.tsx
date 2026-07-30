@@ -128,7 +128,7 @@ export default function PositionsPage() {
                         <thead>
                             <tr>
                                 {['Position', 'Department', 'Candidates', 'Status', ''].map((h, i) => (
-                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-semibold uppercase tracking-wider text-tertiary border-b border-subtle ${i === 4 ? 'text-right' : 'text-left'}`}>{h}</th>
+                                    <th key={i} className={`bg-surface-sunken/60 px-4 h-9 text-2xs font-medium uppercase tracking-wider text-tertiary border-b border-subtle ${i === 4 ? 'text-right' : 'text-left'}`}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
