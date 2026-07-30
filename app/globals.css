@@ -160,13 +160,13 @@
 }
 
 @layer components {
-  /* Buttons: compact (h-8), flat, medium weight. The primary action is the
+  /* Buttons: compact (h-9), flat, medium weight. The primary action is the
      monochrome inverse fill — the same confident near-black/near-white the
      landing uses. A coloured primary on every screen is what made the app read
      as generic; the accent is now reserved for links, focus and small tints.
      `active:` gives a physical press without a bouncy scale. */
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[13px] font-medium
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md text-sm font-medium
            transition-[background-color,color,opacity,box-shadow] duration-150
            active:translate-y-px focus-visible:outline-none focus-visible:ring-2
            focus-visible:ring-accent/40 focus-visible:ring-offset-1 focus-visible:ring-offset-canvas
@@ -182,7 +182,7 @@
   /* Inputs: raised shadcn field — subtle shadow, hairline border, accent focus
      ring. rounded-md now resolves to ~10px off the bumped --radius. */
   .input-field {
-    @apply w-full h-8 px-2.5 bg-surface border border-subtle rounded-md shadow-sm text-[13px] text-primary
+    @apply w-full h-9 px-3 bg-surface border border-subtle rounded-md shadow-sm text-sm text-primary
            placeholder:text-tertiary transition-colors outline-none
            focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25;
   }
@@ -193,7 +193,7 @@
   }
 
   .badge {
-    @apply inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium capitalize;
+    @apply inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-medium capitalize;
   }
   .badge-neutral { @apply badge bg-surface-hover text-secondary; }
   .badge-success { @apply badge bg-success/10 text-success; }
@@ -225,7 +225,7 @@
 /* Tiptap / ProseMirror content styling for the Docs rich editor (RichEditor.tsx).
    Markdown stays the stored format; these rules just render the live editor. */
 @layer components {
-  .rb-editor { min-height: 60vh; color: hsl(var(--text-primary)); font-size: 14px; line-height: 1.7; }
+  .rb-editor { min-height: 60vh; color: hsl(var(--text-primary)); font-size: 15px; line-height: 1.7; }
   .rb-editor:focus { outline: none; }
   .rb-editor > * + * { margin-top: 0.7em; }
   .rb-editor h1 { font-size: 1.6em; font-weight: 600; letter-spacing: -0.01em; margin-top: 1em; }
