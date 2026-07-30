@@ -17,15 +17,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `origin` = `CasperCrypto/talent-insight` is a stale mirror.
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
-- **0064_invoice_reminders.sql is PENDING** (the Supabase connector dropped before it could be
-  applied). Reminders stay OFF per workspace until an owner enables them, so nothing mails on deploy.
-- **0065_files.sql is PENDING** — company files + FTS. Verified against a scratch PG 16, not yet run
-  on the live DB. Until it is, `/files` shows "run migration 0065" instead of failing opaquely.
-- **Migrations through 0063 are ALL APPLIED** (verified 2026-07-29 against the live DB through the
-  Supabase connector — don't report any of them as pending). 0062 went in via `apply_migration`, so
-  it is recorded in `supabase_migrations`; 0058–0061 were run by hand and are not.
-  Still outstanding as *actions*, not migrations: POST `/api/sanctions/refresh` once to ingest OFAC
-  (the table exists but is empty until then), and set `UMAMI_*` env vars only if you deploy Umami.
+- **Migrations through 0065 are ALL APPLIED** (verified 2026-07-30 against the live DB via the
+  Supabase connector: `files` + all six file RPCs exist, `invoice_reminder_settings` +
+  `due_invoice_reminders`/`mark_invoices_overdue`/`log_invoice_reminder` exist). Don't report 0064 or
+  0065 as pending — that was true earlier in the day and is no longer.
+  Still outstanding as *actions*, not migrations:
+  - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
+    table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
+  - Invoice reminders need a **daily cron** hitting `/api/finance/reminders/run` with `CRON_SECRET`.
+    Nothing mails without it, and reminders are off per workspace until an owner enables them.
+  - `UMAMI_*` env vars only if you deploy Umami.
+- **`careers_slug` lives on `companies`, not `workspaces`** — easy to get wrong; the careers page
+  resolves the company by slug.
+- **This sandbox cannot reach `supabase.co`.** Any data-backed page rendered locally shows its empty
+  state (careers 404s, a public form says "isn't available"). That is the network, not a bug — check
+  the RPC through the Supabase connector before chasing it.
 
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug

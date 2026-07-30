@@ -102,7 +102,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
 
       <div className="max-w-3xl mx-auto px-5 py-8 sm:py-10 space-y-8">
         <section className="card-surface p-6 sm:p-8">
-          <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-3">About this role</h2>
+          <h2 className="text-base font-semibold text-primary mb-3">About this role</h2>
           {position.description?.trim() ? (
             // Descriptions are plain text today, so preserve the author's line
             // breaks instead of collapsing everything into one block.
@@ -128,7 +128,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
 
         {others.length > 0 && (
           <section>
-            <h2 className="text-2xs font-semibold uppercase tracking-widest text-tertiary mb-2.5">
+            <h2 className="text-base font-semibold text-primary mb-2.5">
               Other open roles
             </h2>
             <ul className="space-y-2">
