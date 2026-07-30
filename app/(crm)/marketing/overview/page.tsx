@@ -51,7 +51,7 @@ export default function MarketingOverview() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Marketing</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {live ? 'Live' : 'Sample'}

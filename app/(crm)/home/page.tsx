@@ -79,7 +79,7 @@ export default function WorkspaceHome() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
         <h1 className="text-sm font-semibold text-primary">Home</h1>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
       </header>
@@ -166,7 +166,7 @@ export default function WorkspaceHome() {
             {/* Recent applications */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-base font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
+                <h3 className="text-md font-semibold text-primary flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">
@@ -194,7 +194,7 @@ export default function WorkspaceHome() {
             {/* Recent transactions */}
             <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
-                <h3 className="text-base font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
+                <h3 className="text-md font-semibold text-primary flex items-center gap-2"><Receipt className="w-4 h-4 text-success" /> Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-xs font-semibold text-accent hover:text-accent inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
               </div>
               <div className="divide-y divide-subtle">

@@ -97,15 +97,15 @@ module.exports = {
         //
         // Leading is generous relative to the size: line-height is what makes
         // small text readable, and it was the tighter of the two problems.
-        '3xs': ['11px', '15px'],   // legal/footnote only — not for UI labels
-        '2xs': ['12px', '16px'],   // meta lines, table sub-values, counts
-        xs: ['13px', '18px'],      // secondary labels, filter chips
-        sm: ['14px', '20px'],      // DEFAULT UI text: rows, inputs, buttons, nav
-        base: ['15px', '22px'],    // section titles, emphasised body
-        md: ['16px', '24px'],      // page titles
+        '3xs': ['12px', '16px'],   // legal/footnote only — not for UI labels
+        '2xs': ['13px', '18px'],   // meta lines, table sub-values, counts
+        xs: ['14px', '20px'],      // secondary labels, filter chips
+        sm: ['15px', '22px'],      // DEFAULT UI text: rows, inputs, buttons, nav
+        base: ['16px', '24px'],    // section titles, emphasised body
+        md: ['18px', '26px'],      // page titles
         // The one display size the product UI owns: a KPI figure. Named rather
         // than written as text-[26px] so it moves with the rest of the scale.
-        stat: ['28px', '32px'],
+        stat: ['30px', '34px'],
         // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },

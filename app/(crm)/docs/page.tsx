@@ -42,8 +42,8 @@ export default function DocsPage() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
-        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><FileText className="w-4 h-4 text-tertiary" /> Docs</h1>
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><FileText className="w-4 h-4 text-tertiary" /> Docs</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>

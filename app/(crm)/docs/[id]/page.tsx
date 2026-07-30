@@ -83,7 +83,7 @@ export default function DocEditor() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-2 px-5 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
         <button onClick={() => router.push('/docs')} className="p-1.5 -ml-1 rounded-md text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Untitled" disabled={!canEdit} className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary bg-transparent" />
         <button onClick={() => setPreview((p) => !p)} title={preview ? 'Rich editor' : 'Edit markdown source'} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">{preview ? <Pencil className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />} {preview ? 'Editor' : 'Markdown'}</button>

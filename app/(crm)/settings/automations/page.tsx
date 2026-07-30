@@ -77,8 +77,8 @@ export default function AutomationsPage() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
-        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Automations</h1>
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><Zap className="w-4 h-4 text-warning" /> Automations</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <span className={`text-3xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <div className="ml-auto flex items-center gap-1.5">
@@ -218,7 +218,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
-        <div className="h-14 shrink-0 flex items-center gap-2 px-5 border-b border-subtle">
+        <div className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
           <input autoFocus value={a.name} onChange={(e) => set({ name: e.target.value })} placeholder="Automation name" className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary" />
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>

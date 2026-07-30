@@ -39,8 +39,8 @@ export default function AssistantPage() {
 
   return (
     <>
-      <header className="h-14 shrink-0 flex items-center gap-3 px-5 border-b border-subtle">
-        <h1 className="text-base font-semibold text-primary flex items-center gap-2"><MessageCircle className="w-4 h-4 text-accent" /> Assistant</h1>
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+        <h1 className="text-md font-semibold text-primary flex items-center gap-2"><MessageCircle className="w-4 h-4 text-accent" /> Assistant</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
           <button onClick={() => setEditing({ platform: 'telegram', autonomy: 'auto', enabled: true, allowed_senders: [] })}
