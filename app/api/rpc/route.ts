@@ -62,6 +62,8 @@ const ALLOWED = new Set([
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
   // Skills (0068) — reusable instruction packs attached to agents.
   'get_skills', 'save_skill', 'delete_skill',
+  // Post Studio board (0069) — positions + edges for the content-plan canvas.
+  'get_post_board', 'save_post_board',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

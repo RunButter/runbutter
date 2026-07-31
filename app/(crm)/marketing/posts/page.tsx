@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, MessageCircle, Loader2, CalendarDays, LayoutGrid } from 'lucide-react';
+import { Plus, MessageCircle, Loader2, CalendarDays, LayoutGrid, Workflow } from 'lucide-react';
 import { loadPosts, savePost, setPostSchedule, type PostListItem } from '@/lib/crm/data';
 import PostCalendar from '@/components/crm/PostCalendar';
+import PostBoard from '@/components/crm/PostBoard';
+import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
+import { loadPostBoard, EMPTY_BOARD, type PostBoardGraph } from '@/lib/crm/postboard';
 import { useDialog } from '@/components/ui/Dialog';
 
 const PLATFORM_CHIP: Record<string, string> = {
@@ -33,11 +36,22 @@ export default function PostsPage() {
   const [creating, setCreating] = useState(false);
   // Calendar first: planning is the job people come to Post Studio for, and the
   // grid only ever answered "what exists", never "what goes out when".
-  const [view, setView] = useState<'calendar' | 'grid'>('calendar');
+  const [view, setView] = useState<'calendar' | 'board' | 'grid'>('calendar');
+  const [ws, setWs] = useState<WorkspaceContext | null>(null);
+  const [board, setBoard] = useState<PostBoardGraph>(EMPTY_BOARD);
 
   useEffect(() => {
     if (!ready) return;
     loadPosts(privy).then((res) => { setPosts(res.posts); setLive(res.live); setLoading(false); });
+    // The board is loaded alongside, not on tab switch, so flipping to it is
+    // instant rather than showing a second spinner.
+    if (privy) {
+      getWorkspace(privy).then((w) => {
+        if (!w) return;
+        setWs(w);
+        loadPostBoard(privy, w.id).then(setBoard);
+      });
+    }
   }, [ready, privy]);
 
   const newPost = async () => {
@@ -68,7 +82,7 @@ export default function PostsPage() {
         <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center rounded-lg bg-surface-hover p-0.5">
-            {([['calendar', CalendarDays, 'Calendar'], ['grid', LayoutGrid, 'Grid']] as const).map(([v, Icon, label]) => (
+            {([['calendar', CalendarDays, 'Calendar'], ['board', Workflow, 'Board'], ['grid', LayoutGrid, 'Grid']] as const).map(([v, Icon, label]) => (
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
                 className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
                   view === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
@@ -84,6 +98,14 @@ export default function PostsPage() {
         </div>
       </header>
 
+      {/* The board owns its own scrolling and fills the pane — wrapping it in
+          the padded, scrolling container the other two views use would give a
+          canvas a scrollbar, which fights panning. */}
+      {view === 'board' && !loading ? (
+        <div className="flex-1 min-h-0">
+          <PostBoard posts={posts} graph={board} ws={ws?.id ?? null} privy={privy} onNew={newPost} />
+        </div>
+      ) : (
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
@@ -116,6 +138,7 @@ export default function PostsPage() {
           </div>
         )}
       </div>
+      )}
     </>
   );
 }

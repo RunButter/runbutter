@@ -282,6 +282,9 @@ export const NAV = [
   ]},
   { group: 'Automate', items: [
     { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
+    // A library, not a per-agent setting — one skill is usually attached to
+    // several agents, so it needs a home you can reach without editing one.
+    { slug: 'skills', label: 'Skills', icon: 'BookOpen', href: '/skills' },
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
   ]},
   // People, not configuration — kept out of Settings deliberately.
