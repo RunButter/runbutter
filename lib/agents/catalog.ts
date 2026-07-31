@@ -18,7 +18,7 @@ export interface ToolInfo {
   write?: true;
 }
 
-export type ToolGroup = 'Records' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring';
+export type ToolGroup = 'Records' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -48,9 +48,15 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'search_candidates', label: 'Search candidates', group: 'Hiring' },
   { name: 'get_candidate', label: 'Read a candidate', group: 'Hiring' },
   { name: 'get_hiring_pipeline', label: 'Pipeline board', group: 'Hiring' },
+
+  // The only tools that reach OUTSIDE the workspace. The agent picks a saved
+  // connection by id; it never supplies a URL, so what it can reach is bounded
+  // by what a workspace owner already set up in Settings → Integrations.
+  { name: 'list_connections', label: 'List connections', group: 'Connections' },
+  { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },
 ];
 
-export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring'];
+export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
 
 /**
  * Read tools. screen_sanctions is here despite appending to its own audit trail:

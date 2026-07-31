@@ -9,9 +9,10 @@
 // the caller's permitted workspaces from p_privy inside SQL
 // (`where ... workspace_id = any(my)`). Both are scoped — just at different
 // layers — so don't "fix" the ones without p_workspace by inventing an argument.
-import { runDispatcher } from '@/lib/automations/dispatcher';
+import { runDispatcher, signWebhook } from '@/lib/automations/dispatcher';
 import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
+import { isSafeOutboundUrl } from '@/lib/security/http';
 
 export interface ToolCtx { admin: any; workspace: string; privy: string }
 
@@ -68,6 +69,9 @@ export const TOOLS = [
   { name: 'search_files', description: 'Full-text search the CONTENTS of uploaded files (contracts, invoices, CVs). Returns matching files with highlighted snippets. Postgres FTS, no AI cost. Only files that were text-extracted are searchable.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Supports quoted phrases and OR.' } }, required: ['query'] } },
   { name: 'list_files', description: 'Files in the workspace, optionally only those attached to one record. Reports each file\'s extraction status but not its text — use get_file_text for that.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Filter by linked record type, e.g. companies.' }, id: { type: 'string', description: 'Filter by linked record id.' } } } },
   { name: 'get_file_text', description: 'The full extracted text of one file. Can be long — prefer search_files when looking for a passage.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+
+  { name: 'list_connections', description: 'Outgoing connections this workspace has set up (Slack, Discord, Zapier, Make, n8n or a generic webhook). Returns their ids and labels so you can send to one — the destination URLs are not exposed.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'call_connection', description: 'Send a message and optional structured data to one of this workspace\'s saved connections. Use it to post to Slack/Discord or to hand data to Zapier/Make/n8n. Call list_connections first to get an id. You cannot specify a URL — only a saved connection.', inputSchema: { type: 'object', properties: { connection_id: { type: 'string', description: 'id from list_connections.' }, message: { type: 'string', description: 'Human-readable text. This is what shows up in a Slack or Discord channel.' }, data: { type: 'object', description: 'Optional structured payload for automation tools.' } }, required: ['connection_id', 'message'] } },
 ] as const;
 
 // Re-exported from the catalogue rather than restated here. The builder cannot
@@ -271,6 +275,75 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
         };
       }
       return row;
+    }
+
+    // ── Outbound ──────────────────────────────────────────────────────────────
+    case 'list_connections': {
+      const rows = await rpc(ctx, 'get_connections', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      const list = Array.isArray(rows) ? rows : [];
+      // url and secret are deliberately dropped. The model has no use for the
+      // destination — it sends by id — and putting a webhook URL (or its signing
+      // secret) into a transcript that gets stored on the run is a leak for no
+      // gain. The SAME reasoning is why call_connection takes no url argument.
+      return list
+        .filter((c: any) => c.is_active)
+        .map((c: any) => ({ id: c.id, label: c.label, kind: c.kind }));
+    }
+
+    case 'call_connection': {
+      const id = String(args?.connection_id || '');
+      const message = String(args?.message || '').slice(0, 4000);
+      if (!id) throw new Error('connection_id is required — call list_connections first.');
+      if (!message.trim()) throw new Error('message is required.');
+
+      // Resolved server-side, scoped to this workspace. An id belonging to
+      // another tenant returns nothing rather than another tenant's URL.
+      const conn = await rpc(ctx, 'get_connection', { p_workspace: ctx.workspace, p_id: id });
+      if (!conn) return { error: 'No such connection in this workspace. Call list_connections.' };
+      if (conn.is_active === false) return { error: `Connection "${conn.label}" is disabled.` };
+
+      // Same SSRF guard the automation dispatcher uses. A saved connection is
+      // owner-supplied, but "owner-supplied" is not "safe" — a URL pointing at
+      // 169.254.169.254 or localhost would turn any agent into a probe of our
+      // own network.
+      if (!isSafeOutboundUrl(conn.url)) {
+        await ctx.admin.rpc('log_webhook_delivery', {
+          p_workspace: ctx.workspace, p_connection: id, p_automation: null, p_url: conn.url,
+          p_status: 'failed', p_code: null, p_attempts: 1, p_detail: 'Agent: blocked, private/unsafe URL (SSRF guard)',
+        });
+        return { error: 'That connection points at a private or unsafe address and was blocked.' };
+      }
+
+      const body = JSON.stringify({
+        source: 'runbutter-agent',
+        // Slack and Discord both render `text`; Zapier/Make/n8n just see fields.
+        text: message,
+        message,
+        data: args?.data ?? null,
+        sent_at: new Date().toISOString(),
+      });
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (conn.secret) headers['X-RunButter-Signature'] = signWebhook(conn.secret, body);
+
+      let code = 0, ok = false, detail = '';
+      try {
+        const r = await fetch(conn.url, { method: 'POST', headers, body, signal: AbortSignal.timeout(10_000) });
+        code = r.status; ok = r.ok;
+        detail = `Agent POST ${r.status} · ${conn.label || conn.kind}`;
+      } catch (e: any) {
+        detail = `Agent POST failed · ${e?.message || 'network'}`;
+      }
+
+      // Logged to the same delivery trail as automation webhooks, so an agent
+      // send is auditable next to every other thing that left the workspace.
+      await ctx.admin.rpc('log_webhook_delivery', {
+        p_workspace: ctx.workspace, p_connection: id, p_automation: null, p_url: conn.url,
+        p_status: ok ? 'ok' : 'failed', p_code: code || null, p_attempts: 1, p_detail: detail,
+      });
+
+      return ok
+        ? { sent: true, connection: conn.label || conn.kind, response_code: code }
+        : { sent: false, connection: conn.label || conn.kind, response_code: code || null, error: detail };
     }
 
     default:

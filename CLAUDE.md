@@ -139,6 +139,14 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Agent gallery** = `lib/agents/templates.ts` (8 prebuilt agents). A template is just a prefilled
   editor payload — not a second save path — and is pinned to `suggest` autonomy on install
   regardless of what it declares.
+- **`call_connection` is the ONLY tool that leaves the workspace.** The model picks a saved
+  `connections` row **by id and never supplies a URL** — that, not a filter, is what bounds where an
+  agent can reach. It is classified WRITE, so a `suggest` agent proposes the payload for approval;
+  it reuses `isSafeOutboundUrl` (an owner-saved URL is still not a safe one — 169.254.169.254 would
+  turn any agent into a probe of our own network), signs with the connection secret, and logs to
+  `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
+  the model sends by id, so putting either into a stored run transcript is a leak for no gain.
+  Note this is exposed over `/api/mcp` too, like every other tool.
 - **Skills (0068)** are reusable instruction packs on `agents.skill_ids uuid[]`. `suggested_tools`
   is a **hint for the UI, never a grant**: the runner's tool list comes from the agent alone, and
   `skillBlock()` must never touch `allowed`. `/api/skills/import` reads public GitHub SKILL.md
