@@ -201,6 +201,10 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
         onDoubleClick={onPaneDoubleClick}
         nodeTypes={nodeTypes}
         fitView
+        // Cap at 1:1. fitView scales to fill the viewport, so a map with three
+        // boxes opened at ~1.4x — text and images blown up past their designed
+        // size, and every subsequent box arriving apparently huge.
+        fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
         proOptions={{ hideAttribution: false }}
         deleteKeyCode={['Backspace', 'Delete']}
         className="bg-canvas"
