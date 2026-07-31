@@ -39,15 +39,15 @@ function BoxNode({ id, data, selected }: NodeProps) {
   return (
     <div
       onDoubleClick={() => setEditing(true)}
-      className={`card-surface px-4 py-3 min-w-[168px] max-w-[280px] transition-shadow ${
+      className={`card-surface !rounded-lg px-4 py-3 min-w-[168px] max-w-[280px] transition-shadow ${
         selected ? 'ring-2 ring-accent shadow-elevated' : ''
       }`}
     >
       {/* Handles on all four sides: a mind map grows in every direction, and
           forcing left-to-right (the flow-chart default) makes people fight the
           canvas to lay out anything radial. */}
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-strong !border-0" />
-      <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-strong !border-0" />
+      <Handle id="l" type="target" position={Position.Left} className="!w-2 !h-2 !bg-strong !border-0" />
+      <Handle id="t" type="target" position={Position.Top} className="!w-2 !h-2 !bg-strong !border-0" />
       {editing ? (
         <textarea
           ref={inputRef}
@@ -66,8 +66,8 @@ function BoxNode({ id, data, selected }: NodeProps) {
           {(data as BoxData).label || <span className="text-tertiary">Double-click to edit</span>}
         </p>
       )}
-      <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-accent !border-0" />
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-accent !border-0" />
+      <Handle id="r" type="source" position={Position.Right} className="!w-2 !h-2 !bg-accent !border-0" />
+      <Handle id="b" type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-accent !border-0" />
     </div>
   );
 }
@@ -132,8 +132,8 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
         className="bg-canvas"
       >
         <Background variant={BackgroundVariant.Dots} gap={18} size={1} className="!bg-canvas" color="hsl(var(--border-strong))" />
-        <Controls showInteractive={false} className="!shadow-card" />
-        <MiniMap pannable zoomable className="!bg-surface !rounded-xl" maskColor="hsl(var(--canvas) / 0.7)" />
+        <Controls showInteractive={false} />
+        <MiniMap pannable zoomable nodeColor="hsl(var(--border-strong))" maskColor="hsl(var(--canvas) / 0.72)" />
       </ReactFlow>
 
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">

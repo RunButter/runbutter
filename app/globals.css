@@ -182,6 +182,30 @@
   .btn-ghost     { @apply btn text-secondary hover:bg-surface-hover hover:text-primary; }
   .btn-danger    { @apply btn bg-danger text-danger-fg shadow-sm hover:bg-danger/90; }
 
+  /* React Flow, on our tokens.
+     The library ships its own control and minimap colours as hardcoded light
+     values, so in dark mode the zoom cluster rendered as a white block with
+     invisible glyphs. It exposes CSS variables for exactly this, so point them
+     at the design tokens once here rather than fighting it with !important at
+     each call site. Scoped to .react-flow so nothing else is affected. */
+  .react-flow {
+    --xy-controls-button-background-color: hsl(var(--surface));
+    --xy-controls-button-background-color-hover: hsl(var(--surface-hover));
+    --xy-controls-button-color: hsl(var(--text-secondary));
+    --xy-controls-button-color-hover: hsl(var(--text-primary));
+    --xy-controls-button-border-color: hsl(var(--border-subtle));
+    --xy-minimap-background-color: hsl(var(--surface));
+    --xy-minimap-mask-background-color-props: hsl(var(--canvas) / 0.72);
+    --xy-node-color: hsl(var(--text-primary));
+    --xy-edge-stroke: hsl(var(--border-strong));
+    --xy-edge-stroke-selected: hsl(var(--accent));
+    --xy-attribution-background-color: transparent;
+  }
+  .react-flow__controls { box-shadow: var(--tw-shadow, 0 1px 2px -1px rgb(0 0 0 / 0.08)); border-radius: 10px; overflow: hidden; }
+  .react-flow__minimap { border-radius: 12px; }
+  /* MIT, so the credit is not required — but it costs nothing and stays. */
+  .react-flow__attribution a { color: hsl(var(--text-tertiary)); }
+
   /* Card surface.
      The elevation rule still holds — cards are RAISED, not flat — but the lift
      comes from a shadow in light mode rather than a hairline ring, which is
