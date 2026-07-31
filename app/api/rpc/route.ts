@@ -89,6 +89,9 @@ const ALLOWED = new Set([
   // Post schedule (0066). set_post_schedule is a drag-to-reschedule write, kept
   // separate from save_post so moving a card doesn't round-trip the post body.
   'set_post_schedule',
+  // Mind maps (0067). The canvas autosaves, so save_mind_map is a write that
+  // fires often — it is size-capped and shape-checked in SQL, not here.
+  'get_mind_maps', 'get_mind_map', 'create_mind_map', 'save_mind_map', 'delete_mind_map',
 ]);
 
 function db() {
