@@ -64,6 +64,14 @@ const ALLOWED = new Set([
   'get_skills', 'save_skill', 'delete_skill',
   // Post Studio board (0069) — positions + edges for the content-plan canvas.
   'get_post_board', 'save_post_board',
+  // Newsletters (0070). The SEND itself is deliberately absent: it runs
+  // server-side on a cron in /api/newsletters/send, which holds the Resend key
+  // and the per-batch cap. queue_newsletter only materialises delivery rows.
+  'get_newsletter_lists', 'save_newsletter_list', 'delete_newsletter_list',
+  'get_newsletter_subscribers', 'upsert_newsletter_subscriber',
+  'set_newsletter_subscriber_status', 'delete_newsletter_subscriber',
+  'get_newsletters', 'get_newsletter', 'save_newsletter', 'delete_newsletter',
+  'queue_newsletter', 'cancel_newsletter',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*
