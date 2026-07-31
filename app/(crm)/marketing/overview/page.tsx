@@ -100,7 +100,7 @@ export default function MarketingOverview() {
               ].map((q) => (
                 <Link key={q.label} href={q.href}
                   className="group flex items-center gap-3 card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
-                  <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-inverse flex items-center justify-center">
                     <q.icon className={`w-4 h-4 ${q.tone}`} />
                   </div>
                   <div className="min-w-0">

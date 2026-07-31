@@ -92,8 +92,8 @@ export default function BillingPage() {
 
                 {/* Current subscription */}
                 <div className="mb-6 card-surface p-5 flex flex-wrap items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
-                        <CreditCard className="w-4 h-4 text-tertiary" />
+                    <div className="w-10 h-10 rounded-xl bg-inverse flex items-center justify-center shrink-0">
+                        <CreditCard className="w-4 h-4 text-inverse-fg" />
                     </div>
                     <div className="min-w-0">
                         <div className="text-2xs font-medium uppercase tracking-wide text-tertiary">Current plan</div>

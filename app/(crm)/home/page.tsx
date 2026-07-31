@@ -151,8 +151,8 @@ export default function WorkspaceHome() {
             <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
               {pillars.map((p) => (
                 <Link key={p.label} href={p.href} className="group card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
-                  <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mb-3">
-                    <p.icon className="w-4 h-4 text-secondary" />
+                  <div className="w-9 h-9 rounded-xl bg-inverse flex items-center justify-center mb-3">
+                    <p.icon className="w-4 h-4 text-inverse-fg" />
                   </div>
                   <div className="text-sm font-medium text-primary truncate">{p.label}</div>
                   <div className="text-xs text-tertiary truncate">{p.desc}</div>

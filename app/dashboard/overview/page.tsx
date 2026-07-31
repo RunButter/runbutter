@@ -12,6 +12,7 @@ import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard from '@/components/ui/StatCard';
 import PageHeader from '@/components/ui/PageHeader';
 import SectionCard from '@/components/ui/SectionCard';
+import ListRow, { RowTile } from '@/components/ui/ListRow';
 
 const fmtDate = (s?: string | null) => {
   if (!s) return '—';
@@ -90,18 +91,16 @@ export default function HrOverviewPage() {
           </SectionCard>
 
           <SectionCard title="Quick actions">
-            <div className="-mx-2 space-y-0.5">
+            <div className="-mx-5">
               {QUICK.slice(0, 4).map((q) => (
-                <Link key={q.label} href={q.href} className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-sunken transition-colors">
-                  <div className="w-9 h-9 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
-                    <q.icon className="w-4 h-4 text-secondary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-primary truncate">{q.label}</div>
-                    <div className="text-2xs text-tertiary truncate">{q.desc}</div>
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-tertiary group-hover:text-secondary transition-colors shrink-0" />
-                </Link>
+                <ListRow
+                  key={q.label}
+                  href={q.href}
+                  leading={<RowTile><q.icon className="w-4 h-4" /></RowTile>}
+                  title={q.label}
+                  sub={q.desc}
+                  trailing={<ArrowUpRight className="w-4 h-4 text-tertiary" />}
+                />
               ))}
             </div>
           </SectionCard>
@@ -129,17 +128,21 @@ export default function HrOverviewPage() {
               {hr.recent.map((c) => {
                 const st = hrStatus(c.status);
                 return (
-                  <Link key={c.id} href={`/dashboard/candidates/${c.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-sunken/70 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-surface-hover text-secondary text-2xs font-semibold flex items-center justify-center shrink-0">
-                      {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-primary truncate">{c.full_name}</div>
-                      <div className="text-2xs text-tertiary truncate">{c.email}{c.position_title ? ` · ${c.position_title}` : ''}</div>
-                    </div>
+                  <ListRow
+                    key={c.id}
+                    href={`/dashboard/candidates/${c.id}`}
+                    leading={
+                      <span className="w-9 h-9 rounded-full bg-surface-hover text-secondary text-2xs font-medium flex items-center justify-center">
+                        {(c.full_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
+                      </span>
+                    }
+                    title={c.full_name}
+                    sub={`${c.email}${c.position_title ? ` · ${c.position_title}` : ''}`}
+                    trailing={<>
                     <span className="hidden sm:block text-2xs text-tertiary tabular-nums">{fmtDate(c.applied_at)}</span>
-                    <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-semibold ring-1 ${st.cls}`}>{st.label}</span>
-                  </Link>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-medium ring-1 ${st.cls}`}>{st.label}</span>
+                    </>}
+                  />
                 );
               })}
             </div>

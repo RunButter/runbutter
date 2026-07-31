@@ -95,17 +95,18 @@ module.exports = {
         // could not be changed at all without a thousand-line diff — that is the
         // actual reason it stayed too small. Adjust density HERE now.
         //
-        // Leading is generous relative to the size: line-height is what makes
-        // small text readable, and it was the tighter of the two problems.
-        '3xs': ['12px', '16px'],   // legal/footnote only — not for UI labels
-        '2xs': ['13px', '18px'],   // meta lines, table sub-values, counts
-        xs: ['14px', '20px'],      // secondary labels, filter chips
-        sm: ['15px', '22px'],      // DEFAULT UI text: rows, inputs, buttons, nav
-        base: ['16px', '24px'],    // section titles, emphasised body
-        md: ['18px', '26px'],      // page titles
+        // Leading is deliberately loose (~1.5). Line-height is what makes a dense
+        // app feel calm rather than stacked, and it costs no layout work because
+        // the sizes themselves do not move.
+        '3xs': ['12px', '18px'],   // legal/footnote only — not for UI labels
+        '2xs': ['13px', '20px'],   // meta lines, table sub-values, counts
+        xs: ['14px', '22px'],      // secondary labels, filter chips
+        sm: ['15px', '24px'],      // DEFAULT UI text: rows, inputs, buttons, nav
+        base: ['16px', '26px'],    // section titles, emphasised body
+        md: ['18px', '28px'],      // page titles
         // The one display size the product UI owns: a KPI figure. Named rather
         // than written as text-[26px] so it moves with the rest of the scale.
-        stat: ['30px', '34px'],
+        stat: ['30px', '38px'],
         // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },

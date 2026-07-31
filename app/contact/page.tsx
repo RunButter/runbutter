@@ -159,8 +159,8 @@ export default function ContactPage() {
 function InfoRow({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) {
     return (
         <div className="flex items-start gap-3 card-surface p-4">
-            <div className="w-8 h-8 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0">
-                <Icon className="w-4 h-4 text-tertiary" />
+            <div className="w-8 h-8 rounded-xl bg-inverse flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4 text-inverse-fg" />
             </div>
             <div className="min-w-0">
                 <div className="text-2xs font-medium uppercase tracking-wide text-tertiary">{label}</div>
