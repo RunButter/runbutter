@@ -1,6 +1,7 @@
 # Roadmap — Newsletters, Marketing Automation, Team Chat
 
-Status: **plan**. Phase 1 data model is built (0070); everything else below is unbuilt.
+Status: **in progress**. Phase 1 data model (0070) and send pipeline (0071 + routes + templates)
+are built and verified. The UI and the AI builder are not. Phases 2 and 3 are unbuilt.
 
 ---
 
@@ -75,14 +76,22 @@ reminder runner: claim a batch, send, mark, repeat.
 `List-Unsubscribe` and `List-Unsubscribe-Post` headers. This is not a nicety: Gmail and Yahoo
 require one-click unsubscribe for bulk senders, and without it deliverability collapses.
 
-### Still to build in phase 1
-- [ ] `/api/newsletters/send` — batch claim + Resend + delivery marking (cron-driven)
-- [ ] Open pixel + click redirect that write to `newsletter_events`
-- [ ] `/u/[token]` one-click unsubscribe page + `List-Unsubscribe` headers
-- [ ] Resend bounce/complaint webhook → mark subscriber `bounced` / `complained`
-- [ ] UI: lists, subscribers, import CSV, newsletter composer, send/schedule, per-send stats
-- [ ] 3 templates (below)
-- [ ] AI builder (below)
+### Phase 1 status
+- [x] `/api/newsletters/send` — batch claim + Resend + delivery marking (cron-driven)
+- [x] Open pixel (`/api/n/o/[id]`) + signed click redirect (`/api/n/c/[id]`)
+- [x] `/api/n/u/[token]` one-click unsubscribe (GET + POST) with `List-Unsubscribe` headers
+- [x] `/api/n/confirm/[token]` double opt-in
+- [x] 3 templates + plain-text alternative
+- [x] `record_newsletter_feedback` for bounce/complaint
+- [ ] **Resend webhook route** to call it — the RPC exists, nothing posts to it yet
+- [ ] UI: lists, subscribers, CSV import, composer, send/schedule, per-send stats
+- [ ] AI builder
+
+### Operational requirement
+The sender is cron-driven. Nothing goes out until a Render Cron Job posts to
+`/api/newsletters/send` every minute with `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>`,
+exactly like `/api/automations/dispatch`. `NEXT_PUBLIC_SITE_URL` must also be set, or
+unsubscribe and tracking links are built against the default origin.
 
 ### The three templates
 Deliberately three, not thirty. Each is a token-themed layout, not a drag-and-drop page builder:

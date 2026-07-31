@@ -20,6 +20,11 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Migrations through 0067 are ALL APPLIED** (0065 verified 2026-07-30 via the Supabase connector;
   0066 post schedule + 0067 mind maps confirmed run by the owner 2026-07-31). Don't report any of
   0064–0067 as pending.
+  - **0070 + 0071 (newsletters) are PENDING** — run both. 0071 alters the delivery status
+    constraint that 0070 creates, so the order matters. Nothing mails until a **Render Cron Job**
+    posts to `/api/newsletters/send` every minute with `x-cron-secret: <service-role key>`, and
+    `NEXT_PUBLIC_SITE_URL` must be set or unsubscribe/tracking links point at the wrong origin.
+  - **0069 (post board) is PENDING** if not yet run.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
     skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
@@ -147,6 +152,19 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
   the model sends by id, so putting either into a stored run transcript is a leak for no gain.
   Note this is exposed over `/api/mcp` too, like every other tool.
+- **Newsletters (0070/0071)** are a NATIVE build, not a port. listmonk is **AGPL-3.0** and Mautic
+  is **GPL-3.0** — copying either would force this whole product off MIT, so don't "just borrow a
+  file" from them. Concepts only.
+  - Sending is **at-most-once on purpose**: a delivery moves to `sending` BEFORE the provider call,
+    and a stale claim is swept to `failed`, never back to `pending`. A duplicate to a whole list is
+    a public incident; a miss is a support question. Don't "fix" this into a retry.
+  - `uq_nl_deliveries (newsletter_id, subscriber_id)` is what makes double-sending structurally
+    impossible. The batch claim uses `FOR UPDATE SKIP LOCKED` inside a data-modifying CTE —
+    `RETURNING ... INTO` there raises on any batch larger than one row.
+  - Re-importing a CSV **never** re-enables an unsubscribed address, and never overwrites the
+    original consent record.
+  - Click links are **HMAC-signed** (`lib/marketing/newsletter-links.ts`). An unsigned tracking
+    redirect is an open redirect that lends our domain to phishing.
 - **Skills (0068)** are reusable instruction packs on `agents.skill_ids uuid[]`. `suggested_tools`
   is a **hint for the UI, never a grant**: the runner's tool list comes from the agent alone, and
   `skillBlock()` must never touch `allowed`. `/api/skills/import` reads public GitHub SKILL.md
