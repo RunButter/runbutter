@@ -232,6 +232,9 @@ export const NAV = [
     // its whole value is that uploaded documents become searchable rows in the
     // same database as the ledger.
     { slug: 'files', label: 'Files', icon: 'FolderOpen', href: '/files' },
+    // Maps sits with Docs and Files: it is a place to think, not a module of
+    // the business. Free-form canvas, so it belongs to no pillar.
+    { slug: 'maps', label: 'Maps', icon: 'Waypoints', href: '/maps' },
     { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
   ]},
   { group: 'Sales', items: [
