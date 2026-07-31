@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, MessageCircle, Loader2 } from 'lucide-react';
-import { loadPosts, savePost, type PostListItem } from '@/lib/crm/data';
+import { Plus, MessageCircle, Loader2, CalendarDays, LayoutGrid } from 'lucide-react';
+import { loadPosts, savePost, setPostSchedule, type PostListItem } from '@/lib/crm/data';
+import PostCalendar from '@/components/crm/PostCalendar';
 import { useDialog } from '@/components/ui/Dialog';
 
 const PLATFORM_CHIP: Record<string, string> = {
@@ -30,6 +31,9 @@ export default function PostsPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  // Calendar first: planning is the job people come to Post Studio for, and the
+  // grid only ever answered "what exists", never "what goes out when".
+  const [view, setView] = useState<'calendar' | 'grid'>('calendar');
 
   useEffect(() => {
     if (!ready) return;
@@ -45,6 +49,16 @@ export default function PostsPage() {
     else if (res.error) notify(res.error);
   };
 
+  // Optimistic: a drag should land instantly. On failure the post snaps back and
+  // the reason is shown, rather than the card sitting on a day it never reached.
+  const reschedule = async (id: string, at: string | null) => {
+    if (!privy) return;
+    const before = posts;
+    setPosts((ps) => ps.map((p) => (p.id === id ? { ...p, scheduled_at: at } : p)));
+    const { error } = await setPostSchedule(privy, id, at);
+    if (error) { setPosts(before); notify(error); }
+  };
+
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
@@ -52,10 +66,22 @@ export default function PostsPage() {
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
         <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
         <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
-        <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
-          className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40 disabled:cursor-not-allowed">
-          {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New post
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center rounded-lg bg-surface-hover p-0.5">
+            {([['calendar', CalendarDays, 'Calendar'], ['grid', LayoutGrid, 'Grid']] as const).map(([v, Icon, label]) => (
+              <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
+                className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
+                  view === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
+                }`}>
+                <Icon className="w-3.5 h-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+          <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
+            className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} New post
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
@@ -63,6 +89,10 @@ export default function PostsPage() {
           <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
         ) : posts.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No posts yet — create your first one.</div>
+        ) : view === 'calendar' ? (
+          <div className="max-w-5xl">
+            <PostCalendar posts={posts} onOpen={(id) => router.push(`/marketing/posts/${id}`)} onReschedule={reschedule} />
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
             {posts.map((p) => (

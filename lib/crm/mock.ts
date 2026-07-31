@@ -219,10 +219,14 @@ export function mockSiteStats(days: number) {
 // Social post studio samples (PreFeed port).
 const POST_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='%236366F1'/><rect x='60' y='180' width='480' height='240' rx='24' fill='%23818CF8'/><rect x='120' y='240' width='360' height='120' rx='16' fill='%23C7D2FE'/><text x='300' y='520' font-size='34' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='bold'>New PVC bus covers</text></svg>";
 
+// Dates are relative to today so the sample calendar is never looking at an
+// empty month. One is left undated on purpose, to show the backlog.
+const inDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(9, 0, 0, 0); return d.toISOString(); };
+
 export const MOCK_POSTS = [
-  { id: 'p1', platform: 'instagram', handle: '@buscovers_pl', content: 'Nowa kolekcja pokrowców PVC już dostępna! 🚌 Odporne na UV i deszcz. #buscovers #pvc', image_url: POST_IMG, status: 'in_review', comment_count: 2 },
-  { id: 'p2', platform: 'linkedin', handle: 'BusCovers PL', content: 'We just shipped custom-fit covers for a fleet of 40 city buses — cutting weather damage costs by 60%. Case study in comments.', image_url: POST_IMG, status: 'draft', comment_count: 0 },
-  { id: 'p3', platform: 'x', handle: '@buscovers_pl', content: 'Fleet managers: weather damage is eating your budget. Custom PVC covers pay for themselves in one season. 🧵', image_url: null, status: 'approved', comment_count: 1 },
+  { id: 'p1', platform: 'instagram', handle: '@buscovers_pl', content: 'Nowa kolekcja pokrowców PVC już dostępna! 🚌 Odporne na UV i deszcz. #buscovers #pvc', image_url: POST_IMG, status: 'in_review', comment_count: 2, scheduled_at: inDays(1) },
+  { id: 'p2', platform: 'linkedin', handle: 'BusCovers PL', content: 'We just shipped custom-fit covers for a fleet of 40 city buses — cutting weather damage costs by 60%. Case study in comments.', image_url: POST_IMG, status: 'draft', comment_count: 0, scheduled_at: inDays(3) },
+  { id: 'p3', platform: 'x', handle: '@buscovers_pl', content: 'Fleet managers: weather damage is eating your budget. Custom PVC covers pay for themselves in one season. 🧵', image_url: null, status: 'approved', comment_count: 1, scheduled_at: inDays(8) },
 ];
 
 export function mockPostDetail(id: string) {

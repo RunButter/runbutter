@@ -667,6 +667,24 @@ export type PostPlatform = 'instagram' | 'facebook' | 'x' | 'linkedin';
 export interface PostListItem {
   id: string; platform: PostPlatform; handle?: string | null; content: string;
   image_url?: string | null; status: string; updated_at?: string; comment_count: number;
+  /** 0066. Null means the post is in the backlog rather than on the calendar. */
+  scheduled_at?: string | null;
+}
+
+/**
+ * Move a post to a date, or back to the backlog with null.
+ *
+ * Deliberately not savePost: dragging a card across a calendar should not
+ * round-trip the post body, and doing so would overwrite a concurrent edit in
+ * another tab with whatever the dragging client last read.
+ */
+export async function setPostSchedule(privyUserId: string, id: string, at: string | null): Promise<{ error?: string }> {
+  const { error } = await rpc('set_post_schedule', { p_privy: privyUserId, p_id: id, p_at: at });
+  if (!error) return {};
+  if (/does not exist|schema cache/i.test(error.message)) {
+    return { error: 'Scheduling is not set up yet — run migration 0066 in Supabase.' };
+  }
+  return { error: error.message };
 }
 export interface PostCommentRow { id: string; author: string; body: string; x?: number | null; y?: number | null; resolved: boolean; created_at?: string }
 export interface PostDetail {
