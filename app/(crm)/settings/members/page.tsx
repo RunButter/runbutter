@@ -62,7 +62,7 @@ export default function MembersPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Members &amp; roles</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{members.length}</span>
         {ws && <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${ROLE_TONE[ws.role] || ROLE_TONE.member}`}>you: {ws.role}</span>}

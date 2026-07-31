@@ -9,6 +9,7 @@ import {
   type Automation, type AutomationRun, type Connection, type Condition, type Action, type TriggerType,
 } from '@/lib/crm/automations';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
 const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
@@ -77,10 +78,10 @@ export default function AutomationsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Automations</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-1.5">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {([['board', Workflow, 'Board'], ['list', List, 'List']] as const).map(([v, Icon, label]) => (

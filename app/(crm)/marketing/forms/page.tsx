@@ -73,7 +73,7 @@ export default function FormsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Forms</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (

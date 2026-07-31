@@ -7,6 +7,7 @@ import { Plus, Columns3, Table2, Loader2 } from 'lucide-react';
 import { loadIssueBoard } from '@/lib/crm/data';
 import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
+import DataBadge from '@/components/ui/DataBadge';
 
 export default function IssueBoardPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -27,12 +28,10 @@ export default function IssueBoardPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Issues</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{board.records.length}</span>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-          {live ? 'Live' : 'Sample'}
-        </span>
+        <DataBadge live={live} />
         <div className="ml-1 flex items-center rounded-md ring-1 ring-subtle overflow-hidden">
           <span className="h-7 px-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-surface text-primary"><Columns3 className="w-3.5 h-3.5" /> Board</span>
           <Link href="/objects/issues" className="h-7 px-2 inline-flex items-center gap-1.5 text-xs font-medium text-tertiary hover:bg-surface-sunken"><Table2 className="w-3.5 h-3.5" /> Table</Link>

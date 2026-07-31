@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { FileText, Plus, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { loadDocs, saveDoc, deleteDoc, type DocMeta } from '@/lib/crm/docs';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 const fmt = (s: string) => new Date(s).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -42,10 +43,10 @@ export default function DocsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Docs</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <DataBadge live={live} />
         <button onClick={create} disabled={!canEdit || creating} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>{creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New doc</button>
       </header>
 

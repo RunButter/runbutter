@@ -64,7 +64,11 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
       <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
-      <main className="flex-1 flex flex-col overflow-hidden bg-surface lg:border-l lg:border-subtle">
+      {/* One surface, not two. This was bg-surface with a left border, so the
+          grey rail sat beside a white page and the app read as two panels
+          bolted together. Rail, header and page are now the same canvas, and
+          the only white things are the cards floating on it. */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-canvas">
         <header className="lg:hidden h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
           <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-md">
             <Menu className="w-5 h-5" />

@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Loader2 } from 'lucide-react';
 import { loadRoadmap, type RoadmapProject } from '@/lib/crm/data';
 import RoadmapTimeline from '@/components/crm/RoadmapTimeline';
+import DataBadge from '@/components/ui/DataBadge';
 
 // Must stay in step with PRIORITY_COLOR in components/crm/RoadmapTimeline.tsx.
 const PRIORITY: [string, string][] = [
@@ -25,11 +26,9 @@ export default function RoadmapPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Roadmap</h1>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-          {live ? 'Live' : 'Sample'}
-        </span>
+        <DataBadge live={live} />
         <div className="ml-auto hidden sm:flex items-center gap-3 text-2xs font-semibold">
           {PRIORITY.map(([label, color]) => (
             <span key={label} className="inline-flex items-center gap-1.5 text-secondary">

@@ -7,6 +7,7 @@ import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2, A
 import { loadFinanceAnalytics, loadBankAccounts, type FinanceAnalytics, type BankAccount } from '@/lib/crm/data';
 import FinanceChart from '@/components/crm/FinanceChart';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
+import DataBadge from '@/components/ui/DataBadge';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -52,11 +53,9 @@ export default function FinanceOverview() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Finance</h1>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-          {live ? 'Live' : 'Sample'}
-        </span>
+        <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
           {PERIODS.map((p) => (
             <button key={p.label} onClick={() => setMonths(p.months)}

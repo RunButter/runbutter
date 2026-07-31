@@ -185,9 +185,9 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       <div className="px-2 pb-3">
         <button
           onClick={() => window.dispatchEvent(new Event('runbutter:command'))}
-          className="w-full flex items-center gap-2 h-10 px-3 rounded-lg text-sm text-tertiary bg-surface-sunken ring-1 ring-subtle hover:bg-surface-hover hover:text-secondary transition-colors">
+          className="w-full flex items-center gap-2 h-10 px-3 rounded-lg text-sm text-tertiary bg-surface shadow-sm hover:text-secondary transition-colors">
           <Search className="w-3.5 h-3.5 shrink-0" /> Search
-          <kbd className="ml-auto shrink-0 rounded border border-subtle bg-surface px-1.5 py-0.5 text-2xs font-mono text-tertiary leading-none">⌘K</kbd>
+          <kbd className="ml-auto shrink-0 rounded bg-surface-hover px-1.5 py-0.5 text-2xs font-mono text-tertiary leading-none">⌘K</kbd>
         </button>
       </div>
 

@@ -16,6 +16,7 @@ import {
 import { toCSV, downloadCSV, parseCSV, autoMatch } from '@/lib/crm/csv';
 import RecordForm from '@/components/crm/RecordForm';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 const PERIODS = [{ label: '1M', months: 1 }, { label: '3M', months: 3 }, { label: '6M', months: 6 }, { label: '12M', months: 12 }];
 const OBJ = OBJECTS.transactions;
@@ -118,9 +119,9 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Transactions</h1>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-1.5">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />

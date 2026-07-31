@@ -19,6 +19,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { Package } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 export default function ObjectPage() {
   const { notify } = useDialog();
@@ -135,7 +136,7 @@ export default function ObjectPage() {
       <PageHeader
         title={object.plural}
         count={filtered.length}
-        badge={<Badge tone={live ? 'success' : 'warning'}>{live ? 'Live' : 'Sample'}</Badge>}
+        badge={<DataBadge live={live} />}
       >
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />

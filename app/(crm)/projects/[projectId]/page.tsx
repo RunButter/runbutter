@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Plus, CheckCircle2, Circle, Clock } from 'lucide-re
 import { loadProject } from '@/lib/crm/data';
 import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
+import DataBadge from '@/components/ui/DataBadge';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-success/10 text-success ring-success/30',
@@ -57,7 +58,7 @@ export default function ProjectDashboard() {
           <h1 className="text-md font-medium text-primary">{project?.name || 'Project'}</h1>
           {project?.identifier && <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
           {project?.status && <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
-          <span className={`ml-1 text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+          <DataBadge live={live} />
           <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
         </div>
       </header>

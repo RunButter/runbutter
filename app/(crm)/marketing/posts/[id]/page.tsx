@@ -11,6 +11,7 @@ import {
 } from '@/lib/crm/data';
 import PostCanvas from '@/components/marketing/PostCanvas';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 const PLATFORMS: PostPlatform[] = ['instagram', 'facebook', 'x', 'linkedin'];
 const STATUSES = ['draft', 'in_review', 'approved', 'published'];
@@ -110,7 +111,7 @@ export default function PostStudio() {
       <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
         <button onClick={() => router.push('/marketing/posts')} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-3.5 h-3.5" /> Posts</button>
         <h1 className="text-md font-medium text-primary">Post studio</h1>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${post.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{post.live ? 'Live' : 'Sample'}</span>
+        <DataBadge live={post.live} />
         <div className="ml-auto flex items-center gap-2">
           <select value={post.status} onChange={(e) => set({ status: e.target.value })}
             className="h-7 px-2 text-xs font-semibold rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30 capitalize">

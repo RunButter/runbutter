@@ -10,6 +10,7 @@ import PostBoard from '@/components/crm/PostBoard';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { loadPostBoard, EMPTY_BOARD, type PostBoardGraph } from '@/lib/crm/postboard';
 import { useDialog } from '@/components/ui/Dialog';
+import DataBadge from '@/components/ui/DataBadge';
 
 const PLATFORM_CHIP: Record<string, string> = {
   instagram: 'bg-accent/10 text-accent ring-accent/30',
@@ -75,10 +76,10 @@ export default function PostsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Posts</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
-        <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{live ? 'Live' : 'Sample'}</span>
+        <DataBadge live={live} />
         <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center rounded-lg bg-surface-hover p-0.5">

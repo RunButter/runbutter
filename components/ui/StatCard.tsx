@@ -92,14 +92,15 @@ export default function StatCard({
             of cards showed a green badge on one and a grey box on the rest.
             Top-right is now real data or nothing.
 
-            Small uppercase label over a large figure. Uppercase is noticeably
-            wider than sentence case, which is why the KPI grid drops to TWO
-            across on a phone rather than three — at three, "Candidates" and
-            "Interviews" truncated mid-word. The icon still drops below sm to buy
-            the label back some width. */}
+            The label was small-uppercase-tracking-wider; it is now sentence
+            case. Four shouting labels above four large figures competed with
+            the numbers they were labelling. This also RELIEVES the width
+            problem uppercase created — sentence case is narrower, so
+            "Candidates" and "Interviews" no longer depend on the KPI grid
+            dropping to two across on a phone to avoid truncating mid-word. */}
         <span className="flex items-center gap-1.5 min-w-0">
           {Icon && <Icon className="w-3.5 h-3.5 shrink-0 text-tertiary hidden sm:block" />}
-          <span className="text-3xs font-medium uppercase tracking-wider text-tertiary truncate">{label}</span>
+          <span className="text-xs font-medium text-tertiary truncate">{label}</span>
         </span>
         {trend && (
           <span className={cn(
