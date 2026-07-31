@@ -11,6 +11,7 @@ import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
+import Comparison from '@/components/landing/Comparison';
 import Reveal from '@/components/landing/Reveal';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
@@ -101,6 +102,7 @@ export default function HomePage() {
           <nav className="flex items-center gap-2 md:gap-6 text-sm text-secondary">
             <Link href="#features" className="hidden md:inline hover:text-primary transition-colors">Features</Link>
             <Link href="#developers" className="hidden md:inline hover:text-primary transition-colors">Developers</Link>
+            <Link href="#compare" className="hidden md:inline hover:text-primary transition-colors">Compare</Link>
             <Link href="#pricing" className="hidden md:inline hover:text-primary transition-colors">Pricing</Link>
             <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 hover:text-primary transition-colors"><Github className="w-4 h-4" /> GitHub</a>
             <ThemeToggle />
@@ -265,6 +267,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Comparison />
+
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
       <section id="pricing" className="border-t border-subtle">
         <div className="max-w-6xl mx-auto px-6 py-20">
@@ -355,6 +359,7 @@ export default function HomePage() {
             <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Product</div>
             <ul className="space-y-2 text-xs text-secondary">
               <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
+              <li><Link href="#compare" className="hover:text-primary transition-colors">Compare</Link></li>
               <li><Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
               <li><a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>
               <li><Link href="/auth/register" className="hover:text-primary transition-colors">Start free</Link></li>
