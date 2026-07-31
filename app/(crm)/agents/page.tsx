@@ -2,12 +2,18 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight } from 'lucide-react';
+import {
+  Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight,
+  Wallet, AlarmClock, TrendingUp, UserSearch, FileSearch, Handshake, Sunrise,
+  type LucideIcon,
+} from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun,
-  READ_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, type Agent, type AgentRun,
+  DEFAULT_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, TOOL_CATALOG, TOOL_GROUPS,
+  type Agent, type AgentRun,
 } from '@/lib/crm/agents';
+import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -15,8 +21,32 @@ import { useDialog } from '@/components/ui/Dialog';
 
 const BLANK: Partial<Agent> = {
   name: '', role: '', instructions: '', model: '',
-  allowed_tools: [...READ_TOOLS], allowed_objects: [], autonomy: 'suggest', max_steps: 12,
+  allowed_tools: [...DEFAULT_TOOLS], allowed_objects: [], autonomy: 'suggest', max_steps: 12,
 };
+
+/** A template is just a prefilled editor payload — no id, so saving creates. */
+function fromTemplate(t: AgentTemplate): Partial<Agent> {
+  return {
+    name: t.name, role: t.role, instructions: t.instructions, model: '',
+    allowed_tools: [...t.allowed_tools], allowed_objects: [...t.allowed_objects],
+    // Deliberately not taken from the template: a gallery agent installed in ten
+    // seconds must not be able to write before someone has watched it run once.
+    autonomy: 'suggest', max_steps: t.max_steps,
+  };
+}
+
+const TEMPLATE_ICONS: Record<string, LucideIcon> = {
+  Wallet, AlarmClock, TrendingUp, UserSearch, FileSearch, ShieldCheck, Handshake, Sunrise,
+};
+
+function TemplateIcon({ name }: { name: string }) {
+  const Icon = TEMPLATE_ICONS[name] ?? Bot;
+  return (
+    <span className="w-7 h-7 rounded-md bg-surface-hover flex items-center justify-center shrink-0">
+      <Icon className="w-3.5 h-3.5 text-accent" />
+    </span>
+  );
+}
 
 export default function AgentsPage() {
   const { confirm: confirmDialog, notify } = useDialog();
@@ -106,10 +136,40 @@ export default function AgentsPage() {
             {agents.length === 0 && privy && (
               <div className="sm:col-span-2 rounded-lg border border-dashed border-subtle p-10 text-center">
                 <Bot className="w-6 h-6 text-tertiary mx-auto mb-2" />
-                <p className="text-sm text-secondary">No agents yet. Create one to get started.</p>
+                <p className="text-sm text-secondary">No agents yet. Hire one below, or build your own.</p>
               </div>
             )}
           </section>
+
+          {/* Gallery. A blank form is the wrong first screen: knowing that a
+              finance agent needs get_finance_summary + get_ledger and should stay
+              in suggest mode is exactly what a new user doesn't know yet. Each
+              card opens the SAME editor, prefilled — not a second code path. */}
+          {privy && (
+            <section>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Hire an agent</h2>
+              <p className="text-xs text-secondary mb-3 max-w-2xl">
+                Ready-made configurations. Each one opens in the editor so you can read its
+                instructions and adjust its access before saving — all of them start in approve-writes mode.
+              </p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {AGENT_TEMPLATES.map((t) => (
+                  <button key={t.key} onClick={() => setEditing(fromTemplate(t))}
+                    className="text-left rounded-lg border border-subtle bg-surface p-3.5 hover:border-strong hover:shadow-card transition-all">
+                    <div className="flex items-center gap-2">
+                      <TemplateIcon name={t.icon} />
+                      <h3 className="text-sm font-medium text-primary truncate">{t.name}</h3>
+                    </div>
+                    <p className="text-xs text-secondary mt-1.5 line-clamp-2">{t.summary}</p>
+                    <div className="flex items-center gap-1.5 mt-2.5">
+                      <Badge tone="neutral">{t.group}</Badge>
+                      <span className="text-3xs text-tertiary">{t.allowed_tools.length} tools</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Run history */}
           {runs.length > 0 && (
@@ -179,7 +239,7 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
 
 // ── Editor modal ──────────────────────────────────────────────────────────────
 function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
-  const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...READ_TOOLS], allowed_objects: initial.allowed_objects || [] });
+  const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...DEFAULT_TOOLS], allowed_objects: initial.allowed_objects || [] });
   const [saving, setSaving] = useState(false);
   const set = (k: keyof Agent, v: any) => setA((p) => ({ ...p, [k]: v }));
   const toggleTool = (t: string) => set('allowed_tools', a.allowed_tools?.includes(t) ? a.allowed_tools.filter((x) => x !== t) : [...(a.allowed_tools || []), t]);
@@ -217,14 +277,38 @@ function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; on
             </div>
           </Field>
 
-          <Field label="Tools">
-            <div className="flex flex-wrap gap-1.5">
-              {[...READ_TOOLS, ...WRITE_TOOLS].map((t) => (
-                <button key={t} onClick={() => toggleTool(t)}
-                  className={`text-2xs font-mono px-2 py-1 rounded border transition-colors ${a.allowed_tools?.includes(t) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>
-                  {t}{WRITE_TOOLS.includes(t) ? ' ✎' : ''}
-                </button>
-              ))}
+          {/* Grouped by module, and showing all 22 tools. The flat list here used
+              to render a stale 6-name copy of the catalogue, so finance, files,
+              candidate and analytics tools were simply not grantable. */}
+          <Field label="Tools" hint="✎ marks a tool that changes data.">
+            <div className="space-y-2.5">
+              {TOOL_GROUPS.map((g) => {
+                const inGroup = TOOL_CATALOG.filter((t) => t.group === g);
+                const onCount = inGroup.filter((t) => a.allowed_tools?.includes(t.name)).length;
+                const allOn = onCount === inGroup.length;
+                return (
+                  <div key={g}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-3xs uppercase tracking-wide text-tertiary">{g}</span>
+                      <button
+                        onClick={() => set('allowed_tools', allOn
+                          ? (a.allowed_tools || []).filter((x) => !inGroup.some((t) => t.name === x))
+                          : Array.from(new Set([...(a.allowed_tools || []), ...inGroup.map((t) => t.name)])))}
+                        className="text-3xs text-tertiary hover:text-accent">
+                        {allOn ? 'none' : 'all'}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {inGroup.map((t) => (
+                        <button key={t.name} onClick={() => toggleTool(t.name)} title={t.name}
+                          className={`text-2xs px-2 py-1 rounded border transition-colors ${a.allowed_tools?.includes(t.name) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>
+                          {t.label}{t.write ? ' ✎' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Field>
 
@@ -258,6 +342,7 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
   const [busy, setBusy] = useState(false);
   const [out, setOut] = useState<any | null>(null);
   const [err, setErr] = useState('');
+  const examples = AGENT_TEMPLATES.find((t) => t.name === agent.name)?.examples ?? [];
 
   const run = async () => {
     if (!task.trim()) return;
@@ -282,6 +367,18 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
         </div>
         <div className="p-4 space-y-3">
           <textarea autoFocus value={task} onChange={(e) => setTask(e.target.value)} rows={3} className="input-field !h-auto py-2 resize-y" placeholder="Describe the task, e.g. 'List overdue invoices and draft a reminder task for each.'" />
+          {/* Only shown for an agent still carrying a template's name — once it's
+              renamed we no longer know these examples suit it. */}
+          {examples.length > 0 && !task && (
+            <div className="flex flex-wrap gap-1.5">
+              {examples.map((ex) => (
+                <button key={ex} onClick={() => setTask(ex)}
+                  className="text-2xs text-left px-2 py-1 rounded border border-subtle text-tertiary hover:border-strong hover:text-secondary transition-colors">
+                  {ex}
+                </button>
+              ))}
+            </div>
+          )}
           <Button variant="primary" onClick={run} disabled={busy || !task.trim()} className="w-full">
             {busy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Working…</> : <><Play className="w-3.5 h-3.5" /> Run</>}
           </Button>

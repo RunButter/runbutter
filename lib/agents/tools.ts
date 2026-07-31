@@ -70,20 +70,21 @@ export const TOOLS = [
   { name: 'get_file_text', description: 'The full extracted text of one file. Can be long — prefer search_files when looking for a passage.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
 ] as const;
 
-export const READ_TOOLS = [
-  'list_objects', 'list_records', 'search_records', 'get_record',
-  'get_finance_summary', 'get_finance_trends', 'get_ledger',
-  // screen_sanctions appends a row to its own audit trail, which is the entire
-  // point of the feature — but it mutates no business data, so gating it behind
-  // write approval would just stop agents from running compliance checks.
-  'screen_sanctions', 'get_sanctions_status',
-  'validate_iban', 'parse_invoice_text',
-  'list_sites', 'get_site_stats',
-  'list_positions', 'search_candidates', 'get_candidate', 'get_hiring_pipeline',
-  'search_files', 'list_files', 'get_file_text',
-];
-export const WRITE_TOOLS = ['create_record', 'update_record'];
-export const isWriteTool = (name: string) => WRITE_TOOLS.includes(name);
+// Re-exported from the catalogue rather than restated here. The builder cannot
+// import this module (it pulls in the admin client), so it used to keep its own
+// copy of these lists — and that copy silently fell sixteen tools behind. One
+// list, imported by both sides, is the only way that stays fixed.
+export { READ_TOOLS, WRITE_TOOLS, isWriteTool } from '@/lib/agents/catalog';
+import { READ_TOOLS as _READ, WRITE_TOOLS as _WRITE } from '@/lib/agents/catalog';
+
+// Fails loudly at import time if a tool is added to TOOLS without a catalogue
+// entry — otherwise it would exist in the executor and be ungrantable in the UI,
+// which is exactly the drift this file just came out of.
+{
+  const known = new Set([..._READ, ..._WRITE]);
+  const orphans = TOOLS.map((t) => t.name).filter((n) => !known.has(n));
+  if (orphans.length) throw new Error(`Tools missing from lib/agents/catalog.ts: ${orphans.join(', ')}`);
+}
 
 const rpcObject = (o: string) => (o === 'offers' ? 'invoices' : o);
 

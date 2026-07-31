@@ -17,9 +17,16 @@ export interface AgentRun {
   created_at: string; finished_at: string | null;
 }
 
-export const READ_TOOLS = ['list_objects', 'list_records', 'search_records', 'get_record'];
-export const WRITE_TOOLS = ['create_record', 'update_record'];
-export const AGENT_OBJECTS = ['companies', 'people', 'invoices', 'offers', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
+// These used to be declared here by hand, and the hand-written READ_TOOLS held
+// four names while the executor had nineteen — so the builder's picker could not
+// grant an agent finance, files, candidate or analytics tools at all. They now
+// come from the one catalogue both sides read.
+export {
+  READ_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, DEFAULT_TOOLS,
+  TOOL_CATALOG, TOOL_GROUPS, toolLabel, isWriteTool,
+  type ToolInfo, type ToolGroup,
+} from '@/lib/agents/catalog';
+import { DEFAULT_TOOLS as FALLBACK_TOOLS } from '@/lib/agents/catalog';
 
 export async function listAgents(privy: string, ws: string): Promise<Agent[]> {
   const { data } = await rpc('get_agents', { p_privy: privy, p_workspace: ws });
@@ -31,7 +38,9 @@ export async function saveAgent(privy: string, ws: string, a: Partial<Agent> & {
     p_privy: privy, p_workspace: ws, p_id: a.id ?? null,
     p_name: a.name || 'New agent', p_role: a.role || '', p_instructions: a.instructions || '',
     p_provider: a.provider || '', p_model: a.model || '',
-    p_allowed_tools: a.allowed_tools || READ_TOOLS,
+    // The look-don't-touch default, not every read tool — an agent saved without
+    // an explicit tool list should not silently arrive holding the ledger.
+    p_allowed_tools: a.allowed_tools?.length ? a.allowed_tools : FALLBACK_TOOLS,
     p_allowed_objects: a.allowed_objects || [],
     p_autonomy: a.autonomy || 'suggest', p_max_steps: a.max_steps || 12,
   });
