@@ -14,6 +14,8 @@ import {
   type Agent, type AgentRun,
 } from '@/lib/crm/agents';
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
+import { listSkills, type Skill } from '@/lib/crm/skills';
+import SkillsSection from '@/components/crm/SkillsSection';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -21,7 +23,7 @@ import { useDialog } from '@/components/ui/Dialog';
 
 const BLANK: Partial<Agent> = {
   name: '', role: '', instructions: '', model: '',
-  allowed_tools: [...DEFAULT_TOOLS], allowed_objects: [], autonomy: 'suggest', max_steps: 12,
+  allowed_tools: [...DEFAULT_TOOLS], allowed_objects: [], skill_ids: [], autonomy: 'suggest', max_steps: 12,
 };
 
 /** A template is just a prefilled editor payload — no id, so saving creates. */
@@ -31,7 +33,7 @@ function fromTemplate(t: AgentTemplate): Partial<Agent> {
     allowed_tools: [...t.allowed_tools], allowed_objects: [...t.allowed_objects],
     // Deliberately not taken from the template: a gallery agent installed in ten
     // seconds must not be able to write before someone has watched it run once.
-    autonomy: 'suggest', max_steps: t.max_steps,
+    autonomy: 'suggest', max_steps: t.max_steps, skill_ids: [],
   };
 }
 
@@ -55,13 +57,14 @@ export default function AgentsPage() {
   const [ws, setWs] = useState<WorkspaceContext | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Agent> | null>(null);
   const [running, setRunning] = useState<Agent | null>(null);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
-    const [a, r] = await Promise.all([listAgents(p, w.id), listRuns(p, w.id)]);
-    setAgents(a); setRuns(r); setLoading(false);
+    const [a, r, sk] = await Promise.all([listAgents(p, w.id), listRuns(p, w.id), listSkills(p, w.id)]);
+    setAgents(a); setRuns(r); setSkills(sk); setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -141,6 +144,8 @@ export default function AgentsPage() {
             )}
           </section>
 
+          {privy && ws && <SkillsSection skills={skills} ws={ws.id} privy={privy} onChange={refresh} />}
+
           {/* Gallery. A blank form is the wrong first screen: knowing that a
               finance agent needs get_finance_summary + get_ledger and should stay
               in suggest mode is exactly what a new user doesn't know yet. Each
@@ -184,7 +189,7 @@ export default function AgentsPage() {
       </div>
 
       {editing && ws && privy && (
-        <AgentEditor initial={editing} onClose={() => setEditing(null)}
+        <AgentEditor initial={editing} skills={skills} onClose={() => setEditing(null)}
           onSave={async (a) => { await saveAgent(privy, ws.id, a); setEditing(null); refresh(); }} />
       )}
       {running && ws && privy && (
@@ -238,12 +243,13 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
 }
 
 // ── Editor modal ──────────────────────────────────────────────────────────────
-function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
-  const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...DEFAULT_TOOLS], allowed_objects: initial.allowed_objects || [] });
+function AgentEditor({ initial, skills, onClose, onSave }: { initial: Partial<Agent>; skills: Skill[]; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
+  const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...DEFAULT_TOOLS], allowed_objects: initial.allowed_objects || [], skill_ids: initial.skill_ids || [] });
   const [saving, setSaving] = useState(false);
   const set = (k: keyof Agent, v: any) => setA((p) => ({ ...p, [k]: v }));
   const toggleTool = (t: string) => set('allowed_tools', a.allowed_tools?.includes(t) ? a.allowed_tools.filter((x) => x !== t) : [...(a.allowed_tools || []), t]);
   const toggleObj = (o: string) => set('allowed_objects', a.allowed_objects?.includes(o) ? a.allowed_objects.filter((x) => x !== o) : [...(a.allowed_objects || []), o]);
+  const toggleSkill = (id: string) => set('skill_ids', a.skill_ids?.includes(id) ? a.skill_ids.filter((x) => x !== id) : [...(a.skill_ids || []), id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -311,6 +317,25 @@ function AgentEditor({ initial, onClose, onSave }: { initial: Partial<Agent>; on
               })}
             </div>
           </Field>
+
+          {skills.length > 0 && (
+            <Field label="Skills" hint="Company knowledge this agent should apply. Never widens its tool access.">
+              <div className="space-y-1">
+                {skills.map((s) => {
+                  const on = a.skill_ids?.includes(s.id);
+                  return (
+                    <label key={s.id} className={`flex items-start gap-2 rounded-md border p-2 cursor-pointer transition-colors ${on ? 'border-accent bg-accent/5' : 'border-subtle hover:border-strong'}`}>
+                      <input type="checkbox" checked={!!on} onChange={() => toggleSkill(s.id)} className="mt-0.5 rounded border-strong accent-accent" />
+                      <span className="min-w-0 flex-1">
+                        <span className="text-xs font-medium text-primary block truncate">{s.name}</span>
+                        {s.description && <span className="text-2xs text-tertiary block truncate">{s.description}</span>}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Field>
+          )}
 
           <Field label="Objects" hint="Leave all off to allow every object.">
             <div className="flex flex-wrap gap-1.5">

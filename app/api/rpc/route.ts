@@ -60,6 +60,8 @@ const ALLOWED = new Set([
   'hr_list_interviews', 'hr_create_candidate', 'hr_delete_candidate', 'hr_list_positions_min',
   // Agents (0043)
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
+  // Skills (0068) — reusable instruction packs attached to agents.
+  'get_skills', 'save_skill', 'delete_skill',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

@@ -8,6 +8,7 @@ export interface Agent {
   provider: string; model: string;
   allowed_tools: string[]; allowed_objects: string[];
   autonomy: 'suggest' | 'auto'; max_steps: number; enabled: boolean;
+  skill_ids: string[];
 }
 
 export interface AgentRun {
@@ -43,6 +44,7 @@ export async function saveAgent(privy: string, ws: string, a: Partial<Agent> & {
     p_allowed_tools: a.allowed_tools?.length ? a.allowed_tools : FALLBACK_TOOLS,
     p_allowed_objects: a.allowed_objects || [],
     p_autonomy: a.autonomy || 'suggest', p_max_steps: a.max_steps || 12,
+    p_skill_ids: a.skill_ids || [],
   });
   return { id: data ?? null, error };
 }
