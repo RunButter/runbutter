@@ -285,9 +285,12 @@ export const NAV = [
     { slug: 'automations', label: 'Automations', icon: 'Zap', href: '/settings/automations' },
   ]},
   // People, not configuration — kept out of Settings deliberately.
+  // A "Directory" link used to sit here pointing at /hris/directory, a route
+  // that was never built — it 404'd for every user who clicked it. It was also
+  // redundant three ways: Settings → Members lists who is in the workspace,
+  // My Team covers your own reports, and /objects/people holds contacts.
   { group: 'Team', items: [
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
-    { slug: 'directory', label: 'Directory', icon: 'Users', href: '/hris/directory' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
   ]},
   // Settings splits by WHO a change affects: everything here changes the
