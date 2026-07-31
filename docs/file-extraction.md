@@ -15,7 +15,8 @@ Migration: `0065_files.sql`. Screen: **Workspace → Files**.
 | PDF with a text layer | `pdfjs-dist`, locally | `text_layer` | none |
 | DOCX | `mammoth`, locally | `text_layer` | none |
 | txt / md / csv / json / html / xml / yaml / log | UTF-8 decode | `text_layer` | none |
-| Scanned PDF, photo of a receipt | self-hosted MinerU, **if configured** | `ocr` | none (your own server) |
+| Photo of a receipt, scanned image | self-hosted vision endpoint or MinerU, **if configured** | `ocr` | none (your own server) |
+| Scanned PDF | self-hosted MinerU, **if configured** | `ocr` | none (your own server) |
 | …with no OCR configured | stored, listed, not searchable by content | `skipped` | none |
 | Legacy `.doc`, archives, unknown | stored, listed, not searchable | `skipped` | none |
 
@@ -37,7 +38,37 @@ the PDF editor. The CV parser (`lib/extract-text.ts`) was switched over too: it 
 the same defect, which meant modern PDF resumes were stored with empty
 `resume_raw_text` and could never be found by keyword search.
 
-## Optional OCR (MinerU)
+## Optional OCR — two backends, both self-hosted
+
+Scans need OCR, and every hosted OCR API meters per page. So OCR is **opt-in and
+self-hosted**, and the backend is pluggable. Set one of these:
+
+```
+# A. Any OpenAI-compatible vision endpoint — this is how vLLM and SGLang serve
+#    Baidu's Unlimited-OCR (MIT) and DeepSeek-OCR. Needs an NVIDIA GPU.
+OCR_API_URL=http://gpu-box:8000/v1
+OCR_MODEL=unlimited-ocr        # defaults to "unlimited-ocr"
+OCR_API_KEY=…                  # optional
+
+# B. MinerU (below). Has a CPU-only backend, so no GPU required.
+MINERU_URL=http://mineru.internal:8000
+```
+
+`OCR_API_URL` wins if both are set — those models read layout and tables far
+better than a classical pipeline.
+
+**They are not interchangeable.** The vision endpoint accepts *images*: OpenAI
+chat-completions takes image content parts, not PDF bytes, and rasterising a PDF
+server-side would mean a native canvas dependency. **A scanned PDF therefore
+still needs `MINERU_URL`** — with only the vision endpoint configured, a scanned
+PDF is recorded `skipped` and says so. Photos and scanned images work with
+either. Running both covers everything.
+
+Nothing about the integration is specific to one model beyond `OCR_MODEL`, which
+is why it is a generic endpoint rather than a named one — point it at whatever
+you serve.
+
+## MinerU specifically
 
 Scans need OCR, and every hosted OCR API meters per page. So OCR is **opt-in and
 self-hosted**: point RunButter at your own [MinerU](https://github.com/opendatalab/MinerU)

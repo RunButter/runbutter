@@ -4,8 +4,10 @@
 //   1. text_layer — a PDF that already contains text, or a DOCX, or anything
 //      textual. Handled locally by pdf-parse / mammoth / a UTF-8 decode. Free.
 //   2. ocr — a scan or a photo. Needs a real OCR stack, which we do NOT bundle
-//      and do NOT call as a metered service. If the workspace runs MinerU
-//      (self-hosted, MINERU_URL) we hand the file to it; otherwise…
+//      and do NOT call as a metered service. The backend is PLUGGABLE and
+//      self-hosted: either MinerU (MINERU_URL) or any OpenAI-compatible vision
+//      endpoint (OCR_API_URL), which is how vLLM and SGLang serve models like
+//      Baidu's Unlimited-OCR and DeepSeek-OCR; otherwise…
 //   3. skipped — …the file is stored and listed, just not searchable by content.
 //      That is an honest outcome, not a failure: nothing is lost, and the status
 //      column says exactly why the body is empty.
@@ -52,8 +54,24 @@ function clean(raw: string): string {
     .slice(0, MAX_CHARS);
 }
 
-/** Whether an OCR backend is configured at all. Drives the UI's honesty about scans. */
-export const ocrConfigured = () => !!process.env.MINERU_URL;
+/**
+ * Which OCR backend, if any, this deployment has been pointed at.
+ *
+ * Both are self-hosted and neither is metered by us — the workspace runs the
+ * service and we send it bytes, which is the same arrangement as MinerU has
+ * always been. `vision` is preferred when both are set: the models served this
+ * way (Unlimited-OCR, DeepSeek-OCR) read layout and tables far better than a
+ * classical pipeline. It does, however, need an NVIDIA GPU, whereas MinerU has
+ * a CPU-only backend — which is exactly why both stay supported.
+ */
+export type OcrBackend = 'vision' | 'mineru' | null;
+export function ocrBackend(): OcrBackend {
+  if (process.env.OCR_API_URL) return 'vision';
+  if (process.env.MINERU_URL) return 'mineru';
+  return null;
+}
+/** Whether ANY OCR backend is configured. Drives the UI's honesty about scans. */
+export const ocrConfigured = () => ocrBackend() !== null;
 
 /**
  * Hand a file to a self-hosted MinerU instance.
@@ -129,6 +147,71 @@ async function viaMineru(bytes: Buffer, name: string, mime: string): Promise<Ext
 }
 
 /**
+ * Hand an IMAGE to an OpenAI-compatible vision endpoint.
+ *
+ * This is the shape vLLM and SGLang expose, so it works unchanged against
+ * Baidu's Unlimited-OCR (MIT, built on DeepSeek-OCR) and any other vision model
+ * served the same way. Nothing here is specific to one model beyond OCR_MODEL,
+ * which is why the integration is a generic endpoint rather than a named one.
+ *
+ * IMAGES ONLY, deliberately. These servers accept image content parts, not PDF
+ * bytes, and rasterising a PDF server-side would mean pulling in a native canvas
+ * dependency. A scanned PDF therefore still routes to MinerU — see extractFile.
+ */
+async function viaVisionApi(bytes: Buffer, mime: string): Promise<Extraction> {
+  const base = (process.env.OCR_API_URL || '').replace(/\/+$/, '');
+  const model = process.env.OCR_MODEL || 'unlimited-ocr';
+  const url = `${base}/chat/completions`;
+  const dataUri = `data:${mime || 'image/png'};base64,${bytes.toString('base64')}`;
+
+  // A long document on a busy GPU genuinely takes minutes.
+  const abort = AbortSignal.timeout(180_000);
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      signal: abort,
+      headers: {
+        'content-type': 'application/json',
+        ...(process.env.OCR_API_KEY ? { authorization: `Bearer ${process.env.OCR_API_KEY}` } : {}),
+      },
+      body: JSON.stringify({
+        model,
+        // Deterministic: this is transcription, not writing. A creative decode
+        // invents plausible-looking line items on an invoice, which is worse
+        // than no text at all.
+        temperature: 0,
+        max_tokens: 8192,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Transcribe this document to Markdown. Preserve tables and reading order. Output only the document content, with no commentary.' },
+            { type: 'image_url', image_url: { url: dataUri } },
+          ],
+        }],
+      }),
+    });
+  } catch (e: any) {
+    const timedOut = e?.name === 'TimeoutError' || /abort/i.test(e?.message || '');
+    return {
+      text: '', status: 'failed', pages: null,
+      error: timedOut ? 'OCR timed out after 3 minutes.' : `OCR endpoint unreachable at ${base}.`,
+    };
+  }
+
+  if (!res.ok) {
+    const detail = (await res.text().catch(() => '')).slice(0, 300);
+    return { text: '', status: 'failed', pages: null, error: `OCR endpoint returned HTTP ${res.status}. ${detail}`.trim() };
+  }
+
+  const body: any = await res.json().catch(() => null);
+  const text = clean(body?.choices?.[0]?.message?.content ?? '');
+  if (!text) return { text: '', status: 'failed', pages: null, error: 'OCR returned no text for this file.' };
+  return { text, status: 'ocr', pages: null, error: null };
+}
+
+/**
  * Extract text from an uploaded file.
  *
  * Never throws — every failure path returns a status and a sentence the UI can
@@ -150,14 +233,18 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
       const thin = text.length < (pages || 1) * SCAN_CHARS_PER_PAGE;
 
       if (!thin) return { text, status: 'text_layer', pages, error: null };
-      if (ocrConfigured()) {
+      // MinerU takes a whole PDF; the vision endpoint takes images, so a scan
+      // needs MinerU even when a vision backend is also configured.
+      if (process.env.MINERU_URL) {
         const ocr = await viaMineru(bytes, name, 'application/pdf');
         // A failed OCR attempt on a scan still knows the page count.
         return { ...ocr, pages: ocr.pages ?? pages };
       }
       return {
         text, status: 'skipped', pages,
-        error: 'This PDF is a scan with no text layer. Configure an OCR backend to make it searchable.',
+        error: ocrBackend() === 'vision'
+          ? 'This PDF is a scan. The configured OCR endpoint reads images, not PDFs — set MINERU_URL to handle scanned PDFs, or upload the pages as images.'
+          : 'This PDF is a scan with no text layer. Configure an OCR backend to make it searchable.',
       };
     }
 
@@ -171,7 +258,9 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
     }
 
     if (isImage) {
-      if (ocrConfigured()) return viaMineru(bytes, name, mime || 'image/png');
+      const backend = ocrBackend();
+      if (backend === 'vision') return viaVisionApi(bytes, mime || 'image/png');
+      if (backend === 'mineru') return viaMineru(bytes, name, mime || 'image/png');
       return {
         text: '', status: 'skipped', pages: null,
         error: 'Images need OCR to be searchable. Configure an OCR backend to enable it.',
