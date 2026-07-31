@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, Controls, MiniMap,
-  addEdge, useNodesState, useEdgesState, Handle, Position, MarkerType,
+  addEdge, useNodesState, useEdgesState, Handle, Position, MarkerType, useReactFlow,
   type Node, type Edge, type Connection, type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -19,7 +19,7 @@ import type { MindMapGraph } from '@/lib/crm/mindmaps';
  * second visual vocabulary on the one screen that is most obviously "ours".
  */
 
-type BoxData = { label: string };
+type BoxData = { label: string; image?: string | null };
 
 function BoxNode({ id, data, selected }: NodeProps) {
   const [editing, setEditing] = useState(false);
@@ -38,7 +38,7 @@ function BoxNode({ id, data, selected }: NodeProps) {
 
   return (
     <div
-      onDoubleClick={() => setEditing(true)}
+      onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
       className={`card-surface !rounded-lg px-4 py-3 min-w-[168px] max-w-[280px] transition-shadow ${
         selected ? 'ring-2 ring-accent shadow-elevated' : ''
       }`}
@@ -48,6 +48,18 @@ function BoxNode({ id, data, selected }: NodeProps) {
           canvas to lay out anything radial. */}
       <Handle id="l" type="target" position={Position.Left} className="!w-2 !h-2 !bg-strong !border-0" />
       <Handle id="t" type="target" position={Position.Top} className="!w-2 !h-2 !bg-strong !border-0" />
+      {(data as BoxData).image && (
+        // Capped rather than natural size: a phone screenshot pasted at full
+        // resolution would otherwise become a node several thousand pixels wide
+        // and make the canvas unusable.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={(data as BoxData).image as string}
+          alt=""
+          draggable={false}
+          className="mb-2 w-full max-h-[180px] object-cover rounded-md"
+        />
+      )}
       {editing ? (
         <textarea
           ref={inputRef}
@@ -63,7 +75,8 @@ function BoxNode({ id, data, selected }: NodeProps) {
         />
       ) : (
         <p className="text-sm text-primary whitespace-pre-wrap break-words">
-          {(data as BoxData).label || <span className="text-tertiary">Double-click to edit</span>}
+          {(data as BoxData).label
+            || ((data as BoxData).image ? null : <span className="text-tertiary">Double-click to edit, or paste an image</span>)}
         </p>
       )}
       <Handle id="r" type="source" position={Position.Right} className="!w-2 !h-2 !bg-accent !border-0" />
@@ -75,6 +88,7 @@ function BoxNode({ id, data, selected }: NodeProps) {
 const nodeTypes = { box: BoxNode };
 
 function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: MindMapGraph) => void }) {
+  const { screenToFlowPosition } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>((initial.nodes as Node[]) ?? []);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>((initial.edges as Edge[]) ?? []);
 
@@ -91,6 +105,47 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
     return () => window.removeEventListener('mindmap:rename', rename);
   }, [setNodes]);
 
+  // Paste an image straight onto the selected box.
+  //
+  // Stored as a data URI in the graph rather than uploaded. That is a deliberate
+  // trade: it keeps a paste instant and offline, and the graph is already capped
+  // at 2 MB server-side, which bounds the damage — a screenshot or two fits, a
+  // photo library does not, and save_mind_map rejects the overflow with a
+  // message rather than silently truncating. Uploading to storage would be the
+  // right call once maps routinely carry many images.
+  useEffect(() => {
+    const onPaste = async (e: ClipboardEvent) => {
+      // Let a normal text paste into the textarea behave normally.
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+
+      const file = Array.from(e.clipboardData?.items ?? [])
+        .find((i) => i.kind === 'file' && i.type.startsWith('image/'))?.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+
+      const selected = nodes.filter((n) => n.selected);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const src = String(reader.result);
+        if (selected.length > 0) {
+          setNodes((ns) => ns.map((n) => (n.selected ? { ...n, data: { ...n.data, image: src } } : n)));
+        } else {
+          // Nothing selected: the image becomes its own box rather than being
+          // dropped on the floor.
+          setNodes((ns) => [...ns, {
+            id: `n${Date.now().toString(36)}`, type: 'box',
+            position: { x: 160 + Math.random() * 200, y: 120 + Math.random() * 160 },
+            data: { label: '', image: src },
+          }]);
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [nodes, setNodes]);
+
   const onConnect = useCallback(
     (c: Connection) => setEdges((eds) => addEdge({ ...c, type: 'default', markerEnd: { type: MarkerType.ArrowClosed } }, eds)),
     [setEdges],
@@ -106,6 +161,24 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
       data: { label: '' },
     }]);
   }, [setNodes]);
+
+  /**
+   * Double-click empty canvas to create a box THERE.
+   *
+   * screenToFlowPosition is what makes this correct under pan and zoom — using
+   * raw client coordinates would drop the box wherever that pixel happens to be
+   * in an unzoomed, unpanned canvas, which is only the right answer at 100% with
+   * the view at the origin. The offset centres the box on the cursor.
+   */
+  const onPaneDoubleClick = useCallback((e: React.MouseEvent) => {
+    const at = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+    setNodes((ns) => [...ns, {
+      id: `n${Date.now().toString(36)}`, type: 'box',
+      position: { x: at.x - 84, y: at.y - 24 },
+      data: { label: '' },
+      selected: true,
+    }]);
+  }, [screenToFlowPosition, setNodes]);
 
   const removeSelected = useCallback(() => {
     setNodes((ns) => ns.filter((n) => !n.selected));
@@ -125,6 +198,7 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onDoubleClick={onPaneDoubleClick}
         nodeTypes={nodeTypes}
         fitView
         proOptions={{ hideAttribution: false }}
@@ -141,6 +215,9 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
           className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse shadow-sm hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" /> Add box
         </button>
+        <span className="hidden sm:inline text-2xs text-tertiary bg-surface/90 rounded-lg px-2 py-1.5 shadow-sm">
+          Double-click the canvas to add · paste an image onto a box
+        </span>
         {selectedCount > 0 && (
           <button onClick={removeSelected}
             className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-danger bg-surface shadow-sm hover:bg-surface-hover transition-colors">
