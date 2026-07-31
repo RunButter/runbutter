@@ -17,15 +17,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `origin` = `CasperCrypto/talent-insight` is a stale mirror.
 - Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
   **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
-- **Migrations through 0065 are ALL APPLIED** (verified 2026-07-30 against the live DB via the
-  Supabase connector: `files` + all six file RPCs exist, `invoice_reminder_settings` +
-  `due_invoice_reminders`/`mark_invoices_overdue`/`log_invoice_reminder` exist). Don't report 0064 or
-  0065 as pending — that was true earlier in the day and is no longer.
+- **Migrations through 0067 are ALL APPLIED** (0065 verified 2026-07-30 via the Supabase connector;
+  0066 post schedule + 0067 mind maps confirmed run by the owner 2026-07-31). Don't report any of
+  0064–0067 as pending.
+  - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
+    empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
+    skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
+    that is deliberate, because adding a parameter would otherwise create an overload.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
   - Invoice reminders need a **daily cron** hitting `/api/finance/reminders/run` with `CRON_SECRET`.
     Nothing mails without it, and reminders are off per workspace until an owner enables them.
+  - Automations already HAVE their cron endpoint — `/api/automations/dispatch`, authed with
+    `x-cron-secret: <service-role key>`. Nothing to build; point a Render Cron Job at it every
+    minute. `/api/automations/tick` nudges the same dispatcher after mutations.
   - `UMAMI_*` env vars only if you deploy Umami.
 - **`careers_slug` lives on `companies`, not `workspaces`** — easy to get wrong; the careers page
   resolves the company by slug.
@@ -124,6 +130,20 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - The HR RPCs (`search_candidates_for_recruiter`, `get_candidate_details`) are **not in the
   migrations folder** — they live in the DB from the legacy ATS. Verify arg names against real
   call sites in `app/dashboard/candidates/*`, not against the migrations.
+- **`lib/agents/catalog.ts` is the ONE tool list** — name, label, group, write-flag. `tools.ts`
+  (the executor) can't be imported by a client component because it pulls in the admin client, so
+  the builder used to keep a hand-written copy; that copy sat at 4 read tools while the executor
+  had 19, and the picker rendered the copy — finance, files, candidate and analytics tools were
+  **ungrantable**. Both sides import the catalogue now, and `tools.ts` throws at import if a tool
+  in `TOOLS` has no catalogue entry. Add a tool in BOTH places or the build fails loudly.
+- **Agent gallery** = `lib/agents/templates.ts` (8 prebuilt agents). A template is just a prefilled
+  editor payload — not a second save path — and is pinned to `suggest` autonomy on install
+  regardless of what it declares.
+- **Skills (0068)** are reusable instruction packs on `agents.skill_ids uuid[]`. `suggested_tools`
+  is a **hint for the UI, never a grant**: the runner's tool list comes from the agent alone, and
+  `skillBlock()` must never touch `allowed`. `/api/skills/import` reads public GitHub SKILL.md
+  files and **returns a preview without storing anything** — imported text lands in a system
+  prompt, so a human picks what to save.
 
 ## Free-data features (no key, no per-call cost)
 Same rule as the cost rule above: prefer public/government data + local computation over metered APIs.
