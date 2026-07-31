@@ -86,6 +86,9 @@ const ALLOWED = new Set([
   // deliberately absent: each has to move a blob in the private bucket too, so
   // they run server-side in /api/files/* where the service-role key lives.
   'get_files', 'get_file', 'search_files',
+  // Post schedule (0066). set_post_schedule is a drag-to-reschedule write, kept
+  // separate from save_post so moving a card doesn't round-trip the post body.
+  'set_post_schedule',
 ]);
 
 function db() {
