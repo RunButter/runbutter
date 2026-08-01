@@ -24,7 +24,7 @@ const DIRECTIONS = [
 ];
 
 const fmt = (s: string | null) => {
-  if (!s) return 'never';
+  if (!s) return '';
   const d = new Date(s);
   const mins = Math.round((Date.now() - d.getTime()) / 60000);
   if (mins < 1) return 'just now';
@@ -122,37 +122,42 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
       </p>
 
       <div className="card-surface overflow-hidden">
-        {/* Connection */}
-        <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-subtle">
+        {/* Connection. Stacks on a phone: side by side, the buttons squeezed the
+            address down to a single truncated letter. */}
+        <div className="px-5 py-4 border-b border-subtle">
           {loading ? (
             <span className="text-sm text-tertiary inline-flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</span>
           ) : conn ? (
-            <>
-              <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-primary truncate">{conn.account_email || 'Microsoft account'}</div>
-                <div className="text-2xs text-tertiary">OneDrive and SharePoint workbooks</div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm text-primary truncate">{conn.account_email || 'Microsoft account'}</div>
+                  <div className="text-2xs text-tertiary">OneDrive and SharePoint workbooks</div>
+                </div>
               </div>
-              <button onClick={openPicker} disabled={!privy}
-                className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
-                <Plus className="w-3.5 h-3.5" /> Link a sheet
-              </button>
-              <button onClick={disconnect}
-                className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
-                Disconnect
-              </button>
-            </>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={openPicker} disabled={!privy}
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
+                  <Plus className="w-3.5 h-3.5" /> Link a sheet
+                </button>
+                <button onClick={disconnect}
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
+                  Disconnect
+                </button>
+              </div>
+            </div>
           ) : (
-            <>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-primary">Not connected</div>
                 <div className="text-2xs text-tertiary">Sign in with the Microsoft account that owns the workbooks.</div>
               </div>
               <a href="/api/auth/microsoft"
-                 className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+                 className="h-9 px-3 shrink-0 self-start sm:self-auto inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
                 Connect Microsoft
               </a>
-            </>
+            </div>
           )}
         </div>
 
@@ -223,33 +228,39 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
           const D = DIRECTIONS.find((d) => d.value === l.direction) || DIRECTIONS[0];
           return (
             <div key={l.id} className={`px-5 py-3 border-b border-subtle last:border-0 ${l.enabled ? '' : 'opacity-50'}`}>
-              <div className="flex items-center gap-3">
-                <D.icon className="w-4 h-4 text-tertiary shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm text-primary truncate">
-                    {l.file_name || 'Workbook'} <span className="text-tertiary">· {l.worksheet}</span>
-                  </div>
-                  <div className="text-2xs text-tertiary">
-                    {l.object} · {D.label} · synced {fmt(l.last_sync_at)}
-                    {l.last_status === 'ok' && (l.last_rows_out > 0 || l.last_rows_in > 0) &&
-                      ` · ${l.last_rows_out} out, ${l.last_rows_in} in`}
+              {/* Stacks on a phone. Side by side, three buttons left the label
+                  a column so narrow the filename wrapped over five lines. */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                  <D.icon className="w-4 h-4 text-tertiary shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <div className="text-sm text-primary truncate">
+                      {l.file_name || 'Workbook'} <span className="text-tertiary">· {l.worksheet}</span>
+                    </div>
+                    <div className="text-2xs text-tertiary">
+                      {l.object} · {D.label} · {l.last_sync_at ? `synced ${fmt(l.last_sync_at)}` : 'not synced yet'}
+                      {l.last_status === 'ok' && (l.last_rows_out > 0 || l.last_rows_in > 0) &&
+                        ` · ${l.last_rows_out} out, ${l.last_rows_in} in`}
+                    </div>
                   </div>
                 </div>
-                <button onClick={() => runNow(l)} disabled={busy === l.id}
-                  className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover inline-flex items-center gap-1.5 disabled:opacity-40">
-                  {busy === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Sync now
-                </button>
-                <button onClick={() => toggle(l)} title={l.enabled ? 'Pause' : 'Resume'}
-                  className="h-7 px-2 rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover">
-                  <Power className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => remove(l)}
-                  className="h-7 px-2 rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2 shrink-0 pl-6 sm:pl-0">
+                  <button onClick={() => runNow(l)} disabled={busy === l.id}
+                    className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover inline-flex items-center gap-1.5 disabled:opacity-40">
+                    {busy === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Sync now
+                  </button>
+                  <button onClick={() => toggle(l)} title={l.enabled ? 'Pause syncing' : 'Resume syncing'}
+                    className="h-7 px-2 rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover">
+                    <Power className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => remove(l)} title="Unlink this sheet"
+                    className="h-7 px-2 rounded-md ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               {l.last_status === 'error' && l.last_error && (
-                <div className="mt-2 ml-7 text-2xs text-danger flex items-start gap-1.5">
+                <div className="mt-2 pl-6 text-2xs text-danger flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" /> {l.last_error}
                 </div>
               )}

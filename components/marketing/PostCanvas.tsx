@@ -17,6 +17,13 @@ const AVATAR = 'bg-gradient-to-br from-indigo-500 to-fuchsia-500';
 const initials = (s: string) => (s || 'B').replace(/^@/, '').split(/[\s._-]/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
 // ── Pixel-faithful platform cards (ported from PreFeed, restyled to fit) ──────
+//
+// PLATFORM EXCEPTION — the bg-white / text-slate-* literals below are
+// deliberate, not missed semantic tokens. These cards depict Instagram,
+// LinkedIn and X as they actually look to the audience, and those surfaces are
+// white whatever theme OUR app is in. Tokenizing them would make the preview
+// go dark with the dashboard and stop being a preview of anything real.
+// Same reasoning as the paper exception in app/sign/[token]/Signer.tsx.
 function Instagram({ p }: { p: PostDraft }) {
   const h = p.handle || '@yourbrand';
   return (
