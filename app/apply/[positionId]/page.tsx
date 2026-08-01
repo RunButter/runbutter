@@ -21,6 +21,14 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     title: string; companyName: string; logoUrl: string | null;
     accentColor: string | null; applyIntro: string | null;
   } | null>(null);
+  // Three states, not two. A null positionInfo used to mean both "still
+  // checking" and "this role does not exist", so a stale link rendered a
+  // complete, working-looking form headed "Apply" with no company name — and
+  // only told the candidate after they had typed everything and uploaded a CV.
+  // 'failed' is separate from 'unavailable' on purpose: a network blip must not
+  // tell someone a live role has closed. One is a definitive statement about
+  // the job, the other is "try again".
+  const [availability, setAvailability] = useState<'checking' | 'open' | 'unavailable' | 'failed'>('checking');
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -81,7 +89,13 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         p_position_id: params.positionId,
       });
 
-      if (error || !data) return;   // .rpc() resolves on failure — never throws
+      // .rpc() resolves on failure — never throws, so `error` is the only way
+      // to see a transport problem.
+      if (error) { setAvailability('failed'); return; }
+      // A null payload is an answer, not a failure: the role is closed,
+      // unpublished, or gone. The RPC deliberately cannot tell those apart —
+      // saying which would confirm a hidden role exists — so neither can we.
+      if (!data) { setAvailability('unavailable'); return; }
       const b = data as any;
       setPositionInfo({
         title: b.title,
@@ -90,6 +104,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         accentColor: b.accent_color,
         applyIntro: b.apply_intro,
       });
+      setAvailability('open');
     };
 
     fetchPositionDetails();
@@ -278,6 +293,46 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
               This link was also emailed to <strong className="text-secondary">{formData.email}</strong>
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Still resolving the role — show nothing rather than a form that might be
+  // about to be replaced by "not available".
+  if (availability === 'checking') {
+    return (
+      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center">
+        <Loader2 className="w-5 h-5 animate-spin text-tertiary" />
+      </div>
+    );
+  }
+
+  // Closed, unpublished, or deleted. Say so before any effort is spent, and
+  // don't guess which: an apply link that confirms a hidden role exists is the
+  // same leak get_apply_branding refuses to be.
+  if (availability === 'unavailable' || availability === 'failed') {
+    const failed = availability === 'failed';
+    return (
+      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-8 text-center">
+          <div className="w-12 h-12 rounded-full bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mx-auto mb-5">
+            <FileText className="w-5 h-5 text-tertiary" />
+          </div>
+          <h1 className="text-xl font-medium text-primary mb-2">
+            {failed ? 'Couldn’t load this role' : 'This role isn’t accepting applications'}
+          </h1>
+          <p className="text-base text-secondary leading-relaxed">
+            {failed
+              ? 'Something went wrong reaching us — the role may well still be open. Check your connection and try again.'
+              : 'The link may be out of date, or the position may have closed. If someone sent you here recently, ask them for the current link.'}
+          </p>
+          {failed && (
+            <button onClick={() => window.location.reload()}
+              className="mt-6 h-10 px-4 inline-flex items-center gap-1.5 rounded-xl text-sm font-semibold bg-accent text-accent-fg hover:opacity-90 transition-opacity">
+              Try again
+            </button>
+          )}
         </div>
       </div>
     );
