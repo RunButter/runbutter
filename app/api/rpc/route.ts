@@ -42,6 +42,12 @@ const ALLOWED = new Set([
   'get_connections', 'get_connection', 'save_connection', 'delete_connection',
   'create_api_key', 'get_api_keys', 'revoke_api_key', 'get_webhook_endpoints',
   'upsert_webhook_endpoint', 'delete_webhook_endpoint', 'get_webhook_deliveries',
+  // Excel sync (0079). The three service_role RPCs — claim_excel_links,
+  // record_excel_sync, set_excel_table_name — are deliberately ABSENT: a client
+  // that could write last_status could hide a failing sync, and one that could
+  // claim links could stall the sweep for everyone.
+  'get_ms_connection', 'get_excel_links', 'save_excel_link',
+  'set_excel_link_enabled', 'delete_excel_link', 'disconnect_microsoft',
   // docs + AI providers
   'get_docs', 'get_doc', 'save_doc', 'delete_doc', 'get_ai_providers',
   'store_ai_provider', 'delete_ai_provider', 'set_ai_provider_meta',

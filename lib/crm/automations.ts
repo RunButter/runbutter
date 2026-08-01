@@ -1,6 +1,7 @@
 // Data layer for the Automations engine + integration layer (migration 0032).
 // Privy pattern via getWorkspace(); Sample fallback so the pages always render.
 import { supabase } from '@/lib/supabase';
+import { getAccessToken } from '@privy-io/react-auth';
 import { getWorkspace } from './data';
 import { rpc } from '@/lib/rpc';
 
@@ -178,6 +179,88 @@ export function feedUrl(object: string, key: string): string {
     ? window.location.origin
     : (process.env.NEXT_PUBLIC_SITE_URL || 'https://runbutter.app');
   return `${base}/api/v1/records?object=${encodeURIComponent(object)}&format=csv&key=${encodeURIComponent(key)}`;
+}
+
+// ── Two-way Excel sync over Microsoft Graph (0079) ────────────────────────────
+export interface MsConnection { id: string; account_email: string | null; expires_at: string | null; created_at: string; connected_by_me: boolean }
+export interface ExcelLink {
+  id: string; object: string; file_name: string | null; worksheet: string; table_name: string | null;
+  direction: 'out' | 'in' | 'both'; enabled: boolean;
+  last_sync_at: string | null; last_status: string | null; last_error: string | null;
+  last_rows_out: number; last_rows_in: number; created_at: string;
+}
+export interface Workbook { driveId: string; itemId: string; name: string; webUrl: string; lastModified: string }
+
+export async function loadMsConnection(privy: string | null): Promise<MsConnection | null> {
+  const id = await ws(privy);
+  if (!privy || !id) return null;
+  const { data, error } = await rpc('get_ms_connection', { p_privy: privy, p_workspace: id });
+  return error ? null : ((data as MsConnection) ?? null);
+}
+
+export async function loadExcelLinks(privy: string | null): Promise<ExcelLink[]> {
+  const id = await ws(privy);
+  if (!privy || !id) return [];
+  const { data, error } = await rpc('get_excel_links', { p_privy: privy, p_workspace: id });
+  return error || !Array.isArray(data) ? [] : (data as ExcelLink[]);
+}
+
+export async function saveExcelLink(privy: string, link: {
+  id?: string | null; object: string; driveId: string; itemId: string;
+  fileName: string; worksheet: string; direction: 'out' | 'in' | 'both';
+}): Promise<{ id?: string; error?: string }> {
+  const wsId = await ws(privy);
+  if (!wsId) return { error: 'No workspace found for your account.' };
+  const { data, error } = await rpc('save_excel_link', {
+    p_privy: privy, p_workspace: wsId, p_id: link.id ?? null,
+    p_object: link.object, p_drive_id: link.driveId, p_item_id: link.itemId,
+    p_file_name: link.fileName, p_worksheet: link.worksheet, p_direction: link.direction,
+  });
+  if (error) {
+    // The RPC raises NOT_CONNECTED; the raw name is not something to show.
+    return { error: /NOT_CONNECTED/.test(error.message) ? 'Connect a Microsoft account first.' : error.message };
+  }
+  return { id: data as string };
+}
+
+export async function setExcelLinkEnabled(privy: string, id: string, enabled: boolean) {
+  const wsId = await ws(privy);
+  if (!wsId) return;
+  await rpc('set_excel_link_enabled', { p_privy: privy, p_workspace: wsId, p_id: id, p_enabled: enabled });
+}
+
+export async function deleteExcelLink(privy: string, id: string) {
+  const wsId = await ws(privy);
+  if (!wsId) return;
+  await rpc('delete_excel_link', { p_privy: privy, p_workspace: wsId, p_id: id });
+}
+
+export async function disconnectMicrosoft(privy: string) {
+  const wsId = await ws(privy);
+  if (!wsId) return;
+  await rpc('disconnect_microsoft', { p_privy: privy, p_workspace: wsId });
+}
+
+// The two calls that need the OAuth token go through verified routes, not the
+// RPC proxy — the token never leaves the server.
+async function verifiedFetch(path: string, init: RequestInit = {}): Promise<any> {
+  const token = await getAccessToken().catch(() => null);
+  const res = await fetch(path, {
+    ...init,
+    headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}), ...(init.headers || {}) },
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(j?.error || `Request failed (${res.status})`);
+  return j;
+}
+
+export async function listWorkbooks(query = ''): Promise<Workbook[]> {
+  const j = await verifiedFetch(`/api/excel/workbooks?q=${encodeURIComponent(query)}`);
+  return j.files || [];
+}
+
+export function syncExcelLink(linkId: string): Promise<{ ok: boolean; rowsOut: number; rowsIn: number }> {
+  return verifiedFetch('/api/excel/sync', { method: 'POST', body: JSON.stringify({ linkId }) });
 }
 
 export async function revokeApiKey(privy: string, id: string): Promise<{ error?: string }> {

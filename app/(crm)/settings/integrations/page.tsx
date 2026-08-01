@@ -8,6 +8,7 @@ import {
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
 import ExcelConnect from '@/components/crm/ExcelConnect';
+import ExcelSync from '@/components/crm/ExcelSync';
 import { rpc } from '@/lib/rpc';
 import { getWorkspace } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
@@ -229,6 +230,10 @@ export default function IntegrationsPage() {
           {/* Excel / Sheets feed — above the raw keys, because this is the
               version of "API key" most people actually want. */}
           <ExcelConnect privy={privy} />
+
+          {/* …and the version for teams whose spreadsheet is the working
+              surface, not just a report. */}
+          <ExcelSync privy={privy} />
 
           {/* API keys */}
           <section>
