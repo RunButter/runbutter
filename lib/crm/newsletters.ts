@@ -11,7 +11,8 @@ export interface NewsletterList {
 export interface Subscriber {
   id: string; email: string; name: string;
   status: 'enabled' | 'unconfirmed' | 'unsubscribed' | 'bounced' | 'complained';
-  person_id: string | null; consent_source: string; consent_at: string | null; created_at: string;
+  person_id: string | null; consent_source: string; consent_at: string | null;
+  score: number; created_at: string;
 }
 
 export interface NewsletterRow {

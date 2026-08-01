@@ -61,7 +61,18 @@ export async function POST(req: Request) {
     enrolled += Number((data as any)?.enrolled ?? 0);
   }
 
-  // 3. Execute due steps.
+  // 3. Refresh engagement scores. This lives on the sequence tick rather than
+  //    its own cron because this route is already the per-minute marketing
+  //    housekeeping pass (sweep, enrol) — a fourth cron job for one batched
+  //    UPDATE is operational overhead with no benefit.
+  const { data: scoringWs } = await admin.rpc('scoring_workspaces');
+  let scored = 0;
+  for (const w of Array.isArray(scoringWs) ? scoringWs : []) {
+    const { data } = await admin.rpc('recompute_subscriber_scores', { p_workspace: w, p_limit: 500 });
+    scored += Number((data as any)?.scored ?? 0);
+  }
+
+  // 4. Execute due steps.
   const { data: batch, error: claimErr } = await admin.rpc('claim_sequence_steps', { p_limit: BATCH });
   if (claimErr) return NextResponse.json({ error: claimErr.message }, { status: 500 });
 
@@ -180,6 +191,6 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({
-    ok: true, swept: Number(swept ?? 0), enrolled, claimed: rows.length, sent, waited, skipped, failed,
+    ok: true, swept: Number(swept ?? 0), enrolled, scored, claimed: rows.length, sent, waited, skipped, failed,
   });
 }

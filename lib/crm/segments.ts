@@ -61,6 +61,10 @@ export const SEGMENT_FIELDS: {
     { op: 'not_within_days', label: 'not in the last', input: 'days' },
     { op: 'never', label: 'never', input: 'none' },
   ] },
+  { field: 'score', label: 'Engagement score', ops: [
+    { op: 'gte', label: 'at least', input: 'count' },
+    { op: 'lte', label: 'at most', input: 'count' },
+  ] },
   { field: 'received', label: 'Newsletters received', ops: [
     { op: 'at_least', label: 'at least', input: 'count' },
     { op: 'never', label: 'none', input: 'none' },
@@ -113,5 +117,46 @@ export async function syncSegmentToList(
   });
   if (!error) return { added: Number((data as any)?.added ?? 0) };
   if (/NOT_FOUND/.test(error.message)) return { error: 'That segment or list no longer exists.' };
+  return { error: error.message };
+}
+
+/**
+ * Engagement scoring config. The score itself is recomputed server-side on the
+ * cron and stored on the subscriber, which is what lets a segment filter on it
+ * with a plain integer comparison.
+ */
+export interface ScoringConfig {
+  enabled: boolean;
+  half_life_days: number;
+  rules: Partial<Record<'open' | 'click' | 'unsubscribe' | 'bounce' | 'complaint', number>>;
+}
+
+export const SCORING_KINDS: { kind: keyof ScoringConfig['rules']; label: string; hint: string }[] = [
+  { kind: 'open', label: 'Opened an email', hint: 'A weak signal — image proxies fire it too.' },
+  { kind: 'click', label: 'Clicked a link', hint: 'The strongest signal you have.' },
+  { kind: 'unsubscribe', label: 'Unsubscribed', hint: 'Usually negative.' },
+  { kind: 'bounce', label: 'Bounced', hint: 'Usually negative.' },
+  { kind: 'complaint', label: 'Marked as spam', hint: 'Strongly negative.' },
+];
+
+export async function getScoringConfig(privy: string, ws: string): Promise<ScoringConfig> {
+  const { data } = await rpc('get_scoring_config', { p_privy: privy, p_workspace: ws });
+  const d = (data as any) || {};
+  return {
+    enabled: Boolean(d.enabled),
+    half_life_days: Number(d.half_life_days ?? 30),
+    rules: d.rules || {},
+  };
+}
+
+export async function saveScoringConfig(privy: string, ws: string, c: ScoringConfig): Promise<{ error?: string }> {
+  const { error } = await rpc('save_scoring_config', {
+    p_privy: privy, p_workspace: ws,
+    p_enabled: c.enabled, p_half_life: c.half_life_days, p_rules: c.rules,
+  });
+  if (!error) return {};
+  if (/BAD_HALF_LIFE/.test(error.message)) return { error: 'Half-life must be between 0 and 3650 days.' };
+  if (/BAD_POINTS/.test(error.message)) return { error: 'Points must be between -100 and 100.' };
+  if (/BAD_RULE_KIND/.test(error.message)) return { error: 'Unknown scoring signal.' };
   return { error: error.message };
 }

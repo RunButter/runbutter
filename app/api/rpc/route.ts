@@ -82,6 +82,9 @@ const ALLOWED = new Set([
   // Resend key and the at-most-once claim protocol.
   'get_sequences', 'save_sequence', 'set_sequence_enabled', 'delete_sequence',
   'get_sequence_stats',
+  // Lead scoring (0074). The recompute itself is service_role only and runs on
+  // the cron — these are just the settings.
+  'get_scoring_config', 'save_scoring_config',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

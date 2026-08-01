@@ -12,7 +12,10 @@ import {
   parseSubscriberPaste,
   type NewsletterList, type Subscriber, type NewsletterRow,
 } from '@/lib/crm/newsletters';
-import { listSegments, deleteSegment, type Segment } from '@/lib/crm/segments';
+import {
+  listSegments, deleteSegment, getScoringConfig, saveScoringConfig, SCORING_KINDS,
+  type Segment, type ScoringConfig,
+} from '@/lib/crm/segments';
 import SegmentBuilder from '@/components/crm/SegmentBuilder';
 import { listSequences, setSequenceEnabled, deleteSequence, sequenceLengthDays, type Sequence } from '@/lib/crm/sequences';
 import SequenceBuilder from '@/components/crm/SequenceBuilder';
@@ -200,7 +203,9 @@ export default function NewslettersPage() {
               </div>
             )
           ) : tab === 'segments' ? (
-            segments.length === 0 ? (
+            <>
+            {ws && privy && <ScoringPanel ws={ws.id} privy={privy} />}
+            {segments.length === 0 ? (
               <Empty icon={Filter} text="No segments yet."
                 hint="A list is who you added. A segment is who currently matches — 'opened nothing in 90 days'." />
             ) : (
@@ -224,7 +229,8 @@ export default function NewslettersPage() {
                   </div>
                 ))}
               </div>
-            )
+            )}
+            </>
           ) : lists.length === 0 ? (
             <Empty icon={Users} text="No lists yet." hint="A list is who a newsletter goes to." />
           ) : (
@@ -324,7 +330,12 @@ function SubscribersModal({ list, ws, privy, onClose }: { list: NewsletterList; 
             <div key={s.id} className="flex items-center gap-2 px-4 py-2.5">
               <div className="min-w-0 flex-1">
                 <div className="text-xs text-primary truncate">{s.email}</div>
-                <div className="text-3xs text-tertiary truncate">{s.name || '—'} · {s.consent_source || 'unknown source'}</div>
+                <div className="text-3xs text-tertiary truncate">
+                  {s.name || '—'} · {s.consent_source || 'unknown source'}
+                  {/* Only when scoring has actually run. A "0" on every row
+                      before anyone enables scoring reads as "nobody engages". */}
+                  {s.score > 0 && <span className="text-accent"> · score {s.score}</span>}
+                </div>
               </div>
               <Badge tone={SUB_TONE[s.status] || 'neutral'}>{s.status}</Badge>
               {/* No "re-enable" for bounced or complained: the mail system told us
@@ -411,6 +422,80 @@ function ImportModal({ list, ws, privy, onClose }: { list: NewsletterList; ws: s
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Engagement scoring config. Lives beside segments because a score is only
+ * useful as something to segment ON — presenting it as its own destination
+ * would imply it does something on its own, which it does not.
+ */
+function ScoringPanel({ ws, privy }: { ws: string; privy: string }) {
+  const { notify } = useDialog();
+  const [c, setC] = useState<ScoringConfig | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => { getScoringConfig(privy, ws).then(setC); }, [privy, ws]);
+  if (!c) return null;
+
+  const save = async (next: ScoringConfig) => {
+    setC(next); setSaving(true);
+    const { error } = await saveScoringConfig(privy, ws, next);
+    setSaving(false);
+    if (error) notify(error);
+  };
+
+  return (
+    <div className="rounded-xl bg-surface shadow-card p-4 mb-3">
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 w-full text-left">
+        <span className="text-sm font-medium text-primary">Engagement scoring</span>
+        <Badge tone={c.enabled ? 'success' : 'neutral'}>{c.enabled ? 'on' : 'off'}</Badge>
+        {saving && <Loader2 className="w-3.5 h-3.5 animate-spin text-tertiary" />}
+        <span className="ml-auto text-2xs text-tertiary">{open ? 'hide' : 'configure'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3">
+          <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
+            <input type="checkbox" checked={c.enabled} className="rounded border-strong accent-accent"
+              onChange={(e) => save({ ...c, enabled: e.target.checked })} />
+            Score subscribers on how they engage
+          </label>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-secondary">A signal is worth half after</span>
+            <input type="number" min={0} max={3650} value={c.half_life_days}
+              onChange={(e) => setC({ ...c, half_life_days: Number(e.target.value) || 0 })}
+              onBlur={() => save(c)} className="input-field !h-8 w-20 text-xs" />
+            <span className="text-xs text-secondary">days</span>
+          </div>
+          {/* Explains the one number people set wrong. */}
+          <p className="text-2xs text-tertiary">
+            Decay is what makes the score answer &ldquo;who is warm now&rdquo; rather than &ldquo;who was ever
+            warm&rdquo;. Set 0 for a lifetime total instead.
+          </p>
+
+          <div className="space-y-1.5">
+            {SCORING_KINDS.map((k) => (
+              <div key={k.kind} className="flex items-center gap-2">
+                <span className="text-xs text-primary flex-1 min-w-0">
+                  {k.label}
+                  <span className="text-2xs text-tertiary block">{k.hint}</span>
+                </span>
+                <input type="number" min={-100} max={100} value={c.rules[k.kind] ?? 0}
+                  onChange={(e) => setC({ ...c, rules: { ...c.rules, [k.kind]: Number(e.target.value) || 0 } })}
+                  onBlur={() => save(c)} className="input-field !h-8 w-20 text-xs" />
+              </div>
+            ))}
+          </div>
+
+          <p className="text-2xs text-tertiary">
+            Scores refresh on the send tick, so a change takes a minute or two to show.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
