@@ -54,7 +54,25 @@ with applied(ord, section, item, probe, ok) as (
   (54, 'A. migration', '0054 custom forms',      'forms + submit_form + public getter', ((to_regclass('public.forms') is not null) and (to_regclass('public.form_submissions') is not null) and (select exists(select 1 from pg_proc where proname='submit_form')) and (select has_function_privilege('anon', 'submit_form(text, jsonb, text)', 'execute')))),
   (55, 'A. migration', '0055 short links',       'short_links + anon register_short_click', ((to_regclass('public.short_links') is not null) and (select exists(select 1 from pg_proc where proname='register_short_click')) and (select has_function_privilege('anon', 'register_short_click(text)', 'execute')))),
   (56, 'A. migration', '0056 cal + meetings',    'cal_connections + meetings + cal_log_meeting', ((to_regclass('public.cal_connections') is not null) and (to_regclass('public.meetings') is not null) and (select exists(select 1 from pg_proc where proname='cal_log_meeting')))),
-  (57, 'A. migration', '0057 chat assistant',    'assistant_channels + resolve RPC', ((to_regclass('public.assistant_channels') is not null) and (select exists(select 1 from pg_proc where proname='resolve_assistant_channel'))))
+  (57, 'A. migration', '0057 chat assistant',    'assistant_channels + resolve RPC', ((to_regclass('public.assistant_channels') is not null) and (select exists(select 1 from pg_proc where proname='resolve_assistant_channel')))),
+  (58, 'A. migration', '0058 sanctions',         'sanctions_entities + screen_sanctions', ((to_regclass('public.sanctions_entities') is not null) and (select exists(select 1 from pg_proc where proname='screen_sanctions')))),
+  (59, 'A. migration', '0059 umami',             'sites.umami_website_id',         (select exists(select 1 from information_schema.columns where table_name='sites' and column_name='umami_website_id'))),
+  (60, 'A. migration', '0060 careers page',      'companies.careers_slug + get_careers_page', (exists(select 1 from information_schema.columns where table_name='companies' and column_name='careers_slug') and (select exists(select 1 from pg_proc where proname='get_careers_page')))),
+  (61, 'A. migration', '0061 branding expanded', 'workspaces.email_footer',        (select exists(select 1 from information_schema.columns where table_name='workspaces' and column_name='email_footer'))),
+  (62, 'A. migration', '0062 careers extras',    'set_position_published()',       (select exists(select 1 from pg_proc where proname='set_position_published'))),
+  (63, 'A. migration', '0063 careers position',  'get_careers_position()',         (select exists(select 1 from pg_proc where proname='get_careers_position'))),
+  (64, 'A. migration', '0064 invoice reminders', 'invoice_reminder_settings + due_invoice_reminders', ((to_regclass('public.invoice_reminder_settings') is not null) and (select exists(select 1 from pg_proc where proname='due_invoice_reminders')))),
+  (65, 'A. migration', '0065 files',             'files table + search_files()',   ((to_regclass('public.files') is not null) and (select exists(select 1 from pg_proc where proname='search_files')))),
+  (66, 'A. migration', '0066 post schedule',     'posts.scheduled_at + set_post_schedule', (exists(select 1 from information_schema.columns where table_name='posts' and column_name='scheduled_at') and (select exists(select 1 from pg_proc where proname='set_post_schedule')))),
+  (67, 'A. migration', '0067 mind maps',         'mind_maps + save_mind_map()',    ((to_regclass('public.mind_maps') is not null) and (select exists(select 1 from pg_proc where proname='save_mind_map')))),
+  (68, 'A. migration', '0068 skills',            'skills + agents.skill_ids',      ((to_regclass('public.skills') is not null) and exists(select 1 from information_schema.columns where table_name='agents' and column_name='skill_ids'))),
+  (69, 'A. migration', '0069 post board',        'post_boards + save_post_board()',((to_regclass('public.post_boards') is not null) and (select exists(select 1 from pg_proc where proname='save_post_board')))),
+  (70, 'A. migration', '0070 newsletters',       'newsletters + deliveries + uniq',((to_regclass('public.newsletters') is not null) and (to_regclass('public.newsletter_deliveries') is not null) and (select exists(select 1 from pg_indexes where indexname='uq_nl_deliveries')))),
+  (71, 'A. migration', '0071 newsletter send',   'claim_newsletter_batch + deliveries.claimed_at', ((select exists(select 1 from pg_proc where proname='claim_newsletter_batch')) and exists(select 1 from information_schema.columns where table_name='newsletter_deliveries' and column_name='claimed_at'))),
+  (72, 'A. migration', '0072 segments',          'segments + segment_match()',     ((to_regclass('public.segments') is not null) and (select exists(select 1 from pg_proc where proname='segment_match')))),
+  (73, 'A. migration', '0073 sequences',         'sequences + sequence_enrollments',((to_regclass('public.sequences') is not null) and (to_regclass('public.sequence_enrollments') is not null))),
+  (74, 'A. migration', '0074 lead scoring',      'scoring_rules + subscribers.score',((to_regclass('public.scoring_rules') is not null) and exists(select 1 from information_schema.columns where table_name='newsletter_subscribers' and column_name='score'))),
+  (75, 'A. migration', '0075 chat',              'channels + messages + can_read_channel', ((to_regclass('public.channels') is not null) and (to_regclass('public.messages') is not null) and (select exists(select 1 from pg_proc where proname='can_read_channel'))))
 ),
 -- Freshness: running an older migration AFTER a newer one silently reverts a
 -- function. These check the live body for tokens only the latest version has.
@@ -66,7 +84,23 @@ fresh(ord, section, item, probe, ok) as (
   (104, 'B. freshness', 'get_invoice_document returns branding', '0017', (select exists(select 1 from pg_proc where proname='get_invoice_document' and pg_get_functiondef(oid) ilike '%logo_url%'))),
   (105, 'B. freshness', 'save_invoice_items applies tax_rate',   '0018', (select exists(select 1 from pg_proc where proname='save_invoice_items'   and pg_get_functiondef(oid) ilike '%tax_rate%'))),
   (106, 'B. freshness', 'create_record handles transactions',    '0031', (select exists(select 1 from pg_proc where proname='create_record'        and pg_get_functiondef(oid) ilike '%bank_account_id%'))),
-  (107, 'B. freshness', 'save_automation free of pgcrypto',      '0037', (select exists(select 1 from pg_proc where proname='save_automation'      and pg_get_functiondef(oid) not ilike '%gen_random_bytes%')))
+  (107, 'B. freshness', 'save_automation free of pgcrypto',      '0037', (select exists(select 1 from pg_proc where proname='save_automation'      and pg_get_functiondef(oid) not ilike '%gen_random_bytes%'))),
+  -- 0068 changed save_agent's ARITY. If the 12-arg version is still the only
+  -- one present, attaching a skill fails with "function does not exist".
+  (108, 'B. freshness', 'save_agent takes p_skill_ids',          '0068', (select exists(select 1 from pg_proc where proname='save_agent'          and pg_get_function_arguments(oid) ilike '%p_skill_ids%'))),
+  (109, 'B. freshness', 'get_agents returns skill_ids',          '0068', (select exists(select 1 from pg_proc where proname='get_agents'          and pg_get_functiondef(oid) ilike '%skill_ids%'))),
+  -- The multi-row claim bug: the first version used RETURNING ... INTO, which
+  -- RAISES for any batch bigger than one row. The fixed version uses a CTE.
+  (110, 'B. freshness', 'claim_newsletter_batch uses a CTE',     '0071', (select exists(select 1 from pg_proc where proname='claim_newsletter_batch' and pg_get_functiondef(oid) ilike '%skip locked%' and pg_get_functiondef(oid) ilike '%with candidate%'))),
+  (111, 'B. freshness', 'deliveries allow the sending state',    '0071', (select exists(select 1 from pg_constraint where conname='newsletter_deliveries_status_check' and pg_get_constraintdef(oid) ilike '%sending%'))),
+  -- 0074 redefines segment_match and get_newsletter_subscribers. Running 0072
+  -- after 0074 would silently drop the score field back out of both.
+  (112, 'B. freshness', 'segment_match knows score',             '0074', (select exists(select 1 from pg_proc where proname='segment_match'          and pg_get_functiondef(oid) ilike '%p_sub.score%'))),
+  (113, 'B. freshness', 'subscriber list returns score',         '0074', (select exists(select 1 from pg_proc where proname='get_newsletter_subscribers' and pg_get_functiondef(oid) ilike '%s.score%'))),
+  -- 0073 redefines these two so opting out also stops a live drip. 0071's
+  -- versions predate sequences and would leave the drip running.
+  (114, 'B. freshness', 'unsubscribe cancels enrolments',        '0073', (select exists(select 1 from pg_proc where proname='newsletter_unsubscribe'    and pg_get_functiondef(oid) ilike '%sequence_enrollments%'))),
+  (115, 'B. freshness', 'bounce cancels enrolments',             '0073', (select exists(select 1 from pg_proc where proname='record_newsletter_feedback' and pg_get_functiondef(oid) ilike '%sequence_enrollments%')))
 )
 select
   section,
