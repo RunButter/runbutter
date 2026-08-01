@@ -178,13 +178,16 @@ function renderDigest(ctx: RenderCtx): string {
   return shell(
     `${content.heading ? `<h1 style="margin:0 0 12px;font-size:22px;line-height:30px;font-weight:600;color:${INK};">${esc(content.heading)}</h1>` : ''}
      ${content.intro ? paragraphs(content.intro, MUTED) : ''}
-     ${items.map((it) => {
+     ${items.map((it, i) => {
        const u = safeUrl(it.url);
        const title = u
          ? `<a href="${esc(track(u))}" style="color:${accent};text-decoration:none;">${esc(it.title)}</a>`
          : esc(it.title);
-       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
-         <tr><td style="padding:0 0 14px;border-bottom:1px solid ${LINE};">
+       // The last item drops its rule: the footer draws one immediately below,
+       // and the two together read as a mistake.
+       const last = i === items.length - 1;
+       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 ${last ? '4' : '18'}px;">
+         <tr><td style="padding:0 0 14px;${last ? '' : `border-bottom:1px solid ${LINE};`}">
            <div style="font-size:17px;line-height:24px;font-weight:600;color:${INK};margin:0 0 4px;">${title}</div>
            ${it.blurb ? `<div style="font-size:15px;line-height:23px;color:${MUTED};">${esc(it.blurb)}</div>` : ''}
          </td></tr></table>`;
