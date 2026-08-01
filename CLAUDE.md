@@ -34,6 +34,10 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
     skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
     that is deliberate, because adding a parameter would otherwise create an overload.
+  - **0076 → 0077 → 0078 → 0079 are PENDING, in that order.** 0077 is the point of no return
+    (see known issue 5) and must run only AFTER the app carrying 0076 is deployed. 0078 **drops and
+    recreates `create_api_key`** with a fourth arg (`p_scope`) — same overload reasoning as 0068.
+    0079 (Excel sync) is independent of the others and safe to run any time after 0001.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
@@ -253,6 +257,25 @@ Same rule as the cost rule above: prefer public/government data + local computat
   carries a **UTF-8 BOM** (else Excel/Windows mangles non-ASCII names) and CRLF, and columns are the
   **union of keys in first-seen order** — `Object.keys(rows[0])` silently truncates the sheet when a
   later JSONB row carries a field the first one omitted.
+- **Two-way Excel sync (0079)** — `lib/excel/{graph,sync}.ts`, the **Two-way Excel sync** panel, and
+  `MS_CLIENT_ID`/`MS_CLIENT_SECRET`. Complements 0078 rather than replacing it: the feed is for
+  people who want data in a sheet, this is for teams whose sheet IS the working surface. `GET
+  /api/excel/sync` with `CRON_SECRET` sweeps; "Sync now" runs one link as the signed-in member.
+  - **The conflict rule is the feature, and it lives only in `syncLink()`.** Graph exposes no
+    per-cell timestamps, so a three-way merge is unavailable at any price. Inbound runs FIRST (a
+    person editing a cell is the latest intent), then outbound rewrites the sheet from the DB.
+  - **A row deleted in Excel NEVER deletes the record.** A filter, a sort that pushed rows out of
+    the table range, and a cleared row are indistinguishable from a deletion over the API. Don't
+    "finish" this into a two-way delete. A stale id in the sheet is likewise never resurrected.
+  - Reads/writes go through a real Excel **table**, not a range, so a user's own sorting, filtering
+    and extra columns survive; those extra columns are ignored on the way in, never sent.
+  - `sameValue()` exists because Excel round-trips are lossy — a `'12345'` zip returns as the number
+    `12345`. Comparing raw would mark every row edited and rewrite the whole DB on every sync.
+  - Tokens are **sealed at rest** (`lib/crypto/secrets.ts`), unlike the older `integration_tokens`
+    rows: a `Files.ReadWrite` grant opens every workbook that person can open.
+  - `claim_excel_links`, `record_excel_sync` and `set_excel_table_name` are **service_role only** and
+    deliberately absent from `/api/rpc`'s ALLOWED — a client that could write `last_status` could
+    hide a failing sync.
 - **Files that become data (0065)** — `docs/file-extraction.md`. `/files` uploads to a **private**
   bucket, extracts text, and indexes it with Postgres FTS *in the same database as the ledger*, which
   is the entire pitch: "which contracts auto-renew, for clients who owe us money" is one join.
@@ -316,3 +339,11 @@ Enterprise: unlimited / + HRIS export, SSO. (Test with `UPDATE companies SET pla
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
 **`NEXT_PUBLIC_PRIVY_APP_ID`** (login breaks without it — no hardcoded fallback), `RESEND_API_KEY`,
 Stripe + Google keys. `SECRETS_MASTER_KEY` is optional (falls back to a key derived from the service-role key).
+**`.env.example` is the full list and says what breaks without each one** — it was 17 vars short and
+is now complete (verified by diffing `process.env` usage against it). The ones most often missed:
+`NEXT_PUBLIC_SITE_URL` (every unsubscribe and tracking link points at the wrong host without it),
+`CRON_SECRET` (the reminder and Excel sweeps refuse to run — an unauthenticated endpoint that mails
+customers or writes into workbooks is not a safe default), `RESEND_WEBHOOK_SECRET`, and
+`MS_CLIENT_ID`/`MS_CLIENT_SECRET` for the Excel sync.
+**The two cron secrets are NOT interchangeable:** automations/newsletters/sequences authenticate with
+`x-cron-secret: <service-role key>`; finance reminders and `/api/excel/sync` use `CRON_SECRET`.
