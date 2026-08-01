@@ -1,7 +1,7 @@
 # Roadmap — Newsletters, Marketing Automation, Team Chat
 
-Status: **Phase 1 complete.** Data model, send pipeline, UI, templates, AI drafting and the
-provider feedback webhook are all built and verified. Phases 2 and 3 are unbuilt.
+Status: **Phases 1 and 2 complete.** Data model, send pipeline, UI, templates, AI drafting and the
+provider feedback webhook are all built and verified, as are segments, drip sequences and lead scoring. Phase 3 (team chat) is unbuilt.
 
 ---
 
@@ -116,7 +116,7 @@ same way agents propose writes rather than making them.
 
 ---
 
-## 3. Phase 2 — Marketing automation (the Mautic ideas)
+## 3. Phase 2 — Marketing automation (the Mautic ideas) — **COMPLETE**
 
 Our automation engine already does triggers → conditions → actions with an outbox and retries. Three
 things are missing, in order of value:
@@ -150,9 +150,19 @@ Three rules the UI states outright because people assume otherwise: people enter
 re-added; leaving the list or segment does NOT eject someone mid-drip; unsubscribing or bouncing
 stops it immediately.
 
-**3. Lead scoring.** Points per action (opened, clicked, visited pricing, submitted form), decaying
-over time, exposed as a field on the person. Cheap once events exist, and it is what makes a
-"Sales follow-up" agent actually useful.
+**3. Lead scoring — BUILT (0074).** Points per signal, decaying with a configurable half-life,
+stored on the subscriber and filterable from segments.
+
+Stored, not computed: 0072's engagement predicates already run an EXISTS per row, and a decayed sum
+computed inside a filter would multiply that by each person's event count. A column refreshed in
+batches on the cron makes `score >= 20` a plain integer scan; the staleness is at most one tick.
+
+Decay is the point. Without it the score is a lifetime total, so someone who read everything two
+years ago outranks someone reading you now — inverting the only question the score exists to answer.
+
+Scope, stated: newsletter engagement only. Form submissions and page views are out because both
+need matching an anonymous visitor to a subscriber, which is a guess — and a scoring model built on
+a guess is worse than a narrower one that is right.
 
 Deliberately **not** doing: Mautic's landing-page builder (we have Forms + careers + sites), its
 own CRM (we are one), or its plugin marketplace.

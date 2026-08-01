@@ -28,7 +28,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
     domain); and a verified sending domain in Resend.
   - **0069 (post board), 0072 (segments) and 0073 (sequences) are PENDING** if not yet run.
-    0073 must come after 0072 and 0071. Drips need their own cron on `/api/sequences/run`.
+    0073 must come after 0072 and 0071; 0074 after 0073. `/api/sequences/run` needs its own cron —
+    it drives drips AND does enrolment, the stale sweep and the score refresh.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
     skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
@@ -156,6 +157,13 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
   the model sends by id, so putting either into a stored run transcript is a leak for no gain.
   Note this is exposed over `/api/mcp` too, like every other tool.
+- **Lead scoring (0074)** stores a DECAYED engagement score on `newsletter_subscribers.score`,
+  refreshed in batches by `/api/sequences/run`. Stored rather than computed because segments filter
+  on it and a per-row decayed sum would be quadratic against 0072's EXISTS predicates. 0074
+  **redefines `segment_match` in full** (adds the `score` field) and `get_newsletter_subscribers`
+  (selects it) — extend those definitions, don't add parallel ones. Scope is newsletter engagement
+  only; form/page signals are excluded because matching an anonymous visitor to a subscriber is a
+  guess.
 - **Sequences (0073)** are drips with a per-subscriber cursor. A step's email points at a **draft**
   newsletter and sending writes a normal `newsletter_deliveries` row — that is what gives dedupe,
   tracking and unsubscribe for free, and it means a newsletter already SENT as a campaign must not
