@@ -250,12 +250,48 @@
     transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
   }
+  /* Directional variants override only the starting transform; the shared
+     transition and .reveal-in below stay in charge of the rest. */
+  .reveal-left { transform: translateX(-30px); }
+  .reveal-right { transform: translateX(30px); }
+  .reveal-zoom { transform: scale(0.95); }
+  .reveal-fade { transform: none; }
   /* Drop the compositing hint once revealed. Holding will-change forever pins a
      stale layer: descendants then miss repaints when the theme tokens change at
      runtime, so cards kept their old background after a theme toggle. */
   .reveal-in { opacity: 1; transform: none; will-change: auto; }
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ── Hero artwork ─────────────────────────────────────────────────────────
+     The engraving is a real full-bleed image; the ASCII field interacts on
+     top of it. scale(1.03) is the deliberate overscan past both edges. The
+     parallax is scroll-driven CSS only — @supports gates it, and browsers
+     without it simply keep the static plate. */
+  .hero-art { transform: scale(1.03); transform-origin: 50% 0; }
+  .hero-art img {
+    animation: hero-art-in 1s ease-out both;
+  }
+  @keyframes hero-art-in { from { opacity: 0; } }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .hero-art {
+        animation: hero-art-drift linear both;
+        animation-timeline: view();
+        animation-range: exit 0% exit 100%;
+      }
+      @keyframes hero-art-drift {
+        to { transform: translateY(64px) scale(1.06); }
+      }
+    }
+  }
+
+  /* Below-fold sections skip layout/paint until scrolled near. The intrinsic
+     size keeps the scrollbar honest so the page doesn't jump. */
+  .cv-auto { content-visibility: auto; contain-intrinsic-size: auto 720px; }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-art, .hero-art img { animation: none; }
   }
 }
 

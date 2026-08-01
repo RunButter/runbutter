@@ -46,7 +46,7 @@ export default function AsciiField({
    * 'contain' fits the WHOLE artwork inside it, which is the only way a
    * composition whose meaning lives in its corners survives a wide hero.
    */
-  imageFit?: 'cover' | 'contain';
+  imageFit?: 'cover' | 'contain' | 'width';
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -63,6 +63,7 @@ export default function AsciiField({
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let cols = 0, rows = 0, t = 0, raf = 0;
+    let inView = true;   // rAF stops while the hero is scrolled away
     const mouse = { x: -9999, y: -9999, lastX: -9999, lastY: -9999 };
 
     // Expanding wave-rings left by cursor movement and clicks.
@@ -131,7 +132,13 @@ export default function AsciiField({
       const gridAspect = (cols * cellW) / (rows * cell);
       const ia = artImg.naturalWidth / artImg.naturalHeight;
 
-      if (imageFit === 'contain') {
+      if (imageFit === 'width') {
+        const dw = cols * imageScale;
+        const dh = ((cols * cellW) / ia / cell) * imageScale;
+        const dx = (cols - dw) / 2;
+        const dy = (rows - dh) * Math.max(0, Math.min(1, focalY));
+        octx.drawImage(artImg, dx, dy, dw, dh);
+      } else if (imageFit === 'contain') {
         // The whole plate, letterboxed. Width and height are computed in the
         // grid's own units, which is why cellW appears on both sides.
         let dw = cols, dh = rows;
@@ -239,7 +246,7 @@ export default function AsciiField({
           ctx!.fillText(ch, px, py);
         }
       }
-      if (!reduced) raf = requestAnimationFrame(frame);
+      if (!reduced && inView) raf = requestAnimationFrame(frame);
     }
 
     // Window-level listeners + rect bounds check: the canvas sits BEHIND the
@@ -266,6 +273,20 @@ export default function AsciiField({
       if (pt) addRipple(pt.x, pt.y, 1.35, 1600); // shockwave
     };
 
+    // A full-height canvas animating at 60fps below the fold is pure waste:
+    // pause the loop whenever the hero is out of view, resume on return.
+    const vio = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(([e]) => {
+          const now = !!e?.isIntersecting;
+          if (now === inView) return;
+          inView = now;
+          if (reduced) return;
+          cancelAnimationFrame(raf);
+          if (inView) raf = requestAnimationFrame(frame);
+        })
+      : null;
+    vio?.observe(canvas);
+
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('pointermove', onMove, { passive: true });
@@ -273,6 +294,7 @@ export default function AsciiField({
     if (reduced) frame(); else raf = requestAnimationFrame(frame);
 
     return () => {
+      vio?.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onMove);

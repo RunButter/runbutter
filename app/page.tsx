@@ -160,33 +160,46 @@ export default function HomePage() {
           interactive product window is the centrepiece and breaks into the
           page below.
 
-          The drifting ASCII terrain now carries the Flammarion engraving
-          (1888, public domain) as a height bias — glyphs cluster where the ink
-          is, so the figure pushing through the edge of the sky emerges out of
-          the same field the cursor already disturbs. It is NOT an image layered
-          behind an effect: the glow and the ripples travel through the picture,
-          which is the only version worth having.
-
-          focalY 0.42 puts the tear in the firmament and the reaching figure
-          across the middle band — low enough to clear the headline, high enough
-          not to be swallowed by the product window below. */}
+          The Flammarion engraving (1888, public domain) is now BOTH layers:
+          the real plate, full-bleed and visible, and the height bias for the
+          ASCII field drawn over it — so glyphs cluster on the ink and the
+          cursor's glow and ripples travel through the same picture you can
+          actually see. Width-fit at every viewport: 'contain' flipped to side
+          margins on ultrawide screens, which read as a crop. */}
       <section className="relative overflow-hidden">
+        {/* The plate itself: whole composition, edge to edge, top-anchored,
+            with a slight deliberate overscan (.hero-art) past both sides.
+            multiply drops the paper onto the canvas; dark mode inverts to
+            white ink and screens it over the dark canvas. The bottom mask
+            dissolves it into the page before the product window. */}
+        <div className="hero-art absolute inset-x-0 top-0 pointer-events-none" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/flammarion-1400.webp"
+            srcSet="/flammarion-800.webp 800w, /flammarion-1400.webp 1400w"
+            sizes="100vw"
+            width={1376}
+            height={768}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            className="w-full h-auto select-none mix-blend-multiply opacity-[0.55] dark:invert dark:mix-blend-screen dark:opacity-[0.4]
+                       [mask-image:linear-gradient(to_bottom,black_60%,transparent_98%)]
+                       [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_98%)]"
+          />
+        </div>
         <div className="absolute inset-0">
           <AsciiField
             colors={MONO}
-            baseAlpha={0.14}
-            peakAlpha={0.66}
+            baseAlpha={0.1}
+            peakAlpha={0.5}
             image="/flammarion.jpg"
-            imageWeight={0.62}
-            /* The WHOLE plate. Cover-fit cropped a portrait engraving to fill a
-               wide hero, which threw away the two things that carry the meaning
-               — the figure pushing through at bottom-left and the sun at right. */
-            imageFit="contain"
+            /* Lighter than before: the real image now carries the picture, so
+               the field is the shimmer and the interaction, not the render. */
+            imageWeight={0.42}
+            imageFit="width"
             focalX={0.5}
-            /* Sat high rather than centred: at 1.79:1 the plate nearly fills
-               the width, so this puts the horizon and the reaching figure
-               across the middle band instead of behind the product window. */
-            focalY={0.3}
+            focalY={0}
             imageScale={1}
             /* The centre-calming contour is what keeps the plain field quiet;
                with artwork it would erase the picture exactly where it matters. */
@@ -200,13 +213,13 @@ export default function HomePage() {
             artwork survive at the edges and below. */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(58% 42% at 50% 30%, hsl(var(--canvas)/0.97) 45%, hsl(var(--canvas)/0.72) 72%, transparent 100%)' }}
+          style={{ background: 'radial-gradient(56% 44% at 50% 28%, hsl(var(--canvas)/0.94) 38%, hsl(var(--canvas)/0.62) 68%, transparent 100%)' }}
         />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-canvas to-transparent pointer-events-none" />
 
         {/* pt-16 on a phone: 96px of empty canvas above the badge pushed the
             headline most of the way down the first screen. */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-16 md:pt-32 pb-14 text-center">
+        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 md:pt-44 pb-16 md:pb-24 text-center">
           {/* Two ranks, and the difference is COLOUR and SIZE, not weight —
               the design rule the rest of the app follows. "Build beyond" is the
               line the engraving is arguing for; the butter line stays because
@@ -232,7 +245,10 @@ export default function HomePage() {
 
         {/* the big product window breaks out of the hero into the page */}
         <div id="product" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 -mb-24 md:-mb-40">
-          <Reveal><ProductPreview /></Reveal>
+          {/* A quiet halo behind the window lifts it off the artwork without
+              adding a colour. */}
+          <div aria-hidden className="absolute -inset-x-4 -top-10 bottom-0 rounded-[3rem] bg-canvas/60 blur-2xl pointer-events-none" />
+          <Reveal variant="zoom"><ProductPreview /></Reveal>
         </div>
       </section>
 
@@ -267,9 +283,9 @@ export default function HomePage() {
                 {/* Icon inline with the title rather than stacked above it:
                     on a phone these stack one per row, and a stacked icon made
                     fourteen tiles into a very long scroll for no extra clarity. */}
-                <div className="h-full rounded-xl bg-surface border border-subtle p-4 sm:p-5 transition-colors hover:border-strong">
+                <div className="group h-full rounded-xl bg-surface border border-subtle p-4 sm:p-5 transition-all duration-200 hover:border-strong hover:-translate-y-0.5 hover:shadow-card">
                   <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-7 h-7 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
                       <c.icon className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <h3 className="text-sm font-medium text-primary">{c.name}</h3>
@@ -283,14 +299,14 @@ export default function HomePage() {
       </section>
 
       {/* Feature deep-dives (alternating rows with real mock UIs) */}
-      <div className="border-t border-subtle">
+      <div className="border-t border-subtle cv-auto">
         <Showcase />
       </div>
 
       {/* ── The full inventory ───────────────────────────────────────────────
           Grouped index rather than a flat list: this is the section a buyer
           scans to check their own must-have is in the box. */}
-      <section className="border-t border-subtle">
+      <section className="border-t border-subtle cv-auto">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <div className="max-w-2xl">
@@ -404,7 +420,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-      <section className="border-t border-subtle">
+      <section className="border-t border-subtle cv-auto">
         <div className="max-w-3xl mx-auto px-6 py-20">
           <Reveal>
             <h2 className="text-2xl md:text-4xl font-medium tracking-tight text-center">Questions, answered</h2>
@@ -424,7 +440,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="border-t border-subtle">
+      <section className="border-t border-subtle cv-auto">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <div className="relative overflow-hidden rounded-2xl bg-inverse px-8 py-20 text-center">

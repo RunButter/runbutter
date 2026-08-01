@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import Reveal from '@/components/landing/Reveal';
 import type { FinanceSeriesPoint } from '@/lib/crm/data';
 
 // Deep-dive feature rows for the landing page. Each pairs a copy block with a
@@ -173,16 +174,20 @@ function Row({ reverse, eyebrow, title, body, bullets, visual }: {
     // page scrolls sideways.
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
       <div className={`min-w-0 ${reverse ? 'lg:order-2' : ''}`}>
-        <div className={`inline-block text-2xs font-medium uppercase tracking-wider mb-3 text-tertiary`}>{eyebrow}</div>
-        <h3 className="text-2xl md:text-3xl font-medium tracking-tight text-primary">{title}</h3>
-        <p className="mt-3 text-secondary leading-relaxed">{body}</p>
-        <ul className="mt-5 space-y-2.5">
-          {bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-base text-secondary"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{b}</li>
-          ))}
-        </ul>
+        <Reveal variant={reverse ? 'right' : 'left'}>
+          <div className={`inline-block text-2xs font-medium uppercase tracking-wider mb-3 text-tertiary`}>{eyebrow}</div>
+          <h3 className="text-2xl md:text-3xl font-medium tracking-tight text-primary">{title}</h3>
+          <p className="mt-3 text-secondary leading-relaxed">{body}</p>
+          <ul className="mt-5 space-y-2.5">
+            {bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-base text-secondary"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />{b}</li>
+            ))}
+          </ul>
+        </Reveal>
       </div>
-      <div className={`min-w-0 ${reverse ? 'lg:order-1' : ''}`}>{visual}</div>
+      <div className={`min-w-0 ${reverse ? 'lg:order-1' : ''}`}>
+        <Reveal variant={reverse ? 'left' : 'right'} delay={90}>{visual}</Reveal>
+      </div>
     </div>
   );
 }
