@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // between navigation and auth-ready reads as a broken page.
   if (!ready || !authenticated) {
     return (
-      <div className="flex h-screen overflow-hidden bg-surface">
+      <div className="flex h-screen overflow-hidden bg-canvas">
         <div className="hidden lg:flex"><NavRail /></div>
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-tertiary animate-spin" />
@@ -57,20 +57,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface text-primary">
+    <div className="flex h-screen overflow-hidden bg-canvas text-primary">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
       <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
+        <header className="lg:hidden h-16 shrink-0 flex items-center gap-2 px-6">
           <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="p-2 -ml-1 text-secondary hover:bg-surface-hover rounded-lg">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-semibold text-primary">RunButter</span>
+          <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
-        <div className="flex-1 overflow-y-auto bg-surface-sunken/30">
+        <div className="flex-1 overflow-y-auto bg-canvas">
           {company && requiredFeature ? (
             <PlanGate plan={company.plan} feature={requiredFeature}>{children}</PlanGate>
           ) : (

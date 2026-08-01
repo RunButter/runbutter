@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-surface-sunken">
-            <header className="bg-surface border-b">
+            <header className="bg-canvas">
                 <div className="max-w-5xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard" className="p-2 hover:bg-surface-hover rounded-full transition">

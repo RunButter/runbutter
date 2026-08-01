@@ -359,7 +359,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
 
     return (
         <div className="min-h-screen bg-surface-sunken pb-12">
-            <header className="bg-surface border-b sticky top-0 z-10 transition-shadow hover:shadow-elevated">
+            <header className="sticky top-0 z-10 bg-canvas">
                 <div className="max-w-7xl px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <Link href="/dashboard/candidates" className="p-2 hover:bg-surface-hover rounded-full transition shrink-0">

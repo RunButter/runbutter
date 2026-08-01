@@ -114,7 +114,7 @@ export default function TeamPage() {
 
     return (
         <div className="min-h-screen bg-surface-sunken pb-12">
-            <header className="bg-surface border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+            <header className="bg-canvas px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                     <Users className="w-6 h-6 text-accent" />
                     <h1 className="text-xl font-semibold text-primary">Team Management</h1>

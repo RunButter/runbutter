@@ -255,6 +255,7 @@ export const NAV = [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
     { slug: 'campaigns', label: 'Campaigns', icon: 'Rocket', href: '/objects/campaigns' },
     { slug: 'posts', label: 'Posts', icon: 'PenSquare', href: '/marketing/posts' },
+    { slug: 'newsletters', label: 'Newsletters', icon: 'Mail', href: '/marketing/newsletters' },
     { slug: 'forms', label: 'Forms', icon: 'FileInput', href: '/marketing/forms' },
     { slug: 'links', label: 'Short links', icon: 'Link2', href: '/marketing/links' },
     { slug: 'webanalytics', label: 'Web analytics', icon: 'Globe', href: '/marketing/analytics' },
