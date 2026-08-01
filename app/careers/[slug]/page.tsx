@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MapPin, Briefcase, Building2, ArrowRight } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase';
+import { brandStyle } from '@/lib/brand/theme';
 
 export const runtime = 'nodejs';
 // Cached so a burst of traffic from a job post doesn't hit Postgres per view,
@@ -70,9 +71,13 @@ export default async function CareersPage({ params }: { params: { slug: string }
   if (!page) notFound();
 
   const { company, positions } = page;
-  // The workspace's brand colour drives the page. Fall back to the product
-  // accent rather than rendering an unstyled page when branding is unset.
-  const accent = /^#[0-9a-f]{6}$/i.test(company.accent_color || '') ? company.accent_color! : '#4653CE';
+  // The brand colour drives the page by overriding --accent and its family on
+  // the root, so the ordinary accent classes below carry it. brandStyle returns
+  // {} when there is no usable colour, which leaves the product accent in place.
+  //
+  // This replaced hand-rolled `style={{ background: accent }}` plus a hardcoded
+  // text-white label — which failed contrast outright on any light brand colour
+  // — and a stale '#4653CE' fallback left over from before the emerald redesign.
 
   // Group by department so a 40-role page stays scannable; roles with no
   // department fall into one trailing bucket rather than vanishing.
@@ -85,7 +90,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
     a === 'Other' ? 1 : b === 'Other' ? -1 : a.localeCompare(b));
 
   return (
-    <main className="min-h-screen bg-surface-sunken" style={{ ['--brand' as any]: accent }}>
+    <main className="min-h-screen bg-surface-sunken" style={brandStyle(company.accent_color)}>
       <header className="border-b border-subtle bg-surface">
         {company.cover_image_url && (
           // Decorative: the heading right below carries the meaning, so an
@@ -98,7 +103,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
           <div className="flex items-center gap-3.5">
             {company.logo_url
               ? <img src={company.logo_url} alt="" className="w-12 h-12 rounded-xl object-contain ring-1 ring-subtle bg-surface" />
-              : <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-semibold" style={{ background: accent }}>
+              : <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-accent text-accent-fg text-lg font-semibold">
                   {company.name.slice(0, 1).toUpperCase()}
                 </div>}
             <div className="min-w-0">
@@ -115,7 +120,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: accent }}>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-accent text-accent-fg">
               <Briefcase className="w-3.5 h-3.5" />
               {positions.length} open {positions.length === 1 ? 'role' : 'roles'}
             </span>
@@ -155,7 +160,7 @@ export default async function CareersPage({ params }: { params: { slug: string }
                             {p.employment_type && <span className="capitalize">{prettyType(p.employment_type)}</span>}
                           </div>
                         </div>
-                        <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-1.5 transition-all" style={{ color: accent }}>
+                        <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-accent group-hover:gap-1.5 transition-all">
                           View role <ArrowRight className="w-3.5 h-3.5" />
                         </span>
                       </Link>

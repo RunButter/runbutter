@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MapPin, Briefcase, ArrowLeft, ArrowRight, Building2, Clock } from 'lucide-react';
+import { brandStyle } from '@/lib/brand/theme';
 
 export interface JobPageData {
   company: {
@@ -49,10 +50,13 @@ export function jobPostingJsonLd(job: JobPageData, url: string) {
 /** Presentation only — the route does the fetching and the 404. */
 export default function JobDetail({ job }: { job: JobPageData }) {
   const { company, position, other_positions: others } = job;
-  const accent = /^#[0-9a-f]{6}$/i.test(company.accent_color || '') ? company.accent_color! : '#4653CE';
+  // Brand colour drives the page via --accent (lib/brand/theme.ts) rather than
+  // inline fills. The previous version hardcoded text-white on an arbitrary
+  // background, which fails contrast outright on any light brand colour — on
+  // the Apply button, i.e. the one control the page exists for.
 
   return (
-    <main className="min-h-screen bg-surface-sunken">
+    <main className="min-h-screen bg-surface-sunken" style={brandStyle(company.accent_color)}>
       <header className="bg-surface border-b border-subtle">
         {company.cover_image_url && (
           <div className="w-full h-32 sm:h-44 overflow-hidden bg-surface-sunken">
@@ -68,7 +72,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
           <div className="flex items-start gap-3.5">
             {company.logo_url
               ? <img src={company.logo_url} alt="" className="w-11 h-11 rounded-xl object-contain ring-1 ring-subtle bg-surface shrink-0" />
-              : <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-base font-semibold shrink-0" style={{ background: accent }}>
+              : <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-accent text-accent-fg text-base font-semibold shrink-0">
                   {company.name.slice(0, 1).toUpperCase()}
                 </div>}
             <div className="min-w-0">
@@ -90,8 +94,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
           </div>
 
           <Link href={`/apply/${position.id}`}
-            className="mt-6 inline-flex items-center gap-2 h-11 px-5 rounded-xl text-base font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
-            style={{ background: accent }}>
+            className="mt-6 inline-flex items-center gap-2 h-11 px-5 rounded-xl text-base font-semibold bg-accent text-accent-fg shadow-sm hover:opacity-90 transition-opacity">
             Apply for this role <ArrowRight className="w-4 h-4" />
           </Link>
           {company.apply_intro && (
@@ -120,8 +123,7 @@ export default function JobDetail({ job }: { job: JobPageData }) {
           <p className="text-base font-medium text-primary">Interested?</p>
           <p className="mt-1 text-sm text-tertiary">Takes a few minutes — CV plus a short assessment.</p>
           <Link href={`/apply/${position.id}`}
-            className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold text-white hover:opacity-90"
-            style={{ background: accent }}>
+            className="mt-4 inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold bg-accent text-accent-fg hover:opacity-90">
             Apply now <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </section>

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Upload, FileText, Loader2, CheckCircle2, ArrowRight, X } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import LogoContainer from '@/components/LogoContainer';
+import { brandStyle } from '@/lib/brand/theme';
 
 export default function ApplyPage({ params }: { params: { positionId: string } }) {
   const router = useRouter();
@@ -16,7 +17,10 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   const [success, setSuccess] = useState(false);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [positionInfo, setPositionInfo] = useState<{ title: string; companyName: string; logoUrl: string | null } | null>(null);
+  const [positionInfo, setPositionInfo] = useState<{
+    title: string; companyName: string; logoUrl: string | null;
+    accentColor: string | null; applyIntro: string | null;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -69,25 +73,23 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
   useEffect(() => {
     const fetchPositionDetails = async () => {
-      const { data, error } = await supabase
-        .from('positions')
-        .select(`
-          title,
-          companies (
-            name,
-            logo_url
-          )
-        `)
-        .eq('id', params.positionId)
-        .single();
+      // One SECURITY DEFINER read (0080) instead of a raw table select. The
+      // brand colour lives on `workspaces`, which is not readable by an
+      // anonymous candidate, and this keeps the logo/name precedence identical
+      // to the careers page rather than re-deriving it here.
+      const { data, error } = await supabase.rpc('get_apply_branding', {
+        p_position_id: params.positionId,
+      });
 
-      if (data && !error) {
-        setPositionInfo({
-          title: data.title,
-          companyName: (data.companies as any).name,
-          logoUrl: (data.companies as any).logo_url,
-        });
-      }
+      if (error || !data) return;   // .rpc() resolves on failure — never throws
+      const b = data as any;
+      setPositionInfo({
+        title: b.title,
+        companyName: b.company_name,
+        logoUrl: b.logo_url,
+        accentColor: b.accent_color,
+        applyIntro: b.apply_intro,
+      });
     };
 
     fetchPositionDetails();
@@ -218,6 +220,13 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
     }
   };
 
+  // Overrides --accent and its family on the page root, so every existing
+  // `bg-accent` / `text-accent` / `ring-accent` below resolves to the employer's
+  // colour. Empty object when they haven't set one, which leaves the product
+  // accent exactly as it was. The label colour on the fill is computed per
+  // brand rather than inherited — see lib/brand/theme.ts.
+  const brand = brandStyle(positionInfo?.accentColor);
+
   const inputCls = 'w-full h-11 px-3.5 text-md card-surface placeholder:text-tertiary shadow-sm focus:ring-2 focus:ring-accent/30 outline-none transition-shadow';
 
   // Shared brand header: the company applying to, not RunButter.
@@ -239,7 +248,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
 
   if (success) {
     return (
-      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
+      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6" style={brand}>
         <div className="max-w-md w-full">
           <div className="bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-8 text-center">
             <div className="mb-6"><CompanyMark /></div>
@@ -275,7 +284,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   }
 
   return (
-    <div className="min-h-[100dvh] bg-surface-sunken py-10 px-4 sm:px-6">
+    <div className="min-h-[100dvh] bg-surface-sunken py-10 px-4 sm:px-6" style={brand}>
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-8">
           <div className="mb-6"><CompanyMark big /></div>
@@ -284,6 +293,12 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
           </h1>
           {positionInfo?.companyName && (
             <p className="mt-1.5 text-md text-secondary">Application for {positionInfo.companyName}</p>
+          )}
+          {/* Settings → Branding offers an "Apply form intro" field described as
+              "One line candidates see above the application form". It was
+              never rendered anywhere until now. */}
+          {positionInfo?.applyIntro && (
+            <p className="mt-3 text-base text-secondary max-w-md mx-auto leading-relaxed">{positionInfo.applyIntro}</p>
           )}
         </div>
 

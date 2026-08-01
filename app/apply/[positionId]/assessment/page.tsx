@@ -9,6 +9,7 @@ import {
     Brain, Target, Clock, BarChart3, Check
 } from 'lucide-react';
 import LogoContainer from '@/components/LogoContainer';
+import { brandStyle } from '@/lib/brand/theme';
 import { useDialog } from '@/components/ui/Dialog';
 
 // Candidate assessment, one question at a time (Typeform-style): a real
@@ -24,7 +25,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const [loading, setLoading] = useState(true);
     const [candidate, setCandidate] = useState<any>(null);
     const [template, setTemplate] = useState<any>(null);
-    const [companyInfo, setCompanyInfo] = useState<{ name: string, logoUrl: string | null } | null>(null);
+    const [companyInfo, setCompanyInfo] = useState<{ name: string, logoUrl: string | null, accentColor: string | null } | null>(null);
     const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1: personality/workstyle, 2: screening, 3: completed
     const [submitting, setSubmitting] = useState(false);
     const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -74,7 +75,11 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
             setCandidate(can);
             setCompanyInfo({
                 name: company.name,
-                logoUrl: company.logo_url
+                logoUrl: company.logo_url,
+                // 0080 carries the employer's brand colour this far. Without it
+                // the candidate crossed from the company's colours into ours on
+                // the longest screen of the whole funnel.
+                accentColor: company.accent_color ?? null,
             });
 
             if (tmpl && tmpl.questions) {
@@ -232,6 +237,11 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
         }
     };
 
+    // Overrides --accent and its family for the whole screen, so every existing
+    // bg-accent / text-accent / ring-accent below becomes the employer's colour.
+    // Empty when unbranded, which leaves the product accent untouched.
+    const brand = brandStyle(companyInfo?.accentColor);
+
     const CompanyMark = () =>
         companyInfo?.logoUrl ? (
             <LogoContainer src={companyInfo.logoUrl} alt={companyInfo.name} width="130px" height="36px" className="h-9 w-auto" />
@@ -246,7 +256,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
     if (loading) {
         return (
-            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center">
+            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center" style={brand}>
                 <Loader2 className="w-8 h-8 text-tertiary animate-spin" />
             </div>
         );
@@ -254,7 +264,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
 
     if (currentStep === 3) {
         return (
-            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6">
+            <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center p-6" style={brand}>
                 <div className="max-w-md w-full bg-surface rounded-2xl ring-1 ring-subtle shadow-popover p-8 text-center">
                     <div className="flex justify-center mb-6"><CompanyMark /></div>
                     <div className="w-14 h-14 bg-success/10 ring-1 ring-success/30 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -275,7 +285,7 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const personalityDone = qIndex >= personalityQs.length;
 
     return (
-        <div className="min-h-[100dvh] bg-surface-sunken flex flex-col">
+        <div className="min-h-[100dvh] bg-surface-sunken flex flex-col" style={brand}>
             {/* Header: company + real per-question progress */}
             <header className="bg-surface/80 backdrop-blur border-b border-subtle sticky top-0 z-10">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
