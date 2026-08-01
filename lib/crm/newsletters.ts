@@ -120,6 +120,25 @@ export const cancelNewsletter = (privy: string, ws: string, id: string) =>
   rpc('cancel_newsletter', { p_privy: privy, p_workspace: ws, p_id: id });
 
 /**
+ * Draft a newsletter from a brief on the workspace's own AI key. Returns the
+ * draft for a human to edit — it never saves and never sends.
+ */
+export async function draftNewsletter(
+  privy: string, ws: string, template: TemplateKey, brief: string,
+): Promise<{ draft?: { subject: string; preheader: string; content: NewsletterContent }; error?: string }> {
+  const { getAccessToken } = await import('@privy-io/react-auth');
+  const token = await getAccessToken().catch(() => null);
+  const res = await fetch('/api/newsletters/draft', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
+    body: JSON.stringify({ privyUserId: privy, workspaceId: ws, template, brief }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: j?.error || `Draft failed (${res.status})` };
+  return { draft: j.draft };
+}
+
+/**
  * Parse a pasted CSV or newline list into { email, name } pairs.
  *
  * Local, not a dependency and not a server round-trip: the whole point is that

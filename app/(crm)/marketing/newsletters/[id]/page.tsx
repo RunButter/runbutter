@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Send, Save, Eye, Plus, Trash2, Clock } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Save, Eye, Plus, Trash2, Clock, Sparkles } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
-  getNewsletter, saveNewsletter, queueNewsletter, listNewsletterLists,
+  getNewsletter, saveNewsletter, queueNewsletter, listNewsletterLists, draftNewsletter,
   type NewsletterFull, type NewsletterList,
 } from '@/lib/crm/newsletters';
 import {
@@ -38,6 +38,8 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [brief, setBrief] = useState('');
+  const [drafting, setDrafting] = useState(false);
 
   const load = useCallback(async (w: WorkspaceContext, p: string) => {
     const [row, ls] = await Promise.all([getNewsletter(p, w.id, params.id), listNewsletterLists(p, w.id)]);
@@ -64,6 +66,22 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
     setSaving(false);
     if (error) { notify(error); return false; }
     return true;
+  };
+
+  const draft = async () => {
+    if (!n || !ws || !privy || !brief.trim()) return;
+    setDrafting(true);
+    const { draft: d, error } = await draftNewsletter(privy, ws.id, (n.template || 'plain') as TemplateKey, brief);
+    setDrafting(false);
+    if (error || !d) return notify(error || 'No draft returned.');
+    // Merged into the existing draft, not swapped for it: the list selection,
+    // from-name and reply-to are the user's and must survive a re-draft.
+    setN((p) => (p ? {
+      ...p,
+      subject: d.subject || p.subject,
+      preheader: d.preheader || p.preheader,
+      content: { ...(p.content || {}), ...d.content },
+    } : p));
   };
 
   const send = async () => {
@@ -145,6 +163,30 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
                 This newsletter has started sending, so it can no longer be edited. Its content is kept
                 exactly as delivered.
               </p>
+            )}
+
+            {!locked && (
+              <div className="rounded-lg bg-surface-sunken p-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-xs font-medium text-primary">Draft with AI</span>
+                  <span className="ml-auto text-3xs text-tertiary">your own key</span>
+                </div>
+                <textarea
+                  value={brief} onChange={(e) => setBrief(e.target.value)} rows={2}
+                  className="input-field !h-auto py-2 resize-y"
+                  placeholder="What should this say? e.g. announce the new board view, invite people to try it"
+                />
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="secondary" onClick={draft} disabled={drafting || !brief.trim()}>
+                    {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {n.subject || n.content?.body ? 'Redraft' : 'Draft'}
+                  </Button>
+                  {/* Said plainly: a draft that silently overwrote a finished
+                      newsletter would be the worst possible surprise here. */}
+                  <span className="text-3xs text-tertiary">Fills subject and body below. Nothing is sent.</span>
+                </div>
+              </div>
             )}
 
             <Field label="Subject">
