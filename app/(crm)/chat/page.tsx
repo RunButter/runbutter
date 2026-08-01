@@ -1,0 +1,243 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { Hash, Lock, Plus, Loader2, Send, Trash2, Bot, Link2, X } from 'lucide-react';
+import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
+import {
+  listChannels, createChannel, deleteChannel, listMessages, postMessage,
+  deleteMessage, markChannelRead, groupMessages, POLL_MS,
+  type Channel, type Message,
+} from '@/lib/crm/chat';
+import PageHeader from '@/components/dashboard/PageHeader';
+import Button from '@/components/ui/Button';
+import { useDialog } from '@/components/ui/Dialog';
+
+/**
+ * Team chat. The point is not chat — it is chat attached to records: a channel
+ * can belong to an invoice, a candidate, a deal, in the same database as the
+ * thing it is about. Slack cannot do that because it does not know what an
+ * invoice is.
+ */
+export default function ChatPage() {
+  const { confirm: confirmDialog, notify } = useDialog();
+  const { ready, authenticated, user } = usePrivy();
+  const privy = authenticated && user ? user.id : null;
+  const displayName = (user?.email?.address || user?.google?.email || 'Someone').split('@')[0];
+
+  const [ws, setWs] = useState<WorkspaceContext | null>(null);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const bottom = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
+
+  const loadChannels = useCallback(async (w: WorkspaceContext, p: string) => {
+    const cs = await listChannels(p, w.id);
+    setChannels(cs);
+    setActive((a) => a ?? cs[0]?.id ?? null);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!privy) { setLoading(false); return; }
+    getWorkspace(privy).then((w) => { if (w) { setWs(w); loadChannels(w, privy); } else setLoading(false); });
+  }, [ready, privy, loadChannels]);
+
+  // Poll the open channel and the channel list together — see POLL_MS for why
+  // this is polling and not a websocket.
+  useEffect(() => {
+    if (!privy || !ws || !active) return;
+    let cancelled = false;
+    const tick = async () => {
+      const [ms, cs] = await Promise.all([listMessages(privy, active), listChannels(privy, ws.id)]);
+      if (cancelled) return;
+      setMessages(ms);
+      setChannels(cs);
+    };
+    tick();
+    const t = setInterval(tick, POLL_MS);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [privy, ws, active]);
+
+  // Mark read on open, and again whenever new messages land while you are
+  // looking at the bottom of the channel.
+  useEffect(() => {
+    if (privy && active && atBottom.current) markChannelRead(privy, active);
+  }, [privy, active, messages.length]);
+
+  useEffect(() => {
+    // Only auto-scroll if the reader was already at the bottom; yanking someone
+    // away from history they are reading is worse than a missed scroll.
+    if (atBottom.current) bottom.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const send = async () => {
+    if (!privy || !active || !body.trim()) return;
+    setSending(true);
+    const text = body;
+    setBody('');
+    const { error } = await postMessage(privy, active, text, displayName);
+    setSending(false);
+    if (error) { setBody(text); return notify(error); }
+    atBottom.current = true;
+    setMessages(await listMessages(privy, active));
+  };
+
+  const newChannel = async () => {
+    if (!privy || !ws) return;
+    const name = window.prompt('Channel name');   // eslint-disable-line no-alert
+    if (!name?.trim()) return;
+    setCreating(true);
+    const { id, error } = await createChannel(privy, ws.id, name);
+    setCreating(false);
+    if (error) return notify(error);
+    await loadChannels(ws, privy);
+    if (id) setActive(id);
+  };
+
+  if (!ready || loading) {
+    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+  }
+
+  const channel = channels.find((c) => c.id === active) || null;
+  const groups = groupMessages(messages);
+
+  return (
+    <>
+      <PageHeader title="Chat" subtitle={channel ? channel.topic || `#${channel.name}` : 'Channels for your team'}>
+        <Button size="sm" variant="primary" onClick={newChannel} disabled={!privy || creating}>
+          {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} New channel
+        </Button>
+      </PageHeader>
+
+      <div className="flex-1 min-h-0 flex gap-3 px-5 lg:px-7 pb-6">
+        {/* Channel list */}
+        <aside className="w-52 shrink-0 rounded-xl bg-surface shadow-card p-2 overflow-y-auto hidden sm:block">
+          {channels.length === 0 ? (
+            <p className="text-2xs text-tertiary p-3 text-center">No channels yet.</p>
+          ) : channels.map((c) => (
+            <button key={c.id} onClick={() => { atBottom.current = true; setActive(c.id); }}
+              className={`w-full flex items-center gap-1.5 h-8 px-2 rounded-lg text-xs transition-colors ${
+                c.id === active ? 'bg-surface-hover text-primary font-medium' : 'text-secondary hover:bg-surface-hover'}`}>
+              {c.is_private ? <Lock className="w-3.5 h-3.5 shrink-0 text-tertiary" /> : <Hash className="w-3.5 h-3.5 shrink-0 text-tertiary" />}
+              <span className="truncate flex-1 text-left">{c.name}</span>
+              {c.unread > 0 && (
+                <span className="shrink-0 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-md bg-accent text-accent-fg text-3xs font-medium tabular-nums">
+                  {c.unread > 99 ? '99+' : c.unread}
+                </span>
+              )}
+            </button>
+          ))}
+        </aside>
+
+        {/* Conversation */}
+        <section className="flex-1 min-w-0 rounded-xl bg-surface shadow-card flex flex-col overflow-hidden">
+          {!channel ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center p-8">
+              <Hash className="w-5 h-5 text-tertiary" />
+              <p className="text-sm text-secondary">No channel selected.</p>
+              <p className="text-xs text-tertiary max-w-sm">
+                Channels can be attached to a record — an invoice, a candidate — so the discussion
+                lives next to the thing it is about.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="h-11 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
+                {channel.is_private ? <Lock className="w-3.5 h-3.5 text-tertiary" /> : <Hash className="w-3.5 h-3.5 text-tertiary" />}
+                <span className="text-sm font-medium text-primary truncate">{channel.name}</span>
+                {channel.linked_object && (
+                  <span className="inline-flex items-center gap-1 text-2xs text-tertiary">
+                    <Link2 className="w-3 h-3" />{channel.linked_object}
+                  </span>
+                )}
+                <button
+                  onClick={async () => {
+                    if (ws && privy && await confirmDialog(`Delete #${channel.name}? Every message in it goes too.`)) {
+                      await deleteChannel(privy, ws.id, channel.id);
+                      setActive(null); loadChannels(ws, privy);
+                    }
+                  }}
+                  className="ml-auto p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><Trash2 className="w-3.5 h-3.5 text-danger" /></button>
+              </div>
+
+              <div
+                className="flex-1 overflow-y-auto p-4 space-y-3"
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+                }}>
+                {messages.length === 0 && (
+                  <p className="text-xs text-tertiary text-center py-8">Nothing here yet. Say something.</p>
+                )}
+                {groups.map((g) => (
+                  <div key={g[0].id} className="flex gap-2.5">
+                    <span className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-2xs font-medium ${
+                      g[0].author_kind === 'agent' ? 'bg-accent/10 text-accent' : 'bg-surface-hover text-secondary'}`}>
+                      {g[0].author_kind === 'agent'
+                        ? <Bot className="w-3.5 h-3.5" />
+                        : (g[0].author_name || '?')[0].toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-medium text-primary truncate">{g[0].author_name || 'Someone'}</span>
+                        {/* An agent is always labelled. A reader must never have
+                            to guess whether a person or a bot wrote something. */}
+                        {g[0].author_kind === 'agent' && <span className="text-3xs text-accent">agent</span>}
+                        <span className="text-3xs text-tertiary">
+                          {new Date(g[0].created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {g.map((m) => (
+                        <div key={m.id} className="group flex items-start gap-2">
+                          <p className={`text-sm whitespace-pre-wrap break-words flex-1 ${m.deleted ? 'text-tertiary italic' : 'text-secondary'}`}>
+                            {m.deleted ? 'Message deleted' : m.body}
+                            {m.edited_at && !m.deleted && <span className="text-3xs text-tertiary ml-1">(edited)</span>}
+                          </p>
+                          {!m.deleted && m.author_privy === privy && (
+                            <button
+                              onClick={async () => {
+                                if (privy && await confirmDialog('Delete this message?')) {
+                                  await deleteMessage(privy, m.id);
+                                  if (active) setMessages(await listMessages(privy, active));
+                                }
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded text-tertiary hover:bg-surface-hover transition-opacity">
+                              <Trash2 className="w-3 h-3 text-danger" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div ref={bottom} />
+              </div>
+
+              <div className="shrink-0 p-3 border-t border-subtle flex items-end gap-2">
+                <textarea
+                  value={body} onChange={(e) => setBody(e.target.value)} rows={1}
+                  onKeyDown={(e) => {
+                    // Enter sends, Shift+Enter breaks the line — the convention
+                    // every chat app shares, so anything else feels broken.
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+                  }}
+                  className="input-field !h-auto py-2 resize-none flex-1 max-h-32"
+                  placeholder={`Message #${channel.name}`} />
+                <Button variant="primary" onClick={send} disabled={sending || !body.trim()}>
+                  {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+    </>
+  );
+}

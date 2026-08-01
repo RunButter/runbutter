@@ -85,6 +85,13 @@ const ALLOWED = new Set([
   // Lead scoring (0074). The recompute itself is service_role only and runs on
   // the cron — these are just the settings.
   'get_scoring_config', 'save_scoring_config',
+  // Team chat (0075). Visibility is decided by can_read_channel inside SQL, so
+  // every one of these is safe to expose through the verified proxy.
+  // post_agent_message is deliberately ABSENT — it forces author_kind='agent'
+  // and is service_role only, so a browser cannot post as an agent.
+  'get_channels', 'create_channel', 'delete_channel', 'join_channel', 'leave_channel',
+  'add_channel_member', 'get_messages', 'post_message', 'edit_message',
+  'delete_message', 'mark_channel_read',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

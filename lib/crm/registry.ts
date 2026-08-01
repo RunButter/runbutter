@@ -294,6 +294,7 @@ export const NAV = [
   // redundant three ways: Settings → Members lists who is in the workspace,
   // My Team covers your own reports, and /objects/people holds contacts.
   { group: 'Team', items: [
+    { slug: 'chat', label: 'Chat', icon: 'MessageCircle', href: '/chat' },
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
   ]},
