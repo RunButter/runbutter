@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public
@@ -28,21 +28,25 @@ const MODULES = [
   { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding checklists, and team pulse.' },
 ];
 
-// Cross-cutting capabilities, shown as a bento with rhythm (the first tile is
-// wide). Monochrome throughout — no hue.
-// 11 tiles, the first spanning two columns: exactly 12 cells, so the 4-column
-// grid fills three clean rows with no ragged gap at the end.
+// Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
+// throughout — no hue.
+// 14 tiles, two of them spanning two columns: exactly 16 cells, so the
+// 4-column grid fills four clean rows with no ragged gap at the end. Keep that
+// arithmetic true when editing — an odd tile leaves a hole in the last row.
 const CAPS = [
   { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true },
+  { icon: Mail, name: 'Newsletters and drip sequences', body: 'Write a campaign, filter the list live by behaviour, and let a sequence follow up on its own. Opens, clicks, bounces and one-click unsubscribe are handled.', wide: true },
+  { icon: Table2, name: 'Excel, both ways', body: 'A live link your team refreshes in Excel — or a real two-way sync, so edits in the sheet come back.' },
+  { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work, where your agents can post too. No fifth tab.' },
   { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records.' },
   { icon: PenLine, name: 'E-signatures', body: 'Send a document, they sign in the browser. No account, no third-party seat.' },
   { icon: FileInput, name: 'Custom forms', body: 'Publish a form, every answer lands as a record in your workspace.' },
+  { icon: FileSearch, name: 'Files that become data', body: 'Upload contracts and CVs; the text is indexed next to the ledger and searchable.' },
   { icon: Link2, name: 'Short links', body: 'Your own branded shortener, with click tracking on every campaign link.' },
   { icon: FileBarChart, name: 'Scheduled reports', body: 'A PDF of the numbers that matter, in the right inboxes every Monday.' },
   { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints the app uses.' },
   { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, straight from your documents.' },
   { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
-  { icon: Table, name: 'Import and export', body: 'CSV or Google Sheets in, any list out, one click.' },
   { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
 ];
 
@@ -65,6 +69,7 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
   { q: 'Can AI agents actually do work for me?', a: 'Yes. Define an agent with a role and a scoped set of tools, then run it on a task. It reads and updates records through the same verified endpoints the app uses, on your own AI key. By default it proposes changes for you to approve; you can let trusted agents run on their own within a step limit.' },
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
   { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
+  { q: 'My team lives in Excel. Do we have to stop?', a: 'No, and there are two ways to keep working the way you already do. The simple one is a live link you paste into Excel once (Data → Get Data → From Web); after that, Refresh All pulls today’s numbers, and the link is read-only so it cannot change anything. The second is a real two-way sync with a workbook in OneDrive or SharePoint: edits people make in the sheet come back into RunButter, and the sheet is refreshed to match. Rows you delete in Excel are never deleted here — a filter or a sort looks identical to a deletion over Microsoft’s API, so deleting stays something you do deliberately in the app.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
   { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details, then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
 ];
@@ -74,10 +79,10 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
 const INCLUDED: { group: string; items: string[] }[] = [
   { group: 'Sales', items: ['Deal pipeline', 'Companies and people', 'Product catalogue', 'Offers, accepted to invoice', 'VAT and NIP autofill'] },
   { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'E-signatures', 'KSeF e-invoicing'] },
-  { group: 'Marketing', items: ['Campaigns and budgets', 'Post studio with real previews', 'Client review links', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Source attribution'] },
-  { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar'] },
+  { group: 'Marketing', items: ['Campaigns and budgets', 'Newsletters with AI drafting', 'Live segments and lead scoring', 'Drip sequences', 'Post studio with real previews', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Source attribution'] },
+  { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar', 'Mind maps and content boards'] },
   { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
-  { group: 'Platform', items: ['AI agents on your own key', 'Automations and webhooks', 'REST API and MCP server', 'Scheduled PDF reports', 'Roles and permissions', 'Import and export', 'GDPR controls'] },
+  { group: 'Platform', items: ['AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'Roles and permissions', 'GDPR controls'] },
 ];
 
 const MCP_SNIPPET = `{
@@ -119,7 +124,9 @@ export default function HomePage() {
         <div className="absolute inset-0"><AsciiField colors={MONO} baseAlpha={0.09} peakAlpha={0.42} /></div>
         <div className="absolute inset-x-0 top-0 h-[78%] bg-gradient-to-b from-canvas via-canvas/95 to-transparent pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-24 md:pt-32 pb-14 text-center">
+        {/* pt-16 on a phone: 96px of empty canvas above the badge pushed the
+            headline most of the way down the first screen. */}
+        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-16 md:pt-32 pb-14 text-center">
           <div className="inline-flex items-center gap-1.5 h-6 px-2.5 mb-6 rounded-full border border-subtle bg-surface text-2xs font-medium text-secondary">
             <span className="w-1.5 h-1.5 rounded-full bg-inverse" /> Open source · MIT licensed
           </div>
@@ -172,12 +179,17 @@ export default function HomePage() {
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {CAPS.map((c, i) => (
               <Reveal key={c.name} delay={i * 40} className={c.wide ? 'sm:col-span-2' : ''}>
-                <div className="h-full rounded-xl bg-surface border border-subtle p-5 transition-colors hover:border-strong">
-                  <div className="w-8 h-8 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center mb-4">
-                    <c.icon className="w-4 h-4 text-primary" />
+                {/* Icon inline with the title rather than stacked above it:
+                    on a phone these stack one per row, and a stacked icon made
+                    fourteen tiles into a very long scroll for no extra clarity. */}
+                <div className="h-full rounded-xl bg-surface border border-subtle p-4 sm:p-5 transition-colors hover:border-strong">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-7 h-7 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center shrink-0">
+                      <c.icon className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-medium text-primary">{c.name}</h3>
                   </div>
-                  <h3 className="text-sm font-medium text-primary">{c.name}</h3>
-                  <p className="text-xs text-secondary mt-1 leading-relaxed max-w-[42ch]">{c.body}</p>
+                  <p className="text-xs text-secondary leading-relaxed max-w-[42ch]">{c.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -224,9 +236,12 @@ export default function HomePage() {
 
       {/* ── Developers / open source ─────────────────────────────────────── */}
       <section id="developers" className="border-t border-subtle bg-surface-sunken">
+        {/* min-w-0 on the columns: a grid track is min-content by default, so a
+            long unbreakable string (the clone command, the JSON) would set a
+            floor wider than a phone and scroll the whole page sideways. */}
         <div className="max-w-6xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <Reveal>
-            <div>
+          <Reveal className="min-w-0">
+            <div className="min-w-0">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Open, and built for agents</h2>
               <p className="text-secondary mt-4 leading-relaxed max-w-[52ch]">
                 One REST API, signed webhooks, and a native MCP server so AI agents read and write your
@@ -252,9 +267,9 @@ export default function HomePage() {
               </div>
             </div>
           </Reveal>
-          <Reveal delay={80}>
+          <Reveal delay={80} className="min-w-0">
             {/* Monochrome terminal card: the MCP config, mono on inverse. */}
-            <div className="rounded-xl overflow-hidden border border-subtle shadow-popover">
+            <div className="rounded-xl overflow-hidden border border-subtle shadow-popover min-w-0">
               <div className="h-9 flex items-center gap-2 px-3.5 bg-inverse/95">
                 <span className="w-2.5 h-2.5 rounded-full bg-inverse-fg/25" />
                 <span className="w-2.5 h-2.5 rounded-full bg-inverse-fg/25" />

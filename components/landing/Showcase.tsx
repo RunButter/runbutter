@@ -168,8 +168,11 @@ function Row({ reverse, eyebrow, title, body, bullets, visual }: {
   reverse?: boolean; eyebrow: string; title: string; body: string; bullets: string[]; visual: React.ReactNode;
 }) {
   return (
+    // min-w-0 on both tracks: a grid column is min-content wide by default, so
+    // one wide mock UI sets a floor the phone viewport can't meet and the whole
+    // page scrolls sideways.
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-      <div className={reverse ? 'lg:order-2' : ''}>
+      <div className={`min-w-0 ${reverse ? 'lg:order-2' : ''}`}>
         <div className={`inline-block text-2xs font-medium uppercase tracking-wider mb-3 text-tertiary`}>{eyebrow}</div>
         <h3 className="text-2xl md:text-3xl font-medium tracking-tight text-primary">{title}</h3>
         <p className="mt-3 text-secondary leading-relaxed">{body}</p>
@@ -179,7 +182,7 @@ function Row({ reverse, eyebrow, title, body, bullets, visual }: {
           ))}
         </ul>
       </div>
-      <div className={reverse ? 'lg:order-1' : ''}>{visual}</div>
+      <div className={`min-w-0 ${reverse ? 'lg:order-1' : ''}`}>{visual}</div>
     </div>
   );
 }
