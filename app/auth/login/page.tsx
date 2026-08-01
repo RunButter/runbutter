@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
+import { loadMyHrCompanies } from '@/lib/crm/data';
 import { Users, Loader2 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
@@ -22,17 +22,17 @@ export default function LoginPage() {
     if (!ready || !authenticated || !user) return;
     let cancelled = false;
     (async () => {
-      // limit(1), NOT maybeSingle(): a user can belong to more than one company
-      // (multi-workspace), and maybeSingle() throws "multiple rows returned".
-      const { data, error } = await supabase
-        .from('company_users')
-        .select('id')
-        .eq('privy_user_id', user.id)
-        .limit(1);
+      // Through the verified proxy, not a direct table read: `company_users`
+      // was only readable here because it was anon-readable, and that same
+      // policy made it anon-WRITABLE — a tenant bypass. See 0076/0077.
+      let rows: unknown[] = [];
+      let failed = false;
+      try { rows = await loadMyHrCompanies(user.id); } catch { failed = true; }
       if (cancelled) return;
-      const hasCompany = !!data && data.length > 0;
-      // Genuine lookup error → send existing users to the app, not re-onboarding.
-      router.push(error || hasCompany ? '/dashboard' : '/auth/register');
+      // A genuine lookup failure sends existing users to the app, not back
+      // through onboarding — re-registering someone who already has a company
+      // is worse than showing them an empty dashboard.
+      router.push(failed || rows.length > 0 ? '/dashboard' : '/auth/register');
     })();
     return () => { cancelled = true; };
   }, [ready, authenticated, user, router]);

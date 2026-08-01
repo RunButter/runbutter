@@ -280,14 +280,21 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
 
 ## Known open issues
 1. **`STRIPE_WEBHOOK_SECRET` is a placeholder** on Render → paid checkouts don't auto-upgrade plans.
-2. **Onboarding provisioning is fragile** — company creation still uses client-side anon inserts into
-   `companies`/`company_users`, and the 0005 triggers that create the workspace + `accounts` row are
-   exception-safe, so a failure leaves a user with **no workspace, silently**. Real fix: a server-side,
-   Privy-verified `ensure_workspace` RPC. (Login routing is fixed; the fragility underneath is not.)
+2. ~~Onboarding provisioning is fragile~~ — **fixed by 0076.** `ensure_workspace()` creates company +
+   membership + template + `accounts` row in ONE transaction behind a verified Privy token
+   (`/api/onboarding/provision`), so it cannot half-succeed and leave someone with no workspace. It is
+   also idempotent, so a double-submitted form no longer makes two companies.
 3. **Automations dispatcher needs a cron** for scheduled triggers (event/webhook triggers fire instantly).
 4. **No cognitive test exists** — `cognitive_score`/`cognitive_data` are stored null and hidden in the UI.
    Market "skills + Big-5", never "cognitive/IQ".
-5. **RLS is still open on the legacy ATS tables** (`companies`/`company_users` are anon-readable/writable).
+5. ~~RLS open on the legacy ATS tables~~ — **fixed by 0076 + 0077.** `company_users` was
+   anon-WRITABLE and `hr_company_id()` resolved from it alone, so a forged row read another
+   tenant's candidates, CVs and assessment results. 0076 hardens the resolver to cross-check
+   `accounts` (so the bypass dies even with the policies open) and moves provisioning server-side;
+   0077 drops the policies. **0077 must run only AFTER the app carrying 0076's client changes is
+   deployed** — it is the point of no return, and running it early breaks login and registration.
+   0076 also fixes a latent bug it exposed: `redeem_invite` never created an `accounts` row, so
+   every invited member would have been locked out by the hardening.
 
 ## Plan matrix (`lib/plans.ts` is the source of truth)
 Free: 1 pos / 25 cand / pipeline + assessments + status emails.

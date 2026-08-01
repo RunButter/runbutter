@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
+import { usePrivy, getAccessToken } from '@privy-io/react-auth';
+import { loadMyHrCompanies } from '@/lib/crm/data';
 import { Users, Building2, Globe, Loader2 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
@@ -37,14 +37,11 @@ export default function RegisterPage() {
       try {
         // limit(1), NOT maybeSingle(): someone can belong to more than one
         // company, and maybeSingle() throws "multiple rows returned" for them.
-        const { data, error } = await supabase
-          .from('company_users')
-          .select('id')
-          .eq('privy_user_id', user.id)
-          .limit(1);
-
-        if (error) {
-          setError(`DB check failed: ${error.message}`);
+        let data: unknown[] = [];
+        try {
+          data = await loadMyHrCompanies(user.id);
+        } catch (e: unknown) {
+          setError(`Membership check failed: ${e instanceof Error ? e.message : 'unknown error'}`);
           setStep('auth');
           return;
         }
@@ -81,8 +78,12 @@ export default function RegisterPage() {
 
   const checkSubdomain = async (subdomain: string) => {
     if (!subdomain || subdomain.length < 3) { setSubdomainAvailable(null); return; }
-    const { data } = await supabase.from('companies').select('subdomain').eq('subdomain', subdomain).maybeSingle();
-    setSubdomainAvailable(!data);
+    // Server-side: `companies` stops being anon-readable in 0077.
+    try {
+      const res = await fetch(`/api/onboarding/provision?subdomain=${encodeURIComponent(subdomain)}`);
+      const j = await res.json();
+      setSubdomainAvailable(Boolean(j?.available));
+    } catch { setSubdomainAvailable(null); }
   };
 
   const handleSubdomainChange = (value: string) => {
@@ -104,37 +105,26 @@ export default function RegisterPage() {
       const email = user.email?.address ?? user.google?.email ?? '';
       const fullName = user.google?.name ?? email.split('@')[0] ?? 'User';
 
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .insert({ name: formData.companyName, subdomain: formData.subdomain, plan: 'free' })
-        .select()
-        .single();
-      if (companyError) throw new Error(companyError.message);
-
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-
-      const { error: userError } = await supabase
-        .from('company_users')
-        .insert({
-          company_id: company.id,
-          email,
-          full_name: fullName,
-          role: 'owner',
-          privy_user_id: user.id,
-          auth_user_id: supabaseUser?.id,
-        });
-      if (userError) throw new Error(userError.message);
-
-      await supabase.from('assessment_templates').insert({
-        company_id: company.id,
-        name: 'Default Assessment',
-        description: 'Standard personality, work style, and cognitive assessment',
-        questions: [
-          { id: '1', category: 'personality', trait: 'Extraversion', text: 'I enjoy being the center of attention', type: 'scale', options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'] },
-          { id: '2', category: 'work_style', text: 'I prefer to:', type: 'choice', options: ['Work independently', 'Work in teams', 'Mix of both'] },
-        ],
-        is_default: true,
+      // ONE verified server call, replacing three client-side anon INSERTs into
+      // companies / company_users / assessment_templates.
+      //
+      // Beyond closing the write path (those inserts are why company_users had
+      // to be anon-writable, which was a tenant bypass — see 0076), this ends
+      // the silent half-failure: the old flow could create the company, fail on
+      // the membership, and leave someone signed in with no workspace at all.
+      const token = await getAccessToken().catch(() => null);
+      const res = await fetch('/api/onboarding/provision', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
+        body: JSON.stringify({
+          privyUserId: user.id,
+          companyName: formData.companyName,
+          subdomain: formData.subdomain,
+          email, fullName,
+        }),
       });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.error || 'Could not create your workspace.');
 
       router.push('/dashboard?welcome=true');
     } catch (err: unknown) {

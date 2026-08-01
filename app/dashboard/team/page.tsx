@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
+import { loadMyHrCompanies, getMembers } from '@/lib/crm/data';
 import { Users, UserPlus, Shield, Loader2, Mail, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import Paywall from '@/components/Paywall';
 import Link from 'next/link';
@@ -30,28 +30,17 @@ export default function TeamPage() {
         if (!user) return;
         try {
 
-            // Fetch current user and their company
-            const { data: me } = await supabase
-                .from('company_users')
-                .select('role, company:companies(*)')
-                .eq('privy_user_id', user.id)
-                .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary row
-                .limit(1)
-                .maybeSingle();
+            // Both reads go through the verified proxy. They used to hit
+            // `company_users` directly, which only worked because the table was
+            // anon-readable — the same policy that made it anon-WRITABLE and
+            // turned a forged row into a tenant bypass. See 0076/0077.
+            const memberships = await loadMyHrCompanies(user.id);
+            const me = memberships[0];   // ordered oldest-first in SQL
 
             if (me) {
-                const comp: any = Array.isArray(me.company) ? me.company[0] : me.company;
-                setCompany(comp);
-                setCurrentUserRole(me.role);
-
-                // Fetch all team members
-                const { data: teamMembers } = await supabase
-                    .from('company_users')
-                    .select('*')
-                    .eq('company_id', comp.id)
-                    .order('created_at', { ascending: true });
-
-                setTeam(teamMembers || []);
+                setCompany({ id: me.company_id, name: me.company_name, plan: me.plan } as any);
+                setCurrentUserRole(me.role as 'owner' | 'admin' | 'recruiter' | 'viewer');
+                setTeam(await getMembers(user.id, me.company_id));
             }
         } catch (error) {
             console.error('Failed to load team:', error);

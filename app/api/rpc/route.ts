@@ -58,6 +58,10 @@ const ALLOWED = new Set([
   // Interview schedule/edit/cancel run through /api/hr/interviews (0045), not
   // here, because they orchestrate Google Meet + the candidate email server-side.
   'hr_list_interviews', 'hr_create_candidate', 'hr_delete_candidate', 'hr_list_positions_min',
+  // 0076 — the browser's replacement for reading company_users directly.
+  // ensure_workspace is deliberately ABSENT: it PROVISIONS, so it runs
+  // server-side in /api/onboarding/provision behind a verified Privy token.
+  'get_my_hr_companies',
   // Agents (0043)
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
   // Skills (0068) — reusable instruction packs attached to agents.

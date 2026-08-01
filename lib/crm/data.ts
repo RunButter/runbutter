@@ -770,3 +770,28 @@ export async function loadBoard(privyUserId: string | null, slug: string, kind: 
     return fallback;
   }
 }
+
+// ── HR membership, via the verified proxy ────────────────────────────────────
+/**
+ * The caller's own HR company memberships.
+ *
+ * Replaces four direct `.from('company_users')` reads in the browser. Those
+ * only worked because `company_users` was anon-readable — the same policy that
+ * made it anon-WRITABLE, which was a tenant-isolation bypass (a forged row made
+ * hr_company_id resolve to someone else's company). 0077 closes the policy;
+ * this is what the browser uses instead.
+ *
+ * Ordered oldest-first in SQL, so callers taking [0] get a STABLE answer — an
+ * unordered limit(1) returns an arbitrary company, which reads to the user as
+ * "my positions disappeared".
+ */
+export interface HrMembership {
+  company_id: string; role: string; full_name: string; email: string;
+  created_at: string; company_name: string; plan: string; subdomain: string;
+}
+
+export async function loadMyHrCompanies(privyUserId: string | null): Promise<HrMembership[]> {
+  if (!privyUserId) return [];
+  const { data } = await rpc('get_my_hr_companies', { p_privy: privyUserId });
+  return Array.isArray(data) ? (data as HrMembership[]) : [];
+}

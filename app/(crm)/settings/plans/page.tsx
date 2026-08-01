@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
 import {
   PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, normalizePlan, type SubscriptionPlan,
 } from '@/lib/plans';
+import { loadMyHrCompanies } from '@/lib/crm/data';
 
 // Maps a paid plan to its Stripe price id. Env var names keep the old
 // STARTER/PRO wording so existing Render config keeps working after the
@@ -26,15 +26,13 @@ export default function PlansPage() {
   useEffect(() => {
     if (!ready) return;
     if (!authenticated || !user) { setLoading(false); return; }
-    // limit(1), NOT maybeSingle(): belonging to more than one company made
-    // maybeSingle() throw "multiple rows returned" and left this page empty.
-    supabase
-      .from('company_users')
-      .select('*, company:companies(*)')
-      .eq('privy_user_id', user.id)
-      .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
-      .limit(1)
-      .then(({ data }) => { const row = data?.[0]; if (row?.company) setCompany(row.company); setLoading(false); });
+    // Ordered oldest-first inside SQL, so [0] is stable — an arbitrary company
+    // here reads to the user as "my plan is wrong".
+    loadMyHrCompanies(user.id).then((rows) => {
+      const m = rows[0];
+      if (m) setCompany({ id: m.company_id, name: m.company_name, plan: m.plan } as any);
+      setLoading(false);
+    });
   }, [ready, authenticated, user]);
 
   // normalizePlan maps legacy 'starter'/'professional' rows onto Team/Business.
