@@ -183,7 +183,10 @@ export default function HomePage() {
                — the figure pushing through at bottom-left and the sun at right. */
             imageFit="contain"
             focalX={0.5}
-            focalY={0.34}
+            /* Sat high rather than centred: at 1.79:1 the plate nearly fills
+               the width, so this puts the horizon and the reaching figure
+               across the middle band instead of behind the product window. */
+            focalY={0.3}
             imageScale={1}
             /* The centre-calming contour is what keeps the plain field quiet;
                with artwork it would erase the picture exactly where it matters. */
