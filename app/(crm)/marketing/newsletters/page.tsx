@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Loader2, Mail, Users, Clock, Ban, Trash2, Upload, X, Check } from 'lucide-react';
+import { Plus, Loader2, Mail, Users, Clock, Ban, Trash2, Upload, X, Check, Filter } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   listNewsletterLists, saveNewsletterList, deleteNewsletterList,
@@ -12,6 +12,8 @@ import {
   parseSubscriberPaste,
   type NewsletterList, type Subscriber, type NewsletterRow,
 } from '@/lib/crm/newsletters';
+import { listSegments, deleteSegment, type Segment } from '@/lib/crm/segments';
+import SegmentBuilder from '@/components/crm/SegmentBuilder';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -33,16 +35,20 @@ export default function NewslettersPage() {
   const privy = authenticated && user ? user.id : null;
 
   const [ws, setWs] = useState<WorkspaceContext | null>(null);
-  const [tab, setTab] = useState<'sends' | 'lists'>('sends');
+  const [tab, setTab] = useState<'sends' | 'lists' | 'segments'>('sends');
   const [rows, setRows] = useState<NewsletterRow[]>([]);
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [loading, setLoading] = useState(true);
   const [openList, setOpenList] = useState<NewsletterList | null>(null);
   const [importing, setImporting] = useState<NewsletterList | null>(null);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [editingSeg, setEditingSeg] = useState<Partial<Segment> | null>(null);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
-    const [n, l] = await Promise.all([listNewsletters(p, w.id), listNewsletterLists(p, w.id)]);
-    setRows(n); setLists(l); setLoading(false);
+    const [n, l, g] = await Promise.all([
+      listNewsletters(p, w.id), listNewsletterLists(p, w.id), listSegments(p, w.id),
+    ]);
+    setRows(n); setLists(l); setSegments(g); setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -78,9 +84,15 @@ export default function NewslettersPage() {
         title="Newsletters"
         subtitle={`${rows.length} send${rows.length === 1 ? '' : 's'} · ${totalSubs} subscriber${totalSubs === 1 ? '' : 's'}`}
       >
-        {tab === 'sends'
-          ? <Button size="sm" variant="primary" onClick={create} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New newsletter</Button>
-          : <Button size="sm" variant="primary" onClick={newList} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New list</Button>}
+        {tab === 'sends' ? (
+          <Button size="sm" variant="primary" onClick={create} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New newsletter</Button>
+        ) : tab === 'lists' ? (
+          <Button size="sm" variant="primary" onClick={newList} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New list</Button>
+        ) : (
+          <Button size="sm" variant="primary" onClick={() => setEditingSeg({ name: 'New segment', filters: [] })} disabled={!privy}>
+            <Plus className="w-3.5 h-3.5" /> New segment
+          </Button>
+        )}
       </PageHeader>
 
       <div className="flex-1 overflow-auto px-5 lg:px-7 pb-8">
@@ -90,7 +102,7 @@ export default function NewslettersPage() {
           )}
 
           <div className="inline-flex items-center rounded-lg bg-surface-hover p-0.5 mb-4">
-            {([['sends', 'Sends', Mail], ['lists', 'Lists', Users]] as const).map(([v, label, Icon]) => (
+            {([['sends', 'Sends', Mail], ['lists', 'Lists', Users], ['segments', 'Segments', Filter]] as const).map(([v, label, Icon]) => (
               <button key={v} onClick={() => setTab(v)} aria-pressed={tab === v}
                 className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
                   tab === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
@@ -142,6 +154,32 @@ export default function NewslettersPage() {
                 ))}
               </div>
             )
+          ) : tab === 'segments' ? (
+            segments.length === 0 ? (
+              <Empty icon={Filter} text="No segments yet."
+                hint="A list is who you added. A segment is who currently matches — 'opened nothing in 90 days'." />
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {segments.map((g) => (
+                  <div key={g.id} className="rounded-xl bg-surface shadow-card p-4 flex flex-col">
+                    <h3 className="text-sm font-medium text-primary truncate">{g.name}</h3>
+                    <p className="text-2xs text-tertiary mt-1">
+                      {g.filters.length === 0 ? 'Every subscriber' : `${g.filters.length} condition${g.filters.length === 1 ? '' : 's'}`}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-subtle">
+                      <Button size="sm" variant="ghost" onClick={() => setEditingSeg(g)}>Open</Button>
+                      <button
+                        onClick={async () => {
+                          if (ws && privy && await confirmDialog(`Delete segment "${g.name}"? Subscribers are not affected.`)) {
+                            await deleteSegment(privy, ws.id, g.id); refresh();
+                          }
+                        }}
+                        className="ml-auto p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><Trash2 className="w-3.5 h-3.5 text-danger" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           ) : lists.length === 0 ? (
             <Empty icon={Users} text="No lists yet." hint="A list is who a newsletter goes to." />
           ) : (
@@ -179,6 +217,11 @@ export default function NewslettersPage() {
       )}
       {importing && ws && privy && (
         <ImportModal list={importing} ws={ws.id} privy={privy} onClose={() => { setImporting(null); refresh(); }} />
+      )}
+      {editingSeg && ws && privy && (
+        <SegmentBuilder initial={editingSeg} lists={lists} ws={ws.id} privy={privy}
+          onClose={() => setEditingSeg(null)}
+          onSaved={() => { setEditingSeg(null); refresh(); }} />
       )}
     </>
   );

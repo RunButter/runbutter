@@ -72,6 +72,11 @@ const ALLOWED = new Set([
   'set_newsletter_subscriber_status', 'delete_newsletter_subscriber',
   'get_newsletters', 'get_newsletter', 'save_newsletter', 'delete_newsletter',
   'queue_newsletter', 'cancel_newsletter',
+  // Segments (0072). evaluate_segment_filters is a READ that the builder calls
+  // on every edit; it is size-capped and shape-checked in SQL, and its filter
+  // vocabulary is a whitelist that fails closed — there is no dynamic SQL.
+  'get_segments', 'save_segment', 'delete_segment',
+  'evaluate_segment_filters', 'sync_segment_to_list',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*
