@@ -46,7 +46,7 @@ export default function RegisterPage() {
           return;
         }
         if (data && data.length > 0) {
-          router.push('/dashboard');
+          router.push('/home');
         } else {
           // No auto-claim by email here. It used to POST { email, privyUserId }
           // to /api/team/claim, which trusted both — anyone could bind their
@@ -126,7 +126,7 @@ export default function RegisterPage() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || 'Could not create your workspace.');
 
-      router.push('/dashboard?welcome=true');
+      router.push('/home?welcome=true');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Setup failed.';
       setError(message);

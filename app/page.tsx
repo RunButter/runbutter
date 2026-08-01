@@ -178,13 +178,17 @@ export default function HomePage() {
             peakAlpha={0.6}
             image="/flammarion.jpg"
             imageWeight={0.5}
-            focalX={0.86}
-            focalY={0.46}
-            imageScale={2.3}
+            /* The WHOLE plate. Cover-fit cropped a portrait engraving to fill a
+               wide hero, which threw away the two things that carry the meaning
+               — the figure pushing through at bottom-left and the sun at right. */
+            imageFit="contain"
+            focalX={0.5}
+            focalY={0.34}
+            imageScale={1}
             /* The centre-calming contour is what keeps the plain field quiet;
                with artwork it would erase the picture exactly where it matters. */
-            edgeBias={0.22}
-            cell={11}
+            edgeBias={0.18}
+            cell={8}
           />
         </div>
         {/* Two scrims instead of one. A full-width top gradient was the simple

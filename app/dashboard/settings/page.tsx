@@ -249,7 +249,10 @@ export default function SettingsPage() {
             <header className="bg-canvas">
                 <div className="max-w-5xl px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/dashboard" className="p-2 hover:bg-surface-hover rounded-full transition">
+                        {/* Explicitly the HR overview, not bare /dashboard —
+                            that now lands on the company OS home, and a back
+                            button inside HR settings should stay inside HR. */}
+                        <Link href="/dashboard/overview" className="p-2 hover:bg-surface-hover rounded-full transition">
                             <ArrowLeft className="w-5 h-5 text-secondary" />
                         </Link>
                         <h1 className="text-xl sm:text-2xl font-medium text-primary">Company Settings</h1>

@@ -19,6 +19,7 @@ export default function AsciiField({
   focalX = 0.5,
   focalY = 0.5,
   imageScale = 1,
+  imageFit = 'cover',
 }: {
   colors?: string[];
   baseAlpha?: number;
@@ -40,6 +41,12 @@ export default function AsciiField({
   focalY?: number;
   /** >1 zooms in, for showing one part of a busy source. */
   imageScale?: number;
+  /**
+   * 'cover' fills the frame and crops — right when the art is only texture.
+   * 'contain' fits the WHOLE artwork inside it, which is the only way a
+   * composition whose meaning lives in its corners survives a wide hero.
+   */
+  imageFit?: 'cover' | 'contain';
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -110,19 +117,39 @@ export default function AsciiField({
       const octx = off.getContext('2d', { willReadFrequently: true });
       if (!octx) { art = null; return; }
 
-      // Cover-fit into the grid, honouring the character cell's aspect: cells
-      // are much taller than wide, so sampling on pixel aspect would stretch
-      // the engraving into an unrecognisable smear.
-      const gridAspect = (cols * cell) / (rows * cell);
-      const ia = artImg.naturalWidth / artImg.naturalHeight;
-      let sw = artImg.naturalWidth, sh = artImg.naturalHeight;
-      if (ia > gridAspect) sw = artImg.naturalHeight * gridAspect;
-      else sh = artImg.naturalWidth / gridAspect;
-      sw /= imageScale; sh /= imageScale;
-      const sx = (artImg.naturalWidth - sw) * Math.max(0, Math.min(1, focalX));
-      const sy = (artImg.naturalHeight - sh) * Math.max(0, Math.min(1, focalY));
+      // Paper first. The offscreen canvas starts TRANSPARENT, and transparent
+      // reads as luminance 0 — solid ink — so any grid the artwork does not
+      // cover comes back as the densest possible glyphs. Filling white makes
+      // uncovered area read as blank paper, which is what lets 'contain'
+      // letterbox into the plain drifting terrain instead of a black slab.
+      octx.fillStyle = '#fff';
+      octx.fillRect(0, 0, cols, rows);
 
-      octx.drawImage(artImg, sx, sy, sw, sh, 0, 0, cols, rows);
+      // Aspect in PIXELS, not cell counts: characters are far taller than they
+      // are wide, so fitting on cells alone squashes the engraving flat.
+      const cellW = cell * 0.6;                      // monospace advance ≈ 0.6em
+      const gridAspect = (cols * cellW) / (rows * cell);
+      const ia = artImg.naturalWidth / artImg.naturalHeight;
+
+      if (imageFit === 'contain') {
+        // The whole plate, letterboxed. Width and height are computed in the
+        // grid's own units, which is why cellW appears on both sides.
+        let dw = cols, dh = rows;
+        if (ia > gridAspect) dh = (cols * cellW) / ia / cell;
+        else dw = (rows * cell) * ia / cellW;
+        dw *= imageScale; dh *= imageScale;
+        const dx = (cols - dw) * Math.max(0, Math.min(1, focalX));
+        const dy = (rows - dh) * Math.max(0, Math.min(1, focalY));
+        octx.drawImage(artImg, dx, dy, dw, dh);
+      } else {
+        let sw = artImg.naturalWidth, sh = artImg.naturalHeight;
+        if (ia > gridAspect) sw = artImg.naturalHeight * gridAspect;
+        else sh = artImg.naturalWidth / gridAspect;
+        sw /= imageScale; sh /= imageScale;
+        const sx = (artImg.naturalWidth - sw) * Math.max(0, Math.min(1, focalX));
+        const sy = (artImg.naturalHeight - sh) * Math.max(0, Math.min(1, focalY));
+        octx.drawImage(artImg, sx, sy, sw, sh, 0, 0, cols, rows);
+      }
       const d = octx.getImageData(0, 0, cols, rows).data;
       const out = new Float32Array(cols * rows);
       for (let i = 0, p = 0; i < d.length; i += 4, p++) {
@@ -251,7 +278,7 @@ export default function AsciiField({
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('click', onClick);
     };
-  }, [colors, baseAlpha, peakAlpha, cell, edgeBias, image, imageWeight, focalX, focalY, imageScale]);
+  }, [colors, baseAlpha, peakAlpha, cell, edgeBias, image, imageWeight, focalX, focalY, imageScale, imageFit]);
 
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
 }

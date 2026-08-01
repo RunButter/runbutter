@@ -42,7 +42,7 @@ export default function AcceptInvite({
         return;
       }
       setDone(true);
-      setTimeout(() => router.push('/dashboard?welcome=true'), 900);
+      setTimeout(() => router.push('/home?welcome=true'), 900);
     } catch (e: any) {
       setError(e?.message || 'Network error.');
     } finally {

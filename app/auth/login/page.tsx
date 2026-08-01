@@ -32,7 +32,10 @@ export default function LoginPage() {
       // A genuine lookup failure sends existing users to the app, not back
       // through onboarding — re-registering someone who already has a company
       // is worse than showing them an empty dashboard.
-      router.push(failed || rows.length > 0 ? '/dashboard' : '/auth/register');
+      // Land on the company OS home, not the ATS overview. RunButter is a
+      // whole-company workspace now; recruiting is one module inside it, and
+      // opening on it told every non-recruiter they were in the wrong product.
+      router.push(failed || rows.length > 0 ? '/home' : '/auth/register');
     })();
     return () => { cancelled = true; };
   }, [ready, authenticated, user, router]);

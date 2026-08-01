@@ -15,7 +15,7 @@
     /* Light theme, shadcn-style elevation: the canvas is a soft grey so white
        cards visibly float on it (paired with shadow-card), the way the shadcn
        block gallery reads. */
-    --canvas:        240 5% 96%;    /* app background behind panels (zinc-100) */
+    --canvas:        60 6% 93%;     /* #eeeeec — warm paper, not blue-grey */
     --surface:       0 0% 100%;     /* panels, tables, cards        */
     --surface-hover: 240 5% 95.5%;  /* row / item hover             */
     --surface-sunken:240 5% 97%;    /* rails, headers, inputs       */

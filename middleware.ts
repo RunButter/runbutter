@@ -114,12 +114,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // The ATS dashboard index is now the HR Overview — redirect old links + the
-  // post-login landing there (done in middleware so it fires before the client
-  // dashboard layout's auth gate, which would otherwise swallow a page redirect).
+  // Bare /dashboard is an OLD post-login landing from when this was only an
+  // ATS. It now goes to the company OS home; recruiting is one module, reached
+  // from the nav, and opening the whole product on it made every non-recruiter
+  // think they were in the wrong app. Deep ATS links (/dashboard/overview,
+  // /dashboard/candidates, …) are untouched.
+  // Done in middleware so it fires before the client dashboard layout's auth
+  // gate, which would otherwise swallow a page-level redirect.
   if (pathname === '/dashboard') {
     const url = req.nextUrl.clone();
-    url.pathname = '/dashboard/overview';
+    url.pathname = '/home';
     return NextResponse.redirect(url);
   }
 
