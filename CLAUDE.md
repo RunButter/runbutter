@@ -27,7 +27,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     wrong host); **`RESEND_WEBHOOK_SECRET`** + a Resend webhook on `/api/newsletters/webhook` for
     `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
     domain); and a verified sending domain in Resend.
-  - **0069 (post board) and 0072 (segments) are PENDING** if not yet run.
+  - **0069 (post board), 0072 (segments) and 0073 (sequences) are PENDING** if not yet run.
+    0073 must come after 0072 and 0071. Drips need their own cron on `/api/sequences/run`.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
     skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
@@ -155,6 +156,13 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
   the model sends by id, so putting either into a stored run transcript is a leak for no gain.
   Note this is exposed over `/api/mcp` too, like every other tool.
+- **Sequences (0073)** are drips with a per-subscriber cursor. A step's email points at a **draft**
+  newsletter and sending writes a normal `newsletter_deliveries` row — that is what gives dedupe,
+  tracking and unsubscribe for free, and it means a newsletter already SENT as a campaign must not
+  be reused in a drip (everyone who got it would be silently skipped). `create_sequence_delivery`
+  returning NULL means "already sent, skip" — never treat it as an error. 0073 also **redefines
+  `newsletter_unsubscribe` and `record_newsletter_feedback` in full** so opting out or bouncing
+  cancels live enrolments; 0071's versions predate sequences and would leave a drip running.
 - **Segments (0072)** filter subscribers live. `segment_match` is a whitelist CASE, **never dynamic
   SQL** — a SECURITY DEFINER function building `EXECUTE` from user values is one escaping mistake
   from arbitrary SQL across every tenant. An unknown field/op returns FALSE (fails closed); making

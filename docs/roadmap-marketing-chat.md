@@ -87,11 +87,11 @@ require one-click unsubscribe for bulk senders, and without it deliverability co
 - [x] UI: lists, subscribers, paste import, composer with live preview, send, per-send stats
 - [x] AI drafting (`/api/newsletters/draft`) — BYO key, drafts only
 
-### Operational requirements
+### Operational requirements (newsletters AND sequences)
 1. **Migrations 0070 then 0071**, in that order — 0071 alters a constraint 0070 creates.
-2. **A Render Cron Job** posting to `/api/newsletters/send` every minute with
-   `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>`, exactly like `/api/automations/dispatch`.
-   Nothing goes out without it.
+2. **Render Cron Jobs** posting every minute with `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>` to
+   BOTH `/api/newsletters/send` (campaigns) and `/api/sequences/run` (drips). Nothing goes out
+   without them — and the sequence one also does enrolment and the stale sweep.
 3. **`NEXT_PUBLIC_SITE_URL`**, or unsubscribe and tracking links are built against the
    default origin and every one of them points at the wrong host.
 4. **`RESEND_WEBHOOK_SECRET`** plus a Resend webhook pointing at
@@ -138,11 +138,17 @@ Known limit, stated rather than hidden: the engagement predicates run an EXISTS 
 linear in list size. Results are capped and paged. Past roughly six figures the fix is a
 materialised engagement summary per subscriber — not dynamic SQL.
 
-**2. Sequences (drip).** Our automations fire once on an event. A sequence is an ordered list of
-steps with **waits** — "day 0 welcome, day 3 case study, day 7 ask for a call". That needs a
-per-contact cursor (`sequence_enrollments`: which step, when due), which the existing dispatcher can
-drain on the same cron. This is the single biggest gap between "automations" and "marketing
-automation".
+**2. Sequences (drip) — BUILT (0073).** A per-subscriber cursor (`sequence_enrollments`: which step,
+when due) drained by `/api/sequences/run` on a cron. Entry is a list or a segment; steps are waits
+and emails.
+
+Sequence emails reuse the newsletter machinery — a step points at a draft `newsletters` row, and
+sending creates an ordinary `newsletter_deliveries` row. Dedupe, open/click tracking, one-click
+unsubscribe and per-step stats all come free and correct as a result.
+
+Three rules the UI states outright because people assume otherwise: people enter once and are never
+re-added; leaving the list or segment does NOT eject someone mid-drip; unsubscribing or bouncing
+stops it immediately.
 
 **3. Lead scoring.** Points per action (opened, clicked, visited pricing, submitted form), decaying
 over time, exposed as a field on the person. Cheap once events exist, and it is what makes a
