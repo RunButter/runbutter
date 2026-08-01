@@ -15,6 +15,7 @@ import Comparison from '@/components/landing/Comparison';
 import Reveal from '@/components/landing/Reveal';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
+import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
 const REPO_URL = 'https://github.com/RunButter/runbutter';
 // Monochrome ASCII: greys read on both canvases; the drift shifts between them.
@@ -23,7 +24,7 @@ const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 const MODULES = [
   { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline on one relational core.' },
   { icon: Wallet, name: 'Finance', body: 'Invoices, expenses, a bank ledger that auto-reconciles, and live revenue KPIs.' },
-  { icon: Megaphone, name: 'Marketing', body: 'Campaigns, a social post studio, and cookieless first-party web analytics.' },
+  { icon: Megaphone, name: 'Marketing', body: 'Newsletters and drip sequences, a post studio, and cookieless first-party analytics.' },
   { icon: FolderKanban, name: 'Projects', body: 'Projects and issues on a clean board, with a Gantt-lite roadmap.' },
   { icon: Heart, name: 'Recruiting & HR', body: 'Skills + personality hiring, onboarding checklists, and team pulse.' },
 ];
@@ -50,20 +51,58 @@ const CAPS = [
   { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
 ];
 
-// Keep in step with lib/plans.ts — that file is the entitlement source of truth.
-// Self-hosting gets everything; these tiers price the hosted service.
-const PLANS = [
-  { name: 'Free', price: '$0', sub: 'self-host, or start here', features: ['2 seats, 500 records', 'Every core module', 'Pipelines, invoices, docs', 'CSV and Google Sheets import'], cta: 'Start free', href: '/auth/register?plan=free', highlight: false },
-  { name: 'Team', price: '$8', sub: 'per seat / month', features: ['Everything in Free', 'Unlimited seats, 25,000 records', 'Automations and webhooks', 'E-signatures, forms, short links'], cta: 'Start free', href: '/auth/register?plan=team', highlight: true },
-  { name: 'Business', price: '$33', sub: 'per seat / month', features: ['Everything in Team', 'AI agents on your own key', 'REST API and MCP server', 'Attribution and scheduled reports'], cta: 'Start free', href: '/auth/register?plan=business', highlight: false },
-  { name: 'Enterprise', price: 'Custom', sub: 'for organizations', features: ['Everything in Business', 'SSO / SAML and audit log', 'Unlimited everything', 'Dedicated support and SLA'], cta: 'Contact sales', href: '/contact', highlight: false },
-];
+// Prices, names and limits are DERIVED from lib/plans.ts — the same file that
+// actually gates features — rather than restated here. This used to be a
+// hand-kept copy "in step with" that file, which is exactly how the numbers in
+// CLAUDE.md drifted a whole pricing model behind reality. Marketing copy stays
+// local because it is curated; anything a customer could hold us to is read.
+const TIER_COPY: Record<SubscriptionPlan, { sub: string; features: string[]; cta: string; href: string; highlight: boolean }> = {
+  free: {
+    sub: 'self-host, or start here',
+    features: ['Every core module', 'Pipelines, invoices, docs', 'CSV and Google Sheets import'],
+    cta: 'Start free', href: '/auth/register?plan=free', highlight: false,
+  },
+  team: {
+    sub: 'per seat / month',
+    features: ['Everything in Free', 'Newsletters and sequences', 'Automations and webhooks', 'E-signatures, forms, short links'],
+    cta: 'Start free', href: '/auth/register?plan=team', highlight: true,
+  },
+  business: {
+    sub: 'per seat / month',
+    features: ['Everything in Team', 'AI agents on your own key', 'REST API, MCP and Excel sync', 'Attribution and scheduled reports'],
+    cta: 'Start free', href: '/auth/register?plan=business', highlight: false,
+  },
+  enterprise: {
+    sub: 'for organizations',
+    features: ['Everything in Business', 'SSO / SAML and audit log', 'Unlimited everything', 'Dedicated support and SLA'],
+    cta: 'Contact sales', href: '/contact', highlight: false,
+  },
+};
+
+// The seats/records line is generated, so it can never claim a limit the
+// entitlement code does not enforce.
+const limitLine = (plan: SubscriptionPlan) => {
+  const { maxSeats, maxRecords } = PLANS[plan].limits;
+  const seats = maxSeats === Infinity ? 'Unlimited seats' : `${maxSeats} seats`;
+  return `${seats}, ${formatLimit(maxRecords).toLowerCase()} records`;
+};
+
+const PLAN_CARDS = PLAN_ORDER.map((id) => ({
+  // Spread FIRST: with it last it silently overwrote the composed feature list
+  // below and dropped the generated limit line. tsc flagged the duplicate key.
+  ...TIER_COPY[id],
+  id,
+  name: PLANS[id].name,
+  price: PLANS[id].price,
+  features: [limitLine(id), ...TIER_COPY[id].features],
+}));
 
 // `open` renders that entry expanded on load. The Google Calendar answer uses it
 // because OAuth verification requires the homepage to visibly explain why we ask
 // for user data — a reviewer should not have to click an accordion to find it.
 const FAQ: { q: string; a: string; open?: boolean }[] = [
-  { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together.' },
+  { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together. That is what makes a question like "which contracts auto-renew, for clients who owe us money" a single query instead of an afternoon.' },
+  { q: 'What does it cost to run at scale?', a: 'The price on this page is the price. Search, matching, reconciliation, segmentation and reporting all run in Postgres, so there is no usage meter underneath — no per-task automation billing, no per-contact marketing tier, and no AI tokens on our bill. If you self-host, your only cost is the database and a Node process.' },
   { q: 'Is it open source?', a: 'Yes, MIT licensed. Clone the repo, run it against your own Supabase and Privy, and self-host for free. Or use the hosted version and skip the setup.' },
   { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
   { q: 'Can AI agents actually do work for me?', a: 'Yes. Define an agent with a role and a scoped set of tools, then run it on a task. It reads and updates records through the same verified endpoints the app uses, on your own AI key. By default it proposes changes for you to approve; you can let trusted agents run on their own within a step limit.' },
@@ -127,9 +166,6 @@ export default function HomePage() {
         {/* pt-16 on a phone: 96px of empty canvas above the badge pushed the
             headline most of the way down the first screen. */}
         <div className="relative z-10 max-w-3xl mx-auto px-6 pt-16 md:pt-32 pb-14 text-center">
-          <div className="inline-flex items-center gap-1.5 h-6 px-2.5 mb-6 rounded-full border border-subtle bg-surface text-2xs font-medium text-secondary">
-            <span className="w-1.5 h-1.5 rounded-full bg-inverse" /> Open source · MIT licensed
-          </div>
           <h1 className="text-4xl md:text-6xl font-medium tracking-tight leading-[1.05] text-primary">
             Run your whole company,<br />smooth as butter
           </h1>
@@ -294,7 +330,7 @@ export default function HomePage() {
             </div>
           </Reveal>
           <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {PLANS.map((pl, i) => (
+            {PLAN_CARDS.map((pl, i) => (
               <Reveal key={pl.name} delay={i * 50} className="flex">
                 <div className={`rounded-xl p-5 flex flex-col w-full bg-surface border transition-colors ${pl.highlight ? 'border-strong ring-1 ring-strong' : 'border-subtle hover:border-strong'}`}>
                   <div className="flex items-center gap-2">

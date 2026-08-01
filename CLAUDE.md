@@ -330,10 +330,23 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
    every invited member would have been locked out by the hardening.
 
 ## Plan matrix (`lib/plans.ts` is the source of truth)
-Free: 1 pos / 25 cand / pipeline + assessments + status emails.
-Starter $99: 5 / 250 / + Treasury, resume search, source tracking, email templates, branding.
-Professional $299: 25 / 2500 / + interviews, My Team, Team Fit, advanced analytics, GDPR controls.
-Enterprise: unlimited / + HRIS export, SSO. (Test with `UPDATE companies SET plan='enterprise' WHERE …`.)
+This section was stale for a long time — it still described the ATS-era
+Starter $99 / Professional $299 tiers, which no longer exist in code. The real
+tiers are **per seat**, priced for a whole-company tool rather than a recruiter
+seat, and the landing page renders them straight from `lib/plans.ts`:
+
+| Plan | Price | Seats | Records | Positions | Candidates | Automations | E-sign/mo |
+|---|---|---|---|---|---|---|---|
+| Free | $0 | 2 | 500 | 1 | 25 | 0 | 0 |
+| Team | $8/seat | ∞ | 25,000 | 10 | 1,000 | 20 | 10 |
+| Business | $33/seat | ∞ | ∞ | ∞ | ∞ | ∞ | ∞ |
+| Enterprise | Custom | ∞ | ∞ | ∞ | ∞ | ∞ | ∞ |
+
+Team adds automations, e-signatures, forms and short links; Business adds AI
+agents, the REST API + MCP, attribution and scheduled reports; Enterprise adds
+SSO/SAML and the audit log. Test with `UPDATE companies SET plan='business' WHERE …`.
+**Don't restate these numbers anywhere else** — that is how this drifted. The
+landing page reads `PLANS`; anything new should too.
 
 ## Env vars
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
