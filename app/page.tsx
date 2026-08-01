@@ -174,10 +174,10 @@ export default function HomePage() {
         <div className="absolute inset-0">
           <AsciiField
             colors={MONO}
-            baseAlpha={0.13}
-            peakAlpha={0.6}
+            baseAlpha={0.14}
+            peakAlpha={0.66}
             image="/flammarion.jpg"
-            imageWeight={0.5}
+            imageWeight={0.62}
             /* The WHOLE plate. Cover-fit cropped a portrait engraving to fill a
                wide hero, which threw away the two things that carry the meaning
                — the figure pushing through at bottom-left and the sun at right. */
