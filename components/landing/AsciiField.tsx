@@ -14,12 +14,32 @@ export default function AsciiField({
   peakAlpha = 1,
   cell = 14,
   edgeBias = 0.7,
+  image,
+  imageWeight = 0.55,
+  focalX = 0.5,
+  focalY = 0.5,
+  imageScale = 1,
 }: {
   colors?: string[];
   baseAlpha?: number;
   peakAlpha?: number;
   cell?: number;
   edgeBias?: number;
+  /**
+   * Optional artwork sampled into the height field, so glyphs cluster where the
+   * ink is. The picture is not drawn — it BIASES the same terrain the cursor
+   * glow and ripples already push around, which is what keeps the whole thing
+   * one interactive surface instead of a static image with an effect on top.
+   */
+  image?: string;
+  /** How hard the artwork pushes the terrain. Too high and the drift dies. */
+  imageWeight?: number;
+  /** Horizontal focal point when cover-fitting (0 = left, 1 = right). */
+  focalX?: number;
+  /** Vertical focal point when cover-fitting (0 = top, 1 = bottom). */
+  focalY?: number;
+  /** >1 zooms in, for showing one part of a busy source. */
+  imageScale?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -77,6 +97,50 @@ export default function AsciiField({
       return `${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)}`;
     }
 
+    // ── Artwork sampled to the character grid ────────────────────────────────
+    // One Float32Array of ink density, rebuilt only on resize. Per frame this
+    // costs a single array read per cell, so the drift stays at full rate.
+    let art: Float32Array | null = null;
+    let artImg: HTMLImageElement | null = null;
+
+    function sampleArt() {
+      if (!artImg || !artImg.complete || !artImg.naturalWidth || !cols || !rows) { art = null; return; }
+      const off = document.createElement('canvas');
+      off.width = cols; off.height = rows;
+      const octx = off.getContext('2d', { willReadFrequently: true });
+      if (!octx) { art = null; return; }
+
+      // Cover-fit into the grid, honouring the character cell's aspect: cells
+      // are much taller than wide, so sampling on pixel aspect would stretch
+      // the engraving into an unrecognisable smear.
+      const gridAspect = (cols * cell) / (rows * cell);
+      const ia = artImg.naturalWidth / artImg.naturalHeight;
+      let sw = artImg.naturalWidth, sh = artImg.naturalHeight;
+      if (ia > gridAspect) sw = artImg.naturalHeight * gridAspect;
+      else sh = artImg.naturalWidth / gridAspect;
+      sw /= imageScale; sh /= imageScale;
+      const sx = (artImg.naturalWidth - sw) * Math.max(0, Math.min(1, focalX));
+      const sy = (artImg.naturalHeight - sh) * Math.max(0, Math.min(1, focalY));
+
+      octx.drawImage(artImg, sx, sy, sw, sh, 0, 0, cols, rows);
+      const d = octx.getImageData(0, 0, cols, rows).data;
+      const out = new Float32Array(cols * rows);
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const lum = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+        // Ink (dark) → high density. The paper is near-white and must land at
+        // ~0 or the whole field lifts and the terrain disappears under a wash.
+        out[p] = Math.max(0, 1 - lum);
+      }
+      art = out;
+    }
+
+    if (image) {
+      artImg = new Image();
+      artImg.decoding = 'async';
+      artImg.onload = () => sampleArt();
+      artImg.src = image;
+    }
+
     function resize() {
       const w = parent!.clientWidth, h = parent!.clientHeight;
       canvas!.width = w * dpr; canvas!.height = h * dpr;
@@ -85,6 +149,7 @@ export default function AsciiField({
       ctx!.font = `${cell}px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx!.textBaseline = 'top';
       cols = Math.ceil(w / cell); rows = Math.ceil(h / cell);
+      sampleArt();
     }
 
     function frame() {
@@ -107,6 +172,21 @@ export default function AsciiField({
           const px = x * cell, py = y * cell;
           // organic height field, slowly drifting
           let n = fbm(px / scale + t, py / scale - t * 0.35);
+          // Artwork drives the SAME terrain the cursor glow and ripples below
+          // push around, so the interaction travels through the picture rather
+          // than over it.
+          //
+          // The ink has to DOMINATE, not merely nudge: added as a bias of
+          // similar amplitude to the noise, the engraving washed out into
+          // uniform static. So the drift is demoted to a shimmer and the ink
+          // carries the height, with a gamma that pulls the near-white paper
+          // firmly below the draw threshold — otherwise the blank sky fills in
+          // and the linework has nothing to read against.
+          if (art) {
+            const ink = art[y * cols + x];
+            const shaped = Math.pow(ink, 1.45);
+            n = 0.42 + (n - 0.5) * 0.30 + shaped * (0.55 + imageWeight);
+          }
           // cursor glow — instant, local
           const dx = px - mouse.x, dy = py - mouse.y;
           n = Math.min(1.4, n + Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 170) * 0.45);
@@ -171,7 +251,7 @@ export default function AsciiField({
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('click', onClick);
     };
-  }, [colors, baseAlpha, peakAlpha, cell, edgeBias]);
+  }, [colors, baseAlpha, peakAlpha, cell, edgeBias, image, imageWeight, focalX, focalY, imageScale]);
 
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
 }

@@ -158,20 +158,62 @@ export default function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────────────────────
           Taller than a standard hero: the type sits high, then a big
           interactive product window is the centrepiece and breaks into the
-          page below. Monochrome ASCII drifts behind a canvas scrim. */}
+          page below.
+
+          The drifting ASCII terrain now carries the Flammarion engraving
+          (1888, public domain) as a height bias — glyphs cluster where the ink
+          is, so the figure pushing through the edge of the sky emerges out of
+          the same field the cursor already disturbs. It is NOT an image layered
+          behind an effect: the glow and the ripples travel through the picture,
+          which is the only version worth having.
+
+          focalY 0.42 puts the tear in the firmament and the reaching figure
+          across the middle band — low enough to clear the headline, high enough
+          not to be swallowed by the product window below. */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0"><AsciiField colors={MONO} baseAlpha={0.09} peakAlpha={0.42} /></div>
-        <div className="absolute inset-x-0 top-0 h-[78%] bg-gradient-to-b from-canvas via-canvas/95 to-transparent pointer-events-none" />
+        <div className="absolute inset-0">
+          <AsciiField
+            colors={MONO}
+            baseAlpha={0.13}
+            peakAlpha={0.6}
+            image="/flammarion.jpg"
+            imageWeight={0.5}
+            focalX={0.86}
+            focalY={0.46}
+            imageScale={2.3}
+            /* The centre-calming contour is what keeps the plain field quiet;
+               with artwork it would erase the picture exactly where it matters. */
+            edgeBias={0.22}
+            cell={11}
+          />
+        </div>
+        {/* Two scrims instead of one. A full-width top gradient was the simple
+            option and it erased the engraving exactly where it is worth seeing.
+            This protects only the band the type actually occupies, and lets the
+            artwork survive at the edges and below. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(58% 42% at 50% 30%, hsl(var(--canvas)/0.97) 45%, hsl(var(--canvas)/0.72) 72%, transparent 100%)' }}
+        />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-canvas to-transparent pointer-events-none" />
 
         {/* pt-16 on a phone: 96px of empty canvas above the badge pushed the
             headline most of the way down the first screen. */}
         <div className="relative z-10 max-w-3xl mx-auto px-6 pt-16 md:pt-32 pb-14 text-center">
-          <h1 className="text-4xl md:text-6xl font-medium tracking-tight leading-[1.05] text-primary">
-            Run your whole company,<br />smooth as butter
+          {/* Two ranks, and the difference is COLOUR and SIZE, not weight —
+              the design rule the rest of the app follows. "Build beyond" is the
+              line the engraving is arguing for; the butter line stays because
+              it is the one people repeat back to you. */}
+          <h1 className="text-[2.6rem] leading-[1.04] md:text-[4.5rem] md:leading-[0.98] font-medium tracking-[-0.03em] text-primary">
+            Explore further.<br />
+            <span className="text-secondary">Build beyond.</span>
           </h1>
-          <p className="mt-6 text-base md:text-lg text-secondary max-w-xl mx-auto leading-relaxed">
-            One workspace for sales, invoicing, marketing, projects and hiring.
-            Plus AI agents that run on your own key.
+          <p className="mt-7 text-base md:text-lg text-primary max-w-xl mx-auto leading-relaxed">
+            Run your whole company, smooth as butter.
+          </p>
+          <p className="mt-2.5 text-sm md:text-base text-secondary max-w-xl mx-auto leading-relaxed">
+            Sales, invoicing, marketing, projects and hiring on one relational core —
+            plus AI agents that run on your own key.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <div className="hidden sm:block"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
