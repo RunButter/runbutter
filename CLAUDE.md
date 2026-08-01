@@ -28,7 +28,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
     domain); and a verified sending domain in Resend.
   - **0069 (post board), 0072 (segments) and 0073 (sequences) are PENDING** if not yet run.
-    0073 must come after 0072 and 0071; 0074 after 0073. `/api/sequences/run` needs its own cron —
+    0073 must come after 0072 and 0071; 0074 after 0073; 0075 (chat) is independent. `/api/sequences/run` needs its own cron —
     it drives drips AND does enrolment, the stale sweep and the score refresh.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
@@ -157,6 +157,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
   the model sends by id, so putting either into a stored run transcript is a leak for no gain.
   Note this is exposed over `/api/mcp` too, like every other tool.
+- **Team chat (0075).** `can_read_channel` is the SINGLE visibility predicate — every read and write
+  calls it, because scattering that rule is how a private channel eventually leaks. `post_agent_message`
+  is service_role only and forces `author_kind='agent'`, so a browser can never post as an agent and a
+  reader can always tell a bot from a person. Chat POLLS (4s) rather than using Supabase Realtime:
+  Realtime needs anon-key RLS policies on `messages`, which would undo the /api/rpc proxy. Don't
+  "upgrade" it by opening RLS — write an SSE endpoint instead.
 - **Lead scoring (0074)** stores a DECAYED engagement score on `newsletter_subscribers.score`,
   refreshed in batches by `/api/sequences/run`. Stored rather than computed because segments filter
   on it and a per-row decayed sum would be quadratic against 0072's EXISTS predicates. 0074

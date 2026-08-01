@@ -1,7 +1,7 @@
 # Roadmap — Newsletters, Marketing Automation, Team Chat
 
-Status: **Phases 1 and 2 complete.** Data model, send pipeline, UI, templates, AI drafting and the
-provider feedback webhook are all built and verified, as are segments, drip sequences and lead scoring. Phase 3 (team chat) is unbuilt.
+Status: **All three phases built.** Data model, send pipeline, UI, templates, AI drafting and the
+provider feedback webhook are all built and verified, as are segments, drip sequences, lead scoring and team chat.
 
 ---
 
@@ -169,7 +169,7 @@ own CRM (we are one), or its plugin marketplace.
 
 ---
 
-## 4. Phase 3 — Team chat
+## 4. Phase 3 — Team chat — **BUILT (0075)**
 
 A Slack-style channel surface inside the workspace, in the Team group.
 
@@ -185,8 +185,14 @@ mobile push, threading depth) are not where the value is, so v1 can be small.
 - Mentions → the existing notification path
 - Agents post as members, so an agent's run summary lands in `#finance` instead of a runs table
 
-**Explicitly deferred:** threads, huge file uploads (Files already exists — link, don't re-upload),
-voice, external federation.
+**Explicitly deferred:** threads, reactions, file uploads (Files already exists — link, don't
+re-upload), voice, external federation, and @-mention notifications.
+
+**No websocket in v1, deliberately.** Supabase Realtime pushes Postgres changes to the BROWSER using
+the anon key and RLS policies. This project revokes anon/authenticated everywhere and routes reads
+through the verified `/api/rpc` proxy (0040/0046); opening RLS on `messages` purely to get a socket
+would reintroduce the hole that proxy closed. The client polls every 4s. The honest upgrade is a
+server-side SSE endpoint, not loosened RLS.
 
 `assistant_channels` (0057) already exists for the AI assistant and is **not** this — that is a
 DM with a bot, not a team channel. They should converge later; they should not be conflated now.
