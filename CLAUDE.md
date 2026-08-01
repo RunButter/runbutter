@@ -20,10 +20,13 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Migrations through 0067 are ALL APPLIED** (0065 verified 2026-07-30 via the Supabase connector;
   0066 post schedule + 0067 mind maps confirmed run by the owner 2026-07-31). Don't report any of
   0064–0067 as pending.
-  - **0070 + 0071 (newsletters) are PENDING** — run both. 0071 alters the delivery status
-    constraint that 0070 creates, so the order matters. Nothing mails until a **Render Cron Job**
-    posts to `/api/newsletters/send` every minute with `x-cron-secret: <service-role key>`, and
-    `NEXT_PUBLIC_SITE_URL` must be set or unsubscribe/tracking links point at the wrong origin.
+  - **0070 + 0071 (newsletters) are PENDING** — run both, in that order (0071 alters a constraint
+    0070 creates). Then FOUR ops steps, none optional: a **Render Cron Job** on
+    `/api/newsletters/send` every minute with `x-cron-secret: <service-role key>` (nothing mails
+    without it); **`NEXT_PUBLIC_SITE_URL`** (or every unsubscribe and tracking link points at the
+    wrong host); **`RESEND_WEBHOOK_SECRET`** + a Resend webhook on `/api/newsletters/webhook` for
+    `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
+    domain); and a verified sending domain in Resend.
   - **0069 (post board) is PENDING** if not yet run.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a

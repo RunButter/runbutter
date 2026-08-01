@@ -1,7 +1,7 @@
 # Roadmap — Newsletters, Marketing Automation, Team Chat
 
-Status: **in progress**. Phase 1 data model (0070) and send pipeline (0071 + routes + templates)
-are built and verified. The UI and the AI builder are not. Phases 2 and 3 are unbuilt.
+Status: **Phase 1 complete.** Data model, send pipeline, UI, templates, AI drafting and the
+provider feedback webhook are all built and verified. Phases 2 and 3 are unbuilt.
 
 ---
 
@@ -83,15 +83,20 @@ require one-click unsubscribe for bulk senders, and without it deliverability co
 - [x] `/api/n/confirm/[token]` double opt-in
 - [x] 3 templates + plain-text alternative
 - [x] `record_newsletter_feedback` for bounce/complaint
-- [ ] **Resend webhook route** to call it — the RPC exists, nothing posts to it yet
-- [ ] UI: lists, subscribers, CSV import, composer, send/schedule, per-send stats
-- [ ] AI builder
+- [x] `/api/newsletters/webhook` — Svix-verified Resend feedback, resolved by provider id
+- [x] UI: lists, subscribers, paste import, composer with live preview, send, per-send stats
+- [x] AI drafting (`/api/newsletters/draft`) — BYO key, drafts only
 
-### Operational requirement
-The sender is cron-driven. Nothing goes out until a Render Cron Job posts to
-`/api/newsletters/send` every minute with `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>`,
-exactly like `/api/automations/dispatch`. `NEXT_PUBLIC_SITE_URL` must also be set, or
-unsubscribe and tracking links are built against the default origin.
+### Operational requirements
+1. **Migrations 0070 then 0071**, in that order — 0071 alters a constraint 0070 creates.
+2. **A Render Cron Job** posting to `/api/newsletters/send` every minute with
+   `x-cron-secret: <SUPABASE_SERVICE_ROLE_KEY>`, exactly like `/api/automations/dispatch`.
+   Nothing goes out without it.
+3. **`NEXT_PUBLIC_SITE_URL`**, or unsubscribe and tracking links are built against the
+   default origin and every one of them points at the wrong host.
+4. **`RESEND_WEBHOOK_SECRET`** plus a Resend webhook pointing at
+   `/api/newsletters/webhook` for `email.bounced` and `email.complained`. Without it
+   bounces never suppress, which is what eventually kills a sending domain.
 
 ### The three templates
 Deliberately three, not thirty. Each is a token-themed layout, not a drag-and-drop page builder:
