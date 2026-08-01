@@ -3,9 +3,11 @@ import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { TOOLS as WORKSPACE_TOOLS, callTool, type ToolCtx } from '@/lib/agents/tools';
+import { isWriteTool } from '@/lib/agents/catalog';
 
 // MCP advertises the shared workspace tools (JSON-schema shape).
 const TOOLS = WORKSPACE_TOOLS.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+const READ_ONLY_TOOLS = TOOLS.filter((t) => !isWriteTool(t.name));
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +28,7 @@ export const dynamic = 'force-dynamic';
  *       "headers": { "Authorization": "Bearer hb_..." } } } }
  */
 
-async function auth(req: Request): Promise<ToolCtx | null> {
+async function auth(req: Request): Promise<(ToolCtx & { scope: 'full' | 'read' }) | null> {
   const header = req.headers.get('authorization') || '';
   const key = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : '';
   if (!key) return null;
@@ -34,7 +36,10 @@ async function auth(req: Request): Promise<ToolCtx | null> {
   const admin = createAdminClient();
   const { data } = await admin.rpc('resolve_api_key', { p_hash: hash });
   if (!data) return null;
-  return { admin, workspace: (data as any).workspace_id, privy: (data as any).owner_privy };
+  // A key's scope (0078) has to hold here too — otherwise a read-only key that
+  // cannot write over /api/v1 could simply write over MCP instead.
+  const scope = ((data as any).scope === 'read' ? 'read' : 'full') as 'full' | 'read';
+  return { admin, workspace: (data as any).workspace_id, privy: (data as any).owner_privy, scope };
 }
 
 const rpcResult = (id: any, result: any) => NextResponse.json({ jsonrpc: '2.0', id, result });
@@ -62,11 +67,20 @@ export async function POST(req: Request) {
     });
   }
   if (method === 'ping') return rpcResult(id, {});
-  if (method === 'tools/list') return rpcResult(id, { tools: TOOLS });
+  if (method === 'tools/list') {
+    // Advertise only what the key can actually do — a client that never sees a
+    // write tool won't burn a turn discovering it is forbidden. Unauthenticated
+    // discovery still shows the full catalogue, as before.
+    const listCtx = await auth(req);
+    return rpcResult(id, { tools: listCtx?.scope === 'read' ? READ_ONLY_TOOLS : TOOLS });
+  }
 
   if (method === 'tools/call') {
     const ctx = await auth(req);
     if (!ctx) return rpcError(id, -32001, 'Invalid or missing API key (Authorization: Bearer hb_...)', 401);
+    if (ctx.scope === 'read' && isWriteTool(params?.name)) {
+      return rpcError(id, -32002, `This API key is read-only, so "${params?.name}" is not permitted. Create a full-access key to write.`, 403);
+    }
     try {
       const out = await callTool(ctx, params?.name, params?.arguments || {});
       return rpcResult(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }] });

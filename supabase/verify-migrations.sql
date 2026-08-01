@@ -72,7 +72,13 @@ with applied(ord, section, item, probe, ok) as (
   (72, 'A. migration', '0072 segments',          'segments + segment_match()',     ((to_regclass('public.segments') is not null) and (select exists(select 1 from pg_proc where proname='segment_match')))),
   (73, 'A. migration', '0073 sequences',         'sequences + sequence_enrollments',((to_regclass('public.sequences') is not null) and (to_regclass('public.sequence_enrollments') is not null))),
   (74, 'A. migration', '0074 lead scoring',      'scoring_rules + subscribers.score',((to_regclass('public.scoring_rules') is not null) and exists(select 1 from information_schema.columns where table_name='newsletter_subscribers' and column_name='score'))),
-  (75, 'A. migration', '0075 chat',              'channels + messages + can_read_channel', ((to_regclass('public.channels') is not null) and (to_regclass('public.messages') is not null) and (select exists(select 1 from pg_proc where proname='can_read_channel'))))
+  (75, 'A. migration', '0075 chat',              'channels + messages + can_read_channel', ((to_regclass('public.channels') is not null) and (to_regclass('public.messages') is not null) and (select exists(select 1 from pg_proc where proname='can_read_channel')))),
+  (76, 'A. migration', '0076 provisioning',      'ensure_workspace + subdomain_available',((select exists(select 1 from pg_proc where proname='ensure_workspace')) and (select exists(select 1 from pg_proc where proname='subdomain_available')))),
+  -- 0077 REMOVES policies rather than creating an object, so it is verified by
+  -- absence — which needs the presence guard, or a database that simply has no
+  -- company_users table reads as "locked".
+  (77, 'A. migration', '0077 HR tables locked',  'no anon policy on company_users',((to_regclass('public.company_users') is not null) and not exists(select 1 from pg_policies where tablename in ('companies','company_users') and 'anon' = any(roles)))),
+  (78, 'A. migration', '0078 API key scopes',    'api_keys.scope + 4-arg create_api_key',(exists(select 1 from information_schema.columns where table_name='api_keys' and column_name='scope') and (select exists(select 1 from pg_proc where proname='create_api_key' and pg_get_function_arguments(oid) ilike '%p_scope%'))))
 ),
 -- Freshness: running an older migration AFTER a newer one silently reverts a
 -- function. These check the live body for tokens only the latest version has.
@@ -100,7 +106,16 @@ fresh(ord, section, item, probe, ok) as (
   -- 0073 redefines these two so opting out also stops a live drip. 0071's
   -- versions predate sequences and would leave the drip running.
   (114, 'B. freshness', 'unsubscribe cancels enrolments',        '0073', (select exists(select 1 from pg_proc where proname='newsletter_unsubscribe'    and pg_get_functiondef(oid) ilike '%sequence_enrollments%'))),
-  (115, 'B. freshness', 'bounce cancels enrolments',             '0073', (select exists(select 1 from pg_proc where proname='record_newsletter_feedback' and pg_get_functiondef(oid) ilike '%sequence_enrollments%')))
+  (115, 'B. freshness', 'bounce cancels enrolments',             '0073', (select exists(select 1 from pg_proc where proname='record_newsletter_feedback' and pg_get_functiondef(oid) ilike '%sequence_enrollments%'))),
+  -- 0076 hardens hr_company_id so a forged company_users row is no longer
+  -- enough: the older body has no accounts check and re-opens the bypass.
+  (116, 'B. freshness', 'hr_company_id checks accounts',         '0076', (select exists(select 1 from pg_proc where proname='hr_company_id'   and pg_get_functiondef(oid) ilike '%accounts%'))),
+  -- 0076 also redefines redeem_invite to create the accounts row. Without it
+  -- the hardening above locks out every invited member.
+  (117, 'B. freshness', 'redeem_invite creates an account',      '0076', (select exists(select 1 from pg_proc where proname='redeem_invite'   and pg_get_functiondef(oid) ilike '%accounts%'))),
+  -- Re-running 0032/0037 after 0078 restores the 3-arg create_api_key and
+  -- every spreadsheet feed key silently comes back as full-access.
+  (118, 'B. freshness', 'resolve_api_key returns scope',         '0078', (select exists(select 1 from pg_proc where proname='resolve_api_key' and pg_get_functiondef(oid) ilike '%scope%')))
 )
 select
   section,

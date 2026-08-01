@@ -7,6 +7,7 @@ import {
   loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
+import ExcelConnect from '@/components/crm/ExcelConnect';
 import { rpc } from '@/lib/rpc';
 import { getWorkspace } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
@@ -225,6 +226,10 @@ export default function IntegrationsPage() {
             </section>
           )}
 
+          {/* Excel / Sheets feed — above the raw keys, because this is the
+              version of "API key" most people actually want. */}
+          <ExcelConnect privy={privy} />
+
           {/* API keys */}
           <section>
             <div className="flex items-center gap-2 mb-3">
@@ -254,7 +259,13 @@ export default function IntegrationsPage() {
                   <div key={k.id} className={`flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0 ${k.revoked ? 'opacity-50' : ''}`}>
                     <KeyRound className="w-4 h-4 text-tertiary shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold text-primary truncate">{k.name} {k.revoked && <span className="text-2xs text-danger font-medium">· revoked</span>}</div>
+                      <div className="text-sm font-semibold text-primary truncate">
+                        {k.name}
+                        {/* A read key can be pasted into a spreadsheet URL; a full one
+                            can create records. Worth telling apart at a glance. */}
+                        {k.scope === 'read' && <span className="ml-1.5 text-2xs font-medium text-tertiary">· read-only</span>}
+                        {k.revoked && <span className="text-2xs text-danger font-medium"> · revoked</span>}
+                      </div>
                       <div className="text-2xs text-tertiary font-mono">{k.prefix}••••••••</div>
                     </div>
                     <span className="text-2xs text-tertiary tabular-nums hidden sm:block">last used {fmtDate(k.last_used_at)}</span>

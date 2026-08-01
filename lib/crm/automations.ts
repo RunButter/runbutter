@@ -17,7 +17,7 @@ export interface Automation {
 export interface AutomationRun { id: string; automation_name: string | null; action_type: string | null; status: string; detail: string | null; created_at: string }
 export interface Connection { id: string; label: string; kind: string; url: string; is_active: boolean; secret?: string }
 export interface WebhookDelivery { id: string; url: string | null; status: string; response_code: number | null; attempts: number; detail: string | null; created_at: string }
-export interface ApiKey { id: string; name: string; prefix: string; last_used_at: string | null; revoked: boolean; created_at: string }
+export interface ApiKey { id: string; name: string; prefix: string; scope?: 'full' | 'read'; last_used_at: string | null; revoked: boolean; created_at: string }
 
 export interface Template { key: string; name: string; desc: string; tone: string; automation: Partial<Automation> }
 
@@ -149,12 +149,35 @@ export async function loadApiKeys(privy: string | null): Promise<{ rows: ApiKey[
   return { rows: data as ApiKey[], live: true };
 }
 
-export async function createApiKey(privy: string, name: string): Promise<{ key?: string; error?: string }> {
+export async function createApiKey(privy: string, name: string, scope: 'full' | 'read' = 'full'): Promise<{ key?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await rpc('create_api_key', { p_privy: privy, p_workspace: wsId, p_name: name });
+  const { data, error } = await rpc('create_api_key', { p_privy: privy, p_workspace: wsId, p_name: name, p_scope: scope });
   if (error) return { error: error.message };
   return { key: data as string };
+}
+
+// ── Spreadsheet feed (Excel / Sheets / Power BI) ──────────────────────────────
+// The objects worth pulling into a spreadsheet. Deliberately the same list the
+// REST bridge allows, minus nothing — if it is readable over the API it is
+// readable as a table.
+export const FEED_OBJECTS = [
+  'people', 'companies', 'invoices', 'offers', 'expenses', 'transactions',
+  'products', 'campaigns', 'projects', 'issues', 'assets',
+] as const;
+
+/**
+ * The URL a user pastes into Excel's "From Web" box.
+ *
+ * The key travels in the query string because Power Query's basic dialog cannot
+ * send an Authorization header — that is the whole reason read-only scopes
+ * exist (0078). Absolute, because Excel has no notion of "this site".
+ */
+export function feedUrl(object: string, key: string): string {
+  const base = typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL || 'https://runbutter.app');
+  return `${base}/api/v1/records?object=${encodeURIComponent(object)}&format=csv&key=${encodeURIComponent(key)}`;
 }
 
 export async function revokeApiKey(privy: string, id: string): Promise<{ error?: string }> {

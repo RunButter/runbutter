@@ -243,6 +243,16 @@ Same rule as the cost rule above: prefer public/government data + local computat
 - **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts`) — merge/split/extract/delete/rotate/watermark/images→PDF
   on the already-installed `pdf-lib`, **in the browser**, so files never upload. pdf-lib restructures
   documents but does not re-encode streams, so **compression is not offered** — don't add it here.
+- **Spreadsheet feed (0078)** — `GET /api/v1/records?object=…&format=csv&key=hb_…` + the
+  **Connect to Excel** panel in Settings → Integrations. Excel's "Get Data → From Web" can't send an
+  Authorization header from its dialog, so the key rides in the query string, bounded by two rules:
+  a **query-string key must be scope `read`** (else 401), and a **query-string key can never write**
+  (403 on POST) *whatever* its scope — the transport is untrusted, not just the credential. The same
+  scope is enforced on `/api/mcp`, or a read key could simply write there instead. CSV, not JSON,
+  because Power Query turns JSON into a table only after several steps most people never find; it
+  carries a **UTF-8 BOM** (else Excel/Windows mangles non-ASCII names) and CRLF, and columns are the
+  **union of keys in first-seen order** — `Object.keys(rows[0])` silently truncates the sheet when a
+  later JSONB row carries a field the first one omitted.
 - **Files that become data (0065)** — `docs/file-extraction.md`. `/files` uploads to a **private**
   bucket, extracts text, and indexes it with Postgres FTS *in the same database as the ledger*, which
   is the entire pitch: "which contracts auto-renew, for clients who owe us money" is one join.
