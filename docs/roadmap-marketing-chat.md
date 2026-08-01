@@ -121,9 +121,22 @@ same way agents propose writes rather than making them.
 Our automation engine already does triggers → conditions → actions with an outbox and retries. Three
 things are missing, in order of value:
 
-**1. Segments.** A saved filter over subscribers/people that evaluates live ("opened nothing in 90
-days", "country = PL and status = customer"). Everything else in this phase depends on it. Mautic's
-real lesson is that segments, not campaigns, are the primitive.
+**1. Segments — BUILT (0072).** A saved filter over subscribers that evaluates live. Nine fields
+(status, email, name, consent source, subscribed date, list membership, opened, clicked, received)
+with a whitelisted operator per field.
+
+No dynamic SQL: `segment_match` is a STABLE function with a CASE over a whitelist, so an unknown
+field or operator returns FALSE rather than being interpolated anywhere. Returning true would let a
+typo in a saved filter silently WIDEN a send's audience, which is the failure that mails people who
+should never have received it.
+
+`sync_segment_to_list` copies matches onto a list so a newsletter can target them. It ADDS ONLY and
+does not stay in step — said plainly in the UI, because "sync" usually implies two-way, and a send's
+audience is fixed at queue time anyway (0070).
+
+Known limit, stated rather than hidden: the engagement predicates run an EXISTS per row, so this is
+linear in list size. Results are capped and paged. Past roughly six figures the fix is a
+materialised engagement summary per subscriber — not dynamic SQL.
 
 **2. Sequences (drip).** Our automations fire once on an event. A sequence is an ordered list of
 steps with **waits** — "day 0 welcome, day 3 case study, day 7 ask for a call". That needs a

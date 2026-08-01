@@ -44,21 +44,21 @@ export const SEGMENT_FIELDS: {
     { op: 'eq', label: 'is', input: 'text' },
   ] },
   { field: 'created_at', label: 'Subscribed', ops: [
-    { op: 'within_days', label: 'in the last (days)', input: 'days' },
-    { op: 'before_days', label: 'more than (days) ago', input: 'days' },
+    { op: 'within_days', label: 'in the last', input: 'days' },
+    { op: 'before_days', label: 'more than', input: 'days' },
   ] },
   { field: 'on_list', label: 'List', ops: [
     { op: 'eq', label: 'is on', input: 'list' },
     { op: 'neq', label: 'is not on', input: 'list' },
   ] },
   { field: 'opened', label: 'Opened', ops: [
-    { op: 'within_days', label: 'in the last (days)', input: 'days' },
-    { op: 'not_within_days', label: 'not in the last (days)', input: 'days' },
+    { op: 'within_days', label: 'in the last', input: 'days' },
+    { op: 'not_within_days', label: 'not in the last', input: 'days' },
     { op: 'never', label: 'never', input: 'none' },
   ] },
   { field: 'clicked', label: 'Clicked', ops: [
-    { op: 'within_days', label: 'in the last (days)', input: 'days' },
-    { op: 'not_within_days', label: 'not in the last (days)', input: 'days' },
+    { op: 'within_days', label: 'in the last', input: 'days' },
+    { op: 'not_within_days', label: 'not in the last', input: 'days' },
     { op: 'never', label: 'never', input: 'none' },
   ] },
   { field: 'received', label: 'Newsletters received', ops: [

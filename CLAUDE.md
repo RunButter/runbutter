@@ -27,7 +27,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     wrong host); **`RESEND_WEBHOOK_SECRET`** + a Resend webhook on `/api/newsletters/webhook` for
     `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
     domain); and a verified sending domain in Resend.
-  - **0069 (post board) is PENDING** if not yet run.
+  - **0069 (post board) and 0072 (segments) are PENDING** if not yet run.
   - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
     empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
     skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
@@ -155,6 +155,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `webhook_deliveries` next to automation sends. `list_connections` **strips `url` and `secret`** —
   the model sends by id, so putting either into a stored run transcript is a leak for no gain.
   Note this is exposed over `/api/mcp` too, like every other tool.
+- **Segments (0072)** filter subscribers live. `segment_match` is a whitelist CASE, **never dynamic
+  SQL** — a SECURITY DEFINER function building `EXECUTE` from user values is one escaping mistake
+  from arbitrary SQL across every tenant. An unknown field/op returns FALSE (fails closed); making
+  it return true would silently widen a send's audience. The numeric operand is parsed with a strict
+  `^\d{1,6}$` match, not by stripping non-digits — a UUID value (used by `on_list`) becomes a
+  32-digit number that overflows `int` and crashes the whole evaluation.
 - **Newsletters (0070/0071)** are a NATIVE build, not a port. listmonk is **AGPL-3.0** and Mautic
   is **GPL-3.0** — copying either would force this whole product off MIT, so don't "just borrow a
   file" from them. Concepts only.

@@ -128,6 +128,7 @@ export default function SegmentBuilder({
                             {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                           </select>
                         ) : (
+                          <span className="flex items-center gap-1.5 flex-1 min-w-[8rem]">
                           <input
                             value={f.value}
                             // Numeric operands are validated in SQL too (a
@@ -136,8 +137,14 @@ export default function SegmentBuilder({
                             type={input === 'days' || input === 'count' ? 'number' : 'text'}
                             min={input === 'days' || input === 'count' ? 1 : undefined}
                             onChange={(e) => patch(i, { value: e.target.value })}
-                            className="input-field !h-8 flex-1 min-w-[8rem] text-xs"
+                            className="input-field !h-8 flex-1 min-w-0 text-xs"
                             placeholder={input === 'days' ? '30' : input === 'count' ? '1' : 'value'} />
+                          {/* The unit sits with the number, not inside the
+                              operator label — "not in the last (days) 90" made
+                              the row read as three disconnected fragments. */}
+                          {input === 'days' && <span className="text-2xs text-tertiary shrink-0">days</span>}
+                          {input === 'count' && <span className="text-2xs text-tertiary shrink-0">newsletters</span>}
+                          </span>
                         )}
 
                       <button onClick={() => setFilters((fs) => fs.filter((_, j) => j !== i))}
