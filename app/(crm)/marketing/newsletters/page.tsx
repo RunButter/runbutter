@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Loader2, Mail, Users, Clock, Ban, Trash2, Upload, X, Check, Filter } from 'lucide-react';
+import { Plus, Loader2, Mail, Users, Clock, Ban, Trash2, Upload, X, Check, Filter, GitBranch } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   listNewsletterLists, saveNewsletterList, deleteNewsletterList,
@@ -14,6 +14,8 @@ import {
 } from '@/lib/crm/newsletters';
 import { listSegments, deleteSegment, type Segment } from '@/lib/crm/segments';
 import SegmentBuilder from '@/components/crm/SegmentBuilder';
+import { listSequences, setSequenceEnabled, deleteSequence, sequenceLengthDays, type Sequence } from '@/lib/crm/sequences';
+import SequenceBuilder from '@/components/crm/SequenceBuilder';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -35,7 +37,7 @@ export default function NewslettersPage() {
   const privy = authenticated && user ? user.id : null;
 
   const [ws, setWs] = useState<WorkspaceContext | null>(null);
-  const [tab, setTab] = useState<'sends' | 'lists' | 'segments'>('sends');
+  const [tab, setTab] = useState<'sends' | 'lists' | 'segments' | 'sequences'>('sends');
   const [rows, setRows] = useState<NewsletterRow[]>([]);
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,12 +45,14 @@ export default function NewslettersPage() {
   const [importing, setImporting] = useState<NewsletterList | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [editingSeg, setEditingSeg] = useState<Partial<Segment> | null>(null);
+  const [sequences, setSequences] = useState<Sequence[]>([]);
+  const [editingSeq, setEditingSeq] = useState<Partial<Sequence> | null>(null);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
-    const [n, l, g] = await Promise.all([
-      listNewsletters(p, w.id), listNewsletterLists(p, w.id), listSegments(p, w.id),
+    const [n, l, g, q] = await Promise.all([
+      listNewsletters(p, w.id), listNewsletterLists(p, w.id), listSegments(p, w.id), listSequences(p, w.id),
     ]);
-    setRows(n); setLists(l); setSegments(g); setLoading(false);
+    setRows(n); setLists(l); setSegments(g); setSequences(q); setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -88,9 +92,13 @@ export default function NewslettersPage() {
           <Button size="sm" variant="primary" onClick={create} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New newsletter</Button>
         ) : tab === 'lists' ? (
           <Button size="sm" variant="primary" onClick={newList} disabled={!privy}><Plus className="w-3.5 h-3.5" /> New list</Button>
-        ) : (
+        ) : tab === 'segments' ? (
           <Button size="sm" variant="primary" onClick={() => setEditingSeg({ name: 'New segment', filters: [] })} disabled={!privy}>
             <Plus className="w-3.5 h-3.5" /> New segment
+          </Button>
+        ) : (
+          <Button size="sm" variant="primary" onClick={() => setEditingSeq({ name: 'New sequence', steps: [] })} disabled={!privy}>
+            <Plus className="w-3.5 h-3.5" /> New sequence
           </Button>
         )}
       </PageHeader>
@@ -102,7 +110,7 @@ export default function NewslettersPage() {
           )}
 
           <div className="inline-flex items-center rounded-lg bg-surface-hover p-0.5 mb-4">
-            {([['sends', 'Sends', Mail], ['lists', 'Lists', Users], ['segments', 'Segments', Filter]] as const).map(([v, label, Icon]) => (
+            {([['sends', 'Sends', Mail], ['lists', 'Lists', Users], ['segments', 'Segments', Filter], ['sequences', 'Sequences', GitBranch]] as const).map(([v, label, Icon]) => (
               <button key={v} onClick={() => setTab(v)} aria-pressed={tab === v}
                 className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
                   tab === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
@@ -150,6 +158,43 @@ export default function NewslettersPage() {
                         }
                       }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
                     )}
+                  </div>
+                ))}
+              </div>
+            )
+          ) : tab === 'sequences' ? (
+            sequences.length === 0 ? (
+              <Empty icon={GitBranch} text="No sequences yet."
+                hint="A drip: email, wait three days, email again — running per subscriber." />
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {sequences.map((q) => (
+                  <div key={q.id} className="rounded-xl bg-surface shadow-card p-4 flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-primary truncate flex-1">{q.name}</h3>
+                      <Badge tone={q.enabled ? 'success' : 'neutral'}>{q.enabled ? 'on' : 'off'}</Badge>
+                    </div>
+                    <p className="text-2xs text-tertiary mt-1">
+                      {q.steps.length} step{q.steps.length === 1 ? '' : 's'} · {sequenceLengthDays(q.steps)} days
+                    </p>
+                    <p className="text-2xs text-tertiary mt-0.5">
+                      {q.active_count} in progress · {q.completed_count} finished
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-subtle">
+                      <Button size="sm" variant="ghost" onClick={() => setEditingSeq(q)}>Open</Button>
+                      <label className="flex items-center gap-1.5 text-2xs text-tertiary cursor-pointer select-none">
+                        <input type="checkbox" checked={q.enabled} className="rounded border-strong accent-accent"
+                          onChange={(e) => ws && privy && setSequenceEnabled(privy, ws.id, q.id, e.target.checked).then(refresh)} />
+                        on
+                      </label>
+                      <button
+                        onClick={async () => {
+                          if (ws && privy && await confirmDialog(`Delete sequence "${q.name}"? Anyone partway through stops receiving it.`)) {
+                            await deleteSequence(privy, ws.id, q.id); refresh();
+                          }
+                        }}
+                        className="ml-auto p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><Trash2 className="w-3.5 h-3.5 text-danger" /></button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -217,6 +262,11 @@ export default function NewslettersPage() {
       )}
       {importing && ws && privy && (
         <ImportModal list={importing} ws={ws.id} privy={privy} onClose={() => { setImporting(null); refresh(); }} />
+      )}
+      {editingSeq && ws && privy && (
+        <SequenceBuilder initial={editingSeq} lists={lists} segments={segments} newsletters={rows}
+          ws={ws.id} privy={privy}
+          onClose={() => setEditingSeq(null)} onSaved={() => { setEditingSeq(null); refresh(); }} />
       )}
       {editingSeg && ws && privy && (
         <SegmentBuilder initial={editingSeg} lists={lists} ws={ws.id} privy={privy}

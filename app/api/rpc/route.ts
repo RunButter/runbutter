@@ -77,6 +77,11 @@ const ALLOWED = new Set([
   // vocabulary is a whitelist that fails closed — there is no dynamic SQL.
   'get_segments', 'save_segment', 'delete_segment',
   'evaluate_segment_filters', 'sync_segment_to_list',
+  // Sequences (0073). Enrolment and step execution are deliberately ABSENT:
+  // they run server-side on a cron in /api/sequences/run, which holds the
+  // Resend key and the at-most-once claim protocol.
+  'get_sequences', 'save_sequence', 'set_sequence_enabled', 'delete_sequence',
+  'get_sequence_stats',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*
