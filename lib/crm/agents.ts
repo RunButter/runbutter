@@ -9,7 +9,26 @@ export interface Agent {
   allowed_tools: string[]; allowed_objects: string[];
   autonomy: 'suggest' | 'auto'; max_steps: number; enabled: boolean;
   skill_ids: string[];
+  /**
+   * Unattended runs (0084). Coarse on purpose — hourly/daily/weekly plus a UTC
+   * hour, not a cron expression: the value of the feature is "it ran without
+   * me", and a cron field turns that into a syntax to debug.
+   *
+   * A schedule does NOT change autonomy. A `suggest` agent still only proposes;
+   * it just proposes unprompted.
+   */
+  schedule: AgentSchedule; schedule_hour: number; schedule_task: string;
+  last_run_at?: string | null;
 }
+
+export type AgentSchedule = 'off' | 'hourly' | 'daily' | 'weekly';
+
+export const SCHEDULE_LABEL: Record<AgentSchedule, string> = {
+  off: 'Only when asked',
+  hourly: 'Every hour',
+  daily: 'Once a day',
+  weekly: 'Once a week',
+};
 
 export interface AgentRun {
   id: string; agent_id: string | null; agent_name: string; task: string;
@@ -45,6 +64,9 @@ export async function saveAgent(privy: string, ws: string, a: Partial<Agent> & {
     p_allowed_objects: a.allowed_objects || [],
     p_autonomy: a.autonomy || 'suggest', p_max_steps: a.max_steps || 12,
     p_skill_ids: a.skill_ids || [],
+    p_schedule: a.schedule || 'off',
+    p_schedule_hour: typeof a.schedule_hour === 'number' ? a.schedule_hour : 9,
+    p_schedule_task: a.schedule_task || '',
   });
   return { id: data ?? null, error };
 }

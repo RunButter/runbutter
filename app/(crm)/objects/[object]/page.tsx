@@ -11,6 +11,8 @@ import RecordTable from '@/components/crm/RecordTable';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
 import SanctionsPanel from '@/components/crm/SanctionsPanel';
+import RecordNotes from '@/components/crm/RecordNotes';
+import { readListState, writeListState, sameListState, EMPTY_LIST_STATE } from '@/lib/crm/list-url';
 import ImportModal from '@/components/crm/ImportModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
@@ -35,11 +37,16 @@ export default function ObjectPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
+  // Seeded from the URL so a shared link opens on the same view. Lazy
+  // initialiser rather than an effect: setting it after mount would flash the
+  // unfiltered list first, and on a big table that is a visible jump.
+  const [query, setQuery] = useState(() =>
+    (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).query);
   const [form, setForm] = useState<{ id: string | null; initial: any } | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [importing, setImporting] = useState(false);
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<FilterState>(() =>
+    (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).filters);
   const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
   const [wsId, setWsId] = useState<string | null>(null);
   const isDoc = slug === 'invoices' || slug === 'offers';
@@ -58,7 +65,30 @@ export default function ObjectPage() {
   }, [object, privy, slug]);
 
   useEffect(() => { if (object && ready) reload(); }, [object, ready, reload]);
-  useEffect(() => { setFilters(EMPTY_FILTERS); setQuery(''); }, [slug]); // reset when switching objects
+  // Switching object clears the view — a status facet from Invoices means
+  // nothing on People. Seeded from the new URL rather than blanked, so
+  // navigating straight to a filtered link still lands filtered.
+  useEffect(() => {
+    const next = typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search);
+    setFilters(next.filters); setQuery(next.query);
+  }, [slug]);
+
+  /**
+   * Mirror the view into the address bar.
+   *
+   * replaceState, not push: typing five characters into the search box must not
+   * bury the previous page under five history entries. And guarded by an
+   * equality check so an unchanged view never rewrites the URL — which would
+   * otherwise fire on every render and fight anything else editing the query
+   * string.
+   */
+  useEffect(() => {
+    const current = readListState(window.location.search);
+    const next = { query, filters };
+    if (sameListState(current, next)) return;
+    const qs = writeListState(window.location.search, next);
+    window.history.replaceState({}, '', window.location.pathname + qs);
+  }, [query, filters]);
 
   const dateKey = useMemo(() => object?.fields.find((f) => f.type === 'date')?.key, [object]);
 
@@ -175,6 +205,11 @@ export default function ObjectPage() {
             <SanctionsPanel privyUserId={privy} workspaceId={wsId} name={String(detail.name)}
               object={slug} recordId={detail.id} />
           )}
+          {/* What an agent has found out about this record, with a source on
+              every line. Below the fields because it is history, not identity. */}
+          <div className="mt-5">
+            <RecordNotes privy={privy} workspaceId={wsId} object={slug} recordId={detail.id} />
+          </div>
         </RecordDetail>
       )}
       {form && (

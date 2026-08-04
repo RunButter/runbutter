@@ -111,6 +111,12 @@ const ALLOWED = new Set([
   // publish twice.
   'get_social_accounts', 'set_social_account_enabled', 'delete_social_account',
   'get_post_targets', 'set_post_targets', 'publish_post_now',
+  // Agent research notes (0084). The write is exposed on purpose: a note a
+  // human cannot add or correct is a note nobody will trust. claim_due_agents
+  // and get_workspace_ai_owner are ABSENT — they belong to the scheduled-agent
+  // dispatcher, and a browser that could claim an agent could make it run
+  // whenever it liked on someone else's AI credit.
+  'get_record_notes', 'add_record_note', 'delete_record_note',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

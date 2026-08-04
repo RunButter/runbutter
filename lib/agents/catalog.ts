@@ -18,7 +18,7 @@ export interface ToolInfo {
   write?: true;
 }
 
-export type ToolGroup = 'Records' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
+export type ToolGroup = 'Records' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -49,6 +49,12 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'get_candidate', label: 'Read a candidate', group: 'Hiring' },
   { name: 'get_hiring_pipeline', label: 'Pipeline board', group: 'Hiring' },
 
+  // The agent's own memory. Classified WRITE because a note IS a lasting change
+  // to a record — a suggest-mode agent proposes it and a person approves, which
+  // is the right gate for something that will later be read as fact.
+  { name: 'get_record_notes', label: 'Read research notes', group: 'Research' },
+  { name: 'add_record_note', label: 'Record a finding', group: 'Research', write: true },
+
   // The only tools that reach OUTSIDE the workspace. The agent picks a saved
   // connection by id; it never supplies a URL, so what it can reach is bounded
   // by what a workspace owner already set up in Settings → Integrations.
@@ -56,7 +62,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },
 ];
 
-export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
+export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Research', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
 
 /**
  * Read tools. screen_sanctions is here despite appending to its own audit trail:

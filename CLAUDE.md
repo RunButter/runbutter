@@ -49,6 +49,10 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` and/or `X_CLIENT_ID`/`X_CLIENT_SECRET`, and
     `NEXT_PUBLIC_SITE_URL` — the OAuth redirect is built from it, so a wrong value sends the grant
     to the wrong host. Register `<site>/api/social/callback/<provider>` on each platform.
+  - **0084 (agentic) is PENDING.** Depends on 0043 + 0068. It **drops and recreates `save_agent`**
+    again (sixteen args now — `p_schedule`, `p_schedule_hour`, `p_schedule_task`), same overload
+    reasoning. Then a **Render Cron Job** on `/api/agents/dispatch` every ~10 min with
+    `x-cron-secret: <service-role key>` — without it, scheduled agents never fire.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
@@ -178,6 +182,27 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   reader can always tell a bot from a person. Chat POLLS (4s) rather than using Supabase Realtime:
   Realtime needs anon-key RLS policies on `messages`, which would undo the /api/rpc proxy. Don't
   "upgrade" it by opening RLS — write an SSE endpoint instead.
+- **Agentic CRM (0084).** Two changes turn "we have agents" into an agentic CRM: an agent can keep
+  notes on a record, and it can work without being asked.
+  - **`record_notes.source` is NOT NULL and there is NO confidence column** — deliberately, and
+    don't add one. A URL or a tool name is checkable; `0.87` is not, and a number beside a guess is
+    how a hallucination gets trusted. `add_record_note` refuses a blank source rather than
+    defaulting it. The tool description tells the model the same thing in the same words.
+  - Notes are writable by PEOPLE too, through the same RPC. Research a human cannot correct is
+    research nobody trusts, and a parallel human-notes table would split the record in half.
+  - **Schedules are coarse on purpose** — `hourly|daily|weekly` + a UTC hour, not cron. The value is
+    "it ran without me"; a cron field turns that into a syntax to debug. A schedule with an empty
+    task is stored as `off`, and an unknown value falls back to `off` (never to a cadence nobody
+    chose). **Autonomy is unchanged by scheduling**: a `suggest` agent still only proposes.
+  - `claim_due_agents` stamps `last_run_at` at **claim** time, not completion — a run that crashes
+    must not become a hot loop retrying every minute all day. `get_workspace_ai_owner` decides whose
+    key and whose permissions an unattended run uses; there is no unattributed actor, because every
+    tool derives tenancy from `p_privy` in SQL.
+  - **`/.well-known/mcp.json`** is generated from `lib/agents/catalog.ts`, never hand-written — a
+    hand-written copy is exactly how the tool picker fell sixteen tools behind once already.
+  - **List state lives in the URL** (`lib/crm/list-url.ts`, `?q=…&f.status=…`) so a view is a link
+    an agent can hand back. Flat and readable rather than a base64 blob, because people and models
+    both read these.
 - **Social publishing (0082/0083)** is a NATIVE build. **Postiz is AGPL-3.0** (verified against its
   LICENSE) — same wall as listmonk and Mautic, so it was read as a *feature spec* and nothing was
   copied. Running it alongside as a separate service is legal but means a second app and a second

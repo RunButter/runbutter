@@ -64,7 +64,13 @@ export async function POST(req: Request) {
     skills = Array.isArray(sRows) ? (sRows as SkillDef[]) : [];
   }
 
-  const ctx = { admin, workspace: workspaceId, privy: privyUserId };
+  // The agent's identity travels with the context so add_record_note (0084) can
+  // attribute a finding without the model being asked to name itself — which it
+  // would get wrong, and which would be unverifiable if it got it right.
+  const ctx = {
+    admin, workspace: workspaceId, privy: privyUserId,
+    agentId, agentName: agent.name, runId: (runId as string) ?? null,
+  };
   const outcome = await runAgent(ctx, agent, provider, apiKey, model, baseUrl, task, skills);
 
   await admin.rpc('finish_agent_run', {

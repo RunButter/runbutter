@@ -11,6 +11,7 @@ import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun,
   DEFAULT_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, TOOL_CATALOG, TOOL_GROUPS,
+  SCHEDULE_LABEL,
   type Agent, type AgentRun,
 } from '@/lib/crm/agents';
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
@@ -25,6 +26,7 @@ import { useDialog } from '@/components/ui/Dialog';
 const BLANK: Partial<Agent> = {
   name: '', role: '', instructions: '', model: '',
   allowed_tools: [...DEFAULT_TOOLS], allowed_objects: [], skill_ids: [], autonomy: 'suggest', max_steps: 12,
+  schedule: 'off', schedule_hour: 9, schedule_task: '',
 };
 
 /** A template is just a prefilled editor payload — no id, so saving creates. */
@@ -35,6 +37,10 @@ function fromTemplate(t: AgentTemplate): Partial<Agent> {
     // Deliberately not taken from the template: a gallery agent installed in ten
     // seconds must not be able to write before someone has watched it run once.
     autonomy: 'suggest', max_steps: t.max_steps, skill_ids: [],
+    // Same reasoning as the autonomy pin above: a gallery agent installed in
+    // ten seconds must not start running unattended before anyone has watched
+    // it do anything.
+    schedule: 'off', schedule_hour: 9, schedule_task: '',
   };
 }
 
@@ -124,6 +130,12 @@ export default function AgentsPage() {
                     {a.autonomy === 'auto' ? <><Zap className="w-3 h-3 mr-0.5 inline" />autonomous</> : <><ShieldCheck className="w-3 h-3 mr-0.5 inline" />approve writes</>}
                   </Badge>
                   <Badge tone="neutral">{a.allowed_tools.filter((t) => WRITE_TOOLS.includes(t)).length ? 'read + write' : 'read only'}</Badge>
+                  {/* An agent that runs on its own is the one fact worth
+                      seeing without opening the editor — it is spending the
+                      workspace's AI key while nobody is watching. */}
+                  {a.schedule && a.schedule !== 'off' && (
+                    <Badge tone="accent"><AlarmClock className="w-3 h-3 mr-0.5 inline" />{SCHEDULE_LABEL[a.schedule].toLowerCase()}</Badge>
+                  )}
                   {a.model && <span className="text-2xs font-mono text-tertiary">{a.model}</span>}
                 </div>
                 <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-subtle">
@@ -344,6 +356,47 @@ function AgentEditor({ initial, skills, onClose, onSave }: { initial: Partial<Ag
                 <button key={o} onClick={() => toggleObj(o)}
                   className={`text-2xs px-2 py-1 rounded border transition-colors ${a.allowed_objects?.includes(o) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>{o}</button>
               ))}
+            </div>
+          </Field>
+
+          {/* Unattended runs. Deliberately below Objects and Tools: what an
+              agent MAY do has to be settled before deciding it may do it
+              without being asked. */}
+          <Field label="Run on a schedule" hint="Autonomy is unchanged — an approve-writes agent still only proposes, it just proposes without being asked.">
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {(['off', 'hourly', 'daily', 'weekly'] as const).map((v) => (
+                  <button key={v} onClick={() => set('schedule', v)}
+                    className={`text-2xs px-2 py-1 rounded border transition-colors ${(a.schedule || 'off') === v ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>
+                    {SCHEDULE_LABEL[v]}
+                  </button>
+                ))}
+              </div>
+              {(a.schedule && a.schedule !== 'off') && (
+                <>
+                  <textarea value={a.schedule_task || ''} onChange={(e) => set('schedule_task', e.target.value)}
+                    rows={2} placeholder="What should it do each time? e.g. “Check every open deal for news and record what you find.”"
+                    className="input-field !h-auto py-2 resize-none w-full text-xs" />
+                  {a.schedule !== 'hourly' && (
+                    <label className="flex items-center gap-2 text-2xs text-tertiary">
+                      At
+                      <select value={a.schedule_hour ?? 9} onChange={(e) => set('schedule_hour', Number(e.target.value))}
+                        className="input-field !h-7 !text-xs w-20">
+                        {Array.from({ length: 24 }, (_, h) => (
+                          <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+                        ))}
+                      </select>
+                      UTC
+                    </label>
+                  )}
+                  {/* Said plainly rather than discovered later: an unattended
+                      run spends the workspace's own AI key. */}
+                  <p className="text-2xs text-tertiary">
+                    Each run uses your own AI key. Needs a cron job on{' '}
+                    <span className="font-mono">/api/agents/dispatch</span>; without one, scheduled agents never fire.
+                  </p>
+                </>
+              )}
             </div>
           </Field>
 

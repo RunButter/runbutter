@@ -14,7 +14,17 @@ import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
 import { isSafeOutboundUrl } from '@/lib/security/http';
 
-export interface ToolCtx { admin: any; workspace: string; privy: string }
+/**
+ * `agentId`, `agentName` and `runId` are OPTIONAL because /api/mcp has none of
+ * them — an external MCP client is a person's tooling, not an agent. A note
+ * written through that path is simply attributed to no agent, which is the
+ * honest answer; making them required would either block MCP from writing notes
+ * or invite a fake agent id.
+ */
+export interface ToolCtx {
+  admin: any; workspace: string; privy: string;
+  agentId?: string | null; agentName?: string; runId?: string | null;
+}
 
 export const OBJECTS: Record<string, string> = {
   companies: 'CRM organizations (name, domain, industry, employee_count, tax_id, address, country)',
@@ -69,6 +79,14 @@ export const TOOLS = [
   { name: 'search_files', description: 'Full-text search the CONTENTS of uploaded files (contracts, invoices, CVs). Returns matching files with highlighted snippets. Postgres FTS, no AI cost. Only files that were text-extracted are searchable.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Supports quoted phrases and OR.' } }, required: ['query'] } },
   { name: 'list_files', description: 'Files in the workspace, optionally only those attached to one record. Reports each file\'s extraction status but not its text — use get_file_text for that.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Filter by linked record type, e.g. companies.' }, id: { type: 'string', description: 'Filter by linked record id.' } } } },
   { name: 'get_file_text', description: 'The full extracted text of one file. Can be long — prefer search_files when looking for a passage.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+
+  // The agent's own memory. This is what separates research from a chat window:
+  // a finding written onto the record survives the run, and the next agent —
+  // or person — reads it. `source` is REQUIRED and there is no confidence
+  // field, on purpose: a checkable provenance beats a number that only looks
+  // like measurement.
+  { name: 'get_record_notes', description: 'Research notes already recorded on one record, newest first. Read this BEFORE researching so you do not repeat work someone (or you) already did.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Record type, e.g. companies.' }, id: { type: 'string', description: 'Record id.' } }, required: ['object', 'id'] } },
+  { name: 'add_record_note', description: 'Record ONE observed fact on a record, so it is there next time. State only what you actually observed — never a guess, an inference presented as fact, or a confidence score. `source` is required and must be checkable: a URL, a file name, or the tool you used (e.g. "search_files"). If you cannot say where it came from, do not record it.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Record type, e.g. companies.' }, id: { type: 'string', description: 'Record id.' }, body: { type: 'string', description: 'One fact, in a sentence. Not a summary of the whole run.' }, source: { type: 'string', description: 'Where it came from — a URL, a file name, or the tool used. Required.' }, source_url: { type: 'string', description: 'The URL, when there is one.' }, kind: { type: 'string', enum: ['observation', 'action'], description: 'observation = something you found out; action = something you did.' }, observed_at: { type: 'string', description: 'ISO date the fact was true, if it differs from today.' } }, required: ['object', 'id', 'body', 'source'] } },
 
   { name: 'list_connections', description: 'Outgoing connections this workspace has set up (Slack, Discord, Zapier, Make, n8n or a generic webhook). Returns their ids and labels so you can send to one — the destination URLs are not exposed.', inputSchema: { type: 'object', properties: {} } },
   { name: 'call_connection', description: 'Send a message and optional structured data to one of this workspace\'s saved connections. Use it to post to Slack/Discord or to hand data to Zapier/Make/n8n. Call list_connections first to get an id. You cannot specify a URL — only a saved connection.', inputSchema: { type: 'object', properties: { connection_id: { type: 'string', description: 'id from list_connections.' }, message: { type: 'string', description: 'Human-readable text. This is what shows up in a Slack or Discord channel.' }, data: { type: 'object', description: 'Optional structured payload for automation tools.' } }, required: ['connection_id', 'message'] } },
@@ -236,6 +254,39 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       });
       if (!pipelineId) return { stages: [], records: [], note: `No ${kind} pipeline exists in this workspace yet.` };
       return rpc(ctx, 'get_pipeline_board', { p_privy: ctx.privy, p_pipeline: pipelineId });
+    }
+
+    // ── Research notes (0084) ───────────────────────────────────────────────
+    case 'get_record_notes': {
+      const { data, error } = await ctx.admin.rpc('get_record_notes', {
+        p_privy: ctx.privy, p_object: String(args?.object || ''), p_record: String(args?.id || ''), p_limit: 50,
+      });
+      if (error) throw new Error(error.message);
+      const rows = (data as any[]) || [];
+      // An empty result is stated rather than returned as a bare [], so a model
+      // cannot read "no notes" as "nothing is known about this record".
+      if (!rows.length) return { notes: [], note: 'No research notes on this record yet.' };
+      return { notes: rows };
+    }
+
+    case 'add_record_note': {
+      const source = String(args?.source || '').trim();
+      const body = String(args?.body || '').trim();
+      // Checked here as well as in SQL so the model gets a sentence it can act
+      // on instead of a Postgres exception it will try to work around.
+      if (!source) throw new Error('source is required — say where this came from (a URL, a file name, or the tool you used).');
+      if (!body) throw new Error('body is required — state the one fact you observed.');
+      const { data, error } = await ctx.admin.rpc('add_record_note', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_object: String(args?.object || ''), p_record: String(args?.id || ''),
+        p_body: body, p_source: source,
+        p_kind: args?.kind === 'action' ? 'action' : 'observation',
+        p_source_url: args?.source_url ? String(args.source_url) : null,
+        p_observed_at: args?.observed_at ? String(args.observed_at) : null,
+        p_agent: ctx.agentId ?? null, p_agent_name: ctx.agentName ?? '', p_run: ctx.runId ?? null,
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, recorded: true };
     }
 
     // ── Files ───────────────────────────────────────────────────────────────
