@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
 import { saveSkill, deleteSkill, importSkillsFromGithub, type Skill, type SkillPreview } from '@/lib/crm/skills';
+import Thinking from '@/components/ui/Thinking';
 
 /**
  * Skills manager. A skill is a reusable instruction pack — "how this company
@@ -178,7 +179,9 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
             <input value={url} onChange={(e) => setUrl(e.target.value)} className="input-field flex-1"
               placeholder="github.com/owner/repo" onKeyDown={(e) => e.key === 'Enter' && url.trim() && scan()} />
             <Button variant="secondary" onClick={scan} disabled={busy || !url.trim()}>
-              {busy && !found ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Scan'}
+              {/* Walks a public repo's tree looking for SKILL.md — a real
+                  network crawl, not a form submit. */}
+              {busy && !found ? <Thinking kind="searching" label="Scanning the repository" /> : 'Scan'}
             </Button>
           </div>
           <p className="text-2xs text-tertiary">

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/Dialog';
+import Thinking from '@/components/ui/Thinking';
 import { hrStatus } from '@/lib/hr/overview';
 import { createCandidate, deleteCandidate, listPositionsMin, type PositionMin } from '@/lib/hr/manage';
 import { rpc } from '@/lib/rpc';
@@ -106,7 +107,10 @@ export default function CandidatesPage() {
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder='Search resumes — react node -junior  or  "node.js"'
                         className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                    {searching && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent animate-spin" />}
+                    {/* Resume full-text search across every CV in the
+                        workspace — the one search in the product that reads
+                        whole documents rather than a name column. */}
+                    {searching && <Thinking kind="searching" label="Searching résumés" className="absolute right-2.5 top-1/2 -translate-y-1/2" />}
                 </div>
                 <Button size="sm" variant="primary" onClick={() => setAdding(true)} disabled={!user}>
                     <Plus className="w-3.5 h-3.5" /> New candidate

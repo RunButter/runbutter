@@ -16,6 +16,7 @@ import {
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import SkillsSection from '@/components/crm/SkillsSection';
+import { ThinkingLine } from '@/components/ui/Thinking';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -407,6 +408,20 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
           <Button variant="primary" onClick={run} disabled={busy || !task.trim()} className="w-full">
             {busy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Working…</> : <><Play className="w-3.5 h-3.5" /> Run</>}
           </Button>
+
+          {/* An agent turn is the longest wait in the product — it can call
+              several tools against a BYO key before it says anything. So the
+              wait gets its own panel where the answer will land, rather than
+              only a spinner inside the button the user just pressed. */}
+          {busy && !out && (
+            <ThinkingLine
+              kind="composing"
+              size="avatar"
+              label={`${agent.name} is working`}
+              hint="Reading your workspace and deciding what to do"
+              className="rounded-md border border-subtle bg-surface-sunken py-6"
+            />
+          )}
 
           {err && <div className="rounded-md border border-danger/30 bg-danger/5 p-2.5 text-xs text-danger">{err}</div>}
 

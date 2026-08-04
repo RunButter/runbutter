@@ -5,6 +5,7 @@ import { X, Loader2, Upload, FileSpreadsheet, ArrowLeft, CheckCircle2 } from 'lu
 import type { ObjectDef } from '@/lib/crm/types';
 import { parseCSV, autoMatch } from '@/lib/crm/csv';
 import { importRecords, fetchSheetCsv } from '@/lib/crm/data';
+import Thinking from '@/components/ui/Thinking';
 
 interface Props {
   object: ObjectDef;
@@ -138,7 +139,8 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
           )}
           {step === 'map' && (
             <button onClick={runImport} disabled={busy} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">
-              {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Import {rows.length} rows
+              {/* One insert per row — a 2,000-row CSV is a genuinely long wait. */}
+              {busy && <Thinking kind="working" label={`Importing ${rows.length} rows`} />} Import {rows.length} rows
             </button>
           )}
           {step === 'done' && (

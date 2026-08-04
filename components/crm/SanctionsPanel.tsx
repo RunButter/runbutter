@@ -8,6 +8,7 @@ import {
   screenName, loadSanctionsStatus, refreshSanctionsList,
   type ScreeningResult, type SanctionsStatus, type SanctionsMatch,
 } from '@/lib/crm/sanctions';
+import { ThinkingLine } from '@/components/ui/Thinking';
 
 interface Props {
   privyUserId: string | null;
@@ -114,11 +115,23 @@ export default function SanctionsPanel({ privyUserId, workspaceId, name, object,
         </button>
       </div>
 
-      <p className="text-2xs text-tertiary mb-2.5">
-        {empty
-          ? 'No list imported yet. Update the list to screen against OFAC.'
-          : `${status!.total.toLocaleString()} OFAC entries · list updated ${fmtDate(lastSync)}`}
-      </p>
+      {/* The ingest downloads and parses two OFAC CSVs — tens of thousands of
+          rows, tens of seconds. The button spinner alone reads as a hang, so
+          the wait says out loud that it is long and that it only happens once. */}
+      {refreshing ? (
+        <ThinkingLine
+          kind="working"
+          label="Downloading the OFAC lists"
+          hint="Tens of thousands of entries — this takes a minute, and only happens when you refresh."
+          className="mb-2.5"
+        />
+      ) : (
+        <p className="text-2xs text-tertiary mb-2.5">
+          {empty
+            ? 'No list imported yet. Update the list to screen against OFAC.'
+            : `${status!.total.toLocaleString()} OFAC entries · list updated ${fmtDate(lastSync)}`}
+        </p>
+      )}
 
       <button onClick={run} disabled={busy || !privyUserId || !workspaceId}
         className="w-full h-8 inline-flex items-center justify-center gap-1.5 rounded-md text-xs font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/20 disabled:opacity-50">

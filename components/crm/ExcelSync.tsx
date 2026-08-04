@@ -8,6 +8,7 @@ import {
   disconnectMicrosoft, listWorkbooks, syncExcelLink, FEED_OBJECTS,
   type MsConnection, type ExcelLink, type Workbook,
 } from '@/lib/crm/automations';
+import Thinking from '@/components/ui/Thinking';
 
 /**
  * Two-way Excel sync (0079) — the panel for people whose workbook IS the
@@ -173,7 +174,7 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
                   className="input-field !h-9 !text-xs !pl-8" />
               </div>
               <button onClick={() => search(q)} className="h-9 px-3 rounded-lg text-sm ring-1 ring-subtle text-secondary hover:bg-surface-hover">
-                {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Search'}
+                {searching ? <Thinking kind="searching" label="Searching OneDrive" /> : 'Search'}
               </button>
               <button onClick={() => setPicking(false)} className="h-9 px-3 rounded-lg text-sm text-tertiary hover:text-primary">Cancel</button>
             </div>
@@ -247,7 +248,10 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
                 <div className="flex items-center gap-2 shrink-0 pl-6 sm:pl-0">
                   <button onClick={() => runNow(l)} disabled={busy === l.id}
                     className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover inline-flex items-center gap-1.5 disabled:opacity-40">
-                    {busy === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Sync now
+                    {/* A sync is two Graph round-trips plus a full inbound and
+                        outbound pass — never the sub-second wait a spinner
+                        implies. */}
+                    {busy === l.id ? <Thinking kind="connecting" label="Syncing with Excel" /> : <RefreshCw className="w-3.5 h-3.5" />} Sync now
                   </button>
                   <button onClick={() => toggle(l)} title={l.enabled ? 'Pause syncing' : 'Resume syncing'}
                     className="h-7 px-2 rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover">

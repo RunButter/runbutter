@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useDropzone } from 'react-dropzone';
 import {
-  FolderOpen, Search, Loader2, Upload, Trash2, ExternalLink, RefreshCw,
+  FolderOpen, Search, Upload, Trash2, ExternalLink, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, File as FileIcon, X, AlertCircle,
 } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
@@ -16,6 +16,7 @@ import {
   splitSnippet, formatBytes, STATUS_LABEL,
   type FileRow, type FileHit, type ExtractStatus,
 } from '@/lib/files/client';
+import Thinking, { ThinkingLine } from '@/components/ui/Thinking';
 
 /**
  * Company files — storage that becomes DATA.
@@ -186,7 +187,7 @@ export default function FilesPage() {
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
                 aria-label="Clear search"
               >
-                {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                {searching ? <Thinking kind="searching" label="Searching your files" /> : <X className="w-3.5 h-3.5" />}
               </button>
             )}
           </div>
@@ -207,7 +208,10 @@ export default function FilesPage() {
             <div className="card-surface divide-y divide-subtle">
               {uploading.map((name) => (
                 <div key={name} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-secondary">
-                  <Loader2 className="w-4 h-4 animate-spin text-tertiary shrink-0" />
+                  {/* Not a spinner: an upload here is followed by text
+                      extraction and an FTS index write, so the wait runs long
+                      past the byte transfer and is worth animating properly. */}
+                  <Thinking kind="working" label={`Uploading ${name}`} className="shrink-0" />
                   <span className="truncate">Uploading {name}…</span>
                 </div>
               ))}
@@ -215,7 +219,7 @@ export default function FilesPage() {
           )}
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <ThinkingLine kind="idle" label="Loading your files" className="h-32 justify-center" />
           ) : !privy ? (
             <EmptyState icon={FolderOpen} title="Sign in to see your files" />
           ) : hits ? (
@@ -288,7 +292,7 @@ export default function FilesPage() {
                         hover-only row is unusable on a phone. */}
                     <div className="flex items-center gap-0.5 shrink-0">
                       {spinning ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-tertiary mx-1.5" />
+                        <Thinking kind="working" label={`Extracting text from ${row.name}`} className="mx-1.5" />
                       ) : (
                         <>
                           <button onClick={() => open_(row.id)} title="Open" aria-label={`Open ${row.name}`}
