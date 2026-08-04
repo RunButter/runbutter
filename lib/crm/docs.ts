@@ -3,8 +3,16 @@ import { supabase } from '@/lib/supabase';
 import { getWorkspace } from './data';
 import { rpc } from '@/lib/rpc';
 
-export interface DocMeta { id: string; title: string; snippet: string; updated_at: string }
-export interface Doc { id: string; title: string; body: string; updated_at?: string }
+/**
+ * `doc` is the rich document; `note` is the light one — a quick note with
+ * checkboxes. Two kinds, not four: a kind the editor cannot render is a bug
+ * waiting, and sheets and canvases already live elsewhere in the product
+ * (Excel sync, Maps). Matches the CHECK constraint in 0081.
+ */
+export type DocKind = 'doc' | 'note';
+
+export interface DocMeta { id: string; title: string; snippet: string; kind?: DocKind; updated_at: string }
+export interface Doc { id: string; title: string; body: string; kind?: DocKind; updated_at?: string }
 export interface AiProviderRow { id: string; provider: string; model: string; key_hint: string; is_default: boolean; enabled: boolean; base_url?: string | null }
 
 const SAMPLE_DOCS: DocMeta[] = [
@@ -43,11 +51,20 @@ export async function loadDoc(privy: string | null, docId: string): Promise<Doc 
   return data as Doc;
 }
 
-export async function saveDoc(privy: string, id: string | null, title: string, body: string): Promise<{ id?: string; error?: string }> {
+export async function saveDoc(privy: string, id: string | null, title: string, body: string, kind: DocKind = 'doc'): Promise<{ id?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body });
-  if (error) return { error: error.message };
+  const { data, error } = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body, p_kind: kind });
+  if (error) {
+    // 0081 added `p_kind`, so a workspace that has not run it yet answers "no
+    // function matches". Retry without it rather than telling someone their
+    // document failed to save — the doc is the point, the kind is a label.
+    if (/p_kind|does not exist|schema cache/i.test(error.message)) {
+      const retry = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body });
+      if (!retry.error) return { id: retry.data as string };
+    }
+    return { error: error.message };
+  }
   return { id: data as string };
 }
 

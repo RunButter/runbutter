@@ -313,6 +313,33 @@
   .rb-editor pre code { background: none; padding: 0; }
   .rb-editor a { color: hsl(var(--accent)); text-decoration: underline; }
   .rb-editor hr { border: none; border-top: 1px solid hsl(var(--border-subtle)); margin: 1.2em 0; }
+  /* Checklists (TaskList/TaskItem). Tiptap emits
+     ul[data-type=taskList] > li[data-type=taskItem] > label + div, so the
+     bullet has to be turned off explicitly — otherwise every checkbox sits
+     next to a disc it did not ask for. */
+  .rb-editor ul[data-type='taskList'] { list-style: none; padding-left: 0.2em; }
+  .rb-editor ul[data-type='taskList'] li { display: flex; align-items: flex-start; gap: 0.55em; }
+  .rb-editor ul[data-type='taskList'] li > label { flex: 0 0 auto; margin-top: 0.32em; user-select: none; }
+  .rb-editor ul[data-type='taskList'] li > div { flex: 1 1 auto; min-width: 0; }
+  .rb-editor ul[data-type='taskList'] input[type='checkbox'] {
+    width: 1em; height: 1em; accent-color: hsl(var(--accent)); cursor: pointer;
+  }
+  /* Ticked items fade rather than vanish: a checklist you can no longer read is
+     a list of things you cannot tell you already did.
+     Scoped to the item's OWN paragraph, not its whole content div — a nested
+     sub-list lives in that div too, and styling the div struck through every
+     unticked child of a ticked parent. */
+  .rb-editor ul[data-type='taskList'] li[data-checked='true'] > div > p {
+    color: hsl(var(--text-tertiary)); text-decoration: line-through;
+  }
+
+  /* Images are references into the private bucket, resolved per render. */
+  .rb-editor img {
+    max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.4em 0;
+    border: 1px solid hsl(var(--border-subtle));
+  }
+  .rb-editor img.ProseMirror-selectednode { outline: 2px solid hsl(var(--accent)); outline-offset: 2px; }
+
   /* Placeholder for the empty first line */
   .rb-editor p.is-editor-empty:first-child::before {
     content: attr(data-placeholder); color: hsl(var(--text-tertiary));

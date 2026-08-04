@@ -8,10 +8,19 @@ export interface Channel {
   joined: boolean; unread: number; updated_at: string;
 }
 
+/**
+ * A file attached to a message. `name`, `mime` and `size` are SNAPSHOTS taken
+ * by the server at post time (0081), the same way `author_name` is: the message
+ * should still read sensibly after the file itself is deleted. The client sends
+ * only `file_id` — anything else it sends is ignored.
+ */
+export interface Attachment { file_id: string; name: string; mime: string; size: number }
+
 export interface Message {
   id: string; author_privy: string; author_name: string;
   author_kind: 'user' | 'agent' | 'system';
-  body: string; deleted: boolean; edited_at: string | null; created_at: string;
+  body: string; attachments?: Attachment[];
+  deleted: boolean; edited_at: string | null; created_at: string;
 }
 
 export async function listChannels(privy: string, ws: string): Promise<Channel[]> {
@@ -51,11 +60,23 @@ export async function listMessages(
 
 export async function postMessage(
   privy: string, channel: string, body: string, authorName: string,
+  fileIds: string[] = [],
 ): Promise<{ id: string | null; error?: string }> {
   const { data, error } = await rpc('post_message', {
     p_privy: privy, p_channel: channel, p_body: body, p_author_name: authorName,
+    p_attachments: fileIds.map((file_id) => ({ file_id })),
   });
   if (!error) return { id: (data as any) ?? null };
+  // 0081 added `p_attachments`. Before it runs, the four-argument form is what
+  // exists — so a plain text message still sends rather than failing outright.
+  // An attachment genuinely cannot be delivered yet, and says so.
+  if (/p_attachments|does not exist|schema cache/i.test(error.message)) {
+    if (fileIds.length) return { id: null, error: 'Attachments need migration 0081 — run it in Supabase.' };
+    const retry = await rpc('post_message', {
+      p_privy: privy, p_channel: channel, p_body: body, p_author_name: authorName,
+    });
+    if (!retry.error) return { id: (retry.data as any) ?? null };
+  }
   if (/EMPTY_MESSAGE/.test(error.message)) return { id: null, error: 'Write something first.' };
   if (/NO_ACCESS/.test(error.message)) return { id: null, error: 'You no longer have access to this channel.' };
   return { id: null, error: error.message };

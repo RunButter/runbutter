@@ -38,6 +38,11 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     (see known issue 5) and must run only AFTER the app carrying 0076 is deployed. 0078 **drops and
     recreates `create_api_key`** with a fourth arg (`p_scope`) — same overload reasoning as 0068.
     0079 (Excel sync) is independent of the others and safe to run any time after 0001.
+  - **0080 (brand the funnel) and 0081 (doc kinds + attachments) are PENDING.** Both are
+    independent of 0076–0079. 0081 **drops and recreates `save_doc`** (sixth arg `p_kind`) and
+    **`post_message`** (fifth arg `p_attachments`) — same overload reasoning as 0068. Both clients
+    fall back to the old signature when the migration has not run, so docs still save and text
+    messages still send; only the kind label and attachments are unavailable until it does.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
@@ -167,6 +172,18 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   reader can always tell a bot from a person. Chat POLLS (4s) rather than using Supabase Realtime:
   Realtime needs anon-key RLS policies on `messages`, which would undo the /api/rpc proxy. Don't
   "upgrade" it by opening RLS — write an SSE endpoint instead.
+- **Attachments & doc kinds (0081)** — an attachment is a **`files.id`, never a URL**. Everything
+  else already existed in 0065 (private bucket, upload route, membership-checked signed URL, FTS),
+  so nothing here uploads or serves bytes; an image dropped in chat is already indexed, and
+  deleting the file removes it everywhere at once. A signed URL stored in a doc body would break
+  within the hour AND persist a read capability into exports and agent transcripts — so the body
+  holds **`rb-file:<uuid>`** (`lib/files/embeds.ts`), which survives markdown round-tripping the way
+  a `data-*` attribute would not, and the URL is minted per reader per render.
+  `sanitize_attachments` is what stops a foreign `file_id` leaking another tenant's file NAME into a
+  channel; the client's `name`/`size` are ignored and snapshotted server-side like `author_name`.
+  `edit_message` deliberately cannot change attachments — the picture everyone replied to must not
+  change after the fact. Doc kinds are **`doc` | `note` only**: a kind the editor can't render is a
+  bug waiting, and sheets/canvases already exist as Excel sync and Maps.
 - **Lead scoring (0074)** stores a DECAYED engagement score on `newsletter_subscribers.score`,
   refreshed in batches by `/api/sequences/run`. Stored rather than computed because segments filter
   on it and a per-row decayed sum would be quadratic against 0072's EXISTS predicates. 0074

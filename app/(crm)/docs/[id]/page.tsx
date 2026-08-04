@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { loadDoc, saveDoc, runAI, type Doc } from '@/lib/crm/docs';
+import { loadDoc, saveDoc, runAI, type Doc, type DocKind } from '@/lib/crm/docs';
+import { getWorkspace } from '@/lib/crm/data';
+import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
 
 // Tiptap/ProseMirror is by far the heaviest thing we ship (~180 kB on this
 // route alone). Load it on demand so the doc shell paints immediately instead
@@ -44,17 +46,58 @@ export default function DocEditor() {
   const [aiBusy, setAiBusy] = useState('');
   const [aiError, setAiError] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [wsId, setWsId] = useState<string | null>(null);
+  const [imgError, setImgError] = useState('');
+
+  // Turns the `rb-file:<uuid>` references stored in the body into signed URLs
+  // for the editor, and back again on save. Per-document, and it must outlive
+  // re-renders — it is the only record of which URL was which file.
+  const embeds = useMemo(() => new EmbedResolver(privy), [privy]);
+  // `body` is captured by the save handler, so the resolver needs the current
+  // one without making save depend on every keystroke.
+  const bodyRef = useRef(body);
+  useEffect(() => { bodyRef.current = body; }, [body]);
 
   useEffect(() => {
     if (!ready) return;
     setLoading(true);
-    loadDoc(privy, id).then((d) => { setDoc(d); setTitle(d?.title || ''); setBody(d?.body || ''); setLoading(false); });
-  }, [ready, privy, id]);
+    loadDoc(privy, id).then(async (d) => {
+      setDoc(d);
+      setTitle(d?.title || '');
+      // Resolve embedded files BEFORE the editor sees the body, or it mounts
+      // with `rb-file:` in every src and paints a row of broken images first.
+      const raw = d?.body || '';
+      await embeds.prime(raw);
+      setBody(embeds.expand(raw));
+      setLoading(false);
+    });
+  }, [ready, privy, id, embeds]);
+
+  // Needed to file an uploaded image under the right workspace.
+  useEffect(() => { if (privy) getWorkspace(privy).then((w) => setWsId(w?.id ?? null)); }, [privy]);
+
+  const uploadImage = useCallback(async (file: File): Promise<string | null> => {
+    setImgError('');
+    if (!privy) { setImgError('Sign in to add images.'); return null; }
+    if (file.size > MAX_EMBED_BYTES) { setImgError(`${file.name} is larger than 10 MB.`); return null; }
+    // Linked to this doc, so it shows up on the Files screen attached to the
+    // document it lives in rather than loose in the workspace.
+    const res = await uploadEmbed(file, privy, wsId, 'doc', id);
+    if ('error' in res) { setImgError(res.error); return null; }
+    // Register the pair immediately. Without this the resolver has never seen
+    // this URL, `collapse` cannot map it back on save, and the signed URL —
+    // which expires — gets written into the document body.
+    embeds.remember(res.id, res.url);
+    return res.url;
+  }, [privy, wsId, id, embeds]);
+
+  const kindOf = (d: Doc | null): DocKind => (d?.kind === 'note' ? 'note' : 'doc');
 
   const save = async () => {
     if (!privy) return;
     setSaving(true);
-    const res = await saveDoc(privy, id, title, body);
+    // Store ids, never signed URLs — see lib/files/embeds.ts.
+    const res = await saveDoc(privy, id, title, embeds.collapse(bodyRef.current), kindOf(doc));
     setSaving(false);
     if (!res.error) { setSavedAt(true); setTimeout(() => setSavedAt(false), 1500); }
   };
@@ -106,6 +149,9 @@ export default function DocEditor() {
           <button onClick={() => prompt.trim() && ai('write', prompt.trim())} disabled={!canEdit || !!aiBusy || !prompt.trim()} className="h-7 px-2.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40">{aiBusy === 'write' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />} Write</button>
         </div>
       </div>
+      {imgError && (
+        <div className="shrink-0 px-4 py-1.5 text-xs text-danger bg-danger/10 border-b border-danger/30">{imgError}</div>
+      )}
       {aiError && (
         <div className="shrink-0 px-4 py-1.5 text-xs text-danger bg-danger/10 border-b border-danger/30">
           {aiError} {/no ai provider|settings/i.test(aiError) && <Link href="/settings/ai" className="font-semibold underline">Add a key →</Link>}
@@ -122,7 +168,10 @@ export default function DocEditor() {
           </div>
         ) : (
           <RichEditor value={body} onChange={setBody} editable={canEdit}
-            placeholder="Start writing… type ‘# ’ for a heading, ‘- ’ for a list, or use the AI toolbar above." />
+            onImageUpload={canEdit ? uploadImage : undefined}
+            placeholder={kindOf(doc) === 'note'
+              ? 'Jot something down… type ‘[] ’ for a checkbox, or drop an image in.'
+              : 'Start writing… type ‘# ’ for a heading, ‘- ’ for a list, or use the AI toolbar above.'} />
         )}
       </div>
     </>
