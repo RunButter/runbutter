@@ -43,6 +43,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     **`post_message`** (fifth arg `p_attachments`) — same overload reasoning as 0068. Both clients
     fall back to the old signature when the migration has not run, so docs still save and text
     messages still send; only the kind label and attachments are unavailable until it does.
+  - **0082 → 0083 (social publishing) are PENDING, in that order.** 0083 references
+    `social_accounts`. Then a **Render Cron Job** on `/api/posts/dispatch` every minute with
+    `x-cron-secret: <service-role key>` (scheduled posts never go out without it), plus
+    `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` and/or `X_CLIENT_ID`/`X_CLIENT_SECRET`, and
+    `NEXT_PUBLIC_SITE_URL` — the OAuth redirect is built from it, so a wrong value sends the grant
+    to the wrong host. Register `<site>/api/social/callback/<provider>` on each platform.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
@@ -172,6 +178,30 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   reader can always tell a bot from a person. Chat POLLS (4s) rather than using Supabase Realtime:
   Realtime needs anon-key RLS policies on `messages`, which would undo the /api/rpc proxy. Don't
   "upgrade" it by opening RLS — write an SSE endpoint instead.
+- **Social publishing (0082/0083)** is a NATIVE build. **Postiz is AGPL-3.0** (verified against its
+  LICENSE) — same wall as listmonk and Mautic, so it was read as a *feature spec* and nothing was
+  copied. Running it alongside as a separate service is legal but means a second app and a second
+  Postgres per self-hoster, which is the opposite of the one-core pitch.
+  - **Sending is at-most-once, copied from newsletters.** A target is claimed to `sending` BEFORE
+    the provider call; a stale claim is swept to **`failed`, never back to `pending`**;
+    `unique (post_id, account_id)` is what makes a duplicate structurally impossible. A post sent
+    twice to a real audience is a public incident with no undo. **Don't turn this into a retry.**
+  - `publish_post_now` does NOT send — it only marks targets due. Both it and the cron go through
+    `claim_post_targets`, so exactly one code path can reach a platform.
+  - Tokens are **sealed at rest** and no browser-reachable RPC returns one. `get_social_token`,
+    `save_social_account`, `record_social_account_error`, `claim_post_targets`, `mark_post_target`
+    and `sweep_stale_post_targets` are service_role and deliberately absent from `/api/rpc`'s
+    ALLOWED — same rule as `claim_excel_links`.
+  - The OAuth `state` is **HMAC-signed** (`lib/social/oauth.ts`) and carries the workspace. The
+    callback is unauthenticated by necessity (a top-level navigation from linkedin.com), so that
+    signature is the entire boundary. For X it doubles as the PKCE verifier — sound precisely
+    because it is unforgeable without the server secret, and it means nothing has to be stored
+    between the two legs. The redirect URI comes from `NEXT_PUBLIC_SITE_URL`, never the request
+    Host, or an attacker's header would decide where the code lands.
+  - **LinkedIn issues no refresh token** to standard apps, so `refresh()` throws `NO_REFRESH` on
+    purpose and the UI says "reconnect". X rotates refresh tokens on every use, which is why
+    `save_social_account` upserts and `coalesce`s the refresh columns — a provider that omits one
+    must not blank the one already held.
 - **Attachments & doc kinds (0081)** — an attachment is a **`files.id`, never a URL**. Everything
   else already existed in 0065 (private bucket, upload route, membership-checked signed URL, FTS),
   so nothing here uploads or serves bytes; an image dropped in chat is already indexed, and

@@ -102,6 +102,15 @@ const ALLOWED = new Set([
   'get_channels', 'create_channel', 'delete_channel', 'join_channel', 'leave_channel',
   'add_channel_member', 'get_messages', 'post_message', 'edit_message',
   'delete_message', 'mark_channel_read',
+  // Social publishing (0082/0083). get_social_accounts returns display fields
+  // only — never a token. save_social_account, get_social_token,
+  // record_social_account_error, claim_post_targets, mark_post_target and
+  // sweep_stale_post_targets are all deliberately ABSENT: they are service_role
+  // and belong to the OAuth callback and the dispatcher. A browser that could
+  // read a token could post from anywhere; one that could claim a target could
+  // publish twice.
+  'get_social_accounts', 'set_social_account_enabled', 'delete_social_account',
+  'get_post_targets', 'set_post_targets', 'publish_post_now',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

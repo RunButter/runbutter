@@ -10,6 +10,7 @@ import {
   type PostDetail, type PostPlatform,
 } from '@/lib/crm/data';
 import PostCanvas from '@/components/marketing/PostCanvas';
+import PublishPanel from '@/components/marketing/PublishPanel';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 
@@ -176,6 +177,16 @@ export default function PostStudio() {
               {uploadError && <p className="mt-1.5 text-xs text-danger">{uploadError}</p>}
             </div>
           </div>
+
+          {/* Publishing sits between the draft controls and the review
+              comments — approval happens in the comments above it, and going
+              out is what comes next. Only for a saved post: an unsaved draft
+              has no id to target. */}
+          {post.live && (
+            <div className="p-4 border-b border-subtle">
+              <PublishPanel privy={privy} postId={id} content={post.content} />
+            </div>
+          )}
 
           <div className="p-4">
             <div className="flex items-center gap-1.5 mb-3">

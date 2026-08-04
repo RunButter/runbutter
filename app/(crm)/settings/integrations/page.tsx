@@ -9,6 +9,7 @@ import {
 } from '@/lib/crm/automations';
 import ExcelConnect from '@/components/crm/ExcelConnect';
 import ExcelSync from '@/components/crm/ExcelSync';
+import SocialAccounts from '@/components/crm/SocialAccounts';
 import { rpc } from '@/lib/rpc';
 import { getWorkspace } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
@@ -234,6 +235,10 @@ export default function IntegrationsPage() {
           {/* …and the version for teams whose spreadsheet is the working
               surface, not just a report. */}
           <ExcelSync privy={privy} />
+
+          {/* Social publishing — the OAuth callback redirects back to this
+              page, so the panel that reads ?social= has to live here. */}
+          <SocialAccounts privy={privy} />
 
           {/* API keys */}
           <section>
