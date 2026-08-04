@@ -12,6 +12,7 @@ import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Comparison from '@/components/landing/Comparison';
+import FeatureWindows from '@/components/landing/FeatureWindows';
 import Reveal from '@/components/landing/Reveal';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
@@ -304,6 +305,13 @@ export default function HomePage() {
       {/* Feature deep-dives (alternating rows with real mock UIs) */}
       <div className="border-t border-subtle cv-auto">
         <Showcase />
+      </div>
+
+      {/* The five modules the deep-dives skip. Sits after Showcase and before
+          the flat inventory: someone scrolling has just seen the four big
+          modules argued for, and this is the "and also" before the checklist. */}
+      <div className="border-t border-subtle cv-auto">
+        <FeatureWindows />
       </div>
 
       {/* ── The full inventory ───────────────────────────────────────────────
