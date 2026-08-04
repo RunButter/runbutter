@@ -244,11 +244,14 @@ export default function HomePage() {
         </div>
 
         {/* the big product window breaks out of the hero into the page */}
-        <div id="product" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 -mb-24 md:-mb-40">
+        <div id="product" className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 -mb-24 md:-mb-40">
           {/* A quiet halo behind the window lifts it off the artwork without
-              adding a colour. */}
-          <div aria-hidden className="absolute -inset-x-4 -top-10 bottom-0 rounded-[3rem] bg-canvas/60 blur-2xl pointer-events-none" />
-          <Reveal variant="zoom"><ProductPreview /></Reveal>
+              adding a colour. It has to be -z-[1] and the window's own wrapper
+              `relative`: Reveal's transform ends when the animation does, which
+              drops ProductPreview out of its own stacking context and lets this
+              blur paint OVER the window — it read as a washed-out screenshot. */}
+          <div aria-hidden className="absolute -z-[1] -inset-x-4 -top-10 bottom-0 rounded-[3rem] bg-canvas/60 blur-2xl pointer-events-none" />
+          <Reveal variant="zoom" className="relative"><ProductPreview /></Reveal>
         </div>
       </section>
 
