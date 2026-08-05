@@ -119,6 +119,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   - `lib/crm/custom.ts` converts a custom object into the **same `ObjectDef`** the registry
     produces, which is why no view needed changing.
 
+- **Workspace builder** (`lib/workspace/*`, `/api/workspace/build`) — describe a business, get a
+  plan of objects and fields. **The plan is DATA and creating is a separate act**: the route returns
+  a blueprint and writes nothing, and applying it loops the ordinary `save_custom_object` /
+  `save_custom_field` calls the manual builder uses. That separation is the security model, not a
+  UX preference — the description is untrusted and so is anything a model does with it, so the
+  reply is re-validated against the same whitelist SQL enforces and then shown to a person. A
+  prompt injection's best outcome is a silly plan somebody declines.
+  - **Templates are not a fallback** — they work with no AI key, on the free plan, identically
+    every time, AND they are the few-shot examples the model sees, so the two halves cannot drift.
+    A template never recreates a built-in; it links to one with a `relation` field.
+  - `lib/workspace/blueprint.ts` **must stay import-free of `lib/crm/custom.ts`** — that file is
+    `use client` and pulls in the browser Supabase client, which breaks a route handler at
+    page-data collection. Next reports it as *"join is on the client"*, which is not a followable
+    clue; the field vocabulary lives in `blueprint.ts` for exactly this reason.
+
 ## Information architecture (nav order is deliberate — `lib/crm/registry.ts`)
 - **HR** owns the **Careers page** (`/dashboard/careers`): the address, the copy, and which roles are
   public. It sits next to Positions because it is a hiring surface, not configuration.

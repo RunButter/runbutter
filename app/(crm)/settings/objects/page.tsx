@@ -18,6 +18,7 @@ import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
+import WorkspaceBuilder from '@/components/crm/WorkspaceBuilder';
 
 /**
  * Settings → Objects. Where a workspace defines its own record types.
@@ -131,6 +132,11 @@ export default function ObjectsPage() {
           </p>
 
           {error && <div className="rounded-lg bg-warning/10 text-warning px-3 py-2 text-xs">{error}</div>}
+
+          {/* Above the manual builder, because "describe it" is the answer for
+              almost everyone and "add one field at a time" is the answer for
+              the person who already knows exactly what they want. */}
+          <WorkspaceBuilder privy={privy} ws={ws} onApplied={refresh} />
 
           {creating && (
             <section className="card-surface p-4 space-y-3">

@@ -18,17 +18,11 @@ import type { ObjectDef, FieldDef, FormField, FieldType } from './types';
  * free.
  */
 
-export const FIELD_TYPES = [
-  'text', 'long_text', 'number', 'currency', 'date', 'checkbox',
-  'select', 'email', 'url', 'phone', 'relation',
-] as const;
-export type CustomFieldType = (typeof FIELD_TYPES)[number];
-
-export const FIELD_TYPE_LABEL: Record<CustomFieldType, string> = {
-  text: 'Text', long_text: 'Long text', number: 'Number', currency: 'Money',
-  date: 'Date', checkbox: 'Checkbox', select: 'Choice', email: 'Email',
-  url: 'Link', phone: 'Phone', relation: 'Link to a record',
-};
+// One list, defined in lib/workspace/blueprint.ts — which has no imports and
+// is therefore safe for a route handler to read. Re-exported so call sites can
+// keep importing it from here.
+export { FIELD_TYPES, FIELD_TYPE_LABEL, type CustomFieldType } from '@/lib/workspace/blueprint';
+import type { CustomFieldType } from '@/lib/workspace/blueprint';
 
 export interface CustomField {
   id: string; key: string; label: string; type: CustomFieldType;
