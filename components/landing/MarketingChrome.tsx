@@ -23,7 +23,7 @@ export function MarketingHeader({ home = false }: { home?: boolean }) {
         <nav className="flex items-center gap-2 md:gap-6 text-sm text-secondary">
           <Link href={at('#features')} className="hidden md:inline hover:text-primary transition-colors">Features</Link>
           <Link href="/ai-agents" className="hidden md:inline hover:text-primary transition-colors">Agents</Link>
-          <Link href={at('#developers')} className="hidden md:inline hover:text-primary transition-colors">Developers</Link>
+          <Link href="/developers" className="hidden md:inline hover:text-primary transition-colors">Docs</Link>
           <Link href={at('#pricing')} className="hidden md:inline hover:text-primary transition-colors">Pricing</Link>
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 hover:text-primary transition-colors"><Github className="w-4 h-4" /> GitHub</a>
           <ThemeToggle />
@@ -50,6 +50,7 @@ export function MarketingFooter({ home = false }: { home?: boolean }) {
           <ul className="space-y-2 text-xs text-secondary">
             <li><Link href={at('#features')} className="hover:text-primary transition-colors">Features</Link></li>
             <li><Link href="/ai-agents" className="hover:text-primary transition-colors">AI agents</Link></li>
+            <li><Link href="/developers" className="hover:text-primary transition-colors">Documentation</Link></li>
             <li><Link href={at('#compare')} className="hover:text-primary transition-colors">Compare</Link></li>
             <li><Link href={at('#pricing')} className="hover:text-primary transition-colors">Pricing</Link></li>
             <li><a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>

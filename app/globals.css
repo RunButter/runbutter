@@ -346,3 +346,71 @@
     float: left; height: 0; pointer-events: none;
   }
 }
+
+@layer components {
+  /* ── Documentation prose ──────────────────────────────────────────────────
+     For docs/*.md rendered by lib/markdown.ts. Separate from .rb-editor
+     because that one styles an editing surface (placeholders, selected nodes,
+     tiptap's task lists) and this one styles a reading surface. Semantic
+     tokens only, so both themes work without a second block. */
+  .doc-prose { color: hsl(var(--text-secondary)); font-size: 0.9375rem; line-height: 1.75; max-width: 70ch; }
+  .doc-prose > * + * { margin-top: 1em; }
+
+  .doc-prose h1 {
+    color: hsl(var(--text-primary)); font-size: 2rem; line-height: 1.15;
+    font-weight: 500; letter-spacing: -0.02em; margin-bottom: 0.2em;
+  }
+  .doc-prose h2 {
+    color: hsl(var(--text-primary)); font-size: 1.35rem; font-weight: 500;
+    letter-spacing: -0.01em; margin-top: 2.2em; padding-top: 1.4em;
+    border-top: 1px solid hsl(var(--border-subtle));
+  }
+  .doc-prose h3 { color: hsl(var(--text-primary)); font-size: 1.05rem; font-weight: 500; margin-top: 1.8em; }
+  .doc-prose h4 { color: hsl(var(--text-primary)); font-size: 0.9375rem; font-weight: 600; margin-top: 1.5em; }
+  /* The heading a #anchor lands on should not sit under the sticky header. */
+  .doc-prose :is(h1, h2, h3, h4) { scroll-margin-top: 5rem; }
+
+  .doc-prose strong { color: hsl(var(--text-primary)); font-weight: 600; }
+  .doc-prose a { color: hsl(var(--text-primary)); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: hsl(var(--border-strong)); }
+  .doc-prose a:hover { text-decoration-color: hsl(var(--text-primary)); }
+
+  .doc-prose ul { list-style: disc; padding-left: 1.3em; }
+  .doc-prose ol { list-style: decimal; padding-left: 1.3em; }
+  .doc-prose li { margin-top: 0.35em; }
+  .doc-prose li::marker { color: hsl(var(--text-tertiary)); }
+
+  .doc-prose code {
+    background: hsl(var(--surface-hover)); color: hsl(var(--text-primary));
+    border-radius: 4px; padding: 0.12em 0.36em; font-size: 0.86em;
+  }
+  .doc-prose pre {
+    background: hsl(var(--surface-sunken)); border: 1px solid hsl(var(--border-subtle));
+    border-radius: 0.6rem; padding: 0.9em 1em; overflow-x: auto; font-size: 0.85rem; line-height: 1.6;
+  }
+  .doc-prose pre code { background: none; padding: 0; font-size: inherit; }
+
+  .doc-prose blockquote {
+    border-left: 2px solid hsl(var(--border-strong)); padding-left: 1em;
+    color: hsl(var(--text-secondary));
+  }
+  .doc-prose blockquote p + p { margin-top: 0.6em; }
+
+  .doc-prose hr { border: none; border-top: 1px solid hsl(var(--border-subtle)); margin: 2em 0; }
+
+  /* A wide table scrolls inside its own box; the page never scrolls sideways. */
+  .doc-prose .table-scroll { overflow-x: auto; border: 1px solid hsl(var(--border-subtle)); border-radius: 0.6rem; }
+  .doc-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .doc-prose th {
+    text-align: left; color: hsl(var(--text-tertiary)); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.68rem;
+    padding: 0.65em 0.9em; border-bottom: 1px solid hsl(var(--border-subtle)); white-space: nowrap;
+  }
+  .doc-prose td {
+    padding: 0.65em 0.9em; vertical-align: top; color: hsl(var(--text-secondary));
+    border-bottom: 1px solid hsl(var(--border-subtle));
+  }
+  .doc-prose tbody tr:last-child td { border-bottom: none; }
+  .doc-prose td code { white-space: nowrap; }
+
+  .doc-prose img { max-width: 100%; height: auto; border-radius: 0.5rem; border: 1px solid hsl(var(--border-subtle)); }
+}

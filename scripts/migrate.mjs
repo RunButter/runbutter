@@ -45,6 +45,18 @@ const LEGACY = join(ROOT, 'supabase', 'legacy');
 const args = new Set(process.argv.slice(2));
 const STATUS_ONLY = args.has('--status');
 const DRY_RUN = args.has('--dry-run');
+/**
+ * Record every file as applied WITHOUT running it.
+ *
+ * For a database whose schema was applied by hand — pasted into the Supabase
+ * SQL editor, one file at a time, the way this project was run for its first
+ * year. The ledger is empty there, so a plain `migrate` would re-apply all of
+ * them: safe, because they are idempotent, but slow and alarming. This is the
+ * honest shortcut, and it is deliberately explicit rather than a guess the
+ * runner makes on its own — claiming a migration ran when it did not is a
+ * broken schema that reports itself healthy.
+ */
+const MARK_APPLIED = args.has('--mark-applied');
 
 // Colour only when someone is watching; CI logs should stay plain.
 const tty = process.stdout.isTTY;
@@ -96,7 +108,7 @@ async function main() {
   // Always first, always. It creates the roles, the auth schema and the storage
   // tables the very first legacy file references — and it is a guarded no-op
   // against a real Supabase project, so there is no branch to get wrong.
-  if (existsSync(BOOTSTRAP) && !STATUS_ONLY && !DRY_RUN) {
+  if (existsSync(BOOTSTRAP) && !STATUS_ONLY && !DRY_RUN && !MARK_APPLIED) {
     process.stdout.write(`${dim('→')} bootstrap.sql `);
     try {
       await client.query(readFileSync(BOOTSTRAP, 'utf8'));
@@ -176,6 +188,16 @@ async function main() {
     if (STATUS_ONLY) { console.log(yellow('•'), name, dim('pending')); continue; }
     if (DRY_RUN) { console.log(dim('would run'), name); continue; }
 
+    if (MARK_APPLIED) {
+      await client.query(
+        `insert into schema_migrations (name, checksum, kind) values ($1, $2, $3)
+         on conflict (name) do update set checksum = excluded.checksum, applied_at = now()`,
+        [name, sum, kind],
+      );
+      console.log(dim('marked'), name);
+      continue;
+    }
+
     process.stdout.write(`${dim('→')} ${name} `);
     try {
       await client.query('begin');
@@ -206,7 +228,10 @@ async function main() {
 
   await client.end();
 
-  if (STATUS_ONLY) {
+  if (MARK_APPLIED) {
+    console.log(green(`\nMarked ${pending + changed} file(s) as applied. Nothing was run.`));
+    console.log(dim('If the schema was NOT already up to date, run migrations by hand from the first one that is missing.'));
+  } else if (STATUS_ONLY) {
     console.log(`\n${done} applied, ${pending} pending${changed ? `, ${changed} changed` : ''}.`);
   } else if (DRY_RUN) {
     console.log(`\n${pending} would run.`);

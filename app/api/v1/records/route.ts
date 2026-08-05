@@ -57,7 +57,33 @@ async function auth(req: Request): Promise<Ctx | null> {
   return { admin, workspace: (data as any).workspace_id as string, privy: (data as any).owner_privy as string, scope, fromQuery };
 }
 
-const ALLOWED = new Set(['people', 'companies', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'offers', 'assets']);
+const BUILT_IN = ['people', 'companies', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'offers', 'assets'];
+
+/**
+ * What this key may ask for: the built-ins, plus the workspace's own custom
+ * objects.
+ *
+ * The list used to be a hardcoded Set, which quietly made custom objects the
+ * one place the "everything goes through the five CRUD functions, so a new
+ * object is first-class everywhere" claim was false — list_records serves them
+ * happily, but this route refused the slug before ever calling it. Somebody
+ * whose whole business is Job sites would have found their API returned
+ * everything except their business.
+ *
+ * A database without migration 0087 has no get_custom_objects; that is not an
+ * error worth failing a request over, so the built-ins answer alone.
+ */
+async function allowedObjects(ctx: Ctx): Promise<Set<string>> {
+  const allowed = new Set(BUILT_IN);
+  const { data, error } = await ctx.admin.rpc('get_custom_objects', {
+    p_privy: ctx.privy, p_workspace: ctx.workspace,
+  });
+  if (error) return allowed;
+  for (const o of (data as any[]) || []) {
+    if (o?.slug && o.enabled !== false) allowed.add(String(o.slug));
+  }
+  return allowed;
+}
 
 export async function GET(req: Request) {
   const rl = rateLimit(`v1:${clientIp(req)}`, 120);
@@ -66,7 +92,8 @@ export async function GET(req: Request) {
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
   const params = new URL(req.url).searchParams;
   const object = params.get('object') || '';
-  if (!ALLOWED.has(object)) return NextResponse.json({ error: `Unknown object. Allowed: ${[...ALLOWED].join(', ')}` }, { status: 400 });
+  const allowed = await allowedObjects(ctx);
+  if (!allowed.has(object)) return NextResponse.json({ error: `Unknown object. Allowed: ${[...allowed].join(', ')}` }, { status: 400 });
   const rpcObject = object === 'offers' ? 'invoices' : object;
   const { data, error } = await ctx.admin.rpc('list_records', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: rpcObject });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -91,7 +118,8 @@ export async function POST(req: Request) {
   if (!capped.ok) return NextResponse.json({ error: capped.error }, { status: capped.status });
   const body: any = capped.data;
   const object = body?.object || '';
-  if (!ALLOWED.has(object)) return NextResponse.json({ error: `Unknown object. Allowed: ${[...ALLOWED].join(', ')}` }, { status: 400 });
+  const allowed = await allowedObjects(ctx);
+  if (!allowed.has(object)) return NextResponse.json({ error: `Unknown object. Allowed: ${[...allowed].join(', ')}` }, { status: 400 });
   const payload = object === 'offers' ? { ...(body.data || {}), kind: 'offer' } : (body.data || {});
   const rpcObject = object === 'offers' ? 'invoices' : object;
   const { data, error } = await ctx.admin.rpc('create_record', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: rpcObject, p_data: payload });
