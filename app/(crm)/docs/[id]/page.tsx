@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check, Download, ChevronDown, FileText, StickyNote, ListChecks, Table2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check, Download, ChevronDown, FileText, StickyNote, ListChecks, Table2, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { loadDoc, saveDoc, runAI, kindOf, DOC_KINDS, KIND_META, type Doc, type DocKind } from '@/lib/crm/docs';
+import { loadDoc, saveDoc, runAI, kindOf, tagDot, DOC_KINDS, KIND_META, type Doc, type DocKind } from '@/lib/crm/docs';
 import { downloadPdf, downloadWord, downloadMarkdown, downloadCsv } from '@/lib/crm/doc-export';
 import { getWorkspace } from '@/lib/crm/data';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
@@ -68,6 +68,8 @@ export default function DocEditor() {
   // waiting on a save round trip.
   const [kind, setKind] = useState<DocKind>('doc');
   const [exportOpen, setExportOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
 
   // Turns the `rb-file:<uuid>` references stored in the body into signed URLs
   // for the editor, and back again on save. Per-document, and it must outlive
@@ -85,6 +87,7 @@ export default function DocEditor() {
       setDoc(d);
       setTitle(d?.title || '');
       setKind(kindOf(d?.kind));
+      setTags(d?.tags ?? []);
       // Resolve embedded files BEFORE the editor sees the body, or it mounts
       // with `rb-file:` in every src and paints a row of broken images first.
       const raw = d?.body || '';
@@ -116,7 +119,7 @@ export default function DocEditor() {
     if (!privy) return;
     setSaving(true);
     // Store ids, never signed URLs — see lib/files/embeds.ts.
-    const res = await saveDoc(privy, id, title, embeds.collapse(bodyRef.current), kind);
+    const res = await saveDoc(privy, id, title, embeds.collapse(bodyRef.current), kind, tags);
     setSaving(false);
     if (!res.error) { setSavedAt(true); setTimeout(() => setSavedAt(false), 1500); }
   };
@@ -228,6 +231,40 @@ export default function DocEditor() {
           {aiError} {/no ai provider|settings/i.test(aiError) && <Link href="/settings/ai" className="font-semibold underline">Add a key →</Link>}
         </div>
       )}
+
+      {/* Tags. Free text with no picker and no tag table — the colour comes
+          from the name, so "Personal" is the same green everywhere and there is
+          nothing to administer. Saved with the document, not on their own:
+          a tag is part of the edit, not a separate commit. */}
+      <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle">
+        {tags.map((t) => (
+          <span key={t} className="inline-flex items-center gap-1.5 h-6 pl-1.5 pr-1 rounded-full ring-1 ring-subtle text-2xs text-secondary">
+            <span className={`w-2 h-2 rounded-full ${tagDot(t)}`} />
+            {t}
+            <button onClick={() => setTags((v) => v.filter((x) => x !== t))} disabled={!canEdit}
+              aria-label={`Remove tag ${t}`}
+              className="p-0.5 rounded-full text-tertiary hover:text-primary hover:bg-surface-hover disabled:hidden">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+        {tags.length < 8 && (
+          <input value={tagDraft} onChange={(e) => setTagDraft(e.target.value)} disabled={!canEdit}
+            onKeyDown={(e) => {
+              // Comma as well as Enter: people type tags in a list.
+              if (e.key !== 'Enter' && e.key !== ',') return;
+              e.preventDefault();
+              const v = tagDraft.trim().slice(0, 24);
+              // Deduped case-insensitively here as well as in SQL, so the pill
+              // does not appear twice for a second before the save normalises.
+              if (v && !tags.some((x) => x.toLowerCase() === v.toLowerCase())) setTags((cur) => [...cur, v]);
+              setTagDraft('');
+            }}
+            placeholder={tags.length ? 'Add tag' : 'Add a tag…'}
+            className="h-6 px-1.5 text-2xs bg-transparent outline-none text-primary placeholder:text-tertiary w-24" />
+        )}
+        <span className="ml-auto text-3xs text-tertiary">Tags save with the document</span>
+      </div>
 
       {/* Editor / raw-markdown view */}
       <div className="flex-1 overflow-hidden">

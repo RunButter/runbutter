@@ -4,12 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { FileText, Plus, Loader2, Sparkles, Trash2, StickyNote, ListChecks, Table2, FileStack, CheckCheck } from 'lucide-react';
+import { FileText, Plus, Loader2, Sparkles, StickyNote, ListChecks, Table2, FileStack } from 'lucide-react';
 import {
-  loadDocs, saveDoc, deleteDoc, kindOf, DOC_KINDS, KIND_META,
+  loadDocs, saveDoc, deleteDoc, kindOf, tagDot, DOC_KINDS, KIND_META,
   type DocMeta, type DocKind,
 } from '@/lib/crm/docs';
-import { parseTodo } from '@/lib/crm/doc-formats';
+import DocCard from '@/components/crm/DocCard';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
@@ -32,6 +32,7 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<DocKind | null>(null);
   const [filter, setFilter] = useState<'all' | DocKind>('all');
+  const [tag, setTag] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -54,8 +55,14 @@ export default function DocsPage() {
     await deleteDoc(privy, d.id); reload();
   };
 
-  const shown = filter === 'all' ? rows : rows.filter((d) => kindOf(d.kind) === filter);
+  const byKind = filter === 'all' ? rows : rows.filter((d) => kindOf(d.kind) === filter);
+  const shown = tag ? byKind.filter((d) => d.tags?.includes(tag)) : byKind;
   const count = (k: DocKind) => rows.filter((d) => kindOf(d.kind) === k).length;
+  // Every tag in use, most-used first — a tag list nobody administers, so the
+  // only sensible order is how much it is actually used.
+  const allTags = Object.entries(
+    rows.flatMap((d) => d.tags ?? []).reduce<Record<string, number>>((m, t) => ({ ...m, [t]: (m[t] ?? 0) + 1 }), {}),
+  ).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
 
   return (
     <>
@@ -108,10 +115,24 @@ export default function DocsPage() {
                 </button>
               ))}
             </div>
-            <p className="hidden sm:flex text-xs text-secondary items-center gap-1.5 ml-auto">
+            <p className="hidden lg:flex text-xs text-secondary items-center gap-1.5 ml-auto">
               <Sparkles className="w-3.5 h-3.5 text-accent" /> AI writing uses your own key (Settings → AI keys).
             </p>
           </div>
+
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              {allTags.map((t) => (
+                <button key={t} onClick={() => setTag((cur) => (cur === t ? null : t))}
+                  aria-pressed={tag === t}
+                  className={`inline-flex items-center gap-1.5 h-7 pl-2 pr-2.5 rounded-full text-2xs transition-colors ${
+                    tag === t ? 'bg-inverse text-inverse-fg' : 'ring-1 ring-subtle text-secondary hover:bg-surface-hover'}`}>
+                  <span className={`w-2 h-2 rounded-full ${tagDot(t)}`} />
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
 
           {loading ? (
             <AppLoading label="Loading your documents" />
@@ -119,52 +140,21 @@ export default function DocsPage() {
             <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center">
               <FileText className="w-9 h-9 text-tertiary mx-auto mb-3" />
               <p className="text-sm text-secondary">
-                {filter === 'all' ? 'Nothing here yet — pick one above to start.' : `No ${KIND_META[filter].plural.toLowerCase()} yet.`}
+                {tag ? `Nothing tagged "${tag}".`
+                     : filter === 'all' ? 'Nothing here yet — pick one above to start.'
+                     : `No ${KIND_META[filter].plural.toLowerCase()} yet.`}
               </p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {shown.map((d) => {
-                const k = kindOf(d.kind);
-                const Icon = KIND_ICON[k];
-                // A checklist's snippet is a wall of "- [ ]", so lists show
-                // progress instead — the only thing worth knowing about one
-                // without opening it.
-                const todo = (k === 'todo' || k === 'note') ? parseTodo(d.snippet || '') : null;
-                const real = todo?.items.filter((t) => t.text.trim()) ?? [];
-                const done = real.filter((t) => t.done).length;
-                return (
-                  <div key={d.id} onClick={() => router.push(`/docs/${d.id}`)} className="group cursor-pointer card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Icon className="w-4 h-4 text-tertiary shrink-0" />
-                        <div className="text-base font-medium text-primary truncate">{d.title || 'Untitled'}</div>
-                      </div>
-                      <button onClick={(e) => remove(e, d)} disabled={!canEdit} aria-label={`Delete ${d.title}`}
-                        className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-
-                    {real.length > 0 ? (
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="h-1 rounded-full bg-surface-hover flex-1 min-w-0 overflow-hidden">
-                          <span className="block h-full rounded-full bg-accent" style={{ width: `${(done / real.length) * 100}%` }} />
-                        </span>
-                        <span className="text-2xs text-tertiary tabular-nums shrink-0">
-                          {done === real.length
-                            ? <span className="inline-flex items-center gap-1 text-success"><CheckCheck className="w-3 h-3" /> done</span>
-                            : `${done}/${real.length}`}
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-secondary mt-1 line-clamp-2 whitespace-pre-wrap">
-                        {d.snippet || `Empty ${KIND_META[k].label.toLowerCase()}`}
-                      </p>
-                    )}
-
-                    <div className="text-2xs text-tertiary mt-2">Updated {fmt(d.updated_at)}</div>
-                  </div>
-                );
-              })}
+            /* CSS columns, not a grid: cards are different heights because they
+               render their own content, and a grid row would stretch every card
+               in it to match the tallest. Masonry packs them instead. */
+            <div className="columns-1 sm:columns-2 xl:columns-3 gap-4">
+              {shown.map((d) => (
+                <DocCard key={d.id} doc={d} privy={privy} canEdit={canEdit}
+                  onOpen={() => router.push(`/docs/${d.id}`)}
+                  onDelete={(e) => remove(e, d)} />
+              ))}
             </div>
           )}
         </div>
