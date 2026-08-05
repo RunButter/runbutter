@@ -11,6 +11,7 @@ import { useDialog } from '@/components/ui/Dialog';
 import EmptyState from '@/components/ui/EmptyState';
 import ListRow, { RowTile } from '@/components/ui/ListRow';
 import SectionCard from '@/components/ui/SectionCard';
+import AppLoading from '@/components/ui/AppLoading';
 
 const when = (s: string) => new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
@@ -88,7 +89,7 @@ export default function MapsPage() {
           )}
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : !privy ? (
             <EmptyState icon={Waypoints} title="Sign in to see your maps" />
           ) : maps.length === 0 ? (

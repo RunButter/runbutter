@@ -14,6 +14,7 @@ import { rpc } from '@/lib/rpc';
 import { getWorkspace } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const KINDS = ['generic', 'slack', 'discord', 'zapier', 'make', 'n8n'];
 const fmtDate = (s: string | null) => (s ? new Date(s).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
@@ -187,7 +188,7 @@ export default function IntegrationsPage() {
               <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
             <div className="card-surface overflow-hidden">
-              {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+              {loading ? <AppLoading />
                 : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
                 : connections.map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0">

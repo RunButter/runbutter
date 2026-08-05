@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { loadDoc, saveDoc, runAI, type Doc, type DocKind } from '@/lib/crm/docs';
 import { getWorkspace } from '@/lib/crm/data';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
+import AppLoading from '@/components/ui/AppLoading';
 
 // Tiptap/ProseMirror is by far the heaviest thing we ship (~180 kB on this
 // route alone). Load it on demand so the doc shell paints immediately instead
@@ -16,9 +17,7 @@ import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds'
 const RichEditor = dynamic(() => import('@/components/crm/RichEditor'), {
   ssr: false,
   loading: () => (
-    <div className="min-h-[60vh] flex items-center justify-center text-tertiary">
-      <Loader2 className="w-5 h-5 animate-spin" />
-    </div>
+    <AppLoading />
   ),
 });
 
@@ -116,7 +115,7 @@ export default function DocEditor() {
     setPrompt('');
   };
 
-  if (loading) return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (loading) return <AppLoading />;
   if (!doc) return (
     <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-6">
       <p className="text-base font-semibold text-secondary">This document couldn’t be loaded.</p>

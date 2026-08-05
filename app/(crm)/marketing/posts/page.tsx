@@ -11,6 +11,7 @@ import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { loadPostBoard, EMPTY_BOARD, type PostBoardGraph } from '@/lib/crm/postboard';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const PLATFORM_CHIP: Record<string, string> = {
   instagram: 'bg-accent/10 text-accent ring-accent/30',
@@ -109,7 +110,7 @@ export default function PostsPage() {
       ) : (
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : posts.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No posts yet — create your first one.</div>
         ) : view === 'calendar' ? (

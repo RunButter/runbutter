@@ -17,6 +17,7 @@ import { toCSV, downloadCSV, parseCSV, autoMatch } from '@/lib/crm/csv';
 import RecordForm from '@/components/crm/RecordForm';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const PERIODS = [{ label: '1M', months: 1 }, { label: '3M', months: 3 }, { label: '6M', months: 6 }, { label: '12M', months: 12 }];
 const OBJ = OBJECTS.transactions;
@@ -182,7 +183,7 @@ export default function TransactionsPage() {
       {/* Ledger */}
       <div className="flex-1 overflow-auto px-4 pb-6">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <div className="card-surface overflow-hidden">
             <table className="w-full text-sm border-separate border-spacing-0">
@@ -413,7 +414,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
                 {canEdit && <button onClick={unmatch} disabled={busy === 'unmatch'} className="mt-2 h-7 px-2.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface inline-flex items-center gap-1.5 disabled:opacity-50">{busy === 'unmatch' && <Loader2 className="w-3 h-3 animate-spin" />} Unmatch</button>}
               </div>
             ) : suggestions === null ? (
-              <div className="h-16 flex items-center justify-center text-tertiary"><Loader2 className="w-4 h-4 animate-spin" /></div>
+              <AppLoading />
             ) : suggestions.length === 0 ? (
               <p className="text-xs text-tertiary">{canEdit ? `No open ${out ? 'expenses/bills' : 'invoices'} match this amount.` : 'Sign in to see suggested matches.'}</p>
             ) : (

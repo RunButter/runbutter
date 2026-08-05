@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Plus, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock } from 'lucide-react';
 import { loadProject } from '@/lib/crm/data';
 import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-success/10 text-success ring-success/30',
@@ -65,7 +66,7 @@ export default function ProjectDashboard() {
 
       <div className="flex-1 overflow-hidden flex flex-col">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <>
             <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">

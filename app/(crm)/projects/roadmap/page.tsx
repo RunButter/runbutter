@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { loadRoadmap, type RoadmapProject } from '@/lib/crm/data';
 import RoadmapTimeline from '@/components/crm/RoadmapTimeline';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 // Must stay in step with PRIORITY_COLOR in components/crm/RoadmapTimeline.tsx.
 const PRIORITY: [string, string][] = [
@@ -40,7 +41,7 @@ export default function RoadmapPage() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!projects ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : projects.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No projects yet. Create one to see it on the roadmap.</div>
         ) : (

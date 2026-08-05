@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { Check, Loader2, Sparkles } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
 import {
   PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, normalizePlan, type SubscriptionPlan,
 } from '@/lib/plans';
 import { loadMyHrCompanies } from '@/lib/crm/data';
+import AppLoading from '@/components/ui/AppLoading';
 
 // Maps a paid plan to its Stripe price id. Env var names keep the old
 // STARTER/PRO wording so existing Render config keeps working after the
@@ -49,7 +50,7 @@ export default function PlansPage() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <div className="max-w-6xl">
             <h2 className="text-xl font-semibold text-primary mb-1">One workspace, priced to grow with you</h2>

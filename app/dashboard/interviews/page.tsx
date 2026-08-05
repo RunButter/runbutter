@@ -8,6 +8,7 @@ import { Calendar, Clock, Briefcase, Video, Loader2, Plus, Trash2, X, Pencil, In
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 import {
   listInterviews, scheduleInterview, updateInterview, cancelInterview,
   searchCandidatesLite, isGoogleConnected,
@@ -56,7 +57,7 @@ export default function InterviewsPage() {
   };
 
   if (!ready || loading) {
-    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   return (

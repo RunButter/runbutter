@@ -8,6 +8,7 @@ import { Upload, FileText, Loader2, CheckCircle2, ArrowRight, X } from 'lucide-r
 import { useDropzone } from 'react-dropzone';
 import LogoContainer from '@/components/LogoContainer';
 import { brandStyle } from '@/lib/brand/theme';
+import AppLoading from '@/components/ui/AppLoading';
 
 export default function ApplyPage({ params }: { params: { positionId: string } }) {
   const router = useRouter();
@@ -302,9 +303,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
   // about to be replaced by "not available".
   if (availability === 'checking') {
     return (
-      <div className="min-h-[100dvh] bg-surface-sunken flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-tertiary" />
-      </div>
+      <AppLoading />
     );
   }
 

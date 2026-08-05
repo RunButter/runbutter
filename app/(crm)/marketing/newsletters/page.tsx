@@ -23,6 +23,7 @@ import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const STATUS_TONE: Record<string, 'neutral' | 'accent' | 'success' | 'warning' | 'danger'> = {
   draft: 'neutral', scheduled: 'warning', sending: 'warning',
@@ -80,7 +81,7 @@ export default function NewslettersPage() {
   };
 
   if (!ready || loading) {
-    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   const totalSubs = lists.reduce((a, l) => a + (l.subscriber_count || 0), 0);

@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import {
-  Wallet, PiggyBank, Target, Users, ArrowUpRight, ArrowRight, Loader2,
-  TrendingUp, Megaphone, FolderKanban, Receipt, Calendar, Briefcase,
+  Wallet, PiggyBank, Target, Users, ArrowUpRight, ArrowRight, TrendingUp, Megaphone, FolderKanban, Receipt, Calendar, Briefcase,
 } from 'lucide-react';
 import {
   getWorkspace, loadFinanceAnalytics, loadBankAccounts, loadBoard, loadLedger,
@@ -18,6 +17,7 @@ import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 import EmptyState from '@/components/ui/EmptyState';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const money = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
@@ -124,7 +124,7 @@ export default function WorkspaceHome() {
                 </div>
               </div>
               {loading || !fin ? (
-                <div className="h-56 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+                <AppLoading />
               ) : (
                 <FinanceChart series={fin.series} />
               )}
@@ -139,7 +139,7 @@ export default function WorkspaceHome() {
                 <Link href="/dashboard/pipeline" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">Pipeline <ArrowRight className="w-3 h-3" /></Link>
               </div>
               {loading || !hr ? (
-                <div className="flex-1 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+                <AppLoading />
               ) : (
                 <HiringFunnel stages={hr.funnel} />
               )}

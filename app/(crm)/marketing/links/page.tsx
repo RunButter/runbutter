@@ -6,6 +6,7 @@ import { Link2, Loader2, Plus, X, Trash2, Copy, Check, ExternalLink } from 'luci
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { rpc } from '@/lib/rpc';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 interface ShortLink { id: string; code: string; target_url: string; title: string | null; clicks: number; created_at: string }
 
@@ -57,7 +58,7 @@ export default function LinksPage() {
           <p className="text-sm text-secondary -mt-1">Branded short links with click tracking. Share <span className="font-mono">{origin.replace(/^https?:\/\//, '')}/l/…</span> anywhere.</p>
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <Link2 className="w-8 h-8 text-tertiary mx-auto mb-3" />

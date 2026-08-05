@@ -7,6 +7,7 @@ import { loadSites, createSite, deleteSite, loadSiteStats, linkSiteToUmami, type
 import { useDialog } from '@/components/ui/Dialog';
 import StatCard from '@/components/ui/StatCard';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const PERIODS = [
   { label: '7D', days: 7 },
@@ -169,7 +170,7 @@ export default function WebAnalytics() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!stats ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <div className="max-w-5xl space-y-6">
             {/* Add-site / snippet card */}

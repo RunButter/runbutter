@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Download, Loader2, FileText } from 'lucide-react';
+import { Plus, Search, Upload, Download, FileText } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
@@ -22,6 +22,7 @@ import Badge from '@/components/ui/Badge';
 import { Package } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 export default function ObjectPage() {
   const { notify } = useDialog();
@@ -183,7 +184,7 @@ export default function ObjectPage() {
 
       <div className="flex-1 min-h-0 p-4">
         {loading ? (
-          <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <RecordTable object={object} rows={filtered}
             onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}

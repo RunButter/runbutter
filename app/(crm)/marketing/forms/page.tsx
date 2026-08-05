@@ -6,6 +6,7 @@ import { FileInput, Loader2, Plus, X, Trash2, Copy, Check, ExternalLink, Inbox, 
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { getForms, getForm, saveForm, deleteForm, getFormSubmissions, type FormRow, type FormDetail, type FormField, type FieldType, type FieldMap, type FormSubmission } from '@/lib/forms/client';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const TYPES: { v: FieldType; label: string }[] = [
   { v: 'text', label: 'Text' }, { v: 'email', label: 'Email' }, { v: 'tel', label: 'Phone' },
@@ -88,7 +89,7 @@ export default function FormsPage() {
           <p className="text-sm text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <FileInput className="w-8 h-8 text-tertiary mx-auto mb-3" />
@@ -239,7 +240,7 @@ function Submissions({ form, privy, wsId, onClose }: { form: FormRow; privy: str
         </div>
         <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-3">
           {rows === null ? (
-            <div className="h-24 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <p className="text-sm text-tertiary text-center py-8">No submissions yet. Share <span className="font-mono">/f/{form.slug}</span>.</p>
           ) : rows.map((s) => (

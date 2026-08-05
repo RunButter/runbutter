@@ -7,6 +7,7 @@ import { loadAiProviders, saveAiKey, setAiProviderMeta, deleteAiProvider, type A
 import { PROVIDERS, providerLabel } from '@/lib/ai/providers';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 export default function AiKeysPage() {
   const { confirm: confirmDialog } = useDialog();
@@ -88,7 +89,7 @@ export default function AiKeysPage() {
 
           {/* List */}
           <div className="card-surface overflow-hidden">
-            {loading ? <div className="h-20 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            {loading ? <AppLoading />
               : rows.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No AI keys yet. Add one above to use the Docs assistant.</div>
               : rows.map((r) => (
                 <div key={r.id} className={`flex items-center gap-3 px-4 h-14 border-b border-subtle last:border-0 ${r.enabled ? '' : 'opacity-50'}`}>

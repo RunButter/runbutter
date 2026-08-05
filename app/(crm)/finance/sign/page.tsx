@@ -6,6 +6,7 @@ import { PenLine, Loader2, Plus, X, Trash2, Download, FileCheck2, Clock, Ban, Up
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { listSignDocuments, createSignRequest, voidSignDocument, downloadSignDocument, type SignDocument } from '@/lib/sign/client';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const STATUS_TONE: Record<string, string> = {
   sent: 'bg-warning/10 text-warning ring-warning/30',
@@ -60,7 +61,7 @@ export default function SignPage() {
           <p className="text-sm text-secondary -mt-1">Send a PDF for e-signature. Each signer gets a private link; once everyone signs, the completed PDF with a signature certificate lands in every inbox.</p>
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <FileCheck2 className="w-8 h-8 text-tertiary mx-auto mb-3" />

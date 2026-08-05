@@ -10,6 +10,7 @@ import {
 } from '@/lib/crm/automations';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
 const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
@@ -116,7 +117,7 @@ export default function AutomationsPage() {
 
           {/* Rules */}
           {loading ? (
-            <div className="h-24 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-10 text-center">
               <Zap className="w-8 h-8 text-tertiary mx-auto mb-2" />

@@ -22,6 +22,7 @@ import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const BLANK: Partial<Agent> = {
   name: '', role: '', instructions: '', model: '',
@@ -83,7 +84,7 @@ export default function AgentsPage() {
   const refresh = () => { if (ws && privy) reload(ws, privy); };
 
   if (!ready || loading) {
-    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   return (

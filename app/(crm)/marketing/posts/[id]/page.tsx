@@ -13,6 +13,7 @@ import PostCanvas from '@/components/marketing/PostCanvas';
 import PublishPanel from '@/components/marketing/PublishPanel';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const PLATFORMS: PostPlatform[] = ['instagram', 'facebook', 'x', 'linkedin'];
 const STATUSES = ['draft', 'in_review', 'approved', 'published'];
@@ -105,7 +106,7 @@ export default function PostStudio() {
       </div>
     );
   }
-  if (!post) return <div className="flex-1 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (!post) return <AppLoading />;
 
   return (
     <>

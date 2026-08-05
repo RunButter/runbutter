@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import {
-  Users, Briefcase, CheckCircle2, Calendar, TrendingUp, Clock, Loader2,
-  Plus, Columns3, Sparkles, Mail, ArrowUpRight,
+  Users, Briefcase, CheckCircle2, Calendar, TrendingUp, Clock, Plus, Columns3, Sparkles, Mail, ArrowUpRight,
 } from 'lucide-react';
 import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import HiringFunnel from '@/components/crm/HiringFunnel';
@@ -13,6 +12,7 @@ import StatCard from '@/components/ui/StatCard';
 import PageHeader from '@/components/ui/PageHeader';
 import SectionCard from '@/components/ui/SectionCard';
 import ListRow, { RowTile } from '@/components/ui/ListRow';
+import AppLoading from '@/components/ui/AppLoading';
 
 const fmtDate = (s?: string | null) => {
   if (!s) return '—';
@@ -86,7 +86,7 @@ export default function HrOverviewPage() {
             actionHref="/dashboard/pipeline"
           >
             {!hr
-              ? <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+              ? <AppLoading />
               : <HiringFunnel stages={hr.funnel} />}
           </SectionCard>
 
@@ -114,7 +114,7 @@ export default function HrOverviewPage() {
           actionHref="/dashboard/candidates"
         >
           {!hr ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            <AppLoading />
           ) : hr.recent.length === 0 ? (
             <div className="px-5 py-12 text-center">
               <Users className="w-10 h-10 text-tertiary mx-auto mb-3" />

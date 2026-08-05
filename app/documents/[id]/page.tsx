@@ -7,6 +7,7 @@ import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock, FileDown } from
 import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const fmt = (n: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n || 0);
@@ -26,7 +27,7 @@ const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
 export default function DocumentPage() {
   const { notify } = useDialog();
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
+    <Suspense fallback={<AppLoading />}>
       <DocumentInner />
     </Suspense>
   );
@@ -87,7 +88,7 @@ function DocumentInner() {
   }
 
   if (!doc) {
-    return <div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   const recipient = !!token;                // clean read-only view for clients

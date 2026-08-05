@@ -2,11 +2,12 @@
 
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Loader2, Lock, MessageCircle } from 'lucide-react';
+import { Lock, MessageCircle } from 'lucide-react';
 import { loadPublicPost, addPublicPostComment, type PostDetail } from '@/lib/crm/data';
 import { mockPostDetail } from '@/lib/crm/mock';
 import PostCanvas from '@/components/marketing/PostCanvas';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
@@ -18,7 +19,7 @@ const STATUS_CHIP: Record<string, string> = {
 export default function ReviewPage() {
   const { notify } = useDialog();
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
+    <Suspense fallback={<AppLoading />}>
       <ReviewInner />
     </Suspense>
   );
@@ -68,7 +69,7 @@ function ReviewInner() {
       </div>
     );
   }
-  if (!post) return <div className="min-h-screen bg-surface-hover flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (!post) return <AppLoading />;
 
   const open = post.comments.filter((c) => !c.resolved);
 

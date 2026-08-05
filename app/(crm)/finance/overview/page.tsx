@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, Loader2, ArrowLeftRight } from 'lucide-react';
+import { TrendingUp, Wallet, PiggyBank, Clock, Receipt, ArrowUpRight, ArrowLeftRight } from 'lucide-react';
 import { loadFinanceAnalytics, loadBankAccounts, type FinanceAnalytics, type BankAccount } from '@/lib/crm/data';
 import FinanceChart from '@/components/crm/FinanceChart';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -68,7 +69,7 @@ export default function FinanceOverview() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {!fin ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <div className="max-w-5xl space-y-6">
             {/* KPI cards */}
@@ -92,7 +93,7 @@ export default function FinanceOverview() {
                 </div>
               </div>
               {loading ? (
-                <div className="h-56 flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>
+                <AppLoading />
               ) : (
                 <FinanceChart series={fin.series} />
               )}

@@ -6,6 +6,7 @@ import { MessageCircle, Loader2, Plus, X, Trash2, Check, Send, Info } from 'luci
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { rpc } from '@/lib/rpc';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 interface Channel { id: string; platform: string; webhook_token: string; has_token: boolean; allowed_senders: string[]; autonomy: 'suggest' | 'auto'; enabled: boolean }
 
@@ -57,7 +58,7 @@ export default function AssistantPage() {
           </p>
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <MessageCircle className="w-8 h-8 text-tertiary mx-auto mb-3" />

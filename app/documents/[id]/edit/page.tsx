@@ -11,6 +11,7 @@ import {
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 import SearchSelect from '@/components/crm/SearchSelect';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const fmt = (n: number, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n || 0);
 
@@ -116,7 +117,7 @@ export default function DocumentBuilder() {
     URL.revokeObjectURL(url);
   };
 
-  if (!doc) return <div className="min-h-screen flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (!doc) return <AppLoading />;
 
   const isOffer = doc.kind === 'offer';
   const title = isOffer ? 'Offer' : 'Invoice';

@@ -7,6 +7,7 @@ import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import SkillsSection from '@/components/crm/SkillsSection';
 import PageHeader from '@/components/dashboard/PageHeader';
+import AppLoading from '@/components/ui/AppLoading';
 
 /**
  * Skills has its own route rather than living only inside Agents. It is a
@@ -34,7 +35,7 @@ export default function SkillsPage() {
   }, [ready, privy, reload]);
 
   if (!ready || loading) {
-    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   return (

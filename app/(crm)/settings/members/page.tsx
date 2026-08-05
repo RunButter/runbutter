@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Loader2, ShieldCheck, Trash2, Clock, UserPlus, X } from 'lucide-react';
 import { getWorkspace, getMembers, setMemberRole, removeMember, inviteMember, type WorkspaceContext } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const ROLES = ['owner', 'admin', 'member', 'recruiter', 'viewer'];
 const ROLE_TONE: Record<string, string> = {
@@ -76,7 +77,7 @@ export default function MembersPage() {
 
       <div className="flex-1 overflow-auto p-4 2xl:p-6">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : !privy ? (
           <p className="text-sm text-tertiary">Sign in to manage members.</p>
         ) : (

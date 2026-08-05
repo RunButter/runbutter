@@ -7,6 +7,7 @@ import { Menu } from 'lucide-react';
 import NavRail from '@/components/crm/NavRail';
 import CommandPalette from '@/components/CommandPalette';
 import PlanGate from '@/components/PlanGate';
+import AppLoading from '@/components/ui/AppLoading';
 import { getWorkspace } from '@/lib/crm/data';
 import type { PlanFeature } from '@/lib/plans';
 
@@ -58,6 +59,16 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     ? <PlanGate plan={plan} feature={requiredFeature}>{children}</PlanGate>
     : children;
 
+  // The boot wait, held HERE rather than in each page.
+  //
+  // Privy restores the session asynchronously, so for a moment after landing
+  // every screen has no user and paints its own empty state. Each page used to
+  // cover that with its own centred spinner — fifty of them, all identical and
+  // all generic. Holding it once means the first thing anyone sees after
+  // signing in is the app's own loading state, inside the shell they are about
+  // to use, instead of a grey circle that could belong to anything.
+  const booting = !ready;
+
   return (
     <div className="flex h-screen overflow-hidden bg-canvas text-primary">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
@@ -75,7 +86,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </button>
           <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
-        {body}
+        {booting
+          ? <AppLoading kind="idle" label="Getting your workspace ready" hint="Restoring your session" />
+          : body}
       </main>
       <CommandPalette />
     </div>

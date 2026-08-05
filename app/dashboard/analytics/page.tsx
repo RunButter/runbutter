@@ -9,11 +9,12 @@ import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2,
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
 import StatCard from '@/components/ui/StatCard';
+import AppLoading from '@/components/ui/AppLoading';
 import dynamic from 'next/dynamic';
 
 // Chart.js is ~110 kB and both charts sit below the fold — load it only when
 // they actually render, not before the page can paint.
-const chartLoader = () => <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+const chartLoader = () => <AppLoading />;
 const Bar = dynamic(() => import('@/components/charts/Charts').then((m) => m.Bar), { ssr: false, loading: chartLoader });
 const Pie = dynamic(() => import('@/components/charts/Charts').then((m) => m.Pie), { ssr: false, loading: chartLoader });
 

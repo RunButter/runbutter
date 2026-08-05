@@ -6,6 +6,7 @@ import { FileBarChart, Loader2, Plus, Trash2, X, Download, Mail, Info } from 'lu
 import { getWorkspace, getReportSchedules, saveReportSchedule, deleteReportSchedule, type WorkspaceContext, type ReportSchedule } from '@/lib/crm/data';
 import { SECTION_CATALOG } from '@/lib/reports/registry';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const GROUPS = Array.from(new Set(SECTION_CATALOG.map((s) => s.group)));
@@ -100,7 +101,7 @@ export default function ReportsPage() {
           </p>
 
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-subtle p-12 text-center">
               <FileBarChart className="w-8 h-8 text-tertiary mx-auto mb-3" />

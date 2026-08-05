@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Columns3, Table2, Loader2 } from 'lucide-react';
+import { Plus, Columns3, Table2 } from 'lucide-react';
 import { MOCK_PIPELINES } from '@/lib/crm/mock';
 import { loadBoard } from '@/lib/crm/data';
 import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 export default function BoardPage() {
   const params = useParams();
@@ -48,7 +49,7 @@ export default function BoardPage() {
       </header>
       <div className="flex-1 overflow-hidden p-4">
         {loading ? (
-          <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : (
           <PipelineBoard key={`${slug}-${live}-${board.records.length}`} stages={board.stages} records={board.records} />
         )}

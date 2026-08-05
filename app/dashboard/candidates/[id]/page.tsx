@@ -16,13 +16,14 @@ import dynamic from 'next/dynamic';
 // below the fold and the modal is usually never opened.
 const Radar = dynamic(() => import('@/components/charts/Charts').then((m) => m.Radar), {
     ssr: false,
-    loading: () => <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>,
+    loading: () => <AppLoading />,
 });
 const TeamFitModal = dynamic(() => import('./TeamFitModal'), { ssr: false });
 import CandidateMessageModal from './CandidateMessageModal';
 import { rpc } from '@/lib/rpc';
 import { useChartTokens } from '@/lib/chart-tokens';
 import { useDialog } from '@/components/ui/Dialog';
+import AppLoading from '@/components/ui/AppLoading';
 
 export default function CandidateDetailPage({ params }: { params: { id: string } }) {
     const chart = useChartTokens();

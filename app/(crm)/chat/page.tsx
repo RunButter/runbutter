@@ -15,6 +15,7 @@ import { useDialog } from '@/components/ui/Dialog';
 import ChatAttachments from '@/components/crm/ChatAttachments';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
 import { formatBytes } from '@/lib/files/client';
+import AppLoading from '@/components/ui/AppLoading';
 
 /**
  * Team chat. The point is not chat — it is chat attached to records: a channel
@@ -134,7 +135,7 @@ export default function ChatPage() {
   };
 
   if (!ready || loading) {
-    return <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-5 h-5 animate-spin" /></div>;
+    return <AppLoading />;
   }
 
   const channel = channels.find((c) => c.id === active) || null;

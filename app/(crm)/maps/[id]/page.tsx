@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { loadMindMap, saveMindMap, type MindMapGraph } from '@/lib/crm/mindmaps';
+import AppLoading from '@/components/ui/AppLoading';
 
 // React Flow measures the DOM on mount and has no server rendering to do, so
 // prerendering it only costs a hydration pass and risks a window reference
@@ -15,9 +16,7 @@ import { loadMindMap, saveMindMap, type MindMapGraph } from '@/lib/crm/mindmaps'
 const MindMapCanvas = dynamic(() => import('@/components/crm/MindMapCanvas'), {
   ssr: false,
   loading: () => (
-    <div className="h-full w-full flex items-center justify-center text-tertiary">
-      <Loader2 className="w-6 h-6 animate-spin" />
-    </div>
+    <AppLoading />
   ),
 });
 
@@ -106,7 +105,7 @@ export default function MindMapPage() {
           flex column — without it the child grows and the page scrolls instead. */}
       <div className="flex-1 min-h-0">
         {!ready || (!initial && !error) ? (
-          <div className="h-full flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : initial ? (
           <MindMapCanvas initial={initial} saving={saving} savedAt={savedAt} onDirty={onDirty} />
         ) : null}

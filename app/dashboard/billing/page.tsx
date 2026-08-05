@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import {
-    Check, CreditCard, CheckCircle2, Loader2, ArrowRight, ShieldCheck, Sparkles, XCircle,
+    Check, CreditCard, CheckCircle2, ArrowRight, ShieldCheck, Sparkles, XCircle,
 } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
+import AppLoading from '@/components/ui/AppLoading';
 import {
     PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, normalizePlan,
     type SubscriptionPlan,
@@ -62,7 +63,7 @@ export default function BillingPage() {
     const canceled = params.get('canceled') === 'true';
 
     if (loading) {
-        return <div className="h-full flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-tertiary" /></div>;
+        return <AppLoading />;
     }
 
     return (

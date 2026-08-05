@@ -7,6 +7,7 @@ import { FileText, Plus, Loader2, Sparkles, Trash2, StickyNote } from 'lucide-re
 import { loadDocs, saveDoc, deleteDoc, type DocMeta, type DocKind } from '@/lib/crm/docs';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
+import AppLoading from '@/components/ui/AppLoading';
 
 const fmt = (s: string) => new Date(s).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -89,7 +90,7 @@ export default function DocsPage() {
         <div className="max-w-5xl mx-auto">
           <p className="text-sm text-secondary mb-4 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-accent" /> Write documents with AI — using your own provider key (Settings → AI keys).</p>
           {loading ? (
-            <div className="h-32 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <AppLoading />
           ) : shown.length === 0 ? (
             <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center">
               <FileText className="w-9 h-9 text-tertiary mx-auto mb-3" />

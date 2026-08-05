@@ -7,6 +7,7 @@ import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTrian
 import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
 import { validateIban, formatIban } from '@/lib/finance/iban';
+import AppLoading from '@/components/ui/AppLoading';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
@@ -163,7 +164,7 @@ export default function BrandingPage() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         {loading ? (
-          <div className="h-40 flex items-center justify-center text-tertiary"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          <AppLoading />
         ) : privy && !wsId ? (
           // Signed in but no workspace yet — send them to finish company setup
           // instead of the misleading "Sign in to save" dead-end.
