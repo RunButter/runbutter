@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check, Download, ChevronDown, FileText, StickyNote, ListChecks, Table2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { loadDoc, saveDoc, runAI, type Doc, type DocKind } from '@/lib/crm/docs';
+import { loadDoc, saveDoc, runAI, kindOf, DOC_KINDS, KIND_META, type Doc, type DocKind } from '@/lib/crm/docs';
+import { downloadPdf, downloadWord, downloadMarkdown, downloadCsv } from '@/lib/crm/doc-export';
 import { getWorkspace } from '@/lib/crm/data';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
 import AppLoading from '@/components/ui/AppLoading';
@@ -20,6 +21,22 @@ const RichEditor = dynamic(() => import('@/components/crm/RichEditor'), {
     <AppLoading />
   ),
 });
+
+// Same reasoning as RichEditor: browser-only, and only one of them mounts per
+// document, so loading all three up front is waste on every route.
+const TodoEditor = dynamic(() => import('@/components/crm/TodoEditor'), { ssr: false, loading: () => <AppLoading label="Opening the list" /> });
+const SheetEditor = dynamic(() => import('@/components/crm/SheetEditor'), { ssr: false, loading: () => <AppLoading label="Opening the table" /> });
+
+const KIND_ICON: Record<DocKind, typeof FileText> = {
+  doc: FileText, note: StickyNote, todo: ListChecks, sheet: Table2,
+};
+
+const EXPORTS: { label: string; hint: string; only?: DocKind; run: (t: string, b: string) => void }[] = [
+  { label: 'PDF', hint: 'Print-ready', run: (t, b) => { void downloadPdf(t, b); } },
+  { label: 'Word (.doc)', hint: 'Opens in Word, Pages or Docs', run: downloadWord },
+  { label: 'Markdown', hint: 'The raw source', run: downloadMarkdown },
+  { label: 'CSV', hint: 'For Excel or Sheets', only: 'sheet', run: downloadCsv },
+];
 
 const AI_ACTIONS = [
   { mode: 'improve', label: 'Improve', icon: Wand2 },
@@ -47,6 +64,10 @@ export default function DocEditor() {
   const [prompt, setPrompt] = useState('');
   const [wsId, setWsId] = useState<string | null>(null);
   const [imgError, setImgError] = useState('');
+  // Held apart from `doc` so switching kind re-renders at once rather than
+  // waiting on a save round trip.
+  const [kind, setKind] = useState<DocKind>('doc');
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Turns the `rb-file:<uuid>` references stored in the body into signed URLs
   // for the editor, and back again on save. Per-document, and it must outlive
@@ -63,6 +84,7 @@ export default function DocEditor() {
     loadDoc(privy, id).then(async (d) => {
       setDoc(d);
       setTitle(d?.title || '');
+      setKind(kindOf(d?.kind));
       // Resolve embedded files BEFORE the editor sees the body, or it mounts
       // with `rb-file:` in every src and paints a row of broken images first.
       const raw = d?.body || '';
@@ -90,13 +112,11 @@ export default function DocEditor() {
     return res.url;
   }, [privy, wsId, id, embeds]);
 
-  const kindOf = (d: Doc | null): DocKind => (d?.kind === 'note' ? 'note' : 'doc');
-
   const save = async () => {
     if (!privy) return;
     setSaving(true);
     // Store ids, never signed URLs — see lib/files/embeds.ts.
-    const res = await saveDoc(privy, id, title, embeds.collapse(bodyRef.current), kindOf(doc));
+    const res = await saveDoc(privy, id, title, embeds.collapse(bodyRef.current), kind);
     setSaving(false);
     if (!res.error) { setSavedAt(true); setTimeout(() => setSavedAt(false), 1500); }
   };
@@ -128,12 +148,64 @@ export default function DocEditor() {
       <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
         <button onClick={() => router.push('/docs')} className="p-1.5 -ml-1 rounded-md text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Untitled" disabled={!canEdit} className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary bg-transparent" />
-        <button onClick={() => setPreview((p) => !p)} title={preview ? 'Rich editor' : 'Edit markdown source'} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">{preview ? <Pencil className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />} {preview ? 'Editor' : 'Markdown'}</button>
+        {/* Switching kind is a VIEW change, not a conversion: every kind is
+            markdown in the same column, so a checklist opened as a document is
+            the same text with a different editor over it. That is why this is a
+            row of icons and not a destructive "convert" action. */}
+        <div className="hidden sm:flex items-center gap-0.5 rounded-lg bg-surface-sunken p-0.5 mr-1">
+          {DOC_KINDS.map((k) => {
+            const Icon = KIND_ICON[k];
+            return (
+              <button key={k} onClick={() => { setKind(k); setPreview(false); }} disabled={!canEdit}
+                title={`${KIND_META[k].label} — ${KIND_META[k].blurb}`} aria-label={KIND_META[k].label}
+                aria-pressed={kind === k}
+                className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors ${kind === k ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
+                <Icon className="w-3.5 h-3.5" />
+              </button>
+            );
+          })}
+        </div>
+
+        <button onClick={() => setPreview((p) => !p)} title={preview ? 'Back to the editor' : 'Edit markdown source'}
+          className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+          {preview ? <Pencil className="w-3.5 h-3.5" /> : <Code2 className="w-3.5 h-3.5" />}
+          <span className="hidden md:inline">{preview ? 'Editor' : 'Markdown'}</span>
+        </button>
+
+        {/* Export. Every format is produced in the browser — see
+            lib/crm/doc-export.ts for why a document never goes to a converter. */}
+        <div className="relative">
+          <button onClick={() => setExportOpen((o) => !o)} aria-expanded={exportOpen}
+            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+            <Download className="w-3.5 h-3.5" /><span className="hidden md:inline">Export</span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          {exportOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
+              <div className="absolute right-0 top-9 z-20 w-56 rounded-lg bg-surface ring-1 ring-subtle shadow-popover p-1">
+                {EXPORTS.filter((x) => !x.only || x.only === kind).map((x) => (
+                  <button key={x.label} onClick={() => { x.run(title || 'Untitled', body); setExportOpen(false); }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-surface-hover">
+                    <span className="block text-xs font-medium text-primary">{x.label}</span>
+                    <span className="block text-3xs text-tertiary">{x.hint}</span>
+                  </button>
+                ))}
+                <Link href="/pdf" className="block px-2.5 py-1.5 mt-0.5 rounded-md hover:bg-surface-hover border-t border-subtle">
+                  <span className="block text-xs font-medium text-primary">PDF tools →</span>
+                  <span className="block text-3xs text-tertiary">Merge, split, watermark — in your browser</span>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
         <button onClick={save} disabled={!canEdit || saving} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">{saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedAt ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />} {savedAt ? 'Saved' : 'Save'}</button>
       </header>
 
-      {/* AI toolbar */}
-      <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle bg-surface-sunken/50">
+      {/* AI toolbar. Hidden over a table: "improve this" and "continue" are
+          prose operations, and offering them on a grid of cells is a button
+          that cannot do anything sensible. */}
+      <div className={`shrink-0 flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle bg-surface-sunken/50 ${kind === 'sheet' ? 'hidden' : 'flex'}`}>
         <span className="text-2xs font-medium uppercase tracking-wider text-accent inline-flex items-center gap-1 mr-1"><Sparkles className="w-3.5 h-3.5" /> AI</span>
         {AI_ACTIONS.map((a) => (
           <button key={a.mode} onClick={() => ai(a.mode)} disabled={!canEdit || !!aiBusy}
@@ -165,10 +237,14 @@ export default function DocEditor() {
               placeholder="# Markdown source…"
               className="w-full h-full resize-none text-sm leading-relaxed text-primary font-mono outline-none bg-transparent" />
           </div>
+        ) : kind === 'todo' ? (
+          <TodoEditor value={body} onChange={setBody} editable={canEdit} />
+        ) : kind === 'sheet' ? (
+          <SheetEditor value={body} onChange={setBody} editable={canEdit} />
         ) : (
           <RichEditor value={body} onChange={setBody} editable={canEdit}
             onImageUpload={canEdit ? uploadImage : undefined}
-            placeholder={kindOf(doc) === 'note'
+            placeholder={kind === 'note'
               ? 'Jot something down… type ‘[] ’ for a checkbox, or drop an image in.'
               : 'Start writing… type ‘# ’ for a heading, ‘- ’ for a list, or use the AI toolbar above.'} />
         )}

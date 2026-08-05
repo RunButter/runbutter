@@ -4,12 +4,29 @@ import { getWorkspace } from './data';
 import { rpc } from '@/lib/rpc';
 
 /**
- * `doc` is the rich document; `note` is the light one — a quick note with
- * checkboxes. Two kinds, not four: a kind the editor cannot render is a bug
- * waiting, and sheets and canvases already live elsewhere in the product
- * (Excel sync, Maps). Matches the CHECK constraint in 0081.
+ * The four kinds, each with its own editor. 0081 shipped two and said why:
+ * a kind the editor cannot render is a bug waiting. 0085 widened the CHECK once
+ * the other two had one — so this list and `docs_kind_check` move together.
+ *
+ * `sheet` is a TABLE, not a spreadsheet — no formulas. Live data in a real
+ * spreadsheet is the Excel feed (0078) and two-way sync (0079), pointed at real
+ * records; a half-built formula engine here would be strictly worse.
  */
-export type DocKind = 'doc' | 'note';
+export type DocKind = 'doc' | 'note' | 'todo' | 'sheet';
+
+export const DOC_KINDS: DocKind[] = ['doc', 'note', 'todo', 'sheet'];
+
+export const KIND_META: Record<DocKind, { label: string; plural: string; blurb: string; seed: string; title: string }> = {
+  doc:   { label: 'Document', plural: 'Docs',   blurb: 'Rich text, images and AI',     seed: '',       title: 'Untitled' },
+  note:  { label: 'Note',     plural: 'Notes',  blurb: 'A quick note with checkboxes', seed: '- [ ] ', title: 'Untitled note' },
+  todo:  { label: 'To-do',    plural: 'To-do',  blurb: 'A checklist with progress',    seed: '- [ ] ', title: 'Untitled list' },
+  sheet: { label: 'Table',    plural: 'Tables', blurb: 'A small table — no formulas',
+           seed: '| Column 1 | Column 2 |\n| --- | --- |\n|  |  |', title: 'Untitled table' },
+};
+
+/** Anything unlabelled predates the kind column and is a document. */
+export const kindOf = (k?: string | null): DocKind =>
+  (DOC_KINDS as string[]).includes(k || '') ? (k as DocKind) : 'doc';
 
 export interface DocMeta { id: string; title: string; snippet: string; kind?: DocKind; updated_at: string }
 export interface Doc { id: string; title: string; body: string; kind?: DocKind; updated_at?: string }
