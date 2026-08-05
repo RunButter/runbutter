@@ -20,6 +20,13 @@ import { ensureTable, readRows, writeRows, getToken } from '@/lib/excel/graph';
  * is done in the app, deliberately.
  */
 
+/**
+ * A `<field>_label` column, only when `<field>` is really on the record — so a
+ * user's own column that happens to end in _label is still their column.
+ */
+const isRelationLabel = (h: string, rows: any[]) =>
+  h.endsWith('_label') && rows.some((r) => h.slice(0, -6) in (r || {}));
+
 /** Fields we never let a spreadsheet write back — they are not the user's to set. */
 const READ_ONLY_FIELDS = new Set([
   'id', 'workspace_id', 'company_id', 'created_at', 'updated_at', 'created_by',
@@ -106,6 +113,12 @@ export async function syncLink(
       const patch: Record<string, any> = {};
       sheetHeaders.forEach((h, i) => {
         if (READ_ONLY_FIELDS.has(h)) return;
+        // `<field>_label` is the resolved name of a link (0089), sent so the
+        // sheet reads as words instead of uuids. It is derived, so editing that
+        // cell cannot mean anything — update_record drops the key and the next
+        // outbound pass writes the old name back. Skipping it keeps that a
+        // no-op instead of a pointless write.
+        if (isRelationLabel(h, records)) return;
         // A column the object doesn't have is the user's own working column
         // (a formula, a note). Sending it would fail validation; ignore it.
         if (records.length && !records.some((r) => h in r)) return;

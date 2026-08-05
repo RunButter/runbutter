@@ -60,6 +60,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   - **0086 (doc cards) and 0087 (custom objects) are PENDING.** 0086 needs 0081+0085 and **drops
     and recreates `save_doc`** again (seventh arg `p_tags`). 0087 needs 0031 and **redefines the
     whole CRUD monolith in full** — that is the convention, not an accident.
+  - **0088 (partial-update fix) and 0089 (relation labels) are PENDING**, after 0087. 0088 is the
+    urgent one — see the `update_record` semantics rule above; until it runs, a partial update
+    blanks every column it does not mention. 0089 adds `<key>_label` beside a custom object's
+    relation uuid (`custom_relation_label` is a **whitelist CASE, never dynamic SQL**, and an
+    unknown target returns NULL so the reader falls back to the raw value). Both redefine the
+    monolith in full.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.

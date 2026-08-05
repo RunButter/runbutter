@@ -30,7 +30,10 @@ export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
     case 'tags':
       return <Badge tone={toneFor(String(v))} icon={iconFor(String(v))}>{String(v).replace(/_/g, ' ')}</Badge>;
     case 'relation':
-      return <span className="text-secondary truncate">{v}</span>;
+      // A custom object stores the link as a uuid and SQL resolves the name
+      // beside it (0089). Built-ins already send the name in this column, so
+      // the fallback is the normal path for them, not a degraded one.
+      return <span className="text-secondary truncate">{row[`${field.key}_label`] ?? v}</span>;
     case 'currency':
       return <span className="font-mono text-primary">${Number(v).toLocaleString()}</span>;
     case 'date':
