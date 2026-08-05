@@ -74,6 +74,25 @@ unconfigured instance mails nobody twice over.
 set, both endpoints in Group B **refuse to run**: an unauthenticated URL that
 emails your customers is not a safe default.
 
+### One cron job instead of five
+
+Hosts bill per cron service, and five of them is five bills for work that takes
+milliseconds. Chain the every-minute ones into a single job:
+
+```bash
+curl -fsS -X POST $SITE/api/newsletters/send    -H "x-cron-secret: $SERVICE_KEY";
+curl -fsS -X POST $SITE/api/sequences/run       -H "x-cron-secret: $SERVICE_KEY";
+curl -fsS -X POST $SITE/api/automations/dispatch -H "x-cron-secret: $SERVICE_KEY";
+curl -fsS -X POST $SITE/api/posts/dispatch      -H "x-cron-secret: $SERVICE_KEY";
+curl -fsS -X POST $SITE/api/agents/dispatch     -H "x-cron-secret: $SERVICE_KEY"
+```
+
+Semicolons, not `&&`: one failing endpoint must not stop the ones after it.
+
+Calling the agent dispatcher every minute rather than every ten is harmless — it
+claims only agents that are actually due, so the extra calls do nothing. Same for
+all of them: each is a no-op when there is nothing to send.
+
 **Check it worked.** `curl -i` the newsletter endpoint by hand: `200` with a JSON
 body means it ran, `401` means the header is wrong. Render's cron log shows the
 same. A silent `000` usually means the URL is missing `https://`.
