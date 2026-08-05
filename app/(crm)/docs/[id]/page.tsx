@@ -239,7 +239,7 @@ export default function DocEditor() {
       <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle">
         {tags.map((t) => (
           <span key={t} className="inline-flex items-center gap-1.5 h-6 pl-1.5 pr-1 rounded-full ring-1 ring-subtle text-2xs text-secondary">
-            <span className={`w-2 h-2 rounded-full ${tagDot(t)}`} />
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: tagDot(t) }} />
             {t}
             <button onClick={() => setTags((v) => v.filter((x) => x !== t))} disabled={!canEdit}
               aria-label={`Remove tag ${t}`}

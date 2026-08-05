@@ -127,7 +127,7 @@ export default function DocsPage() {
                   aria-pressed={tag === t}
                   className={`inline-flex items-center gap-1.5 h-7 pl-2 pr-2.5 rounded-full text-2xs transition-colors ${
                     tag === t ? 'bg-inverse text-inverse-fg' : 'ring-1 ring-subtle text-secondary hover:bg-surface-hover'}`}>
-                  <span className={`w-2 h-2 rounded-full ${tagDot(t)}`} />
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: tagDot(t) }} />
                   {t}
                 </button>
               ))}

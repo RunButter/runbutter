@@ -128,24 +128,52 @@ export async function toggleDocItem(privy: string, id: string, index: number, do
 /**
  * A stable colour for a tag, derived from its name.
  *
- * No colour picker and no tags table: "Personal" is the same green in every
- * workspace, and nobody has to administer a palette. Semantic-token classes
- * only — a literal `bg-pink-500` here is exactly what breaks dark mode.
+ * No colour picker and no tags table: "Personal" is the same colour in every
+ * workspace, and nobody has to administer a palette.
+ *
+ * A COLOUR VALUE, NOT A CLASS NAME. Tailwind only scans ./app, ./components and
+ * ./pages, so a `bg-rose-500` returned from this file is purged out of the
+ * stylesheet and the dot renders invisible — which is exactly what happened.
+ * Returning the value means there is nothing to purge.
+ *
+ * These are deliberate literal colours rather than semantic tokens, which is
+ * the one place that is right: a tag's identity has to be the SAME in light and
+ * dark, or the same tag is two different colours depending on the viewer. They
+ * are mid-range shades, legible on both the light and dark card surface.
+ */
+/**
+ * Twelve rather than eight, because the collision rate is the whole cost of
+ * deriving a colour from a name: two unrelated tags occasionally land on the
+ * same dot. Twelve takes that from roughly one pair in eight to one in twelve.
+ *
+ * It does NOT eliminate it, and no palette can — that is the honest trade for
+ * having no tag table and no colour picker. The label is next to the dot, so a
+ * collision is a cosmetic coincidence rather than an ambiguity. If per-tag
+ * colours are ever wanted, that is a tags table with a colour column, not a
+ * cleverer hash.
  */
 const TAG_TONES = [
-  'bg-rose-500', 'bg-emerald-500', 'bg-sky-500', 'bg-violet-500',
-  'bg-amber-500', 'bg-teal-500', 'bg-fuchsia-500', 'bg-indigo-500',
+  '#f43f5e', '#10b981', '#0ea5e9', '#8b5cf6',
+  '#f59e0b', '#14b8a6', '#d946ef', '#6366f1',
+  '#ef4444', '#84cc16', '#06b6d4', '#ec4899',
 ];
 
 export function tagDot(tag: string): string {
-  // FNV-1a: tiny, stable across reloads and machines, and evenly spread — a
-  // sum of char codes clusters badly on short similar words like "Q1"/"Q2".
+  // FNV-1a: tiny, stable across reloads and machines, and far better spread
+  // than a sum of char codes (which clusters badly on short similar words).
   let h = 0x811c9dc5;
   for (let i = 0; i < tag.length; i++) {
     h ^= tag.toLowerCase().charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
-  return TAG_TONES[Math.abs(h) % TAG_TONES.length];
+  // Fold the high bits down before the modulo. FNV's LOW bits are its weakest —
+  // the final multiply propagates entropy upward — and `% 8` reads exactly
+  // those three bits, which is why "Personal", "Meetings" and "Family" all came
+  // out the same green.
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d);
+  h ^= h >>> 15;
+  return TAG_TONES[(h >>> 0) % TAG_TONES.length];
 }
 
 export async function deleteDoc(privy: string, id: string): Promise<{ error?: string }> {

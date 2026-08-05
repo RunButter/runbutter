@@ -146,7 +146,7 @@ export default function DocCard({ doc, privy, onOpen, onDelete, canEdit }: {
         <div className="flex flex-wrap items-center gap-1.5 mt-4">
           {doc.tags?.map((t) => (
             <span key={t} className="inline-flex items-center gap-1.5 h-6 pl-1.5 pr-2.5 rounded-full ring-1 ring-subtle text-2xs text-secondary">
-              <span className={`w-2 h-2 rounded-full ${tagDot(t)}`} />
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: tagDot(t) }} />
               {t}
             </span>
           ))}
