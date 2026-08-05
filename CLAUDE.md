@@ -13,68 +13,34 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   cmdk + Radix (shadcn primitives), pdf-lib + signature_pad (e-sign).
 
 ## Deploy
-- **`git push upstream main`** → Render auto-deploys. `upstream` = `CasperCrypto/hirebtr` (**LIVE**);
-  `origin` = `CasperCrypto/talent-insight` is a stale mirror.
-- Supabase ref **`obrvuwajxbxiihfhthwx`**. Migrations live in `supabase/migrations/00NN_*.sql` and are run
-  **by hand** in the Supabase SQL Editor (no service-role key locally). Check with `supabase/verify-migrations.sql`.
-- **Migrations through 0067 are ALL APPLIED** (0065 verified 2026-07-30 via the Supabase connector;
-  0066 post schedule + 0067 mind maps confirmed run by the owner 2026-07-31). Don't report any of
-  0064–0067 as pending.
-  - **0070 + 0071 (newsletters) are PENDING** — run both, in that order (0071 alters a constraint
-    0070 creates). Then FOUR ops steps, none optional: a **Render Cron Job** on
-    `/api/newsletters/send` every minute with `x-cron-secret: <service-role key>` (nothing mails
-    without it); **`NEXT_PUBLIC_SITE_URL`** (or every unsubscribe and tracking link points at the
-    wrong host); **`RESEND_WEBHOOK_SECRET`** + a Resend webhook on `/api/newsletters/webhook` for
-    `email.bounced`/`email.complained` (without it bounces never suppress, which kills a sending
-    domain); and a verified sending domain in Resend.
-  - **0069 (post board), 0072 (segments) and 0073 (sequences) are PENDING** if not yet run.
-    0073 must come after 0072 and 0071; 0074 after 0073; 0075 (chat) is independent. `/api/sequences/run` needs its own cron —
-    it drives drips AND does enrolment, the stale sweep and the score refresh.
-  - **0068 (skills) is PENDING** — run it in the SQL editor. Until then the Agents page shows an
-    empty Skills section and `save_agent` still has its twelve-argument signature, so attaching a
-    skill fails. 0068 **drops and recreates `save_agent`** with a thirteenth arg (`p_skill_ids`);
-    that is deliberate, because adding a parameter would otherwise create an overload.
-  - **0076 → 0077 → 0078 → 0079 are PENDING, in that order.** 0077 is the point of no return
-    (see known issue 5) and must run only AFTER the app carrying 0076 is deployed. 0078 **drops and
-    recreates `create_api_key`** with a fourth arg (`p_scope`) — same overload reasoning as 0068.
-    0079 (Excel sync) is independent of the others and safe to run any time after 0001.
-  - **0080 (brand the funnel) and 0081 (doc kinds + attachments) are PENDING.** Both are
-    independent of 0076–0079. 0081 **drops and recreates `save_doc`** (sixth arg `p_kind`) and
-    **`post_message`** (fifth arg `p_attachments`) — same overload reasoning as 0068. Both clients
-    fall back to the old signature when the migration has not run, so docs still save and text
-    messages still send; only the kind label and attachments are unavailable until it does.
-  - **0082 → 0083 (social publishing) are PENDING, in that order.** 0083 references
-    `social_accounts`. Then a **Render Cron Job** on `/api/posts/dispatch` every minute with
-    `x-cron-secret: <service-role key>` (scheduled posts never go out without it), plus
-    `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` and/or `X_CLIENT_ID`/`X_CLIENT_SECRET`, and
-    `NEXT_PUBLIC_SITE_URL` — the OAuth redirect is built from it, so a wrong value sends the grant
-    to the wrong host. Register `<site>/api/social/callback/<provider>` on each platform.
-  - **0085 (doc kinds) is PENDING**, after 0081. It widens `docs_kind_check` to
-    `doc|note|todo|sheet` and **redefines `save_doc` with `p_kind default NULL`** — 0081 defaulted
-    it to `'doc'`, which made "I am not saying" indistinguishable from "make it a document", so any
-    five-argument save silently converted a table back into a doc.
-  - **0084 (agentic) is PENDING.** Depends on 0043 + 0068. It **drops and recreates `save_agent`**
-    again (sixteen args now — `p_schedule`, `p_schedule_hour`, `p_schedule_task`), same overload
-    reasoning. Then a **Render Cron Job** on `/api/agents/dispatch` every ~10 min with
-    `x-cron-secret: <service-role key>` — without it, scheduled agents never fire.
-  - **0086 (doc cards) and 0087 (custom objects) are PENDING.** 0086 needs 0081+0085 and **drops
-    and recreates `save_doc`** again (seventh arg `p_tags`). 0087 needs 0031 and **redefines the
-    whole CRUD monolith in full** — that is the convention, not an accident.
-  - **0088 (partial-update fix) and 0089 (relation labels) are PENDING**, after 0087. 0088 is the
-    urgent one — see the `update_record` semantics rule above; until it runs, a partial update
-    blanks every column it does not mention. 0089 adds `<key>_label` beside a custom object's
-    relation uuid (`custom_relation_label` is a **whitelist CASE, never dynamic SQL**, and an
-    unknown target returns NULL so the reader falls back to the raw value). Both redefine the
-    monolith in full.
-  Still outstanding as *actions*, not migrations:
-  - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
-    table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
-  - Invoice reminders need a **daily cron** hitting `/api/finance/reminders/run` with `CRON_SECRET`.
-    Nothing mails without it, and reminders are off per workspace until an owner enables them.
-  - Automations already HAVE their cron endpoint — `/api/automations/dispatch`, authed with
-    `x-cron-secret: <service-role key>`. Nothing to build; point a Render Cron Job at it every
-    minute. `/api/automations/tick` nudges the same dispatcher after mutations.
-  - `UMAMI_*` env vars only if you deploy Umami.
+> **This file is PUBLIC** — it ships in an open-source repository. Keep engineering
+> context here and keep instance state out: no project refs, no dashboard URLs, no
+> "which security migration has not run on production yet". That last one is a map.
+- Pushing the default branch triggers the host's auto-deploy.
+- Migrations live in `supabase/migrations/00NN_*.sql`. **`npm run migrate` applies them**
+  (session pooler, port 5432); `npm run migrate:status` shows what is pending. Applying
+  them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
+  afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
+  `supabase/schema.sql`.
+- **Schema state:** everything through **0085 is applied** on the live instance.
+  **0086 → 0087 → 0088 → 0089 are PENDING, in that order.** 0088 is the urgent one — until it
+  runs, `update_record` blanks every column a partial update does not mention (see the semantics
+  rule below). 0089 needs 0087.
+- **Migration conventions that keep biting:**
+  - Adding a parameter to a Postgres function creates an **overload**, not a replacement, so a
+    signature change must `drop function` first. `save_agent` (0068, 0084), `save_doc` (0081,
+    0085, 0086), `post_message` (0081) and `create_api_key` (0078) all do this deliberately.
+  - A default that means "unset" must be `null`, not a real value. 0081 gave `save_doc.p_kind` a
+    `'doc'` default, which made "I am not saying" indistinguishable from "make it a document" and
+    silently converted tables back into docs; 0085 fixed it.
+  - Clients should fall back to the older signature when a migration has not run, so the feature
+    degrades instead of the screen breaking.
+- **Ops each feature needs** (nothing mails, sends or fires without them) — the full table is in
+  `docs/install.md`: crons for automations, newsletters, sequences, posts and agents authenticate
+  with `x-cron-secret: <service-role key>`; finance reminders and the Excel sweep use `CRON_SECRET`.
+  `NEXT_PUBLIC_SITE_URL` decides every unsubscribe link and OAuth redirect. `RESEND_WEBHOOK_SECRET`
+  is what makes bounces suppress. `POST /api/sanctions/refresh` once, or screening stays `no_data`.
+- `UMAMI_*` env vars only if you deploy Umami.
 - **`careers_slug` lives on `companies`, not `workspaces`** — easy to get wrong; the careers page
   resolves the company by slug.
 - **This sandbox cannot reach `supabase.co`.** Any data-backed page rendered locally shows its empty
@@ -466,7 +432,9 @@ build keeps serving (this silently blocked two deploys). End commit bodies with 
 trailer. Standing rule: **commit + push after every finished task, don't ask.**
 
 ## Known open issues
-1. **`STRIPE_WEBHOOK_SECRET` is a placeholder** on Render → paid checkouts don't auto-upgrade plans.
+1. **Billing needs `STRIPE_WEBHOOK_SECRET` to be a real signing secret.** With a placeholder,
+   checkout completes at Stripe and the plan never upgrades, silently — the webhook is the only
+   thing that writes the new plan.
 2. ~~Onboarding provisioning is fragile~~ — **fixed by 0076.** `ensure_workspace()` creates company +
    membership + template + `accounts` row in ONE transaction behind a verified Privy token
    (`/api/onboarding/provision`), so it cannot half-succeed and leave someone with no workspace. It is

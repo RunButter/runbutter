@@ -1,0 +1,77 @@
+name: Bug report
+description: Something behaves differently from how it is documented or intended.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Two things worth checking first, because they
+        cover most reports:
+
+        - **A migration failed?** Supabase's session pooler is port **5432**; the
+          transaction pooler is 6543 and migrations fail there in ways that read
+          as random.
+        - **A feature does nothing?** Most features that "do nothing" are waiting
+          on a cron job or an environment variable — see
+          [docs/configuration.md](https://github.com/RunButter/runbutter/blob/main/docs/configuration.md).
+
+        Please don't paste API keys, tokens or real customer data. Nobody needs
+        them to help.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what happened, and what you expected instead.
+      placeholder: |
+        I clicked Add on the Assets page and got "UNKNOWN_OBJECT".
+        I expected a new asset.
+    validations: { required: true }
+
+  - type: dropdown
+    id: how
+    attributes:
+      label: How are you running it
+      options:
+        - Docker (docker compose up)
+        - Supabase + Node
+        - Own Postgres + Node
+        - runbutter.app (hosted)
+    validations: { required: true }
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Settings → Updates, or `git rev-parse --short HEAD`.
+      placeholder: v1.2.0 or a1b2c3d
+    validations: { required: true }
+
+  - type: textarea
+    id: error
+    attributes:
+      label: The exact error
+      description: >
+        Browser console for a screen, server logs for a 500, the SQL error for a
+        migration. A screenshot of a stack trace is fine.
+      render: shell
+
+  - type: dropdown
+    id: fresh
+    attributes:
+      label: Does it happen on a fresh workspace
+      description: >
+        This one saves the most time — it separates "the feature is broken" from
+        "this data is unusual".
+      options:
+        - Yes, reproduces on a new workspace
+        - No, only on my existing workspace
+        - Haven't tried
+    validations: { required: true }
+
+  - type: input
+    id: schema
+    attributes:
+      label: Output of `npm run migrate:status` (last line)
+      description: Only if it might be schema-related. Tells us whether your database is current.
+      placeholder: 106 applied, 0 pending.

@@ -307,6 +307,9 @@ export const NAV = [
     { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
     { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
+    // Last, because it is the one you visit twice a year — but it belongs to the
+    // workspace, not to a person, so it is here rather than under Account.
+    { slug: 'updates', label: 'Updates', icon: 'Rocket', href: '/settings/updates' },
   ]},
   // …and everything here is yours alone.
   { group: 'Account', items: [

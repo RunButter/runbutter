@@ -1,0 +1,53 @@
+name: Feature request
+description: Something the product should be able to do and cannot.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful requests here have described a **business** rather than a
+        feature — "we run a driving school and can't track cohorts" — and ended up
+        as a workspace template or a change to the shared CRUD functions rather
+        than the specific thing that was asked for. So the first question matters
+        more than the second.
+
+        Two things get declined consistently, and it is fairer to say so up front:
+
+        - **Anything that adds a per-call cost to every install** (metered APIs
+          for search, enrichment, OCR, screening). Public data plus local
+          computation is nearly always available and is how company lookup,
+          sanctions screening and the PDF tools work.
+        - **Anything copied from an AGPL or GPL project.** They are fine to read
+          as feature specs and impossible to borrow from — this project is MIT.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The job, not the feature. What does your week look like around this?
+    validations: { required: true }
+
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you handle it today
+      description: A spreadsheet, another tool, or not at all — all useful answers.
+    validations: { required: true }
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you had in mind
+      description: Optional. A rough shape is fine; so is "no idea, you decide".
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Could a custom object already do this
+      description: >
+        Settings → Objects lets you add your own record types with fields and
+        links, no code. Worth ten minutes before filing.
+      options:
+        - Tried it — a custom object is not enough
+        - Haven't tried
+        - Not applicable

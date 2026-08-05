@@ -2,6 +2,7 @@ node_modules/
 .next/
 .env*
 !.env.example
+!.env.docker.example
 .DS_Store
 dist/
 build/
@@ -18,3 +19,7 @@ RunButter.app/
 # tracking it meant a dirty tree after every typecheck. CLAUDE.md already said
 # to exclude it; it was tracked anyway.
 tsconfig.tsbuildinfo
+
+# Agent working files — context notes and session scratch, not project files.
+.claude/
+HANDOFF.md

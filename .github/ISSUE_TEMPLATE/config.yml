@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question, idea, or "should this work like this?"
+    url: https://github.com/RunButter/runbutter/discussions
+    about: Discussions. Issues are for things that are broken.
+  - name: Documentation
+    url: https://runbutter.app/developers
+    about: Install, configuration, architecture, agents, API.
+  - name: Security vulnerability
+    url: https://github.com/RunButter/runbutter/security/policy
+    about: Please report privately, not as an issue.

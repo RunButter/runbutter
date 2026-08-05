@@ -1,96 +1,93 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# RunButter — local setup.
+#
+# Does the boring parts of a first run: checks Node, installs dependencies,
+# creates .env.local, and applies the schema if you give it a database. It
+# stops and tells you what to do whenever a decision is yours.
+#
+#   ./setup.sh
+#
+# Prefer containers? `docker compose up` needs none of this — see docs/install.md.
 
-# runbutter Quick Start Script
-# This script helps you get started quickly with local development
+set -euo pipefail
 
-echo "🚀 runbutter - Quick Start Setup"
-echo "===================================="
-echo ""
+ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
+info() { printf '\033[2m•\033[0m %s\n' "$1"; }
+warn() { printf '\033[33m!\033[0m %s\n' "$1"; }
+die()  { printf '\033[31m✗\033[0m %s\n' "$1"; exit 1; }
 
-# Check Node.js
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install Node.js 18+ first."
-    echo "   Visit: https://nodejs.org"
-    exit 1
-fi
+echo
+echo "RunButter — setup"
+echo "─────────────────"
+echo
 
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    echo "❌ Node.js version must be 18 or higher. Current: $(node -v)"
-    exit 1
-fi
+# ── 1. Node ─────────────────────────────────────────────────────────────────
+command -v node >/dev/null 2>&1 || die "Node.js is not installed. Get 18 or newer from https://nodejs.org"
+NODE_MAJOR=$(node -v | sed 's/^v//' | cut -d. -f1)
+[ "$NODE_MAJOR" -ge 18 ] || die "Node 18+ required (found $(node -v))."
+ok "Node $(node -v)"
 
-echo "✅ Node.js $(node -v) detected"
-echo ""
-
-# Check if .env.local exists
-if [ -f ".env.local" ]; then
-    echo "⚠️  .env.local already exists. Skipping creation."
+# ── 2. Dependencies ─────────────────────────────────────────────────────────
+# `npm ci` when there is a lockfile: it reproduces exactly what was tested,
+# and it is what CI and the Docker image use.
+if [ -f package-lock.json ]; then
+  info "Installing dependencies (npm ci)…"
+  npm ci
 else
-    echo "📝 Creating .env.local file..."
-    cp .env.example .env.local
-    echo "✅ .env.local created from template"
-    echo ""
-    echo "⚠️  IMPORTANT: You need to add your credentials to .env.local"
-    echo "   1. Supabase URL and anon key"
-    echo "   2. Google OAuth credentials"
-    echo ""
-    read -p "Press Enter to continue after updating .env.local..."
+  info "Installing dependencies (npm install)…"
+  npm install
+fi
+ok "Dependencies installed"
+
+# ── 3. Environment ──────────────────────────────────────────────────────────
+if [ -f .env.local ]; then
+  ok ".env.local already exists — leaving it alone"
+else
+  cp .env.example .env.local
+  ok "Created .env.local from .env.example"
 fi
 
-# Install dependencies
-echo ""
-echo "📦 Installing dependencies..."
-npm install
+MISSING=()
+for VAR in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY NEXT_PUBLIC_PRIVY_APP_ID; do
+  # Present but empty counts as missing; that is the state cp leaves them in.
+  if ! grep -qE "^${VAR}=.+" .env.local 2>/dev/null; then MISSING+=("$VAR"); fi
+done
 
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to install dependencies"
-    exit 1
+if [ ${#MISSING[@]} -gt 0 ]; then
+  echo
+  warn "Still needed in .env.local:"
+  for VAR in "${MISSING[@]}"; do echo "    $VAR"; done
+  echo
+  echo "    Supabase keys:  your project → Settings → API"
+  echo "    Privy app id:   https://dashboard.privy.io (free, 2 minutes)"
+  echo
+  echo "    Nothing loads without the first three, and login does not work"
+  echo "    without the fourth. Everything else in the file is optional."
 fi
 
-echo "✅ Dependencies installed"
-echo ""
+# ── 4. Schema ───────────────────────────────────────────────────────────────
+echo
+if [ -n "${DATABASE_URL:-}" ]; then
+  info "DATABASE_URL is set — applying the schema…"
+  npm run migrate
+else
+  info "Skipping the database: DATABASE_URL is not set."
+  echo
+  echo "    When you have a Postgres, apply the schema with:"
+  echo
+  echo "      DATABASE_URL='postgresql://…:5432/postgres' npm run migrate"
+  echo
+  echo "    Supabase: Settings → Database → Connection string → Session pooler."
+  echo "    Port 5432 (session), NOT 6543 (transaction) — migrations need"
+  echo "    session state and fail on the transaction pooler in confusing ways."
+  echo
+  echo "    No terminal for that? Paste supabase/schema.sql into the SQL editor."
+fi
 
-# Create necessary directories
-echo "📁 Creating directories..."
-mkdir -p public/uploads
-mkdir -p .next
-echo "✅ Directories created"
-echo ""
-
-# Setup complete
-echo "✅ Setup complete!"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📋 Next Steps:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "1. Set up Supabase:"
-echo "   • Go to https://supabase.com"
-echo "   • Create a new project"
-echo "   • Run supabase-schema.sql in SQL Editor"
-echo "   • Get your URL and anon key"
-echo ""
-echo "2. Set up Google OAuth:"
-echo "   • Go to https://console.cloud.google.com"
-echo "   • Enable Google Calendar API"
-echo "   • Create OAuth 2.0 credentials"
-echo "   • Add redirect URI: http://localhost:3000/api/auth/google/callback"
-echo ""
-echo "3. Update .env.local with your credentials"
-echo ""
-echo "4. Start development server:"
-echo "   npm run dev"
-echo ""
-echo "5. Open http://localhost:3000"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📚 Documentation:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "• README.md - Full setup guide"
-echo "• DEPLOYMENT.md - Production deployment checklist"
-echo "• supabase-schema.sql - Database setup"
-echo ""
-echo "Need help? Check the README.md file!"
-echo ""
+# ── Done ────────────────────────────────────────────────────────────────────
+echo
+ok "Setup finished"
+echo
+echo "    npm run dev      → http://localhost:3000"
+echo "    docs/install.md  → the long version, including Docker"
+echo

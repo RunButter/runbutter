@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Types and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      # The build needs a well-formed Privy app id or every page fails to
+      # prerender, and Supabase values that parse as URLs/keys. These are
+      # placeholders — nothing is contacted at build time.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: clzzzzzzzzzzzzzzzzzzzzzzzz
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+
+  schema:
+    name: Schema applies, and the bundle matches
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+        ports: ['5432:5432']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # Every migration, from empty, in order — the thing a new self-hoster does
+      # on their first day and the thing nobody tests by hand twice.
+      - name: Apply all migrations to an empty database
+        run: npm run migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      - name: Re-running changes nothing
+        run: npm run migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      # supabase/schema.sql is generated. A stale one is an install path that
+      # quietly ships yesterday's schema, which is worse than not having it.
+      - name: supabase/schema.sql is up to date
+        run: |
+          npm run bundle:sql
+          if ! git diff --quiet -- supabase/schema.sql; then
+            echo "::error::supabase/schema.sql is stale — run 'npm run bundle:sql' and commit it."
+            git diff --stat -- supabase/schema.sql
+            exit 1
+          fi
