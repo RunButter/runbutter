@@ -10,6 +10,7 @@ records your team does. MIT licensed, self-hostable, no per-token AI bill.
 |---|---|
 | Run it on my own machine or server | [Install](./install.md) |
 | Know what every environment variable does | [Configuration](./configuration.md) |
+| Switch on cron, Stripe, email and the rest | [Going live](./going-live.md) |
 | Move to a newer version safely | [Updating](./updating.md) |
 | Understand how it is put together | [Architecture](./architecture.md) |
 | Give an AI agent access to my workspace | [Agents](./agents.md) |

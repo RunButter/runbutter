@@ -20,6 +20,7 @@ export const DOCS_NAV: DocSection[] = [
       { slug: 'index', title: 'Overview', blurb: 'What this is and how it fits together' },
       { slug: 'install', title: 'Install', blurb: 'Docker, Supabase, or one SQL file' },
       { slug: 'configuration', title: 'Configuration', blurb: 'Every variable and what it switches on' },
+      { slug: 'going-live', title: 'Going live', blurb: 'Cron, Stripe, email, secrets — step by step' },
       { slug: 'updating', title: 'Updating', blurb: 'New code, then new schema' },
     ],
   },
