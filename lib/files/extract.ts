@@ -16,6 +16,7 @@
 
 import mammoth from 'mammoth';
 import { pdfText } from '@/lib/pdf/server-text';
+import { inspectPdf, pdfMarkdown, preferMarkdown } from '@/lib/pdf/inspect';
 
 export type ExtractStatus = 'text_layer' | 'ocr' | 'vision' | 'skipped' | 'failed';
 
@@ -23,7 +24,12 @@ export interface Extraction {
   text: string;
   status: ExtractStatus;
   pages: number | null;
-  /** Set on 'failed' and on 'skipped' — always human-readable, it is shown in the UI. */
+  /**
+   * Why this file is not fully searchable, in a sentence, shown under the file
+   * name in the Files list. Set on 'failed' and 'skipped', and also on a
+   * 'text_layer' file that is PARTLY a scan — success with a caveat is still a
+   * caveat, and the caveat is the part somebody needs to act on.
+   */
   error: string | null;
 }
 
@@ -229,8 +235,42 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
     if (isPdf) {
       const data = await pdfText(bytes);
       const pages = data.pages || null;
-      const text = clean(data.text);
-      const thin = text.length < (pages || 1) * SCAN_CHARS_PER_PAGE;
+      const flat = clean(data.text);
+
+      // Markdown when it is genuinely richer — tables survive as tables, which
+      // is what makes an invoice's line items readable to search and to agents.
+      const { body } = preferMarkdown(flat, pdfMarkdown(bytes));
+      const text = clean(body);
+
+      // Which pages are scans, rather than an average over all of them. The old
+      // test was characters-per-page across the document, and an average cannot
+      // see a scanned signature page hiding behind two pages of text.
+      const shape = inspectPdf(bytes);
+      const thin = shape
+        ? shape.kind === 'Scanned' || shape.kind === 'ImageBased'
+        : text.length < (pages || 1) * SCAN_CHARS_PER_PAGE;
+
+      // A document that is PART scan: the text pages are indexed and searchable,
+      // and the missing ones are NAMED. Reporting this as a clean success is how
+      // a contract's signature page quietly never appears in a search, with
+      // nothing anywhere to suggest it is missing.
+      if (!thin && shape?.kind === 'Mixed' && shape.pagesNeedingOcr.length) {
+        const list = shape.pagesNeedingOcr.map((p) => p + 1).join(', ');
+        if (process.env.MINERU_URL) {
+          const ocr = await viaMineru(bytes, name, 'application/pdf');
+          // OCR of the whole file covers the scanned pages; if it failed, keep
+          // the text we already have rather than losing both.
+          if (ocr.status === 'ocr' && ocr.text) return { ...ocr, pages: ocr.pages ?? pages };
+          return {
+            text, status: 'text_layer', pages,
+            error: `Indexed the text pages. Page${shape.pagesNeedingOcr.length > 1 ? 's' : ''} ${list} ${shape.pagesNeedingOcr.length > 1 ? 'are scans' : 'is a scan'} and OCR did not run, so ${shape.pagesNeedingOcr.length > 1 ? 'their' : 'its'} content is not searchable.`,
+          };
+        }
+        return {
+          text, status: 'text_layer', pages,
+          error: `Indexed the text pages. Page${shape.pagesNeedingOcr.length > 1 ? 's' : ''} ${list} ${shape.pagesNeedingOcr.length > 1 ? 'are scans' : 'is a scan'} — set MINERU_URL to make ${shape.pagesNeedingOcr.length > 1 ? 'them' : 'it'} searchable too.`,
+        };
+      }
 
       if (!thin) return { text, status: 'text_layer', pages, error: null };
       // MinerU takes a whole PDF; the vision endpoint takes images, so a scan

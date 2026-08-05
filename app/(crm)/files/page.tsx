@@ -282,6 +282,14 @@ export default function FilesPage() {
                         {' · '}{new Date(row.created_at).toLocaleDateString('en-GB')}
                         {row.linked_object ? ` · ${row.linked_object}` : ''}
                       </p>
+                      {/* The reason, where the file is. Extraction has always
+                          recorded WHY a file is not fully searchable — "this is
+                          a scan, configure OCR", "pages 3-4 are scans" — and
+                          nothing ever showed it, so the status badge said
+                          "No text" and left the explanation in the database. */}
+                      {row.extract_error && (
+                        <p className="text-2xs text-warning mt-0.5 line-clamp-2">{row.extract_error}</p>
+                      )}
                     </div>
 
                     <Badge tone={STATUS_TONE[row.extract_status]} className="shrink-0 normal-case">
