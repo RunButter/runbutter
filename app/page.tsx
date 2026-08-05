@@ -7,18 +7,16 @@ import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, File
 // by nature (they appear in any tracked page's HTML).
 const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || '';
 const TRACK = process.env.NODE_ENV === 'production' && !!ANALYTICS_SITE_ID;
-import Logo from '@/components/Logo';
 import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Comparison from '@/components/landing/Comparison';
 import FeatureWindows from '@/components/landing/FeatureWindows';
 import Reveal from '@/components/landing/Reveal';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 import CopyCommand from '@/components/landing/CopyCommand';
+import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
-const REPO_URL = 'https://github.com/RunButter/runbutter';
 // Monochrome ASCII: greys read on both canvases; the drift shifts between them.
 const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 
@@ -36,7 +34,9 @@ const MODULES = [
 // 4-column grid fills four clean rows with no ragged gap at the end. Keep that
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
 const CAPS = [
-  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true },
+  // The one tile with a page of its own behind it — agents are the hardest
+  // thing here to believe from a single sentence.
+  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true, href: '/ai-agents' },
   { icon: Mail, name: 'Newsletters and drip sequences', body: 'Write a campaign, filter the list live by behaviour, and let a sequence follow up on its own. Opens, clicks, bounces and one-click unsubscribe are handled.', wide: true },
   { icon: Table2, name: 'Excel, both ways', body: 'A live link your team refreshes in Excel — or a real two-way sync, so edits in the sheet come back.' },
   { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work, where your agents can post too. No fifth tab.' },
@@ -140,21 +140,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-canvas text-primary antialiased">
       {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-subtle bg-canvas/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/"><Logo mono /></Link>
-          <nav className="flex items-center gap-2 md:gap-6 text-sm text-secondary">
-            <Link href="#features" className="hidden md:inline hover:text-primary transition-colors">Features</Link>
-            <Link href="#developers" className="hidden md:inline hover:text-primary transition-colors">Developers</Link>
-            <Link href="#compare" className="hidden md:inline hover:text-primary transition-colors">Compare</Link>
-            <Link href="#pricing" className="hidden md:inline hover:text-primary transition-colors">Pricing</Link>
-            <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1.5 hover:text-primary transition-colors"><Github className="w-4 h-4" /> GitHub</a>
-            <ThemeToggle />
-            <Link href="/auth/register" className="inline-flex items-center h-8 px-3 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">Start free</Link>
-          </nav>
-        </div>
-      </header>
+      <MarketingHeader home />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────
           Taller than a standard hero: the type sits high, then a big
@@ -282,11 +268,11 @@ export default function HomePage() {
             </div>
           </Reveal>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {CAPS.map((c, i) => (
-              <Reveal key={c.name} delay={i * 40} className={c.wide ? 'sm:col-span-2' : ''}>
-                {/* Icon inline with the title rather than stacked above it:
-                    on a phone these stack one per row, and a stacked icon made
-                    fourteen tiles into a very long scroll for no extra clarity. */}
+            {CAPS.map((c, i) => {
+              {/* Icon inline with the title rather than stacked above it:
+                  on a phone these stack one per row, and a stacked icon made
+                  fourteen tiles into a very long scroll for no extra clarity. */}
+              const tile = (
                 <div className="group h-full rounded-xl bg-surface border border-subtle p-4 sm:p-5 transition-all duration-200 hover:border-strong hover:-translate-y-0.5 hover:shadow-card">
                   <div className="flex items-center gap-2.5 mb-2">
                     <div className="w-7 h-7 rounded-lg bg-surface-sunken border border-subtle flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
@@ -295,9 +281,19 @@ export default function HomePage() {
                     <h3 className="text-sm font-medium text-primary">{c.name}</h3>
                   </div>
                   <p className="text-xs text-secondary leading-relaxed max-w-[42ch]">{c.body}</p>
+                  {c.href && (
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs text-primary font-medium">
+                      See how agents work <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  )}
                 </div>
-              </Reveal>
-            ))}
+              );
+              return (
+                <Reveal key={c.name} delay={i * 40} className={c.wide ? 'sm:col-span-2' : ''}>
+                  {c.href ? <Link href={c.href} className="block h-full">{tile}</Link> : tile}
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -473,42 +469,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-subtle">
-        <div className="max-w-6xl mx-auto px-6 py-12 grid gap-10 sm:grid-cols-3">
-          <div>
-            <Logo mono />
-            <p className="mt-3 text-xs text-tertiary leading-relaxed max-w-[32ch]">
-              The open company OS: sales, finance, marketing, projects, and people in one workspace.
-            </p>
-          </div>
-          <div>
-            <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Product</div>
-            <ul className="space-y-2 text-xs text-secondary">
-              <li><Link href="#features" className="hover:text-primary transition-colors">Features</Link></li>
-              <li><Link href="#compare" className="hover:text-primary transition-colors">Compare</Link></li>
-              <li><Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
-              <li><a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>
-              <li><Link href="/auth/register" className="hover:text-primary transition-colors">Start free</Link></li>
-            </ul>
-          </div>
-          <div>
-            <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Company</div>
-            <ul className="space-y-2 text-xs text-secondary">
-              <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
-              <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link></li>
-              <li><Link href="/terms" className="hover:text-primary transition-colors">Terms</Link></li>
-              <li><Link href="/cookies" className="hover:text-primary transition-colors">Cookies</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-subtle">
-          <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-tertiary">
-            <span>© 2026 runbutter.app</span>
-            <span>Built on Postgres · MIT licensed · no AI token bill</span>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter home />
     </div>
   );
 }

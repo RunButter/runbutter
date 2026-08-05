@@ -100,7 +100,29 @@ If you would rather use hosted Postgres:
 
 **Don't want to self-host?** Just sign up at [runbutter.app](https://runbutter.app) — same app, zero setup.
 
-## Connect AI agents (MCP)
+## Agents
+
+Give an agent a role in plain words, tick the tools and record types it may
+touch, and decide how far it goes. **26 tools** — records, finance, files,
+compliance screening, hiring, web analytics — with the writing ones clearly
+marked. It runs on **your own** API key (Claude, OpenAI, Gemini, OpenRouter, or
+any OpenAI-compatible endpoint); there is no token markup and no AI credit.
+
+- **Suggest mode is the default.** Every write is a proposal showing the exact
+  record and the exact change, and nothing lands until you approve it.
+- **Tenancy is enforced in SQL**, not in the prompt. Tool calls go through the
+  same server-side functions the UI uses, with the workspace derived from a
+  verified session — an agent cannot be talked into another tenant's data.
+- **Only one tool leaves the workspace**, and it can only reach connections an
+  owner already saved. The agent sends by id and never supplies a URL.
+- Agents can run on a schedule, write findings back onto the record with the
+  source attached, and share reusable skill packs.
+
+Eight prebuilt agents ship in the gallery (finance controller, collections,
+recruiting, contract reader, compliance, and more) — full write-up at
+[runbutter.app/ai-agents](https://runbutter.app/ai-agents).
+
+### Connect your own agent (MCP)
 
 ```json
 { "mcpServers": { "runbutter": {
@@ -108,7 +130,10 @@ If you would rather use hosted Postgres:
     "headers": { "Authorization": "Bearer hb_..." } } } }
 ```
 
-Create the `hb_...` API key under **Settings → Integrations**. The same key works for the REST API (`GET/POST /api/v1/records`).
+The same tools, through the same executor — not a thinner read-only mirror.
+Create the `hb_...` API key under **Settings → Integrations**; a read-scoped key
+stays read-only there too. The same key works for the REST API
+(`GET/POST /api/v1/records`).
 
 ## Security model
 
