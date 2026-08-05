@@ -6,23 +6,13 @@
 // was already stubbed in NavRail but did nothing.
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
-  GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight,
-  Zap, Plug, Bot, FileBarChart, PenLine, FileInput, Link2, MessageCircle, ArrowRight,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { iconFor } from '@/lib/crm/object-icons';
 import { NAV } from '@/lib/crm/registry';
 import {
   CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut,
 } from '@/components/ui/command';
 
-const ICONS: Record<string, any> = {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
-  GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight,
-  Zap, Plug, Bot, FileBarChart, PenLine, FileInput, Link2, MessageCircle,
-};
 
 export const COMMAND_EVENT = 'runbutter:command';
 
@@ -59,7 +49,7 @@ export default function CommandPalette() {
         {NAV.map((group: any) => (
           <CommandGroup key={group.group} heading={group.group}>
             {group.items.map((it: any) => {
-              const Icon = ICONS[it.icon] || ArrowRight;
+              const Icon = iconFor(it.icon, ArrowRight);
               return (
                 <CommandItem
                   key={it.slug}

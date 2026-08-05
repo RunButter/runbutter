@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { getWorkspace } from '@/lib/crm/data';
 import { OBJECTS } from '@/lib/crm/registry';
+import { OBJECT_ICON_NAMES } from '@/lib/workspace/blueprint';
+import { iconFor } from '@/lib/crm/object-icons';
 import {
   loadCustomObjects, saveCustomObject, deleteCustomObject,
   saveCustomField, deleteCustomField,
@@ -57,7 +59,7 @@ export default function ObjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState({ singular: '', plural: '', slug: '', group: 'Workspace' });
+  const [draft, setDraft] = useState({ singular: '', plural: '', slug: '', group: 'Workspace', icon: 'Table2' });
   const [busy, setBusy] = useState<string | null>(null);
 
   const reload = useCallback(async (w: string, p: string) => {
@@ -86,6 +88,7 @@ export default function ObjectsPage() {
       plural: draft.plural.trim() || pluralise(singular),
       slug: draft.slug || slugify(pluralise(singular)),
       group_key: draft.group.trim() || 'Workspace',
+      icon: draft.icon,
     });
     if (error) { setBusy(null); return notify(error); }
     // Every object needs something to be called. Creating the headline field
@@ -93,7 +96,7 @@ export default function ObjectsPage() {
     // an empty table until someone works out that fields come next.
     if (id) await saveCustomField(privy, ws, id, { key: 'name', label: 'Name', type: 'text', is_primary: true, required: true });
     setBusy(null); setCreating(false);
-    setDraft({ singular: '', plural: '', slug: '', group: 'Workspace' });
+    setDraft({ singular: '', plural: '', slug: '', group: 'Workspace', icon: 'Table2' });
     refresh();
   };
 
@@ -170,6 +173,29 @@ export default function ObjectsPage() {
                     placeholder={slugify(pluralise(draft.singular)) || 'vehicles'}
                     className="input-field w-full font-mono !text-xs" />
                 </label>
+              </div>
+              {/* A picker rather than a text box: the icon is stored as a name
+                  and only the names in this vocabulary can be drawn, so typing
+                  one is a way to choose something that silently isn't used. */}
+              <div>
+                <span className="block text-2xs text-tertiary mb-1.5">Icon</span>
+                <div className="flex flex-wrap gap-1">
+                  {OBJECT_ICON_NAMES.map((name) => {
+                    const Icon = iconFor(name);
+                    const on = draft.icon === name;
+                    return (
+                      <button
+                        key={name} type="button" title={name}
+                        aria-label={name} aria-pressed={on}
+                        onClick={() => setDraft((d) => ({ ...d, icon: name }))}
+                        className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+                          on ? 'bg-inverse text-inverse-fg' : 'text-secondary hover:bg-surface-hover hover:text-primary'}`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="primary" onClick={create} disabled={!draft.singular.trim() || busy === 'new'}>

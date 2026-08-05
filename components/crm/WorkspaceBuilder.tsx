@@ -6,6 +6,7 @@ import { Sparkles, Wand2, Check, AlertTriangle, ArrowRight, Table2 } from 'lucid
 import { saveCustomObject, saveCustomField } from '@/lib/crm/custom';
 import { describeField, type Blueprint } from '@/lib/workspace/blueprint';
 import { WORKSPACE_TEMPLATES } from '@/lib/workspace/templates';
+import { iconFor } from '@/lib/crm/object-icons';
 import Button from '@/components/ui/Button';
 import { ThinkingLine } from '@/components/ui/Thinking';
 
@@ -176,14 +177,17 @@ export default function WorkspaceBuilder({ privy, ws, onApplied }: {
         <div className="pt-3 border-t border-subtle">
           <p className="text-2xs text-tertiary mb-2">Or start from a trade:</p>
           <div className="flex flex-wrap gap-1.5">
-            {WORKSPACE_TEMPLATES.map((t) => (
-              <button key={t.id}
-                onClick={() => { setPlan(t.blueprint); setWarnings([]); setError(''); }}
-                title={t.audience}
-                className="h-7 px-2.5 rounded-full ring-1 ring-subtle text-2xs text-secondary hover:bg-surface-hover inline-flex items-center gap-1">
-                {t.name} <ArrowRight className="w-3 h-3" />
-              </button>
-            ))}
+            {WORKSPACE_TEMPLATES.map((t) => {
+              const Icon = iconFor(t.icon);
+              return (
+                <button key={t.id}
+                  onClick={() => { setPlan(t.blueprint); setWarnings([]); setError(''); }}
+                  title={t.audience}
+                  className="h-7 px-2.5 rounded-full ring-1 ring-subtle text-2xs text-secondary hover:bg-surface-hover hover:text-primary inline-flex items-center gap-1.5">
+                  <Icon className="w-3 h-3 shrink-0" /> {t.name}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

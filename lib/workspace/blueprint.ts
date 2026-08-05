@@ -39,6 +39,36 @@ export const FIELD_TYPE_LABEL: Record<CustomFieldType, string> = {
   url: 'Link', phone: 'Phone', relation: 'Link to a record',
 };
 
+/**
+ * The icons an object may choose from.
+ *
+ * Names only, no components — this file is read by a route handler that builds
+ * the AI prompt, and importing lucide there to enumerate strings would drag a
+ * component library into a server route for nothing. `lib/crm/object-icons.ts`
+ * maps these to components and THROWS at import if any name here has none, so
+ * the picker can never offer something the nav cannot draw.
+ *
+ * Curated rather than "any lucide name": a model asked for a free-form icon
+ * returns plausible names that do not exist, and the object then silently falls
+ * back to a table glyph.
+ */
+export const OBJECT_ICON_NAMES = [
+  'Table2', 'Truck', 'IdCard', 'Package', 'Boxes', 'Warehouse', 'Ship', 'Anchor',
+  'Stethoscope', 'HeartPulse', 'Baby', 'PawPrint', 'Beaker', 'Leaf',
+  'CalendarClock', 'Calendar', 'Timer', 'Repeat', 'ClipboardList', 'ListTodo',
+  'Factory', 'Cog', 'Layers', 'HardHat', 'Hammer', 'Wrench',
+  'Building', 'Building2', 'Home', 'Key', 'Map', 'Globe',
+  'ShoppingCart', 'Undo2', 'Ticket', 'Gift', 'Shirt', 'Utensils', 'Wine',
+  'GraduationCap', 'BookOpen', 'Users', 'HeartHandshake', 'Handshake', 'Heart',
+  'FileSignature', 'FileText', 'Receipt', 'Wallet', 'CreditCard', 'Scale',
+  'Camera', 'Palette', 'Dumbbell', 'Target', 'Briefcase', 'Rocket', 'ShieldCheck',
+] as const;
+
+export type ObjectIconName = (typeof OBJECT_ICON_NAMES)[number];
+
+const ICON_SET = new Set<string>(OBJECT_ICON_NAMES);
+export const isKnownIcon = (name: string) => ICON_SET.has(name);
+
 export interface BlueprintField {
   label: string;
   key?: string;
@@ -160,10 +190,16 @@ export function normalizeBlueprint(raw: any): NormalizeResult {
       else fields.unshift({ label: 'Name', key: 'name', type: 'text', primary: true, required: true });
     }
 
+    // An icon nothing can draw is worse than an honest default: it looks like a
+    // choice was made and then ignored. Unknown names become the table glyph
+    // without a warning, because an icon is decoration and a warning about one
+    // would sit beside warnings about dropped fields.
+    const icon = String(o?.icon || '').trim();
+
     objects.push({
       singular, plural, slug,
       group: String(o?.group || '').trim() || 'Workspace',
-      icon: String(o?.icon || '').trim() || 'Table2',
+      icon: isKnownIcon(icon) ? icon : 'Table2',
       description: String(o?.description || '').trim(),
       fields,
     });

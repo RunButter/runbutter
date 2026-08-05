@@ -4,13 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
-  GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight, Landmark,
-  Zap, Plug, Search, ChevronsUpDown, ChevronRight, LogOut, Bot, Loader2, FileBarChart, PenLine, FileInput, Link2, MessageCircle,
-  FileStack, Globe2, FolderOpen, Waypoints, BookOpen,
-} from 'lucide-react';
+import { Search, ChevronsUpDown, ChevronRight, LogOut, Loader2, Users } from 'lucide-react';
+import { iconFor } from '@/lib/crm/object-icons';
 import { NAV } from '@/lib/crm/registry';
 import { getWorkspace, loadBranding, loadNavActivity, listMyWorkspaces, setActiveWorkspace, type WorkspaceContext, type WorkspaceOption } from '@/lib/crm/data';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -19,13 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-const ICONS: Record<string, any> = {
-  LayoutDashboard, Users, Building2, TrendingUp, Briefcase, Sparkles, Heart, Laptop,
-  Columns3, Calendar, Radio, Mail, BarChart3, Target, Receipt, Wallet, FolderKanban, ListTodo, Package, ShieldCheck,
-  GanttChartSquare, CreditCard, Palette, FileText, Megaphone, Rocket, Globe, PenSquare, ArrowLeftRight, Landmark,
-  Zap, Plug, Bot, FileBarChart, PenLine, FileInput, Link2, MessageCircle, FileStack, Globe2,
-  FolderOpen, Waypoints, BookOpen,
-};
 
 // Nav slugs the "new since you last looked" badge tracks (must match RPC keys).
 const TRACKED = ['people', 'companies', 'invoices', 'offers', 'expenses', 'transactions', 'issues', 'docs', 'candidates'];
@@ -34,7 +22,7 @@ const readSeen = (): Record<string, string> => { try { return JSON.parse(localSt
 const writeSeen = (m: Record<string, string>) => { try { localStorage.setItem(SEEN_KEY, JSON.stringify(m)); } catch {} };
 
 function Item({ it, active, count, onNavigate }: { it: any; active: boolean; count?: number; onNavigate?: () => void }) {
-  const Icon = ICONS[it.icon] || Users;
+  const Icon = iconFor(it.icon, Users);
   const badge = !!count && count > 0;
   return (
     <Link
