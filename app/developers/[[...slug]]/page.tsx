@@ -29,6 +29,25 @@ import DocsNav from '@/components/docs/DocsNav';
 
 const DOCS_DIR = join(process.cwd(), 'docs');
 
+/**
+ * Make the links work on both surfaces.
+ *
+ * The markdown links to sibling pages the way GitHub needs — `./install.md` —
+ * and rendering that verbatim on the site gives `/developers/install.md`, which
+ * is a 404 on every cross-reference in the docs. Links that point OUT of docs/
+ * (`../CONTRIBUTING.md`, `../supabase/schema.sql`) have no page here at all, so
+ * they go to the file on GitHub.
+ *
+ * Rewriting at render time rather than writing site-shaped links in the source
+ * keeps the files readable in a text editor and correct in a pull request diff,
+ * which is where most people will actually read them.
+ */
+function siteLinks(html: string): string {
+  return html
+    .replace(/href="\.\.\/([^"]+)"/g, `href="${REPO_URL}/blob/main/$1"`)
+    .replace(/href="(?:\.\/)?([a-z0-9-]+)\.md(#[^"]*)?"/g, (_m, page, frag) => `href="/developers/${page}${frag || ''}"`);
+}
+
 const fileFor = (slug: string) => join(DOCS_DIR, `${slug}.md`);
 
 // Only the pages in the sidebar are prerendered. Anything else in docs/ still
@@ -69,7 +88,7 @@ export default function DocPage({ params }: { params: { slug?: string[] } }) {
 
         <main className="py-10 min-w-0">
           <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_11rem] lg:gap-10">
-            <article className="doc-prose min-w-0" dangerouslySetInnerHTML={{ __html: html }} />
+            <article className="doc-prose min-w-0" dangerouslySetInnerHTML={{ __html: siteLinks(html) }} />
 
             {onThisPage.length > 2 && (
               <aside className="hidden lg:block">

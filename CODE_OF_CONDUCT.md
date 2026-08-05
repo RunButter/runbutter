@@ -34,7 +34,7 @@ It also applies when you are representing the project elsewhere.
 
 ## Reporting
 
-Email **conduct@runbutter.app** with what happened, where, and links if you have
+Email **hello@runbutter.app** with what happened, where, and links if you have
 them. Reports are read by the maintainers and are not shared further without
 your agreement, except where we are legally required to.
 
