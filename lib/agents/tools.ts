@@ -143,8 +143,26 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     throw new Error(`Unknown object "${object}". Use one of: ${Object.keys(OBJECTS).join(', ')}`);
   }
   switch (name) {
-    case 'list_objects':
-      return Object.entries(OBJECTS).map(([k, v]) => ({ object: k, fields: v }));
+    case 'list_objects': {
+      const builtIn = Object.entries(OBJECTS).map(([k, v]) => ({ object: k, fields: v }));
+      // A workspace's own objects (0087) belong in this list, or an agent would
+      // be told the workspace has no Vehicles while list_records('vehicles')
+      // happily returns them — worse than not supporting them at all. Read
+      // through the same RPC the browser uses, so tenancy is unchanged.
+      const { data } = await ctx.admin.rpc('get_custom_objects', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+      });
+      const custom = (Array.isArray(data) ? data : []).filter((o: any) => o.enabled).map((o: any) => ({
+        object: o.slug,
+        // Same "name (type)" prose as the built-ins, so the model sees one
+        // consistent description format and does not have to infer a schema.
+        fields: `${o.plural}${o.description ? ` — ${o.description}` : ''} (${
+          (o.fields || []).map((f: any) =>
+            `${f.key} ${f.type}${f.options?.length ? ` [${f.options.join('|')}]` : ''}${f.required ? ' required' : ''}`
+          ).join(', ') || 'no fields yet'})`,
+      }));
+      return [...builtIn, ...custom];
+    }
     case 'list_records':
       return (await listRows(ctx, object)).slice(0, 100);
     case 'search_records': {

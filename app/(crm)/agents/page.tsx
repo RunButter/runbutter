@@ -16,6 +16,7 @@ import {
 } from '@/lib/crm/agents';
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import { listSkills, type Skill } from '@/lib/crm/skills';
+import { loadCustomObjects } from '@/lib/crm/custom';
 import SkillsSection from '@/components/crm/SkillsSection';
 import { ThinkingLine } from '@/components/ui/Thinking';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -66,13 +67,22 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  // A workspace's own objects (0087) have to be scopeable too, or an agent can
+  // only ever be restricted to the built-ins — and allowed_objects is a
+  // whitelist, so a custom object left out is one an agent scoped at all can
+  // never touch.
+  const [customObjects, setCustomObjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Agent> | null>(null);
   const [running, setRunning] = useState<Agent | null>(null);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
-    const [a, r, sk] = await Promise.all([listAgents(p, w.id), listRuns(p, w.id), listSkills(p, w.id)]);
-    setAgents(a); setRuns(r); setSkills(sk); setLoading(false);
+    const [a, r, sk, co] = await Promise.all([
+      listAgents(p, w.id), listRuns(p, w.id), listSkills(p, w.id), loadCustomObjects(p, w.id),
+    ]);
+    setAgents(a); setRuns(r); setSkills(sk);
+    setCustomObjects(co.rows.filter((o) => o.enabled).map((o) => o.slug));
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -203,7 +213,7 @@ export default function AgentsPage() {
       </div>
 
       {editing && ws && privy && (
-        <AgentEditor initial={editing} skills={skills} onClose={() => setEditing(null)}
+        <AgentEditor initial={editing} skills={skills} customObjects={customObjects} onClose={() => setEditing(null)}
           onSave={async (a) => { await saveAgent(privy, ws.id, a); setEditing(null); refresh(); }} />
       )}
       {running && ws && privy && (
@@ -257,7 +267,7 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
 }
 
 // ── Editor modal ──────────────────────────────────────────────────────────────
-function AgentEditor({ initial, skills, onClose, onSave }: { initial: Partial<Agent>; skills: Skill[]; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
+function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { initial: Partial<Agent>; skills: Skill[]; customObjects: string[]; onClose: () => void; onSave: (a: Partial<Agent>) => Promise<void> }) {
   const [a, setA] = useState<Partial<Agent>>({ ...BLANK, ...initial, allowed_tools: initial.allowed_tools?.length ? initial.allowed_tools : [...DEFAULT_TOOLS], allowed_objects: initial.allowed_objects || [], skill_ids: initial.skill_ids || [] });
   const [saving, setSaving] = useState(false);
   const set = (k: keyof Agent, v: any) => setA((p) => ({ ...p, [k]: v }));
@@ -353,7 +363,7 @@ function AgentEditor({ initial, skills, onClose, onSave }: { initial: Partial<Ag
 
           <Field label="Objects" hint="Leave all off to allow every object.">
             <div className="flex flex-wrap gap-1.5">
-              {AGENT_OBJECTS.map((o) => (
+              {[...AGENT_OBJECTS, ...customObjects].map((o) => (
                 <button key={o} onClick={() => toggleObj(o)}
                   className={`text-2xs px-2 py-1 rounded border transition-colors ${a.allowed_objects?.includes(o) ? 'border-accent bg-accent/10 text-accent' : 'border-subtle text-tertiary hover:border-strong'}`}>{o}</button>
               ))}
