@@ -13,7 +13,7 @@ in the same Postgres as your leads and campaigns.
 
 ## The database is ready
 
-The `runbutter-umami-db` Supabase project (`jziegkitndabcldxpmhf`, eu-west-1) is
+A dedicated Supabase project for Umami (separate from the app's) is
 empty, which is exactly right — Umami runs its own Prisma migrations on first
 boot and builds its schema itself. Do not create tables in it by hand; Umami
 tracks its own migration state and pre-made tables will make it fail.
@@ -29,7 +29,7 @@ Get it from **Supabase → runbutter-umami-db → Connect**, and take the
 > common way this setup goes wrong.
 
 ```
-postgresql://postgres.jziegkitndabcldxpmhf:<DB-PASSWORD>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+postgresql://postgres.<PROJECT-REF>:<DB-PASSWORD>@aws-0-<REGION>.pooler.supabase.com:5432/postgres
 ```
 
 `<DB-PASSWORD>` is the database password you set when creating the project. If

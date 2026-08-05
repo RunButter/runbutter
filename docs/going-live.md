@@ -244,32 +244,79 @@ accept one round of re-entry.
 
 ## 7. The public repository
 
+### First: is the history safe to publish?
+
+Publishing a repository publishes **every commit**, not the current files. A key
+deleted in commit 40 is still readable in commit 12, and bots scrape new public
+repositories for exactly that within minutes of them appearing.
+
 ```bash
-git remote add public https://github.com/RunButter/runbutter.git
-git push public main
+# was a .env, key or credential file ever added?
+git log --all --diff-filter=A --name-only --pretty=format: | sort -u \
+  | grep -iE "^\.env|/\.env|\.pem$|\.key$|id_rsa|credentials"
+
+# anything key-shaped, anywhere in history
+git grep -nIE "(sk_live_[A-Za-z0-9]{10,}|whsec_[A-Za-z0-9]{20,}|re_[A-Za-z0-9]{20,}|SUPABASE_SERVICE_ROLE_KEY=ey)" $(git rev-list --all)
 ```
 
-Then, on that repository:
+Both silent means the history is clean. If either finds something, **rotate that
+credential first** — assume it is already compromised — and only then decide
+between rewriting history (`git filter-repo`) and starting the public repository
+from a fresh initial commit.
 
-1. **Enable Discussions** — the issue form links there for questions.
-2. **Check Actions is enabled**, so CI runs on pull requests.
-3. Add the description and topics: `crm`, `erp`, `open-source`, `nextjs`,
-   `postgres`, `ai-agents`, `mcp`, `self-hosted`.
-4. **Publish a release:**
+### Pushing
+
+The public repository begins with a single LICENSE commit, so the two histories
+are unrelated. Replace it:
+
+```bash
+git remote add public https://github.com/RunButter/runbutter.git
+git push public main --force
+```
+
+This is the one time `--force` is right: it discards a LICENSE-only commit that
+this repository already contains, and there is nothing else there to lose. After
+the first push, never force again.
+
+### Then, in the repository settings
+
+1. **Description and topics** — `crm`, `erp`, `open-source`, `nextjs`,
+   `postgres`, `ai-agents`, `mcp`, `self-hosted`. Topics are how people find it.
+2. **Enable Discussions.** The issue form links there for questions; without it
+   that link 404s.
+3. **Check Actions is enabled**, so CI runs on pull requests.
+4. **Branch protection on `main`**: require the CI check to pass. One rule. More
+   than that on a one-maintainer project is friction with nobody to absorb it.
+5. **Publish a release:**
 
    ```bash
    git tag v1.1.0
    git push public v1.1.0
    ```
 
-   Then GitHub → Releases → Draft a new release → pick the tag → paste the
-   Unreleased section of [CHANGELOG.md](../CHANGELOG.md) as the notes.
+   Then Releases → Draft a new release → pick the tag → paste the Unreleased
+   section of [CHANGELOG.md](../CHANGELOG.md).
 
    **Settings → Updates has nothing to compare against until a release exists** —
    it asks GitHub for the latest one, so with none published it correctly reports
    that it could not check.
 
----
+### Bots: three, and no more
+
+Already in the repository:
+
+- **CI** (`.github/workflows/ci.yml`) — types, build, and every migration applied
+  to an empty Postgres.
+- **Gitleaks** (`.github/workflows/gitleaks.yml`) — catches a secret in a pull
+  request before it is merged.
+- **Dependabot** (`.github/dependabot.yml`) — monthly, grouped into one pull
+  request, with majors of Next/React/Tailwind excluded because those are
+  migrations rather than updates. Security advisories are separate and always on.
+
+Resist the rest. A welcome bot, a stale bot, an all-contributors bot and
+per-package weekly Dependabot together produce a pull request list that is mostly
+machine noise — and a repository whose entire activity is bots reads as abandoned
+to the next person who visits.
 
 ## 8. Try the container stack once
 

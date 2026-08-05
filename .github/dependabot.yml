@@ -1,0 +1,41 @@
+version: 2
+
+# Deliberately quiet.
+#
+# Dependabot's default (weekly, one PR per package) opens twenty pull requests a
+# month against a repository with one maintainer, and a project whose PR list is
+# mostly bot noise looks abandoned to the next person who visits — the opposite
+# of what a young open-source repo needs. Security advisories are separate and
+# always on; this file only governs the routine version bumps.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      # One PR for everything routine. A grouped bump either builds or it does
+      # not, which is a single decision instead of fifteen.
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Majors here are migrations, not updates — Next 15 and React 19 both
+      # change how pages render. They belong in a deliberate branch with the
+      # build and the screens checked, never in an automated PR.
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    groups:
+      actions:
+        patterns: ['*']
