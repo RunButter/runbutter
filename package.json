@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "node scripts/migrate.mjs",
-    "migrate:status": "node scripts/migrate.mjs --status"
+    "migrate:status": "node scripts/migrate.mjs --status",
+    "bundle:sql": "node scripts/bundle-sql.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

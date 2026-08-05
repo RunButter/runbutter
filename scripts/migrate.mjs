@@ -33,6 +33,8 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+// One copy of the legacy order — the single-file bundler reads the same list.
+import { LEGACY_ORDER } from './lib/legacy-order.mjs';
 import pg from 'pg';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,32 +51,6 @@ const tty = process.stdout.isTTY;
 const c = (code, s) => (tty ? `\x1b[${code}m${s}\x1b[0m` : s);
 const dim = (s) => c('2', s), green = (s) => c('32', s), red = (s) => c('31', s), yellow = (s) => c('33', s);
 
-/**
- * The legacy files, in dependency order.
- *
- * Hardcoded rather than sorted, because these predate any naming convention and
- * alphabetical order is wrong: the schema has to exist before anything alters
- * it. This list is the only written record of that order.
- */
-const LEGACY_ORDER = [
-  'supabase-schema.sql',
-  'migration.sql',
-  'security-migration.sql',
-  'screening-migration.sql',
-  'neuro-profile-migration.sql',
-  'fix-assessment-schema.sql',
-  'fix-assessment-and-visibility.sql',
-  'fix-company-branding-visibility.sql',
-  'fix-logo-storage-rls.sql',
-  'create-contact-table.sql',
-  'add-gdpr.sql',
-  'add-message-templates.sql',
-  'add-my-team.sql',
-  'add-resume-search.sql',
-  'add-source-attribution.sql',
-  'add-treasury-dataset.sql',
-  'add-webhooks.sql',
-];
 
 function connectionString() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
