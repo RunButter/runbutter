@@ -216,8 +216,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 4b. Ensure proper permissions for all Secure RPCs
 GRANT EXECUTE ON FUNCTION get_candidates_for_recruiter(text) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION get_candidate_details(UUID, text) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION get_assessment_init_data(UUID, UUID) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION submit_assessment(UUID, UUID, JSONB, JSONB) TO authenticated, anon;
+-- get_assessment_init_data and submit_assessment are GRANTED at the bottom of
+-- this file, after they are created. They used to be granted here, four lines
+-- before the CREATE — which only ever worked because a previous hand-run had
+-- already created them. On a genuinely fresh database it failed on the first
+-- statement, which is exactly the case scripts/migrate.mjs exists to serve.
 
 -- 5. SECURE RPC: Initialize Assessment Page (Single Call)
 CREATE OR REPLACE FUNCTION get_assessment_init_data(p_candidate_id UUID, p_token UUID)
@@ -259,3 +262,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Deferred from section 4b — see the note there.
+GRANT EXECUTE ON FUNCTION get_assessment_init_data(UUID, UUID) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION submit_assessment(UUID, UUID, JSONB, JSONB) TO authenticated, anon;
