@@ -25,13 +25,18 @@ jobs:
       - name: Types
         run: npx tsc --noEmit
 
-      # The build needs a well-formed Privy app id or every page fails to
-      # prerender, and Supabase values that parse as URLs/keys. These are
-      # placeholders — nothing is contacted at build time.
+      # The Privy id must be WELL-FORMED — the provider validates its shape
+      # offline and throws on anything else, which fails the prerender of every
+      # page. This one is fake and 25 characters, the shape Privy issues.
+      # Nothing is contacted at build time.
+      #
+      # No STRIPE_SECRET_KEY on purpose: building without billing configured is
+      # what a self-hoster who sells nothing does, so CI should be the one to
+      # notice if that ever breaks again.
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_PRIVY_APP_ID: clzzzzzzzzzzzzzzzzzzzzzzzz
+          NEXT_PUBLIC_PRIVY_APP_ID: clbuildonlyfakeappid00000
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
           SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key

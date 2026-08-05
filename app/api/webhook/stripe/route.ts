@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+import { stripeClient } from '@/lib/billing/stripe';
 import { createAdminClient } from '@/lib/supabase';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2023-10-16' as any,
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Map the purchased Stripe price back to a plan tier so a Starter buyer doesn't
 // get upgraded to Professional. Falls back to 'professional' only if the price
 // can't be resolved (preserves prior behaviour rather than silently failing).
-async function planForSession(session: Stripe.Checkout.Session): Promise<'starter' | 'professional'> {
+async function planForSession(stripe: Stripe, session: Stripe.Checkout.Session): Promise<'starter' | 'professional'> {
     const STARTER = process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID;
     const PRO = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID;
     try {
@@ -27,6 +24,17 @@ async function planForSession(session: Stripe.Checkout.Session): Promise<'starte
 }
 
 export async function POST(req: NextRequest) {
+    // Both resolved per request. The client throws if constructed without a key,
+    // and Next evaluates this module at build time — so a top-level one made
+    // "billing not configured" fail the BUILD rather than the request.
+    const stripe = stripeClient();
+    if (!stripe || !webhookSecret) {
+        // 503, not 400: nothing is wrong with Stripe's request. Stripe retries a
+        // 5xx, so events survive an instance that is configured later.
+        console.error('Stripe webhook received but billing is not configured (STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET).');
+        return NextResponse.json({ error: 'Billing is not configured on this instance.' }, { status: 503 });
+    }
+
     const body = await req.text();
     const signature = req.headers.get('stripe-signature')!;
 
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest) {
 
         if (companyId) {
             const supabase = createAdminClient();
-            const plan = await planForSession(session);
+            const plan = await planForSession(stripe, session);
 
             // Update company subscription status
             const { error } = await supabase

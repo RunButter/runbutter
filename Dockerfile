@@ -28,12 +28,14 @@ COPY . .
 # anywhere in the app itself.
 ARG NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=build-placeholder
-ARG NEXT_PUBLIC_PRIVY_APP_ID=clpispdty00ycl80fpueukbhl
+# Well-formed but fake: Privy validates the SHAPE offline and throws on
+# anything else, which fails the prerender of every page. Pass your real id with
+# --build-arg; it is public anyway (it ships in the browser bundle).
+ARG NEXT_PUBLIC_PRIVY_APP_ID=clbuildonlyfakeappid00000
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
     NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
     NEXT_PUBLIC_PRIVY_APP_ID=$NEXT_PUBLIC_PRIVY_APP_ID \
     SUPABASE_SERVICE_ROLE_KEY=build-placeholder \
-    STRIPE_SECRET_KEY=sk_test_build_placeholder \
     NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build

@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { stripeClient } from '@/lib/billing/stripe';
 
 // The ONE real checkout route. A second, MOCK route used to live at
 // /api/stripe/checkout: it never called Stripe, it just bounced the browser to
 // `?success=true&plan=<undefined>`, so an "upgrade" charged nobody and upgraded
 // nothing. That route is deleted; everything points here.
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2023-10-16' as any,
-});
-
 export async function POST(req: NextRequest) {
+    // Resolved per request, not at module scope: a top-level client throws when
+    // STRIPE_SECRET_KEY is unset, and Next evaluates this module at build time.
+    const stripe = stripeClient();
+    if (!stripe) {
+        return NextResponse.json(
+            { error: 'Billing is not configured on this instance.' },
+            { status: 503 },
+        );
+    }
+
     try {
         const { companyId, priceId, companyName, plan, seats } = await req.json();
 
