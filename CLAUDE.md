@@ -75,6 +75,22 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   state (careers 404s, a public form says "isn't available"). That is the network, not a bug — check
   the RPC through the Supabase connector before chasing it.
 
+## Self-hosting
+- **`npm run migrate` is now the way to apply schema** — `scripts/migrate.mjs` against any Postgres.
+  It applies `supabase/bootstrap.sql`, then `supabase/legacy/*` (**only on an empty database**),
+  then every numbered migration, one transaction each, recorded in `schema_migrations`.
+  `npm run migrate:status` lists what is pending. **Supabase needs the SESSION pooler (5432)**, not
+  the transaction pooler (6543).
+- **`supabase/bootstrap.sql`** creates the roles, `auth` schema and `storage.buckets`/`objects` the
+  schema assumes exist. Every statement is guarded, so it is a **no-op on real Supabase** — that is
+  what removes the branch from the runner. Storage table shapes match `supabase/storage-api`.
+- **`docker compose up`** = Postgres + PostgREST + storage + nginx gateway + app. The gateway exists
+  because `supabase-js` talks to ONE origin with `/rest/v1/` and `/storage/v1/` prefixes. GoTrue is
+  absent on purpose — auth is Privy, which is the one hosted dependency and cannot be removed.
+- **`scripts/gen-keys.mjs`** mints the JWT secret and the anon/service keys. Never ship defaults:
+  Supabase's own self-host guide publishes a demo `service_role` key that bypasses RLS everywhere.
+- `output: 'standalone'` in `next.config.js` is for the Docker image; Render is unaffected.
+
 ## Critical conventions
 - **`supabase.rpc()` returns `{ data, error }` — it never throws.** Always check `error` (recurring bug
   source). It's a `PromiseLike`, so **no `.catch()`** — use `.then(ok, err)`.

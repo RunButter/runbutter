@@ -2,12 +2,25 @@
 
 One relational workspace for the whole company: **Sales · Finance · Marketing · Projects · HR**, plus Docs, Automations, and an open integration layer (REST, webhooks, MCP). Built to run cheaply: Postgres does the heavy lifting, and there are **no platform LLM costs** — AI features run on each workspace's own API keys.
 
+**MIT licensed** — fork it, sell it, run it. No open-core, no AGPL, no
+"community edition".
+
 ```bash
-git clone https://github.com/RunButter/runbutter.git
-cd runbutter && npm install
-cp .env.example .env.local   # fill in Supabase + Privy
-npm run dev
+git clone https://github.com/CasperCrypto/hirebtr.git runbutter && cd runbutter
+cp .env.docker.example .env
+node scripts/gen-keys.mjs --env >> .env    # secrets, generated
+#  ↳ then paste a free Privy app id into .env (dashboard.privy.io, 2 min)
+docker compose up
 ```
+
+That is Postgres, PostgREST, storage, all 104 migrations and the app —
+five containers, one command, no SQL pasted anywhere. Open
+<http://localhost:3000>.
+
+Authentication is [Privy](https://dashboard.privy.io) and it is hosted; there is
+no way around that in this stack, so it is said here rather than discovered
+halfway through. Everything else — your data, your files, your API — stays on
+your machine.
 
 ## What's inside
 
@@ -30,35 +43,44 @@ Next.js 14 (App Router) · React · Tailwind · Supabase (Postgres) · [Privy](h
 
 ## Self-hosting
 
-RunButter brings its own database and auth — you supply your own instances
-(both have free tiers). Nothing is shared with the hosted service.
+Two ways: everything in Docker, or bring your own Supabase. Nothing is shared
+with the hosted service either way.
 
 | Service | Needed? | Free? | What it's for |
 |---|---|---|---|
-| **Supabase** | Required | Yes | Postgres database + file storage |
+| **Postgres** | Required | — | Included in `docker compose`, or bring a Supabase project |
 | **Privy** | Required | Yes | Sign-in (email / Google) |
 | Resend | Optional | Yes (100/day) | Candidate & status emails |
 | Stripe | Optional | Yes | Billing / paid plans |
 | Google Cloud | Optional | Yes | Calendar interview scheduling |
 
 Everything optional **degrades gracefully** — the app runs fine without it.
-Minimum to boot: Supabase + Privy, about 15 minutes.
+### Docker (everything local)
 
-1. **Supabase**: create a project, then in the SQL Editor run, in order:
-   - `supabase/legacy/supabase-schema.sql` (base ATS schema), then the other
-     `supabase/legacy/*.sql` files — see the README in that folder,
-   - everything in `supabase/migrations/` in numeric order (`0001` → `0079`),
-   - then paste `supabase/verify-migrations.sql` — every row should be ✅.
-   - Enable the `pg_cron` and `unaccent` extensions (GDPR auto-anonymization).
-   - **Order matters at the end.** `0040`, `0042` and `0077` revoke browser-key
-     access and drop the legacy anon policies, so run them only **after** the app
-     that expects the locked-down schema is deployed. On a fresh install that is
-     automatic if you follow the numeric order; on an existing one, deploy first.
-2. **Privy**: create a free app at dashboard.privy.io, copy the App ID, and add
-   your domain (e.g. `http://localhost:3000`) to its allowed origins.
-3. **Env**: copy `.env.example` → `.env.local`, fill in the Required block
-   (Supabase + Privy + app URL). Leave the Optional blocks empty to start.
-4. `npm install`, then `npm run dev` (or `npm run build && npm start` in prod).
+The quick start above. `docker compose up` brings up Postgres, PostgREST,
+storage, the migrations and the app. Only Privy is external.
+
+### Bring your own Supabase
+
+If you would rather use hosted Postgres:
+
+1. **Privy**: free app at dashboard.privy.io. Copy the App ID and add your
+   origin (e.g. `http://localhost:3000`) to its allowed list.
+2. **Supabase**: create a project, then apply the schema — **one command, not
+   104 files pasted by hand**:
+
+   ```bash
+   # Project settings → Database → Connection string → Session pooler
+   # NOTE: port 5432 (session), NOT 6543 (transaction) — migrations need session state
+   DATABASE_URL='postgresql://postgres.PROJECT:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres' \
+     npm run migrate
+   ```
+
+   `npm run migrate:status` shows what is applied and what is pending. It is
+   idempotent, it records what it has done, and each file runs in its own
+   transaction — so a failure leaves nothing half-applied.
+3. **Env**: copy `.env.example` → `.env.local` and fill in the Required block.
+4. `npm install && npm run dev` (or `npm run build && npm start`).
 5. **Optional cron jobs.** Each one powers a feature that is simply inert without
    it — nothing breaks, but nothing fires either. Add only the ones you use:
 

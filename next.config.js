@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Traced output for the Docker image: Next copies only the node_modules the
+  // server actually reaches, turning a ~700 MB install into a ~150 MB layer.
+  // Harmless on Render, which runs `next start` against .next as usual.
+  output: 'standalone',
   images: {
     remotePatterns: [
       {

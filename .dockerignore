@@ -1,0 +1,12 @@
+# Everything the build does not need. Keeping this tight is most of the reason
+# the image builds in a minute rather than five.
+node_modules
+.next
+.git
+.env*
+!.env.example
+*.log
+.claude
+HANDOFF.md
+tsconfig.tsbuildinfo
+docs

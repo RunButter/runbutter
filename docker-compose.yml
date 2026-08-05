@@ -1,0 +1,147 @@
+# RunButter, self-hosted.
+#
+#   cp .env.docker.example .env
+#   # put a free Privy app id in it — see the note below
+#   docker compose up
+#
+# Postgres, PostgREST, storage, the migrations and the app. Five containers,
+# one command, no SQL pasted anywhere.
+#
+# ── THE ONE THING THAT IS NOT SELF-HOSTED ───────────────────────────────────
+# Authentication is Privy, and Privy is a hosted service. There is no way
+# around that in this compose file, so it is said plainly rather than
+# discovered: you need a free app id from dashboard.privy.io (two minutes, no
+# card). Everything else — your data, your files, your API — runs here and
+# never leaves the machine.
+#
+# ── WHY NOT THE FULL SUPABASE STACK ─────────────────────────────────────────
+# Supabase's own compose file runs a dozen services because it ships GoTrue,
+# Realtime, Studio, analytics and an API gateway. This app uses none of them:
+# auth is Privy, chat polls rather than subscribing (see 0075), and every read
+# goes through the verified /api/rpc proxy. So it needs Postgres, PostgREST and
+# storage, and nginx to route two path prefixes.
+
+name: runbutter
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # Every other service waits on this. Without it the migrations race the
+      # database's own first-boot initialisation and fail on connection refused.
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    # Not published by default. The database is reachable from the other
+    # containers; exposing 5432 to the host is a decision, not a default.
+    expose:
+      - '5432'
+
+  # One-shot. Applies bootstrap.sql, then supabase/legacy (only on an empty
+  # database), then every numbered migration, each in its own transaction.
+  # Re-running the stack re-runs this and it does nothing, which is the point.
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/migrate.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
+    restart: 'no'
+
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      # Requests with no JWT act as `anon`, which this schema revokes almost
+      # everything from (0046). That is deliberate: the app authenticates
+      # server-side and calls as service_role through /api/rpc.
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PGRST_DB_USE_LEGACY_GUCS: 'false'
+    expose:
+      - '3000'
+
+  storage:
+    image: supabase/storage-api:v1.11.13
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      ANON_KEY: ${SUPABASE_ANON_KEY:?set SUPABASE_ANON_KEY in .env}
+      SERVICE_KEY: ${SUPABASE_SERVICE_KEY:?set SUPABASE_SERVICE_KEY in .env}
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
+      POSTGREST_URL: http://rest:3000
+      FILE_SIZE_LIMIT: '52428800'
+      # Files on a volume, not S3. A self-hoster who wanted a bucket would have
+      # used the hosted product; the point of this file is that nothing leaves.
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: runbutter
+      REGION: local
+      GLOBAL_S3_BUCKET: runbutter
+    volumes:
+      - storage-data:/var/lib/storage
+    expose:
+      - '5000'
+
+  # Makes the two services above look like one Supabase project, because
+  # supabase-js talks to a single origin with /rest/v1 and /storage/v1 prefixes.
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on: [rest, storage]
+    volumes:
+      - ./docker/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - '${SUPABASE_PORT:-8000}:8000'
+
+  app:
+    build:
+      context: .
+      args:
+        # Baked in at build time because Next inlines NEXT_PUBLIC_* into the
+        # client bundle — they cannot be supplied at runtime, however much that
+        # would be nicer.
+        NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_PRIVY_APP_ID: ${PRIVY_APP_ID:?get a free app id at dashboard.privy.io}
+    restart: unless-stopped
+    depends_on: [gateway]
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_PRIVY_APP_ID: ${PRIVY_APP_ID}
+      # Server-side calls go straight to the gateway container, skipping the
+      # host's network entirely.
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY}
+      NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
+      # Optional. Everything below is a feature that stays off until configured
+      # — see .env.docker.example for what each one switches on.
+      SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_not_configured}
+    ports:
+      - '${APP_PORT:-3000}:3000'
+
+volumes:
+  db-data:
+  storage-data:
