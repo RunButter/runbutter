@@ -29,6 +29,22 @@ export async function POST(req: NextRequest) {
                 { status: 400 }
             );
         }
+        // A product id where a price id belongs. Stripe answers this with
+        // "No such price: 'prod_…'", which reads as a missing object rather than
+        // as the wrong KIND of object — and the two ids sit next to each other on
+        // the same dashboard page, so it is the easy mistake to make. Say what to
+        // do instead of forwarding a message that sends people looking for a
+        // price that was never deleted.
+        if (/^prod_/.test(String(priceId))) {
+            return NextResponse.json(
+                {
+                    error: 'That is a Stripe PRODUCT id (prod_…), not a price id. Open the product in Stripe, ' +
+                        'find its Pricing section, and copy the API id beginning with price_ into ' +
+                        'NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID or NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID.',
+                },
+                { status: 400 }
+            );
+        }
 
         // Plans are PER SEAT, so quantity is the seat count, not 1. Hard-coding 1
         // billed a 30-person workspace the same as a solo one.
