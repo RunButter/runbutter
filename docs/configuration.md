@@ -33,9 +33,20 @@ and says so in the UI. It never fails silently and it never crashes a page.
 
 ## Billing — Stripe (optional)
 
-`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and the price ids. Without them
-the plan pages render and checkout does nothing. Self-hosters generally skip
-this entirely and set plans in the database.
+| Variable | Notes |
+|---|---|
+| `STRIPE_SECRET_KEY` | Without it, checkout returns 503 and the plan pages say billing is off. |
+| `STRIPE_WEBHOOK_SECRET` | The **only** thing that upgrades a plan after payment. With a placeholder, checkout completes at Stripe and nothing changes in the app — silently. Point a Stripe webhook at `/api/webhook/stripe` for `checkout.session.completed` and paste its signing secret here. |
+| `NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID` | Price id for the Team plan. **Per seat** — create a recurring price; checkout sends the seat count as the quantity. |
+| `NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID` | Same, for Business. |
+
+`NEXT_PUBLIC_*` values are inlined into the browser bundle at build time, so
+changing a price id needs a redeploy, not just a restart. The older
+`..._STARTER_PRICE_ID` / `..._PRO_PRICE_ID` names are still read as a fallback.
+
+Self-hosters generally skip all of this and set plans directly in the database:
+`update companies set plan = 'business' where id = '…';` — the workspace follows
+automatically (migration 0090).
 
 ## Calendar — Google (optional)
 

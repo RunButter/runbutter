@@ -2,25 +2,47 @@ import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { stripeClient } from '@/lib/billing/stripe';
 import { createAdminClient } from '@/lib/supabase';
+import { PLANS, type SubscriptionPlan } from '@/lib/plans';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-// Map the purchased Stripe price back to a plan tier so a Starter buyer doesn't
-// get upgraded to Professional. Falls back to 'professional' only if the price
-// can't be resolved (preserves prior behaviour rather than silently failing).
-async function planForSession(stripe: Stripe, session: Stripe.Checkout.Session): Promise<'starter' | 'professional'> {
-    const STARTER = process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID;
-    const PRO = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID;
+/**
+ * Which plan was bought.
+ *
+ * METADATA FIRST, because our own checkout route puts the plan there — it is
+ * the one source that cannot be wrong about intent. Price ids are the fallback,
+ * for a session created outside the app (a Stripe payment link, a manual
+ * invoice), and they are matched against BOTH the current variable names and
+ * the ATS-era ones so an existing deployment keeps working after an update.
+ *
+ * The old version of this function returned 'starter' | 'professional' — names
+ * the product stopped selling — and defaulted to 'professional' whenever it
+ * could not tell, which handed the most expensive tier to anyone whose price it
+ * failed to recognise. It now falls back to the CHEAPEST paid tier: the payment
+ * definitely happened, so Free would be wrong, and guessing upward is a discount
+ * nobody agreed to. Either way the price id is logged, loudly, because that is
+ * the fact an operator needs to fix the mapping.
+ */
+async function planForSession(stripe: Stripe, session: Stripe.Checkout.Session): Promise<SubscriptionPlan> {
+    const declared = String(session.metadata?.plan || '').toLowerCase().trim();
+    if (declared && declared in PLANS && declared !== 'free') return declared as SubscriptionPlan;
+
+    const TEAM = process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID;
+    const BUSINESS = process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID;
+
     try {
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
         const priceId = lineItems.data[0]?.price?.id;
-        if (priceId && STARTER && priceId === STARTER) return 'starter';
-        if (priceId && PRO && priceId === PRO) return 'professional';
-        console.warn(`Unrecognized Stripe price "${priceId}" — defaulting plan to professional`);
+        if (priceId && TEAM && priceId === TEAM) return 'team';
+        if (priceId && BUSINESS && priceId === BUSINESS) return 'business';
+        console.warn(
+            `Stripe price "${priceId}" is not mapped to a plan — falling back to Team. ` +
+            'Set NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID / NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID to the ids of your current products.',
+        );
     } catch (e) {
         console.error('Could not resolve plan from line items:', e);
     }
-    return 'professional';
+    return 'team';
 }
 
 export async function POST(req: NextRequest) {

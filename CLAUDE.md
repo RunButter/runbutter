@@ -23,9 +23,14 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
 - **Schema state:** everything through **0085 is applied** on the live instance.
-  **0086 → 0087 → 0088 → 0089 are PENDING, in that order.** 0088 is the urgent one — until it
-  runs, `update_record` blanks every column a partial update does not mention (see the semantics
-  rule below). 0089 needs 0087.
+  **0086 → 0087 → 0088 → 0089 → 0090 are PENDING, in that order.** 0088 is the urgent one — until
+  it runs, `update_record` blanks every column a partial update does not mention (see the semantics
+  rule below). 0089 needs 0087. 0090 is what makes a paid plan visible in the CRM at all.
+- **Billing reaches the product through TWO columns.** Stripe writes `companies.plan`; every
+  new-platform screen reads `workspaces.plan` (`get_my_workspace`, 0051). 0005's trigger only
+  ever copied it AFTER INSERT, so an upgrade never arrived — 0090 adds the update trigger and
+  repairs the drift. `companies_plan_check` also predated the pivot and rejected `team`/`business`;
+  it now accepts both those and the legacy names, which `normalizePlan()` still maps.
 - **Migration conventions that keep biting:**
   - Adding a parameter to a Postgres function creates an **overload**, not a replacement, so a
     signature change must `drop function` first. `save_agent` (0068, 0084), `save_doc` (0081,

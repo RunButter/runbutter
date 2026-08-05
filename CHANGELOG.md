@@ -41,11 +41,24 @@ moves when an install needs manual work beyond `npm run migrate`.
   table, the CSV export and to agents.
 - **`/api/v1/records` refused custom object slugs**, which made the API return
   everything except the objects a business had added itself.
+- **A paid plan never reached the new platform** (`0090`). Stripe updates
+  `companies.plan`; the CRM reads `workspaces.plan`; the only thing that copied
+  one to the other fired on INSERT and never again. A customer paid, the ATS
+  half saw it, and Sales, Finance, Marketing and Projects stayed on Free.
+- **The database did not accept the plan names the product sells** (`0090`) —
+  `companies_plan_check` still allowed only the ATS-era `starter`/`professional`,
+  so setting a plan to `business` by hand was rejected.
+- **The Stripe webhook wrote plan names that no longer exist** and handed out the
+  most expensive tier whenever it could not recognise a price. It now trusts the
+  plan our own checkout recorded in the session metadata.
+- **The build required a Stripe key.** `new Stripe(undefined)` throws and the
+  client was constructed at module scope, so any instance without
+  `STRIPE_SECRET_KEY` could not build at all.
 
 ### Migrations
 
 `0086` doc cards · `0087` custom objects · `0088` partial-update fix ·
-`0089` relation labels
+`0089` relation labels · `0090` plan names and plan sync
 
 Run in that order. **`0088` is the urgent one** — until it runs, editing one
 field on a record blanks the others.

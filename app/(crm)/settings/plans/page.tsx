@@ -14,9 +14,13 @@ import AppLoading from '@/components/ui/AppLoading';
 // Maps a paid plan to its Stripe price id. Env var names keep the old
 // STARTER/PRO wording so existing Render config keeps working after the
 // Team/Business rename — these must be PER-SEAT (quantity) prices in Stripe.
+// Named for the plans that exist. The ATS-era names are read as a fallback so
+// an instance that has not moved its variables over keeps taking payments —
+// NEXT_PUBLIC_* are inlined at build time, so a rename is a redeploy for the
+// person running it, not a config edit.
 const PRICE_IDS: Partial<Record<SubscriptionPlan, string>> = {
-  team: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_STARTER_PLACEHOLDER',
-  business: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_PRO_PLACEHOLDER',
+  team: process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_TEAM_PLACEHOLDER',
+  business: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_BUSINESS_PLACEHOLDER',
 };
 
 export default function PlansPage() {

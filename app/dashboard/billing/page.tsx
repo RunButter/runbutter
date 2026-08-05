@@ -18,9 +18,13 @@ import {
 // Env var names keep the older STARTER/PRO wording so existing Render config
 // keeps working after the Team/Business rename. These MUST be per-seat
 // (per-unit) prices in Stripe, or seat quantity won't bill correctly.
+// Named for the plans that exist. The ATS-era names are read as a fallback so
+// an instance that has not moved its variables over keeps taking payments —
+// NEXT_PUBLIC_* are inlined at build time, so a rename is a redeploy for the
+// person running it, not a config edit.
 const PRICE_IDS: Partial<Record<SubscriptionPlan, string>> = {
-    team: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_STARTER_PLACEHOLDER',
-    business: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_PRO_PLACEHOLDER',
+    team: process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_TEAM_PLACEHOLDER',
+    business: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_BUSINESS_PLACEHOLDER',
 };
 
 export default function BillingPage() {
