@@ -117,6 +117,12 @@ const ALLOWED = new Set([
   // dispatcher, and a browser that could claim an agent could make it run
   // whenever it liked on someone else's AI credit.
   'get_record_notes', 'add_record_note', 'delete_record_note',
+  // Custom objects (0087). Defining an object is a schema change, so every
+  // write here re-checks owner/admin in SQL — the proxy only proves WHO is
+  // asking, never WHAT they may do. The records themselves need nothing new:
+  // they go through list/get/create/update/delete_record, already allowed.
+  'get_custom_objects', 'save_custom_object', 'delete_custom_object',
+  'save_custom_field', 'delete_custom_field',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

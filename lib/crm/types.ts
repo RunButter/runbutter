@@ -1,7 +1,13 @@
 // Core relational types for the RunButter platform (CRM / Business-OS pivot).
 // These mirror the Postgres schema in supabase/migrations/0001_platform_core.sql.
 
-export type ObjectType = 'person' | 'company' | 'asset';
+/**
+ * What KIND of thing an object holds — used for avatars and a couple of
+ * type-specific affordances, not for storage. `custom` is a workspace-defined
+ * object (0087): it renders through exactly the same generic views, it just
+ * has no built-in notion of a face or a logo.
+ */
+export type ObjectType = 'person' | 'company' | 'asset' | 'custom';
 export type PipelineKind = 'sales' | 'recruitment' | 'hris' | 'custom';
 export type FieldType = 'text' | 'number' | 'select' | 'date' | 'boolean' | 'relation' | 'currency' | 'tags' | 'avatar' | 'image';
 

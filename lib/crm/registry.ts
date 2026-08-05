@@ -302,6 +302,7 @@ export const NAV = [
   // workspace for everyone in it…
   { group: 'Settings', items: [
     { slug: 'branding', label: 'Branding', icon: 'Palette', href: '/settings/branding' },
+    { slug: 'objects', label: 'Objects', icon: 'Table2', href: '/settings/objects' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
     { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
     { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },

@@ -23,13 +23,22 @@ import { Package } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
+import { loadCustomObjects, customObjectMap } from '@/lib/crm/custom';
+import type { ObjectDef } from '@/lib/crm/types';
 
 export default function ObjectPage() {
   const { notify } = useDialog();
   const params = useParams();
   const router = useRouter();
   const slug = String(params.object);
-  const object = OBJECTS[slug];
+
+  // A workspace's own objects (0087) are resolved at runtime and merged UNDER
+  // the built-ins, so a hardcoded slug always wins — the same precedence the
+  // CRUD functions use in SQL, and the reason a custom object can never shadow
+  // one. `null` means "not looked up yet", which is what stops a custom object
+  // 404ing for the half-second before its definition arrives.
+  const [custom, setCustom] = useState<Record<string, ObjectDef> | null>(null);
+  const object = OBJECTS[slug] ?? custom?.[slug];
 
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
@@ -66,6 +75,19 @@ export default function ObjectPage() {
   }, [object, privy, slug]);
 
   useEffect(() => { if (object && ready) reload(); }, [object, ready, reload]);
+
+  // Fetched once per session and kept for every object page. Built-ins skip it
+  // entirely — there is no reason to ask the server about `people`.
+  useEffect(() => {
+    if (!privy || OBJECTS[slug]) { if (OBJECTS[slug]) setCustom({}); return; }
+    let cancelled = false;
+    getWorkspace(privy).then(async (w) => {
+      if (!w?.id || cancelled) { if (!cancelled) setCustom({}); return; }
+      const { rows } = await loadCustomObjects(privy, w.id);
+      if (!cancelled) setCustom(customObjectMap(rows));
+    });
+    return () => { cancelled = true; };
+  }, [privy, slug]);
   // Switching object clears the view — a status facet from Invoices means
   // nothing on People. Seeded from the new URL rather than blanked, so
   // navigating straight to a filtered link still lands filtered.
@@ -122,6 +144,9 @@ export default function ObjectPage() {
     return out;
   }, [rows, object]);
 
+  // Still resolving, or signed out and therefore unable to resolve: a custom
+  // object must not 404 before its definition has had a chance to arrive.
+  if (!object && (custom === null || !ready)) return <AppLoading label="Opening…" />;
   if (!object) return notFound();
 
   const openEditFromDetail = async () => {

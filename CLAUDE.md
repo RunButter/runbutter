@@ -57,6 +57,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     again (sixteen args now — `p_schedule`, `p_schedule_hour`, `p_schedule_task`), same overload
     reasoning. Then a **Render Cron Job** on `/api/agents/dispatch` every ~10 min with
     `x-cron-secret: <service-role key>` — without it, scheduled agents never fire.
+  - **0086 (doc cards) and 0087 (custom objects) are PENDING.** 0086 needs 0081+0085 and **drops
+    and recreates `save_doc`** again (seventh arg `p_tags`). 0087 needs 0031 and **redefines the
+    whole CRUD monolith in full** — that is the convention, not an accident.
   Still outstanding as *actions*, not migrations:
   - **`sanctions_entities` has 0 rows** — POST `/api/sanctions/refresh` once to ingest OFAC. The
     table and `screen_sanctions` exist, so screening returns `no_data` (never `clear`) until then.
@@ -97,6 +100,24 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   an RPC is missing → amber "Sample" badge.
 - Psychometrics: discrete int columns on the latest `assessment_results`
   (overall/personality/work_style/screening_score) + Big-5 in `personality_data` JSONB.
+
+- **Custom objects (0087)** are what make this a general tool rather than five hardcoded verticals.
+  - **JSONB, never DDL.** A SECURITY DEFINER function running `CREATE TABLE` from user input is one
+    escaping mistake from arbitrary DDL across every tenant — same reasoning as `segment_match`.
+    Rows live in `custom_records.data jsonb`; one GIN index serves every workspace.
+  - **The CRUD monolith gained one branch each, at the END.** That ordering is the safety property:
+    a custom object can never shadow a built-in, and `reserved_object_slug` refuses the name at
+    creation so the collision is impossible rather than merely lost. Because everything downstream
+    (agent tools, `/api/mcp`, the CSV feed, Excel sync, imports, `RecordTable`) goes through those
+    five functions, a custom object is first-class everywhere for free. **Extend them; never add a
+    parallel path.**
+  - `coerce_custom_value` **fails closed** — a bad number, date or select option is REJECTED, not
+    stored as text, because the CSV feed and agents trust the declared type. URLs are http/https
+    only. Undeclared keys are DROPPED so a payload can't widen the row's shape.
+  - Deleting a FIELD deliberately leaves the values in `data` — re-adding it brings them back.
+    Deleting an OBJECT cascades to fields and rows, which is why it is owner/admin only.
+  - `lib/crm/custom.ts` converts a custom object into the **same `ObjectDef`** the registry
+    produces, which is why no view needed changing.
 
 ## Information architecture (nav order is deliberate — `lib/crm/registry.ts`)
 - **HR** owns the **Careers page** (`/dashboard/careers`): the address, the copy, and which roles are
