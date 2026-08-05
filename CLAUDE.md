@@ -49,6 +49,10 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` and/or `X_CLIENT_ID`/`X_CLIENT_SECRET`, and
     `NEXT_PUBLIC_SITE_URL` — the OAuth redirect is built from it, so a wrong value sends the grant
     to the wrong host. Register `<site>/api/social/callback/<provider>` on each platform.
+  - **0085 (doc kinds) is PENDING**, after 0081. It widens `docs_kind_check` to
+    `doc|note|todo|sheet` and **redefines `save_doc` with `p_kind default NULL`** — 0081 defaulted
+    it to `'doc'`, which made "I am not saying" indistinguishable from "make it a document", so any
+    five-argument save silently converted a table back into a doc.
   - **0084 (agentic) is PENDING.** Depends on 0043 + 0068. It **drops and recreates `save_agent`**
     again (sixteen args now — `p_schedule`, `p_schedule_hour`, `p_schedule_task`), same overload
     reasoning. Then a **Render Cron Job** on `/api/agents/dispatch` every ~10 min with
@@ -227,6 +231,17 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     purpose and the UI says "reconnect". X rotates refresh tokens on every use, which is why
     `save_social_account` upserts and `coalesce`s the refresh columns — a provider that omits one
     must not blank the one already held.
+- **Doc kinds (0081 + 0085)** are `doc | note | todo | sheet`, and **every one stores markdown in
+  the same `body` column** — a todo is `- [ ]` lines, a sheet is a markdown table. That is what
+  keeps every kind openable in every editor, exportable by one path, and found by one query, and it
+  is why adding a kind is a CHECK change rather than a schema change. Switching kind is a VIEW
+  change, not a conversion. A kind the editor cannot render is a bug waiting, so `DOC_KINDS` and
+  `docs_kind_check` move together. **`sheet` is a table, NOT a spreadsheet** — no formulas; live
+  data in a real spreadsheet is 0078/0079, and a half-built formula engine here would be worse.
+  Export (`lib/crm/doc-export.ts`) is PDF/Word/Markdown **entirely in the browser**, same rule as
+  `/pdf`: a contract never goes to a conversion service. The PDF renderer maps non-WinAnsi
+  characters rather than stripping them (pdf-lib THROWS on them, so one curly quote would fail the
+  whole export), and deliberately drops images — they are `rb-file:` ids into a private bucket.
 - **Attachments & doc kinds (0081)** — an attachment is a **`files.id`, never a URL**. Everything
   else already existed in 0065 (private bucket, upload route, membership-checked signed URL, FTS),
   so nothing here uploads or serves bytes; an image dropped in chat is already indexed, and

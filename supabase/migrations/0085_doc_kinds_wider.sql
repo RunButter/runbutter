@@ -35,16 +35,20 @@ alter table docs add constraint docs_kind_check
 -- for BAD values, and the wrong answer for good ones. Full redefinition rather
 -- than a parallel function; the signature is unchanged from 0081, so this is a
 -- plain replace and no overload appears.
+-- NOTE THE DEFAULT: null, not 'doc'. 0081 defaulted it to 'doc', which meant a
+-- caller that omitted the argument was indistinguishable from one asking for a
+-- document — so any five-argument save silently converted a table back into a
+-- document. Null is the only value that can mean "I am not saying", which is
+-- what an omitted argument actually means.
 create or replace function save_doc(
   p_privy text, p_workspace uuid, p_id uuid, p_title text, p_body text,
-  p_kind text default 'doc'
+  p_kind text default null
 ) returns uuid language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_kind text;
 begin
   if not is_workspace_member(p_workspace, p_privy) then raise exception 'NOT_A_MEMBER'; end if;
-  -- Unknown → null → keep the existing kind. An old client that sends nothing
-  -- must keep working, and a bad value must never widen the CHECK by the back
-  -- door.
+  -- Unknown or absent → null → keep the existing kind on update, default to
+  -- 'doc' on insert. A bad value must never widen the CHECK by the back door.
   v_kind := case when p_kind in ('doc', 'note', 'todo', 'sheet') then p_kind else null end;
 
   if p_id is null then

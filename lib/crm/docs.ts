@@ -68,10 +68,16 @@ export async function loadDoc(privy: string | null, docId: string): Promise<Doc 
   return data as Doc;
 }
 
-export async function saveDoc(privy: string, id: string | null, title: string, body: string, kind: DocKind = 'doc'): Promise<{ id?: string; error?: string }> {
+/**
+ * `kind` is optional and defaults to UNDEFINED, not 'doc' — mirroring the SQL.
+ * A caller that does not mention the kind means "leave it alone"; defaulting to
+ * 'doc' here would convert a table into a document on any save that forgot to
+ * pass it, which is exactly the bug the null default in 0085 exists to prevent.
+ */
+export async function saveDoc(privy: string, id: string | null, title: string, body: string, kind?: DocKind): Promise<{ id?: string; error?: string }> {
   const wsId = await ws(privy);
   if (!wsId) return { error: 'No workspace found for your account.' };
-  const { data, error } = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body, p_kind: kind });
+  const { data, error } = await rpc('save_doc', { p_privy: privy, p_workspace: wsId, p_id: id, p_title: title, p_body: body, p_kind: kind ?? null });
   if (error) {
     // 0081 added `p_kind`, so a workspace that has not run it yet answers "no
     // function matches". Retry without it rather than telling someone their

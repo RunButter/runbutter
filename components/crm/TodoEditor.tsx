@@ -108,6 +108,14 @@ export default function TodoEditor({ value, onChange, editable = true }: {
   return (
     <div className="h-full overflow-auto">
       <div className="max-w-2xl mx-auto px-6 sm:px-8 py-8">
+        {/* Text above the first item is kept on save, so it has to be visible —
+            preserving something the editor does not show is how people lose
+            track of their own words. Not editable here: this view is a list,
+            and the rich editor is where prose is edited. */}
+        {prelude && (
+          <p className="text-sm text-secondary whitespace-pre-wrap mb-4">{prelude}</p>
+        )}
+
         {real.length > 0 && (
           <div className="flex items-center gap-3 mb-5">
             <span className="h-1.5 rounded-full bg-surface-hover flex-1 overflow-hidden">
