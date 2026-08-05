@@ -108,6 +108,15 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   it mirrors `hr_company_id()` (0051): active workspace first, else the OLDEST membership.
 - **CRUD monolith** (`list/get/create/update/delete_record`) is redefined IN FULL per migration —
   extend the latest def rather than adding a parallel one. New subsystems get **dedicated RPCs**.
+  - **`update_record` semantics (0088): key ABSENT = leave the column alone; key PRESENT = write it,
+    including NULL to clear.** The test is `p_data ? 'field'`. Before 0088 every branch except
+    `transactions` used a bare `nullif(p_data->>'x','')`, so a partial update **blanked every field
+    it did not mention** — an agent linking an invoice to a company erased its number, dates and
+    notes. The UI never hit it because the form posts every field; agents, the REST API and Excel
+    sync do not. Keep the `case when p_data ? …` form when adding a column.
+  - **`assets` had no create or update branch until 0088** despite being listed, deletable, in the
+    nav and having a page — the Add button raised `UNKNOWN_OBJECT`. Check a new object appears in
+    ALL FIVE functions.
 - **Migrations** are idempotent (`create or replace`, `add column if not exists`) and end with
   `notify pgrst, 'reload schema';`.
 - **Cost rule:** never add LLM/API calls to resume parsing or scoring. Resume search = Postgres FTS

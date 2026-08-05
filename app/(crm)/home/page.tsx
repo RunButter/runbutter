@@ -16,6 +16,7 @@ import FinanceChart from '@/components/crm/FinanceChart';
 import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 import EmptyState from '@/components/ui/EmptyState';
+import SeedDemoData from '@/components/crm/SeedDemoData';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
 
@@ -38,6 +39,9 @@ export default function WorkspaceHome() {
   const [hr, setHr] = useState<HrOverview | null>(null);
   const [txns, setTxns] = useState<LedgerTxn[]>([]);
   const [loading, setLoading] = useState(true);
+  // Bumped after seeding so every panel refetches — the sample data is real
+  // rows, so the page must show them rather than needing a manual refresh.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!ready) return;
@@ -53,7 +57,7 @@ export default function WorkspaceHome() {
       setWs(w); setFin(f); setAccounts(a.accounts); setDeals(b.records); setHr(h); setTxns(l.rows.slice(0, 5));
       setLoading(false);
     });
-  }, [ready, privy]);
+  }, [ready, privy, reloadKey]);
 
   const live = !!ws;
   const cash = accounts.reduce((s, a) => s + a.balance, 0);
@@ -92,6 +96,13 @@ export default function WorkspaceHome() {
             <h2 className="text-2xl font-medium text-primary tracking-tight">{greeting()}{ws?.name ? `, ${ws.name}` : ''}</h2>
             <p className="text-sm text-secondary mt-0.5">Here’s what’s happening across your company today.</p>
           </div>
+
+          {/* Only on a workspace with nothing in it. An empty pipeline beside
+              an empty ledger demonstrates nothing about a product whose pitch
+              is that they are the same database. */}
+          {live && !loading && deals.length === 0 && accounts.length === 0 && (fin?.series?.length ?? 0) === 0 && (
+            <SeedDemoData privy={privy} ws={ws?.id ?? null} onSeeded={() => setReloadKey((k) => k + 1)} />
+          )}
 
           {/* Cross-pillar KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
