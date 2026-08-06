@@ -566,6 +566,22 @@ Exclude `tsconfig.tsbuildinfo`, `.claude/`, `HANDOFF.md`. Exclude `package-lock.
 build keeps serving (this silently blocked two deploys). End commit bodies with the `Co-Authored-By`
 trailer. Standing rule: **commit + push after every finished task, don't ask.**
 
+### Two repos, one set of commits
+- **`CasperCrypto/hirebtr` is the working repo.** Render deploys from it, cloud sessions clone it,
+  every commit lands here first. **`RunButter/runbutter` is the same code, published.**
+- There is **no second set of commits**. The public repo is a copy of `main` — you never "commit to
+  the org", you push the commits you already made to a second remote. `npm run publish:oss` does it
+  (adds the `public` remote on first use, pushes `origin` first so the public copy can never be
+  ahead of what Render is serving, and **refuses a non-fast-forward** — force-pushing a public repo
+  rewrites history under everyone who cloned or forked it).
+- A cloud session can only reach the repo it was started from: `add_repo` refuses cross-owner adds,
+  so a session on `CasperCrypto/hirebtr` **cannot push to `RunButter/runbutter`**. Publishing is a
+  one-command local step, by design of the sandbox rather than by choice.
+- **The sandbox working tree sometimes rolls back to an old commit mid-session** (seen repeatedly,
+  always to the same commit). Pushed work is safe; recover with
+  `git fetch origin <branch> && git reset --hard origin/<branch>`, then `npm install` and recreate
+  `.env.local`. Symptom: `scripts/` suddenly holds one file and `npm run migrate` "does not exist".
+
 ## Known open issues
 1. **Billing needs `STRIPE_WEBHOOK_SECRET` to be a real signing secret.** With a placeholder,
    checkout completes at Stripe and the plan never upgrades, silently — the webhook is the only

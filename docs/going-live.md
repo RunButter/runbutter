@@ -278,6 +278,20 @@ This is the one time `--force` is right: it discards a LICENSE-only commit that
 this repository already contains, and there is nothing else there to lose. After
 the first push, never force again.
 
+### Afterwards: every update
+
+Once the first push is done, publishing is one command:
+
+```bash
+npm run publish:oss
+```
+
+It pushes `origin` first (so the public copy is never ahead of what is deployed),
+then `main` to `public`. There is **no second set of commits to write** — the
+public repository is a copy of the branch you already work on. The script
+refuses a dirty tree, refuses to run off `main`, and refuses a non-fast-forward
+push, because rewriting a public history breaks every clone and fork of it.
+
 ### Then, in the repository settings
 
 1. **Description and topics** — `crm`, `erp`, `open-source`, `nextjs`,
