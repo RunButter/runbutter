@@ -7,7 +7,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 > Its motto still stands for that module: *hire better by skills and personality.*
 
 ## Stack
-- Next.js 14 (App Router), React, **Tailwind v3**, **Geist** font. Local repo name: `talent-insight`.
+- Next.js 14 (App Router), React, **Tailwind v3**, **Geist** font.
+- **Public repo: `RunButter/runbutter`** (MIT). `CasperCrypto/hirebtr` is the private origin the
+  hosted app deploys from; the public one is pushed to deliberately, not automatically.
 - **Supabase** (Postgres). Auth via **Privy** (NOT Supabase Auth).
 - Stripe (billing), Resend (email), Google Calendar (interviews), @dnd-kit (kanban), Chart.js (radar),
   cmdk + Radix (shadcn primitives), pdf-lib + signature_pad (e-sign).
@@ -22,10 +24,11 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state:** everything through **0085 is applied** on the live instance.
-  **0086 → 0087 → 0088 → 0089 → 0090 are PENDING, in that order.** 0088 is the urgent one — until
-  it runs, `update_record` blanks every column a partial update does not mention (see the semantics
-  rule below). 0089 needs 0087. 0090 is what makes a paid plan visible in the CRM at all.
+- **Schema state: 0001–0090 reported applied by the owner.** Do not take that on trust when
+  something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
+  what each recent migration CREATES rather than reading a version number, so it answers honestly on
+  a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
+  it `update_record` blanks every column a partial update does not mention, and nothing says so.
 - **Billing reaches the product through TWO columns.** Stripe writes `companies.plan`; every
   new-platform screen reads `workspaces.plan` (`get_my_workspace`, 0051). 0005's trigger only
   ever copied it AFTER INSERT, so an upgrade never arrived — 0090 adds the update trigger and
@@ -136,6 +139,63 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     page-data collection. Next reports it as *"join is on the client"*, which is not a followable
     clue; the field vocabulary lives in `blueprint.ts` for exactly this reason.
 
+## Custom objects + the workspace builder (0087)
+- Rows in **`custom_records.data jsonb`**, never a generated table. A `SECURITY DEFINER` function
+  running `CREATE TABLE` from user input is one escaping mistake from arbitrary DDL across every
+  tenant. One GIN index serves every workspace.
+- Values are **coerced against the declared type and fail closed** — a bad number, date or select
+  option is rejected, not stored as text — because the CSV feed and the agents trust that type.
+  Undeclared keys are dropped, so a payload cannot widen a row's shape.
+- A custom object gets **one branch at the END of each of the five CRUD functions**, so a built-in can
+  never be shadowed whatever an object is called (`reserved_object_slug` refuses the name anyway).
+  Because everything downstream reads those five, a new object is immediately a page, a nav entry, an
+  agent tool target, a CSV feed row and an Excel sync target. **If something works for `companies` and
+  not for `job_sites`, that is a bug in one of the five, not a missing feature.**
+- **0089: a relation resolves to a name in SQL** (`<key>_label` beside the raw uuid).
+  `custom_relation_label` is a whitelist CASE, **never dynamic SQL**; an unknown target returns NULL so
+  the reader falls back to the raw value. The HR tables are deliberately absent from it — they are
+  tenanted by `company_id` through a different resolver.
+- **`lib/workspace/blueprint.ts` has ZERO imports on purpose.** The AI builder's prompt is assembled in
+  a route handler, and importing `lib/crm/custom.ts` (which is `use client`) breaks the build at
+  page-data collection. Field types AND `OBJECT_ICON_NAMES` live there; `lib/crm/object-icons.ts` maps
+  those names to components and **throws at import** if one has none.
+- **The AI builder returns a PLAN and writes nothing.** `/api/workspace/build` → `normalizeBlueprint`
+  → a human reads it → applying is a loop of the same `save_custom_object`/`save_custom_field` calls
+  the manual builder uses. That separation is the security model: the description is untrusted, so is
+  anything a model does with it, and the worst a prompt injection achieves is a silly plan somebody
+  declines.
+- **`lib/workspace/templates.ts` = 10 trades**, and they are also the few-shot examples the model is
+  shown, so improving a template improves what the AI produces. None recreates a built-in.
+
+## Documentation + the public repo
+- **`docs/*.md` is the single source for both surfaces** — GitHub renders it, and `/developers`
+  renders the same files through `lib/markdown.ts` at build time. A docs-only copy is how an install
+  page ends up right in one place and eighteen months stale in the other.
+- It lives at **`/developers`, not `/docs`** — `/docs` is the app's own Docs screen.
+- `lib/markdown.ts` is a small renderer rather than a dependency: repo-owned content, reviewed in PRs,
+  rendered at build time. It escapes the source anyway. Two things it had to get right —
+  a code-span placeholder cannot be a bare number ("12 vans" is not code span 12), and a wrapped list
+  item must join the item above it rather than become a paragraph below the list.
+- **Settings → Updates** (`/api/version`) shows the running version against GitHub's latest release
+  and the commands to update. It **sends nothing about the instance** — no id, no version, no domain —
+  and an offline server is told it could not check rather than that it is current. There is no
+  telemetry in this project and this is the one place someone would look for some. It deliberately
+  does not update anything: an in-app button would mean the app writing to its own source tree, which
+  is different on every host and a code-execution primitive if the release check were ever spoofed.
+- **Marketing pages** live beside the landing page and share `components/landing/MarketingChrome.tsx`
+  (one header/footer, `home` prop only because the section links are hash anchors into `/`).
+  `/ai-agents` generates its tool list and gallery FROM `lib/agents/catalog.ts` and
+  `lib/agents/templates.ts`, so deleting a tool edits the marketing page. Never hand-type a count.
+- **`docs/going-live.md` is the ops runbook** (cron, Stripe, Resend, secrets, publishing).
+  `docs/install.md` is the install path. Keep both current — they are what a stranger follows.
+- **CI** (`.github/workflows/ci.yml`) = types, build with NO Stripe key, migrations from empty twice,
+  and a stale-`schema.sql` check. **Dependabot is deliberately quiet** (monthly, grouped, no
+  Next/React/Tailwind majors).
+- **`.gitignore` patterns must be anchored** (`/build/`, not `build/`). Unanchored, `build/` matched
+  `app/api/workspace/build/` and the AI builder's route was silently never committed — it existed on
+  one machine, and every deploy answered that route with an HTML 404, which surfaces as
+  `Unexpected token '<', "<!DOCTYPE "...` in the browser.
+
 ## Information architecture (nav order is deliberate — `lib/crm/registry.ts`)
 - **HR** owns the **Careers page** (`/dashboard/careers`): the address, the copy, and which roles are
   public. It sits next to Positions because it is a hiring surface, not configuration.
@@ -188,9 +248,14 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 
 ## MCP / agent tools (`lib/agents/tools.ts`)
 - ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
-  MCP client and an agent take the identical, tenancy-safe path. **19 tools**, not just CRUD:
+  MCP client and an agent take the identical, tenancy-safe path. **26 tools**, not just CRUD:
   finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
-  analytics, positions, candidate FTS, pipeline boards.
+  analytics, positions, candidate FTS, pipeline boards, file search, research notes, connections.
+  The count lives in `lib/agents/catalog.ts` — read it rather than trusting any number written down,
+  including this one.
+- **Every tool was exercised against a real database** (2026-08): each RPC exists, accepts the
+  arguments the executor passes, and returns without raising. Re-do that after touching a signature;
+  the executor is thin, so "does the tool work" is almost entirely "does its RPC accept this".
 - **Tenancy looks inconsistent and isn't.** `list_records`/`create_record` take `p_workspace`;
   `get_record`/`update_record` derive the caller's workspaces from `p_privy` in SQL
   (`workspace_id = any(my)`). Don't "fix" the latter by inventing an argument.
@@ -204,7 +269,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **`lib/agents/catalog.ts` is the ONE tool list** — name, label, group, write-flag. `tools.ts`
   (the executor) can't be imported by a client component because it pulls in the admin client, so
   the builder used to keep a hand-written copy; that copy sat at 4 read tools while the executor
-  had 19, and the picker rendered the copy — finance, files, candidate and analytics tools were
+  had nineteen, and the picker rendered the copy — finance, files, candidate and analytics tools were
   **ungrantable**. Both sides import the catalogue now, and `tools.ts` throws at import if a tool
   in `TOOLS` has no catalogue entry. Add a tool in BOTH places or the build fails loudly.
 - **Agent gallery** = `lib/agents/templates.ts` (8 prebuilt agents). A template is just a prefilled
@@ -407,7 +472,24 @@ Same rule as the cost rule above: prefer public/government data + local computat
   - **Never use `pdf-parse`.** It bundles pdf.js 1.10, which throws `Invalid PDF structure` on any PDF
     with **object streams** — the default for pdf-lib and for current Word/Pages/Acrobat. Use
     **`lib/pdf/server-text.ts`** (`pdfjs-dist`, already a dep). `lib/extract-text.ts` was switched over
-    for the same reason: modern PDF CVs were being stored with empty `resume_raw_text`.
+    for the same reason: modern PDF CVs were being stored with empty `resume_raw_text`. The package
+    was finally **uninstalled** in the 2026-08 audit — it was still in `dependencies`, imported by
+    nothing, and the Files screen was crediting it in the UI.
+  - **`lib/pdf/inspect.ts` (`@firecrawl/pdf-inspector`, MIT) sits BESIDE pdfjs, never replacing it.**
+    It answers the two questions pdfjs cannot: WHICH pages are scans, and what the tables were.
+    - The old scan test was characters-per-page across the whole document, and an average cannot see
+      inside itself — a text page plus a scanned signature page measured 216 chars/page and passed as
+      fully indexed, so the scanned page was missing from search with nothing saying so. `Mixed` now
+      indexes the text pages AND names the ones that need OCR.
+    - Markdown (tables intact) is kept only when it carries **≥98% of the letters and digits** pdfjs
+      found. Two parsers on one file: markdown that quietly dropped half a page would be a worse index
+      than the flat text it replaced, invisibly.
+    - Every function returns **null rather than throwing**, so a missing binary or a corrupt file falls
+      back to exactly the previous behaviour. It is a native addon: it must stay in
+      `serverComponentsExternalPackages` AND in `outputFileTracingIncludes`, or the Docker image ships
+      without it and degrades only in production.
+  - **`extract_error` is shown in the UI** (under the file name). It was recorded from the start and
+    displayed nowhere, so "No text" appeared with the reason sitting in the database.
   - OCR for scans is **opt-in, self-hosted MinerU** (`MINERU_URL`), never a metered OCR API. MinerU's
     licence **requires** the credit rendered on the Files screen — keep it.
   - `extract_status='skipped'` is an honest answer with a reason, never collapsed into success; the
@@ -421,8 +503,16 @@ Same rule as the cost rule above: prefer public/government data + local computat
   In a fresh cloud clone run `npm ci` first, and note the build needs a **well-formed**
   `NEXT_PUBLIC_PRIVY_APP_ID` or every page fails to prerender.
 - SQL migrations can be checked for real: `initdb`/`pg_ctl` as the `postgres` user (PG 16 is installed),
-  stub `workspaces` + `is_workspace_member`, then run the migration and exercise the RPCs.
-  **Don't build while the dev server is running** — it clobbers `.next`.
+  then `DATABASE_URL=… npm run migrate` and exercise the RPCs. **Don't build while the dev server is
+  running** — it clobbers `.next`.
+- **The audit that finds silent breakage:** build that database, then compare every `rpc('name', {args})`
+  call site in the repo against `pg_proc` by name AND argument name. Four defects came out of one run —
+  two report sections passing an argument their function does not take, a browser call missing from the
+  `/api/rpc` allowlist, and a whole route that did not exist. All four failed *closed*, so nothing ever
+  reported them. Worth re-running after any migration that changes a signature.
+- **CI runs the migrations from empty on every push**, twice (idempotency), and fails on a stale
+  `supabase/schema.sql`. A green CI means the schema applies to a stranger's database, which is the
+  thing nobody tests by hand twice.
 - Most UI sits behind Privy login, which the preview can't do. What works: drop a temporary page under
   `app/`, render the **real component** with mock props, check computed styles, then delete it.
 - **To test a theme, set `localStorage['hb-theme']` and reload** — toggling the `.dark` class live races
@@ -431,6 +521,10 @@ Same rule as the cost rule above: prefer public/government data + local computat
 ## Commits
 **This file IS committed** so cloud/web sessions (which clone from GitHub and never see local files)
 start with context. Keep it accurate; it is the first thing every session reads.
+**Before publishing history, scan it** — `git log --all --diff-filter=A --name-only` for `.env`-shaped
+files and a `git grep` for key-shaped strings across `git rev-list --all`. Done 2026-08 over all 147
+commits: clean, no `.env` ever committed. Publishing a repo publishes every commit, and a key deleted
+in commit 40 is still readable in commit 12.
 Exclude `tsconfig.tsbuildinfo`, `.claude/`, `HANDOFF.md`. Exclude `package-lock.json`
 **except when dependencies changed** — then it MUST be committed, or Render's `npm ci` fails and the old
 build keeps serving (this silently blocked two deploys). End commit bodies with the `Co-Authored-By`
@@ -439,7 +533,20 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
 ## Known open issues
 1. **Billing needs `STRIPE_WEBHOOK_SECRET` to be a real signing secret.** With a placeholder,
    checkout completes at Stripe and the plan never upgrades, silently — the webhook is the only
-   thing that writes the new plan.
+   thing that writes the new plan. Test and live mode have DIFFERENT signing secrets.
+   Three more things learned the hard way, all in `docs/going-live.md`:
+   - **Never construct an SDK client at module scope.** `new Stripe(undefined)` throws, Next
+     evaluates route modules while collecting page data, and an instance with no Stripe key could
+     not BUILD. `lib/billing/stripe.ts` resolves per request and returns null; callers answer 503.
+     The Dockerfile used to pass a fake key to get past it, which hid the bug from us and left it
+     in place for everyone else.
+   - **Price ids are `NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID` / `..._BUSINESS_...`** (old
+     `STARTER`/`PRO` names still read as a fallback). `NEXT_PUBLIC_*` is inlined at build time, so
+     changing one is a redeploy. A `prod_…` id where a `price_…` belongs is caught with a message
+     that says which is which.
+   - **The webhook trusts `session.metadata.plan`** — our own checkout sets it — and falls back to
+     price ids, then to the CHEAPEST paid tier. It used to default to the most expensive one
+     whenever it could not recognise a price.
 2. ~~Onboarding provisioning is fragile~~ — **fixed by 0076.** `ensure_workspace()` creates company +
    membership + template + `accounts` row in ONE transaction behind a verified Privy token
    (`/api/onboarding/provision`), so it cannot half-succeed and leave someone with no workspace. It is
