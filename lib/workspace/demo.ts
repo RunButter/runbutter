@@ -78,6 +78,28 @@ export const DEMO_ROWS: DemoRow[] = [
 ];
 
 /**
+ * The deals. Separate from DEMO_ROWS because a pipeline record is not a CRUD
+ * object — it goes through create_pipeline_record (0092), not create_record.
+ *
+ * This block is the reason the header above was a lie for as long as it has
+ * existed: "the invoice to Northwind is for the deal in the pipeline" described
+ * a deal nobody ever seeded, on a board that had no way to create one. Seeding
+ * an empty board next to a full ledger demonstrates the opposite of the pitch.
+ *
+ * `stage` is matched by NAME against the pipeline's own stages, because the
+ * stage ids do not exist until seed_default_pipelines has run for that
+ * workspace. An unmatched name falls into the first stage rather than failing —
+ * a renamed pipeline should still get sample data.
+ */
+export const DEMO_DEALS: { title: string; amount: number; stage: string; companyRef?: string }[] = [
+  { title: 'Fleet routing — phase 2', amount: 24000, stage: 'Proposal', companyRef: 'northwind' },
+  { title: 'Vertex — line monitoring', amount: 41000, stage: 'Discovery', companyRef: 'vertex' },
+  { title: 'Pulse — intake forms', amount: 9600, stage: 'Lead', companyRef: 'pulse' },
+  { title: 'Cobalt — brand refresh', amount: 6200, stage: 'Lead', companyRef: 'cobalt' },
+  { title: 'Northwind — discovery', amount: 18400, stage: 'Closed Won', companyRef: 'northwind' },
+];
+
+/**
  * The relations, applied after everything exists.
  *
  * Kept apart from the rows because a company has to have an id before an
@@ -112,4 +134,4 @@ export const DEMO_DOCS = [
 ];
 
 export const DEMO_SUMMARY =
-  '4 companies, 4 contacts, 4 invoices, 4 expenses, 2 projects with issues, 2 campaigns and 3 documents — linked to each other, dated around today.';
+  '4 companies, 4 contacts, 5 deals on the board, 4 invoices, 4 expenses, 2 projects with issues, 2 campaigns and 3 documents — linked to each other, dated around today.';

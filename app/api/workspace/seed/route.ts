@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { DEMO_ROWS, DEMO_LINKS, DEMO_DOCS } from '@/lib/workspace/demo';
+import { DEMO_ROWS, DEMO_LINKS, DEMO_DOCS, DEMO_DEALS } from '@/lib/workspace/demo';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,6 +81,36 @@ export async function POST(req: Request) {
     });
   }
 
+  // The deal board. Not create_record — pipeline records are their own thing
+  // (0092), and the stage has to be resolved by name because the ids are
+  // created per workspace by seed_default_pipelines.
+  let deals = 0;
+  const { data: pipelineId } = await admin.rpc('get_pipeline_by_kind', {
+    p_privy: privyUserId, p_workspace: workspaceId, p_kind: 'sales',
+  });
+  if (pipelineId) {
+    const { data: board } = await admin.rpc('get_pipeline_board', {
+      p_privy: privyUserId, p_pipeline: pipelineId,
+    });
+    const stages: { id: string; name: string }[] = (board as any)?.stages || [];
+    const stageByName = new Map(stages.map((s) => [s.name.toLowerCase(), s.id]));
+    for (const d of DEMO_DEALS) {
+      const { error } = await admin.rpc('create_pipeline_record', {
+        p_privy: privyUserId, p_workspace: workspaceId, p_pipeline: pipelineId,
+        p_stage: stageByName.get(d.stage.toLowerCase()) ?? null,
+        p_title: d.title, p_amount: d.amount,
+        p_company: (d.companyRef && ids.get(d.companyRef)) || null, p_person: null,
+      });
+      // A database that has not run 0092 has no create_pipeline_record. Say so
+      // once rather than five times — the rest of the seed is unaffected.
+      if (error) {
+        if (deals === 0) failures.push(`deals: ${error.message}`);
+        break;
+      }
+      deals++;
+    }
+  }
+
   // Docs go through save_doc, which is where kinds and tags are validated. A
   // workspace whose Docs tab is empty looks half-installed.
   let docs = 0;
@@ -102,5 +132,5 @@ export async function POST(req: Request) {
     docs++;
   }
 
-  return NextResponse.json({ ok: true, created, docs, failures });
+  return NextResponse.json({ ok: true, created, deals, docs, failures });
 }

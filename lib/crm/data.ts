@@ -778,6 +778,59 @@ export async function loadBoard(privyUserId: string | null, slug: string, kind: 
   }
 }
 
+/**
+ * Deals — the pipeline_records CRUD that 0092 added.
+ *
+ * These all resolve the pipeline by KIND rather than taking an id, because
+ * that is what every caller has: the board route is `/pipelines/sales/board`,
+ * where "sales" is the kind. `get_pipeline_by_kind` is the only thing that
+ * turns one into the other.
+ */
+async function pipelineOf(privy: string, kind: PipelineKind): Promise<{ ws: string; pipeline: string } | null> {
+  const ws = await resolveWorkspace(privy);
+  if (!ws) return null;
+  const { data, error } = await rpc('get_pipeline_by_kind', { p_privy: privy, p_workspace: ws, p_kind: kind });
+  if (error || !data) return null;
+  return { ws, pipeline: data as string };
+}
+
+/** Errors from the RPC are terse on purpose (agents read them too). */
+function dealError(msg: string): string {
+  if (/NEEDS_A_SUBJECT/.test(msg)) return 'Give it a name, or pick a company.';
+  if (/COMPANY_NOT_FOUND|PERSON_NOT_FOUND/.test(msg)) return 'That company or person is not in this workspace.';
+  if (/PIPELINE_HAS_NO_STAGES/.test(msg)) return 'This pipeline has no stages yet.';
+  if (/PIPELINE_NOT_FOUND/.test(msg)) return 'This workspace has no pipeline of that kind yet.';
+  if (/Could not find the function|schema cache/i.test(msg)) return 'Deals need migration 0092 — run it in Supabase.';
+  return msg;
+}
+
+export async function createDeal(privy: string, kind: PipelineKind, d: {
+  title?: string; amount?: number | null; stageId?: string | null;
+  companyId?: string | null; personId?: string | null;
+}): Promise<{ id?: string; error?: string }> {
+  const p = await pipelineOf(privy, kind);
+  if (!p) return { error: 'Could not find that pipeline.' };
+  const { data, error } = await rpc('create_pipeline_record', {
+    p_privy: privy, p_workspace: p.ws, p_pipeline: p.pipeline,
+    p_stage: d.stageId ?? null, p_title: d.title ?? null,
+    p_amount: d.amount ?? null, p_company: d.companyId ?? null, p_person: d.personId ?? null,
+  });
+  if (error) return { error: dealError(error.message) };
+  return { id: data as string };
+}
+
+export async function moveDeal(privy: string, recordId: string, stageId: string, position: number): Promise<{ error?: string }> {
+  const { error } = await rpc('move_pipeline_record', {
+    p_privy: privy, p_record: recordId, p_stage: stageId, p_position: position,
+  });
+  return error ? { error: dealError(error.message) } : {};
+}
+
+export async function deleteDeal(privy: string, recordId: string): Promise<{ error?: string }> {
+  const { error } = await rpc('delete_pipeline_record', { p_privy: privy, p_record: recordId });
+  return error ? { error: dealError(error.message) } : {};
+}
+
 // ── HR membership, via the verified proxy ────────────────────────────────────
 /**
  * The caller's own HR company memberships.

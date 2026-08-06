@@ -9,6 +9,7 @@ import {
 import { getWorkspace } from '@/lib/crm/data';
 import { OBJECTS } from '@/lib/crm/registry';
 import { OBJECT_ICON_NAMES } from '@/lib/workspace/blueprint';
+import { CUSTOM_OBJECT_GROUPS } from '@/lib/crm/nav';
 import { iconFor } from '@/lib/crm/object-icons';
 import {
   loadCustomObjects, saveCustomObject, deleteCustomObject,
@@ -159,10 +160,14 @@ export default function ObjectsPage() {
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 <label className="block min-w-0">
-                  <span className="block text-2xs text-tertiary mb-1">Nav group</span>
-                  <input value={draft.group}
+                  <span className="block text-2xs text-tertiary mb-1">
+                    Sidebar section <span className="text-3xs">— where it appears in the nav</span>
+                  </span>
+                  <select value={draft.group}
                     onChange={(e) => setDraft((d) => ({ ...d, group: e.target.value }))}
-                    placeholder="Fleet" className="input-field w-full" />
+                    className="input-field w-full">
+                    {CUSTOM_OBJECT_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
                 </label>
                 <label className="block min-w-0">
                   <span className="block text-2xs text-tertiary mb-1">
@@ -230,6 +235,53 @@ export default function ObjectsPage() {
 
 // ── One object and its fields ───────────────────────────────────────────────
 
+function ObjectIcon({ name }: { name: string }) {
+  const Icon = iconFor(name);
+  return <Icon className="w-4 h-4 text-accent shrink-0" />;
+}
+
+/**
+ * Which sidebar section this object lives in — changeable after the fact.
+ *
+ * It was only ever askable at creation time, and the answer was free text that
+ * nothing read. Now it is a real choice with a visible consequence, and it can
+ * be moved: people work out where something belongs by using it for a week, not
+ * by predicting it in the create form.
+ */
+function GroupPicker({ object, privy, ws, onChange }: {
+  object: CustomObject; privy: string | null; ws: string | null; onChange: () => void;
+}) {
+  const { notify } = useDialog();
+  const [saving, setSaving] = useState(false);
+  const current = object.group_key || 'Workspace';
+  // A value saved before this was a picker (free text, any spelling) has to stay
+  // selectable, or opening this screen would silently move someone's object.
+  const groups = CUSTOM_OBJECT_GROUPS.includes(current) ? CUSTOM_OBJECT_GROUPS : [current, ...CUSTOM_OBJECT_GROUPS];
+
+  const move = async (group: string) => {
+    if (!privy || !ws || group === current) return;
+    setSaving(true);
+    const { error } = await saveCustomObject(privy, ws, {
+      id: object.id, slug: object.slug, singular: object.singular, plural: object.plural,
+      icon: object.icon, group_key: group, description: object.description,
+    });
+    setSaving(false);
+    if (error) return notify(error);
+    onChange();
+  };
+
+  return (
+    <label className="shrink-0 inline-flex items-center gap-1.5" title="Sidebar section">
+      {saving && <Loader2 className="w-3 h-3 animate-spin text-tertiary" />}
+      <span className="sr-only">Sidebar section for {object.plural}</span>
+      <select value={current} onChange={(e) => move(e.target.value)} disabled={saving || !privy}
+        className="h-7 rounded-md bg-surface-sunken text-2xs text-secondary px-1.5 border-0 outline-none focus:ring-1 focus:ring-accent disabled:opacity-50">
+        {groups.map((g) => <option key={g} value={g}>{g}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function ObjectEditor({ object, privy, ws, busy, onChange, onDelete, onOpen }: {
   object: CustomObject; privy: string | null; ws: string | null;
   busy: boolean; onChange: () => void; onDelete: () => void; onOpen: () => void;
@@ -279,12 +331,13 @@ function ObjectEditor({ object, privy, ws, busy, onChange, onDelete, onOpen }: {
   return (
     <section className="card-surface overflow-hidden">
       <div className="flex items-center gap-2 px-4 h-12 border-b border-subtle">
-        <Table2 className="w-4 h-4 text-accent shrink-0" />
+        <ObjectIcon name={object.icon} />
         <h3 className="text-sm font-medium text-primary truncate">{object.plural}</h3>
         <span className="text-2xs font-mono text-tertiary truncate hidden sm:inline">/{object.slug}</span>
-        <span className="text-2xs text-tertiary tabular-nums ml-auto shrink-0">
+        <span className="text-2xs text-tertiary tabular-nums ml-auto shrink-0 hidden sm:inline">
           {object.record_count} {object.record_count === 1 ? 'record' : 'records'}
         </span>
+        <GroupPicker object={object} privy={privy} ws={ws} onChange={onChange} />
         <button onClick={onOpen} title={`Open ${object.plural}`}
           className="h-7 px-2 rounded-md text-xs font-semibold text-secondary hover:bg-surface-hover inline-flex items-center gap-1">
           Open <ArrowRight className="w-3.5 h-3.5" />

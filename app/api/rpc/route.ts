@@ -27,6 +27,9 @@ const ALLOWED = new Set([
   'get_my_workspace', 'list_my_workspaces', 'set_active_workspace',
   'list_records', 'get_record', 'create_record', 'update_record',
   'delete_record', 'import_records', 'get_pipeline_by_kind', 'move_pipeline_record',
+  // Deals (0092). pipeline_records had no create path at all until this — the
+  // board could be read and reordered but never filled.
+  'create_pipeline_record', 'update_pipeline_record', 'delete_pipeline_record',
   'get_finance_summary', 'get_finance_analytics', 'get_project', 'get_roadmap',
   'get_members', 'set_member_role', 'remove_member', 'get_invoice_document', 'save_invoice_items',
   'convert_offer_to_invoice', 'get_transactions_ledger', 'create_bank_account',

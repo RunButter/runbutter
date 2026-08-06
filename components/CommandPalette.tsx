@@ -8,7 +8,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { iconFor } from '@/lib/crm/object-icons';
-import { NAV } from '@/lib/crm/registry';
+import { usePrivy } from '@privy-io/react-auth';
+import { useNav } from '@/lib/crm/nav';
 import {
   CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut,
 } from '@/components/ui/command';
@@ -19,6 +20,10 @@ export const COMMAND_EVENT = 'runbutter:command';
 export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const { ready, authenticated, user } = usePrivy();
+  // Loaded the first time the palette is opened, not on every page — the
+  // palette is mounted on every screen and most of them never open it.
+  const nav = useNav(ready && authenticated && user ? user.id : null, open);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -46,7 +51,7 @@ export default function CommandPalette() {
       <CommandInput placeholder="Jump to…  (type a page name)" />
       <CommandList>
         <CommandEmpty>No matches.</CommandEmpty>
-        {NAV.map((group: any) => (
+        {nav.map((group: any) => (
           <CommandGroup key={group.group} heading={group.group}>
             {group.items.map((it: any) => {
               const Icon = iconFor(it.icon, ArrowRight);

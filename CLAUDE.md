@@ -24,7 +24,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state: 0001–0090 reported applied by the owner.** Do not take that on trust when
+- **Schema state: 0001–0091 reported applied by the owner; 0092 is NEW and pending.** 0092 is what
+  gives the Deals board a create path — until it runs, "New" on `/pipelines/sales/board` returns
+  *"Deals need migration 0092"* and the board stays read-only. Do not take that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -148,8 +150,15 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   Undeclared keys are dropped, so a payload cannot widen a row's shape.
 - A custom object gets **one branch at the END of each of the five CRUD functions**, so a built-in can
   never be shadowed whatever an object is called (`reserved_object_slug` refuses the name anyway).
-  Because everything downstream reads those five, a new object is immediately a page, a nav entry, an
-  agent tool target, a CSV feed row and an Excel sync target. **If something works for `companies` and
+  Because everything downstream reads those five, a new object is immediately a page, an
+  agent tool target, a CSV feed row and an Excel sync target.
+  **The nav was the exception, and it was a bug, not a design.** `custom_objects.group_key` was
+  written by the create form from day one and read by nothing, so a custom object was reachable
+  only from the "Open" button on Settings → Objects. `lib/crm/nav.ts` (`navWithCustomObjects` +
+  `useNav`) now folds them into `NAV` for both the rail and ⌘K; the section is a **picker over
+  `CUSTOM_OBJECT_GROUPS`**, changeable after creation, and an unrecognised value (the trade
+  templates ship `Fleet`, `Practice`, `Orders`…) becomes its own section before Settings rather
+  than disappearing. Automate/Settings/Account are deliberately not offered. **If something works for `companies` and
   not for `job_sites`, that is a bug in one of the five, not a missing feature.**
 - **0089: a relation resolves to a name in SQL** (`<key>_label` beside the raw uuid).
   `custom_relation_label` is a whitelist CASE, **never dynamic SQL**; an unknown target returns NULL so
@@ -166,6 +175,33 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   declines.
 - **`lib/workspace/templates.ts` = 10 trades**, and they are also the few-shot examples the model is
   shown, so improving a template improves what the AI produces. None recreates a built-in.
+
+## Deals / pipeline records (0092)
+- **`pipeline_records` existed from 0001 with no way to insert one.** The stages were seeded, the
+  board read them and `move_pipeline_record` reordered them — and nothing in SQL or in the app
+  ever created a row. Sales → Deals, the flagship CRM screen, was structurally incapable of
+  holding a deal; the New button had no `onClick` for the whole life of the screen. 0092 adds
+  `create_pipeline_record` / `update_pipeline_record` / `delete_pipeline_record`.
+- **`get_pipeline_board` is redefined IN FULL in 0092** to join `organizations`. 0002 shipped
+  `'company', null` with the comment *"CRM organizations join added with the Sales module"*; 0004
+  shipped that module and the join was never added, so a deal attached to a company rendered
+  without it. Extend the 0092 definition, don't add a parallel one.
+- **Dragging a card used to be a lie.** `onDragEnd` moved it in local state and left a comment
+  where the write belonged, so every reorder survived exactly until the next reload. It now calls
+  `move_pipeline_record` and **puts the card back** if that fails — the only honest optimistic
+  update. `PipelineBoard` writes nothing unless `live` is true, because a sample board's ids do
+  not exist in any database.
+- **`chk_record_subject` was widened to accept a title.** Requiring a person or a company is right
+  for a recruitment record (an applicant IS a person) and wrong for a deal, where "Q4 renewal" is
+  a real row that has not been matched to an organization yet.
+- `create_pipeline_record` **re-checks the company and the person against the workspace** because
+  `pipeline_records.company_id` carries no foreign key (0001 left it loose so Sales could ship
+  later). A stage from another pipeline falls back to this pipeline's first stage rather than
+  putting the card in a column nobody can see. New cards go to the TOP of their column.
+- Card headline is **person → title → company**: a recruitment card IS the candidate's name; a
+  deal is its own title with the company as context. Never the same string twice.
+- `DEMO_DEALS` seeds the board through `create_pipeline_record` (not `create_record` — a pipeline
+  record is not a CRUD object), resolving stages **by name** because the ids are per workspace.
 
 ## Documentation + the public repo
 - **`docs/*.md` is the single source for both surfaces** — GitHub renders it, and `/developers`

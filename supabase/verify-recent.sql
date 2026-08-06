@@ -30,7 +30,23 @@ select * from (values
        where conname = 'companies_plan_check'
          and pg_get_constraintdef(oid) like '%business%')
      and exists (
-      select 1 from pg_trigger where tgname = 'trg_company_plan_to_workspace')))
+      select 1 from pg_trigger where tgname = 'trg_company_plan_to_workspace'))),
+
+  ('0091 get_record assets',
+   (select exists (
+      select 1 from pg_proc p
+       where p.proname = 'get_record'
+         and pg_get_functiondef(p.oid) like '%serial_number%'))),
+
+  ('0092 deals can be created',
+   -- Both halves matter: the create path AND the company join the board has
+   -- been missing since 0002. A database with one and not the other shows an
+   -- empty-looking card for every deal that has a company.
+   (select to_regprocedure('public.create_pipeline_record(text,uuid,uuid,uuid,text,numeric,uuid,uuid)') is not null
+     and exists (
+      select 1 from pg_proc p
+       where p.proname = 'get_pipeline_board'
+         and pg_get_functiondef(p.oid) like '%organizations co%')))
 ) as t(migration, applied)
 order by migration;
 

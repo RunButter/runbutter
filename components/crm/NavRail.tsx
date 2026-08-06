@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Search, ChevronsUpDown, ChevronRight, LogOut, Loader2, Users } from 'lucide-react';
 import { iconFor } from '@/lib/crm/object-icons';
-import { NAV } from '@/lib/crm/registry';
+import { useNav } from '@/lib/crm/nav';
 import { getWorkspace, loadBranding, loadNavActivity, listMyWorkspaces, setActiveWorkspace, type WorkspaceContext, type WorkspaceOption } from '@/lib/crm/data';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import {
@@ -50,6 +50,10 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, ready, authenticated, user } = usePrivy();
+  // NAV plus this workspace's own objects, filed under the group they were
+  // given. Until this, group_key was written and never read — a custom object
+  // was reachable only from Settings → Objects.
+  const nav = useNav(ready && authenticated && user ? user.id : null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
   const [ws, setWs] = useState<WorkspaceContext | null>(null);
@@ -180,7 +184,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2">
-        {NAV.map((g: any) => {
+        {nav.map((g: any) => {
           if (g.pinned) {
             return (
               <div key={g.group} className="px-2 mb-4 space-y-1">
