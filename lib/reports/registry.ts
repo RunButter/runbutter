@@ -98,7 +98,21 @@ export const SECTIONS: ReportSection[] = [
     description: 'Deals by stage and total pipeline value.',
     async fetch({ db, workspaceId, privy }) {
       // rpc() returns { data, error } and never throws — no .catch() on it.
-      const { data, error } = await db.rpc('get_pipeline_board', { p_privy: privy, p_workspace: workspaceId });
+      //
+      // get_pipeline_board takes a PIPELINE id, not a workspace. This used to
+      // pass p_workspace, which Postgres rejects as an unknown argument, so the
+      // call errored, the section returned null, and every scheduled report went
+      // out silently missing its Sales pipeline — a failure that looks exactly
+      // like "there are no deals". Resolve the pipeline first, as the board
+      // screen does.
+      // The kind is 'sales' — the kinds seeded per workspace are sales,
+      // recruitment and hris — and the function returns the pipeline's uuid
+      // directly, not a row to read an id off.
+      const { data: pipelineId } = await db.rpc('get_pipeline_by_kind', {
+        p_privy: privy, p_workspace: workspaceId, p_kind: 'sales',
+      });
+      if (!pipelineId) return null;
+      const { data, error } = await db.rpc('get_pipeline_board', { p_privy: privy, p_pipeline: pipelineId });
       if (error || !data) return null;
       const stages: any[] = Array.isArray(data.stages) ? data.stages : [];
       const records: any[] = Array.isArray(data.records) ? data.records : [];
@@ -154,7 +168,9 @@ export const SECTIONS: ReportSection[] = [
       const { data, error } = await db.rpc('get_sites', { p_privy: privy, p_workspace: workspaceId });
       if (error || !Array.isArray(data) || !data.length) return null;
       const site = data[0];
-      const { data: stats } = await db.rpc('get_site_stats', { p_privy: privy, p_workspace: workspaceId, p_site: site.id });
+      // p_workspace is not an argument of get_site_stats — passing it made the
+      // call fail and the Website traffic section vanish from every report.
+      const { data: stats } = await db.rpc('get_site_stats', { p_privy: privy, p_site: site.id, p_days: 30 });
       if (!stats) return null;
       return {
         title: 'Website traffic',

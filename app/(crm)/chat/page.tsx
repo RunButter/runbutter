@@ -149,6 +149,32 @@ export default function ChatPage() {
         </Button>
       </PageHeader>
 
+      {/* On a phone the sidebar below is hidden, and until now nothing replaced
+          it — you landed in whichever channel loaded first and there was no way
+          to leave it. A scrolling row of chips is the one control that fits:
+          a dropdown hides the unread counts, which are the reason you switch. */}
+      {channels.length > 0 && (
+        <div className="sm:hidden px-5 pb-2 -mt-1">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            {channels.map((c) => (
+              <button key={c.id} onClick={() => { atBottom.current = true; setActive(c.id); }}
+                aria-current={c.id === active ? 'true' : undefined}
+                className={`shrink-0 h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs transition-colors ${
+                  c.id === active ? 'bg-inverse text-inverse-fg font-medium' : 'bg-surface text-secondary ring-1 ring-subtle'}`}>
+                {c.is_private ? <Lock className="w-3 h-3 shrink-0 opacity-70" /> : <Hash className="w-3 h-3 shrink-0 opacity-70" />}
+                <span className="max-w-[9rem] truncate">{c.name}</span>
+                {c.unread > 0 && (
+                  <span className={`min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded text-3xs font-medium tabular-nums ${
+                    c.id === active ? 'bg-inverse-fg/20' : 'bg-accent text-accent-fg'}`}>
+                    {c.unread > 99 ? '99+' : c.unread}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 min-h-0 flex gap-3 px-5 lg:px-7 pb-6">
         {/* Channel list */}
         <aside className="w-52 shrink-0 rounded-xl bg-surface shadow-card p-2 overflow-y-auto hidden sm:block">

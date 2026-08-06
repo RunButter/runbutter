@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, Check, ArrowUpRight, Loader2, Terminal, WifiOff } from 'lucide-react';
 import AppLoading from '@/components/ui/AppLoading';
-import SetupStatus from '@/components/crm/SetupStatus';
 
 /**
  * Settings → Updates.
@@ -58,7 +57,7 @@ export default function UpdatesPage() {
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
-        <h1 className="text-md font-medium text-primary">Updates &amp; setup</h1>
+        <h1 className="text-md font-medium text-primary">Updates</h1>
         <button
           onClick={load}
           disabled={loading}
@@ -70,10 +69,6 @@ export default function UpdatesPage() {
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
         <div className="max-w-3xl space-y-4">
-          {/* Setup first: "what is missing on this server" is asked far more
-              often than "is there a newer version", and it is the question a
-              hosting dashboard cannot answer — it lists variables, not features. */}
-          <SetupStatus />
 
           {loading && !info ? (
             <AppLoading />

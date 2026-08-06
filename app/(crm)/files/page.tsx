@@ -329,7 +329,8 @@ export default function FilesPage() {
               docs/file-extraction.md. */}
           {rows.length > 0 && !hits && (
             <p className="text-2xs text-tertiary leading-relaxed">
-              Text is extracted locally with <span className="text-secondary">pdf-parse</span> and{' '}
+              Text is extracted locally with <span className="text-secondary">pdf.js</span>,{' '}
+              <span className="text-secondary">pdf-inspector</span> and{' '}
               <span className="text-secondary">mammoth</span>, and indexed with Postgres full-text search — no
               per-page fees and nothing sent to a third party. Scans and photos need OCR, provided by a
               self-hosted <a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noreferrer"

@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from 'react';
 import { FileText, Download, ImageOff } from 'lucide-react';
+import Lightbox from '@/components/ui/Lightbox';
 import type { Attachment } from '@/lib/crm/chat';
 import type { EmbedResolver } from '@/lib/files/embeds';
 import { formatBytes } from '@/lib/files/client';
@@ -24,6 +25,7 @@ const isImage = (mime: string) => mime.startsWith('image/');
 function AttachmentTile({ att, embeds }: { att: Attachment; embeds: EmbedResolver }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [zoom, setZoom] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -46,18 +48,29 @@ function AttachmentTile({ att, embeds }: { att: Attachment; embeds: EmbedResolve
 
   if (isImage(att.mime)) {
     return (
-      <a href={url ?? undefined} target="_blank" rel="noreferrer"
-         className="block max-w-xs rounded-lg overflow-hidden ring-1 ring-subtle bg-surface-sunken">
-        {url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed, short-lived, off-origin
-          <img src={url} alt={att.name} className="block w-full h-auto max-h-72 object-contain"
-               onError={() => setFailed(true)} />
-        ) : (
-          // Reserve the space before the URL arrives so the conversation does
-          // not jump under whoever is reading it.
-          <span className="block h-32 w-48" />
-        )}
-      </a>
+      <>
+        {/* A button, not a link. The href was a signed URL, and a signed URL
+            from a private bucket carries Content-Disposition: attachment — so
+            tapping a photo DOWNLOADED it instead of showing it. Opening the
+            viewer is what a tap means; downloading is a button inside it. */}
+        <button
+          type="button"
+          onClick={() => url && setZoom(true)}
+          aria-label={`View ${att.name}`}
+          className="block max-w-xs rounded-lg overflow-hidden ring-1 ring-subtle bg-surface-sunken cursor-zoom-in"
+        >
+          {url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- signed, short-lived, off-origin
+            <img src={url} alt={att.name} className="block w-full h-auto max-h-72 object-contain"
+                 onError={() => setFailed(true)} />
+          ) : (
+            // Reserve the space before the URL arrives so the conversation does
+            // not jump under whoever is reading it.
+            <span className="block h-32 w-48" />
+          )}
+        </button>
+        {zoom && url && <Lightbox src={url} alt={att.name} onClose={() => setZoom(false)} />}
+      </>
     );
   }
 

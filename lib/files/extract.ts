@@ -2,7 +2,7 @@
 //
 // THREE TIERS, cheapest first, and only the first two are ever guaranteed:
 //   1. text_layer — a PDF that already contains text, or a DOCX, or anything
-//      textual. Handled locally by pdf-parse / mammoth / a UTF-8 decode. Free.
+//      textual. Handled locally by pdf.js / mammoth / a UTF-8 decode. Free.
 //   2. ocr — a scan or a photo. Needs a real OCR stack, which we do NOT bundle
 //      and do NOT call as a metered service. The backend is PLUGGABLE and
 //      self-hosted: either MinerU (MINERU_URL) or any OpenAI-compatible vision

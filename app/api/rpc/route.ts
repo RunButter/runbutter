@@ -49,7 +49,11 @@ const ALLOWED = new Set([
   'get_ms_connection', 'get_excel_links', 'save_excel_link',
   'set_excel_link_enabled', 'delete_excel_link', 'disconnect_microsoft',
   // docs + AI providers
-  'get_docs', 'get_doc', 'save_doc', 'delete_doc', 'get_ai_providers',
+  'get_docs', 'get_doc', 'save_doc', 'delete_doc',
+  // 0086. Missing here since the day it shipped: the card's checkbox called it
+  // through the proxy, the proxy refused, and ticking an item just failed.
+  'toggle_doc_item',
+  'get_ai_providers',
   'store_ai_provider', 'delete_ai_provider', 'set_ai_provider_meta',
   // HR / ATS
   'get_message_templates', 'upsert_message_template', 'delete_message_template',

@@ -2,7 +2,7 @@
 //
 // WHY REGEX FIRST AND NOT A MODEL: most B2B invoices arrive as PDFs with a real
 // text layer, and for those, extraction is a parsing problem, not a vision
-// problem — pdf-parse already gives us the characters. Running every upload
+// problem — the PDF text layer already gives us the characters. Running every upload
 // through an LLM would put a per-document price on bookkeeping and break the
 // cost rule. Vision is the fallback for photos, on the customer's own AI key.
 //

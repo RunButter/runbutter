@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { extractResume } from '@/lib/extract-text';
 
-// pdf-parse / mammoth need the Node runtime (not Edge).
+// pdf.js / mammoth need the Node runtime (not Edge).
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
