@@ -4,8 +4,13 @@ node_modules/
 !.env.example
 !.env.docker.example
 .DS_Store
-dist/
-build/
+# Anchored to the repository root. Unanchored, `build/` matches a directory of
+# that name ANYWHERE — which is how app/api/workspace/build/route.ts was
+# silently untracked from the day it was written: `git add -A` skipped it, the
+# file only ever existed on one machine, and every deploy answered that route
+# with an HTML 404. The AI workspace builder had never worked in production.
+/dist/
+/build/
 auth.sqlite
 .gemini/
 
