@@ -90,3 +90,81 @@ jobs:
             git diff --stat -- supabase/schema.sql
             exit 1
           fi
+
+  # ── Does `docker compose up` actually work? ────────────────────────────────
+  # The self-host path was written, documented and never once booted. That is
+  # the single highest-leverage thing to check on a public repository: it is the
+  # first command a stranger runs, and a broken first run costs the star and the
+  # contributor.
+  #
+  # This boots the real stack — Postgres, the migrations, PostgREST, storage,
+  # the gateway and the app — and asks the app for a page. It is slow (the app
+  # image is a full Next build) which is why it runs alongside the other jobs
+  # rather than in front of them.
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # Generated, never committed: JWT_SECRET plus an anon and service key
+      # signed with it. PostgREST and storage-api both verify against that
+      # secret, so a hand-written placeholder would fail the handshake and look
+      # like a networking problem.
+      - name: Compose an .env
+        run: |
+          cp .env.docker.example .env
+          node scripts/gen-keys.mjs --env >> .env
+          # Well-formed but fake — Privy validates the SHAPE offline and throws
+          # on anything else, which would fail the app's prerender. Nothing is
+          # contacted.
+          echo 'PRIVY_APP_ID=clbuildonlyfakeappid00000' >> .env
+
+      - name: docker compose up
+        run: docker compose up -d --wait --wait-timeout 900
+
+      # --wait already gates on the healthchecks, so reaching here means
+      # Postgres came up, the migrations completed, and the gateway proved
+      # PostgREST answers. What is left is whether the app itself serves.
+      - name: The app serves
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/ || true)
+            [ "$code" = "200" ] && { echo "landing page: $code"; break; }
+            sleep 5
+          done
+          test "$code" = "200" || { echo "::error::the app never served a 200"; exit 1; }
+
+      # The check that would have caught the bug this job was written to find:
+      # every server-side call used the BROWSER's Supabase URL, which inside the
+      # container resolves to the app itself. /api/rpc reaching Postgres proves
+      # the server talks to the gateway and not to its own port 8000.
+      #
+      # WHAT PASSING LOOKS LIKE. With no Privy token the proxy degrades and
+      # still performs the call, so a healthy stack answers {"data":null,
+      # "error":null} — an unknown user simply has no workspace. That is a
+      # SUCCESSFUL round trip, so asserting on the word "error" would have been
+      # exactly backwards.
+      #
+      # A server that cannot reach the database fails inside supabase-js and
+      # surfaces as a transport error, so those strings are the real signal.
+      - name: The server can reach Postgres
+        run: |
+          body=$(curl -s -X POST http://localhost:3000/api/rpc \
+            -H 'content-type: application/json' \
+            -d '{"fn":"get_my_workspace","args":{"p_privy":"did:privy:ci-smoke-test"}}')
+          echo "$body"
+          if echo "$body" | grep -qiE 'fetch failed|ECONNREFUSED|ENOTFOUND|socket hang up|EAI_AGAIN'; then
+            echo "::error::/api/rpc could not reach Postgres — the server-side Supabase URL is wrong"
+            exit 1
+          fi
+          echo "$body" | grep -q '"data"' || {
+            echo "::error::/api/rpc did not return a JSON envelope"; exit 1; }
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 120
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

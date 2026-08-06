@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { serverSupabaseUrl } from '@/lib/supabase';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
@@ -165,7 +166,9 @@ const ALLOWED = new Set([
 ]);
 
 function db() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  // serverSupabaseUrl(), not the NEXT_PUBLIC_ one: in a container the browser's
+  // URL points at the app itself. See lib/supabase.ts.
+  const url = serverSupabaseUrl();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.warn('rpc proxy: SUPABASE_SERVICE_ROLE_KEY missing — falling back to anon key (breaks once 0040 revokes anon)');

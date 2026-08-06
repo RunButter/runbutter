@@ -111,6 +111,16 @@ services:
       - ./docker/gateway.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - '${SUPABASE_PORT:-8000}:8000'
+    healthcheck:
+      # PostgREST answers OPTIONS at its root without a JWT, so this proves the
+      # whole chain — nginx up, rest reachable, database migrated — rather than
+      # just that nginx started. `depends_on` without a healthcheck only waits
+      # for the container, which is how a first boot races the migrations and
+      # greets someone with an empty workspace and a console full of 500s.
+      test: ['CMD', 'wget', '-qO-', '--method=OPTIONS', 'http://localhost:8000/rest/v1/']
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   app:
     build:
@@ -123,13 +133,25 @@ services:
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
         NEXT_PUBLIC_PRIVY_APP_ID: ${PRIVY_APP_ID:?get a free app id at dashboard.privy.io}
     restart: unless-stopped
-    depends_on: [gateway]
+    depends_on:
+      gateway:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       NEXT_PUBLIC_PRIVY_APP_ID: ${PRIVY_APP_ID}
-      # Server-side calls go straight to the gateway container, skipping the
-      # host's network entirely.
+      # THE SERVER-SIDE URL, and the reason this line exists.
+      #
+      # NEXT_PUBLIC_SUPABASE_URL above has to be http://localhost:8000, because
+      # it is compiled into the browser bundle and localhost is what the
+      # person's own machine can reach. Inside this container that address is
+      # the app itself, where nothing is listening — so every server-side call
+      # (/api/rpc, the seed route, MCP, uploads) connected to itself and failed.
+      # The stack came up and nothing in it worked.
+      #
+      # This overrides it for the server only. Container-to-container, no trip
+      # through the host's network at all.
+      SUPABASE_URL: http://gateway:8000
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY}
       NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_APP_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}

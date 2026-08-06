@@ -4,6 +4,26 @@ import { createBrowserClient } from '@supabase/ssr';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+/**
+ * The URL the SERVER should use, which is not always the one the browser uses.
+ *
+ * On the hosted product they are the same string and this changes nothing. In
+ * `docker compose` they cannot be: the browser has to be told
+ * `http://localhost:8000`, because that is what the person's own machine can
+ * reach — and `NEXT_PUBLIC_*` is compiled into the bundle at build time, so it
+ * cannot be a container hostname. But inside the app container `localhost:8000`
+ * is the app container itself, where nothing is listening.
+ *
+ * The compose file's own comment claimed server calls went "straight to the
+ * gateway container", and no variable ever made that true: every server-side
+ * call — /api/rpc, the seed route, MCP, file uploads — would have connected to
+ * itself and failed. The app booted; nothing in it worked.
+ *
+ * So `SUPABASE_URL` is a server-only override. Unset, this is exactly the old
+ * behaviour.
+ */
+export const serverSupabaseUrl = () => process.env.SUPABASE_URL || supabaseUrl;
+
 // Browser client — safe to call from Client Components
 export function createSupabaseClient() {
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
@@ -80,7 +100,7 @@ export async function deleteFile(bucket: string, path: string): Promise<boolean>
 // Server-side admin client — only import in API routes / Server Components
 export function createAdminClient() {
   return createClient(
-    supabaseUrl,
+    serverSupabaseUrl(),
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? supabaseAnonKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
