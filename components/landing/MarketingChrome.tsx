@@ -47,8 +47,12 @@ export function MarketingHeader({ home = false }: { home?: boolean }) {
  */
 const SOCIALS: { name: string; href: string; path: string }[] = [
   { name: 'GitHub', href: REPO_URL, path: 'M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3' },
+  // A maintainer's personal account, deliberately. Early open source is a
+  // person, not a brand, and a real account someone can reply to is worth more
+  // than a blank space held for a company handle that does not exist yet.
+  // Swap it for a project account whenever there is one.
+  { name: 'X', href: 'https://x.com/hermescryptos', path: 'M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.5l8.6-9.8L0 1.2h7.6l5.2 6.9zm-1.3 19.4h2L6.5 3.3H4.3z' },
   // Create the account, paste the URL, done. No placeholder links.
-  { name: 'X', href: '', path: 'M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.5l8.6-9.8L0 1.2h7.6l5.2 6.9zm-1.3 19.4h2L6.5 3.3H4.3z' },
   { name: 'Discord', href: '', path: 'M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.4a18 18 0 0 1 4.4 1.4 15.5 15.5 0 0 0-13.2 0A18 18 0 0 1 10.8 3.4L10.6 3a19.8 19.8 0 0 0-4.9 1.4C2.6 9 1.7 13.5 2.2 17.9a19.9 19.9 0 0 0 6 3l1.2-1.7a13 13 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1l1.2 1.7a19.9 19.9 0 0 0 6-3c.6-5.1-.8-9.6-3.5-13.5M8.7 15.3c-1.2 0-2.1-1.1-2.1-2.4S7.5 10.5 8.7 10.5s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4m6.6 0c-1.2 0-2.1-1.1-2.1-2.4s1-2.4 2.1-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4' },
   { name: 'LinkedIn', href: '', path: 'M20.4 20.5h-3.6v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.4V9h3.4v1.6h.1a3.8 3.8 0 0 1 3.4-1.9c3.6 0 4.3 2.4 4.3 5.5zM5.3 7.4a2.1 2.1 0 1 1 2.1-2.1 2.1 2.1 0 0 1-2.1 2.1m1.8 13.1H3.5V9h3.6zM22.2 0H1.8A1.8 1.8 0 0 0 0 1.8v20.4A1.8 1.8 0 0 0 1.8 24h20.4a1.8 1.8 0 0 0 1.8-1.8V1.8A1.8 1.8 0 0 0 22.2 0' },
 ];
