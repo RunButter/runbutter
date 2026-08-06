@@ -2,12 +2,38 @@
 
 import { useEffect, useRef } from 'react';
 
-// Interactive ASCII terrain v2.
+// Interactive ASCII terrain v3.
 // Base: a fractal-noise (FBM) height field thresholded into organic glyph
 // clusters, calmer in the centre (edge bias), coloured by a drifting gradient.
 // Interaction: the cursor carries a soft glow AND leaves a wake — every few px
 // of movement drops a ripple that expands outward as a ring through the
 // characters and fades; clicking fires a stronger shockwave. Pure canvas.
+//
+// ── WHY v3 EXISTS ──────────────────────────────────────────────────────────
+// v2 ran the hero at 16.7 fps with the main thread blocked for 2007 ms out of
+// every 2031 — measured, not guessed. Scrolled past, the same page did 181 fps
+// with zero long tasks, so all of it was this component. The landing page felt
+// broken on the one screen that has to feel fast.
+//
+// The cause was doing everything, per cell, per frame. At cell=8 a hero is
+// ~23,000 cells, and each one ran a four-octave FBM (≈16 hashes), a sqrt, two
+// Math.pow calls, and built a fresh `rgba(...)` string for fillStyle. Four
+// changes, in descending order of what they bought:
+//
+//   1. THE BASE FIELD IS CACHED. The noise and the artwork only change as `t`
+//      drifts, which is slow. It is computed into a Float32Array a few times a
+//      second; every rendered frame reads one float and adds the interactive
+//      parts (glow, ripples) on top. Those are what have to be instant.
+//   2. THE CELL COUNT IS CAPPED. fillText is the floor cost and nothing makes
+//      23,000 of them cheap, so the grid adapts to the viewport instead of
+//      being a fixed pixel size that quietly triples on a large monitor.
+//   3. FILL STYLES ARE A LOOKUP TABLE. Quantised colour × alpha, built once —
+//      no per-cell string allocation, and the GC churn goes with it.
+//   4. FRAMES ARE CAPPED near 30fps. This is a background shimmer; the second
+//      30 frames per second were paid for and never seen.
+//
+// `t` is now derived from elapsed TIME rather than incremented per frame, so
+// the drift runs at the same speed it always did regardless of the frame rate.
 export default function AsciiField({
   colors = ['99,102,241', '139,92,246', '217,70,239', '56,189,248'], // indigo · violet · fuchsia · sky
   baseAlpha = 0.22,
@@ -24,6 +50,7 @@ export default function AsciiField({
   colors?: string[];
   baseAlpha?: number;
   peakAlpha?: number;
+  /** Minimum cell size. The real one grows if the viewport would blow the budget. */
   cell?: number;
   edgeBias?: number;
   /**
@@ -53,18 +80,35 @@ export default function AsciiField({
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     const parent = canvas.parentElement;
     if (!ctx || !parent) return;
+
+    // ── Budget ───────────────────────────────────────────────────────────────
+    // A ceiling on cells, not on pixels. A fixed `cell` means the work scales
+    // with the monitor: the same hero that costs 12k glyphs on a laptop costs
+    // 40k on a 4K display, and the big screen is exactly where people notice.
+    const MAX_CELLS = 17_000;
+    const FRAME_MS = 32;           // ~30fps. It is a background texture.
+    const BASE_EVERY = 4;          // rebuild the noise field every 4th frame
+    const COLOR_STEPS = 24;
+    const ALPHA_STEPS = 24;
 
     const stops = colors.map((c) => c.split(',').map(Number));
     const chars = '.:-=+*#%@';                 // no space: thresholding makes the gaps
     const scale = 96;                          // px per noise unit → blob size
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let cols = 0, rows = 0, t = 0, raf = 0;
+    // No cursor means no glow and no wake, so the only moving part left is a
+    // drift nobody is looking at. Phones pay the most for this and get the
+    // least back: draw one frame and stop.
+    const staticOnly = reduced || !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    let cols = 0, rows = 0, step = cell, raf = 0;
     let inView = true;   // rAF stops while the hero is scrolled away
     const mouse = { x: -9999, y: -9999, lastX: -9999, lastY: -9999 };
+    const start = performance.now();
+    const driftAt = (now: number) => ((now - start) / 1000) * 0.72;   // matches v2's 0.012/frame at 60fps
 
     // Expanding wave-rings left by cursor movement and clicks.
     interface Ripple { x: number; y: number; born: number; amp: number; life: number }
@@ -105,9 +149,52 @@ export default function AsciiField({
       return `${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)}`;
     }
 
+    // ── Lookup tables, built once per resize ────────────────────────────────
+    // Every one of these replaces something that used to run per cell per frame.
+    /** `rgba(r,g,b,a)` for every quantised colour × alpha pair. */
+    let styles: string[] = [];
+    /** Glyph for a quantised level — was two Math.pow calls per cell. */
+    const charFor = new Uint8Array(65);
+    for (let i = 0; i <= 64; i++) {
+      charFor[i] = Math.min(chars.length - 1, Math.floor(Math.pow(i / 64, 0.8) * (chars.length - 1)));
+    }
+    /** Per-column threshold and its reciprocal — depends on x alone. */
+    let threshOf = new Float32Array(0);
+    let invSpan = new Float32Array(0);
+    /** Spatial half of the gradient position, as a colour bucket index. */
+    let hueIdx = new Uint8Array(0);
+    /** The cached height field. */
+    let base = new Float32Array(0);
+
+    function buildTables() {
+      styles = new Array(COLOR_STEPS * ALPHA_STEPS);
+      for (let c = 0; c < COLOR_STEPS; c++) {
+        const rgb = rgbAt(c / COLOR_STEPS);
+        for (let a = 0; a < ALPHA_STEPS; a++) {
+          styles[c * ALPHA_STEPS + a] = `rgba(${rgb},${((a + 0.5) / ALPHA_STEPS).toFixed(3)})`;
+        }
+      }
+      threshOf = new Float32Array(cols);
+      invSpan = new Float32Array(cols);
+      for (let x = 0; x < cols; x++) {
+        const edge = Math.pow(Math.abs(x / cols - 0.5) * 2, 1.3);
+        const th = 0.4 + (1 - edge) * 0.26 * edgeBias;
+        threshOf[x] = th;
+        invSpan[x] = 1 / (1 - th);
+      }
+      hueIdx = new Uint8Array(cols * rows);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const p = (x / cols) * 0.5 + (y / rows) * 0.4;
+          hueIdx[y * cols + x] = Math.floor((p - Math.floor(p)) * COLOR_STEPS) % COLOR_STEPS;
+        }
+      }
+      base = new Float32Array(cols * rows);
+    }
+
     // ── Artwork sampled to the character grid ────────────────────────────────
-    // One Float32Array of ink density, rebuilt only on resize. Per frame this
-    // costs a single array read per cell, so the drift stays at full rate.
+    // One Float32Array of ink density, rebuilt only on resize. The 1.45 gamma is
+    // baked in HERE rather than per frame — it never varies.
     let art: Float32Array | null = null;
     let artImg: HTMLImageElement | null = null;
 
@@ -128,13 +215,13 @@ export default function AsciiField({
 
       // Aspect in PIXELS, not cell counts: characters are far taller than they
       // are wide, so fitting on cells alone squashes the engraving flat.
-      const cellW = cell * 0.6;                      // monospace advance ≈ 0.6em
-      const gridAspect = (cols * cellW) / (rows * cell);
+      const cellW = step * 0.6;                      // monospace advance ≈ 0.6em
+      const gridAspect = (cols * cellW) / (rows * step);
       const ia = artImg.naturalWidth / artImg.naturalHeight;
 
       if (imageFit === 'width') {
         const dw = cols * imageScale;
-        const dh = ((cols * cellW) / ia / cell) * imageScale;
+        const dh = ((cols * cellW) / ia / step) * imageScale;
         const dx = (cols - dw) / 2;
         const dy = (rows - dh) * Math.max(0, Math.min(1, focalY));
         octx.drawImage(artImg, dx, dy, dw, dh);
@@ -142,8 +229,8 @@ export default function AsciiField({
         // The whole plate, letterboxed. Width and height are computed in the
         // grid's own units, which is why cellW appears on both sides.
         let dw = cols, dh = rows;
-        if (ia > gridAspect) dh = (cols * cellW) / ia / cell;
-        else dw = (rows * cell) * ia / cellW;
+        if (ia > gridAspect) dh = (cols * cellW) / ia / step;
+        else dw = (rows * step) * ia / cellW;
         dw *= imageScale; dh *= imageScale;
         const dx = (cols - dw) * Math.max(0, Math.min(1, focalX));
         const dy = (rows - dh) * Math.max(0, Math.min(1, focalY));
@@ -163,7 +250,8 @@ export default function AsciiField({
         const lum = (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
         // Ink (dark) → high density. The paper is near-white and must land at
         // ~0 or the whole field lifts and the terrain disappears under a wash.
-        out[p] = Math.max(0, 1 - lum);
+        // Gamma baked in: it pulls near-white paper below the draw threshold.
+        out[p] = Math.pow(Math.max(0, 1 - lum), 1.45);
       }
       art = out;
     }
@@ -171,24 +259,55 @@ export default function AsciiField({
     if (image) {
       artImg = new Image();
       artImg.decoding = 'async';
-      artImg.onload = () => sampleArt();
+      artImg.onload = () => { sampleArt(); buildBase(driftAt(performance.now())); };
       artImg.src = image;
     }
 
     function resize() {
       const w = parent!.clientWidth, h = parent!.clientHeight;
+      if (!w || !h) return;
+      // The cell grows until the grid fits the budget. `cell` is the floor, not
+      // the value — on a laptop it is usually exactly what was asked for.
+      step = Math.max(cell, Math.ceil(Math.sqrt((w * h) / MAX_CELLS)));
       canvas!.width = w * dpr; canvas!.height = h * dpr;
       canvas!.style.width = w + 'px'; canvas!.style.height = h + 'px';
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx!.font = `${cell}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      ctx!.font = `${step}px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx!.textBaseline = 'top';
-      cols = Math.ceil(w / cell); rows = Math.ceil(h / cell);
+      cols = Math.ceil(w / step); rows = Math.ceil(h / step);
+      buildTables();
       sampleArt();
+      buildBase(driftAt(performance.now()));
     }
 
-    function frame() {
-      t += 0.012;
-      const now = performance.now();
+    /**
+     * The expensive half, run a few times a second instead of sixty.
+     *
+     * Nothing in here responds to the pointer, which is the whole reason it can
+     * lag behind: the drift is slow enough that 7 updates a second is
+     * indistinguishable from 60, while the glow and the wake — the parts a
+     * person is actually driving — stay on every frame.
+     */
+    function buildBase(t: number) {
+      const artW = 0.55 + imageWeight;
+      for (let y = 0; y < rows; y++) {
+        const py = y / scale * step - t * 0.35;
+        const row = y * cols;
+        for (let x = 0; x < cols; x++) {
+          let n = fbm(x / scale * step + t, py);
+          if (art) n = 0.42 + (n - 0.5) * 0.30 + art[row + x] * artW;
+          base[row + x] = n;
+        }
+      }
+    }
+
+    let lastDraw = 0, baseTick = 0;
+
+    function draw(now: number) {
+      const t = driftAt(now);
+      if (baseTick % BASE_EVERY === 0) buildBase(t);
+      baseTick++;
+
       const w = parent!.clientWidth, h = parent!.clientHeight;
       ctx!.clearRect(0, 0, w, h);
 
@@ -200,32 +319,29 @@ export default function AsciiField({
         const fade = 1 - (now - r.born) / r.life;
         return { x: r.x, y: r.y, radius: 40 + age * 300, width: 40 + age * 55, boost: r.amp * fade * fade };
       });
+      const nRings = rings.length;
+
+      // The gradient's drift is an index shift now, not a float recomputed per
+      // cell — the spatial half is baked into hueIdx.
+      const tShift = (Math.floor(t * 0.05 * COLOR_STEPS) % COLOR_STEPS + COLOR_STEPS) % COLOR_STEPS;
+      const mx = mouse.x, my = mouse.y;
+      let style = '';
 
       for (let y = 0; y < rows; y++) {
+        const py = y * step;
+        const row = y * cols;
+        const dy = py - my, dy2 = dy * dy;
         for (let x = 0; x < cols; x++) {
-          const px = x * cell, py = y * cell;
-          // organic height field, slowly drifting
-          let n = fbm(px / scale + t, py / scale - t * 0.35);
-          // Artwork drives the SAME terrain the cursor glow and ripples below
-          // push around, so the interaction travels through the picture rather
-          // than over it.
-          //
-          // The ink has to DOMINATE, not merely nudge: added as a bias of
-          // similar amplitude to the noise, the engraving washed out into
-          // uniform static. So the drift is demoted to a shimmer and the ink
-          // carries the height, with a gamma that pulls the near-white paper
-          // firmly below the draw threshold — otherwise the blank sky fills in
-          // and the linework has nothing to read against.
-          if (art) {
-            const ink = art[y * cols + x];
-            const shaped = Math.pow(ink, 1.45);
-            n = 0.42 + (n - 0.5) * 0.30 + shaped * (0.55 + imageWeight);
-          }
+          const px = x * step;
+          let n = base[row + x];
+
           // cursor glow — instant, local
-          const dx = px - mouse.x, dy = py - mouse.y;
-          n = Math.min(1.4, n + Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 170) * 0.45);
+          const dx = px - mx;
+          const dist = Math.sqrt(dx * dx + dy2);
+          if (dist < 170) n = Math.min(1.4, n + (1 - dist / 170) * 0.45);
+
           // wake — expanding rings from recent movement / clicks
-          for (let k = 0; k < rings.length; k++) {
+          for (let k = 0; k < nRings; k++) {
             const rg = rings[k];
             const rdx = px - rg.x, rdy = py - rg.y;
             const d = Math.sqrt(rdx * rdx + rdy * rdy) - rg.radius;
@@ -234,19 +350,27 @@ export default function AsciiField({
               n = Math.min(1.4, n + band * band * rg.boost);
             }
           }
-          // calmer centre, denser edges via a position-dependent contour line
-          const edge = Math.pow(Math.abs(x / cols - 0.5) * 2, 1.3);
-          const thresh = 0.4 + (1 - edge) * 0.26 * edgeBias;
-          const level = (n - thresh) / (1 - thresh);
+
+          const level = (n - threshOf[x]) * invSpan[x];
           if (level <= 0) continue;
-          const ch = chars[Math.min(chars.length - 1, Math.floor(Math.pow(Math.min(1, level), 0.8) * (chars.length - 1)))];
-          const p = (x / cols) * 0.5 + (y / rows) * 0.4 + t * 0.05;
-          const alpha = Math.min(1, baseAlpha + level * peakAlpha);
-          ctx!.fillStyle = `rgba(${rgbAt(p)},${alpha.toFixed(3)})`;
+          const lv = level < 1 ? level : 1;
+          const ch = chars[charFor[(lv * 64) | 0]];
+
+          let ai = ((baseAlpha + lv * peakAlpha) * ALPHA_STEPS) | 0;
+          if (ai >= ALPHA_STEPS) ai = ALPHA_STEPS - 1;
+          const ci = (hueIdx[row + x] + tShift) % COLOR_STEPS;
+          const s = styles[ci * ALPHA_STEPS + ai];
+          // fillStyle is a parsed setter; skipping the redundant writes is most
+          // of what batching by colour would have bought, without the sort.
+          if (s !== style) { style = s; ctx!.fillStyle = s; }
           ctx!.fillText(ch, px, py);
         }
       }
-      if (!reduced && inView) raf = requestAnimationFrame(frame);
+    }
+
+    function frame(now: number) {
+      if (now - lastDraw >= FRAME_MS) { lastDraw = now; draw(now); }
+      if (inView) raf = requestAnimationFrame(frame);
     }
 
     // Window-level listeners + rect bounds check: the canvas sits BEHIND the
@@ -273,30 +397,39 @@ export default function AsciiField({
       if (pt) addRipple(pt.x, pt.y, 1.35, 1600); // shockwave
     };
 
-    // A full-height canvas animating at 60fps below the fold is pure waste:
-    // pause the loop whenever the hero is out of view, resume on return.
+    // A full-height canvas animating below the fold is pure waste: pause the
+    // loop whenever the hero is out of view, resume on return.
     const vio = typeof IntersectionObserver !== 'undefined'
       ? new IntersectionObserver(([e]) => {
-          const now = !!e?.isIntersecting;
-          if (now === inView) return;
-          inView = now;
-          if (reduced) return;
+          const next = !!e?.isIntersecting;
+          if (next === inView) return;
+          inView = next;
+          if (staticOnly) return;
           cancelAnimationFrame(raf);
           if (inView) raf = requestAnimationFrame(frame);
         })
       : null;
     vio?.observe(canvas);
 
+    // ResizeObserver, not just window.resize: the hero's height depends on
+    // content that settles after mount (fonts, the product window), and a grid
+    // built against the wrong height letterboxes the artwork.
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => resize()) : null;
+    ro?.observe(parent);
+
     resize();
-    window.addEventListener('resize', resize);
-    window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('click', onClick, { passive: true });
-    if (reduced) frame(); else raf = requestAnimationFrame(frame);
+    if (staticOnly) {
+      draw(performance.now());
+    } else {
+      window.addEventListener('pointermove', onMove, { passive: true });
+      window.addEventListener('click', onClick, { passive: true });
+      raf = requestAnimationFrame(frame);
+    }
 
     return () => {
       vio?.disconnect();
+      ro?.disconnect();
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('click', onClick);
     };

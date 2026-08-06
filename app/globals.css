@@ -287,6 +287,27 @@
     }
   }
 
+  /* ── Marquee ──────────────────────────────────────────────────────────────
+     Two identical rows side by side; the pair slides left by exactly one row's
+     width and snaps back, which is invisible because the second row is already
+     where the first one started.
+
+     translate3d, not translateX: it promotes the track to its own compositor
+     layer, so the whole loop runs off the main thread and costs nothing to the
+     rest of the page. Pausing on hover is not a flourish — it is how you read
+     an item you noticed going past. */
+  .marquee-row { animation: marquee-slide 42s linear infinite; }
+  .marquee:hover .marquee-row { animation-play-state: paused; }
+  @keyframes marquee-slide {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-100%, 0, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* Not merely slower — stopped. Continuous horizontal motion is a vestibular
+       trigger, and this one carries no information the static row does not. */
+    .marquee-row { animation: none; }
+  }
+
   /* Below-fold sections skip layout/paint until scrolled near. The intrinsic
      size keeps the scrollbar honest so the page doesn't jump. */
   .cv-auto { content-visibility: auto; contain-intrinsic-size: auto 720px; }

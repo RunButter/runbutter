@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public
@@ -14,6 +14,7 @@ import Comparison from '@/components/landing/Comparison';
 import FeatureWindows from '@/components/landing/FeatureWindows';
 import Reveal from '@/components/landing/Reveal';
 import CopyCommand from '@/components/landing/CopyCommand';
+import ObjectMarquee from '@/components/landing/ObjectMarquee';
 import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
@@ -30,13 +31,16 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
 // throughout — no hue.
-// 14 tiles, two of them spanning two columns: exactly 16 cells, so the
-// 4-column grid fills four clean rows with no ragged gap at the end. Keep that
+// 17 tiles, three of them spanning two columns: exactly 20 cells, so the
+// 4-column grid fills five clean rows with no ragged gap at the end. Keep that
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
-const CAPS = [
+const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string }[] = [
   // The one tile with a page of its own behind it — agents are the hardest
   // thing here to believe from a single sentence.
-  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true, href: '/ai-agents' },
+  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
+  // Wide, and early, because it is the answer to "but my business is not a
+  // software company" — the objection every vertical-shaped buyer arrives with.
+  { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments, kilns. Describe what you track and it gets a table, a form, search, import, export and agent access — no code, no migration.', wide: true },
   { icon: Mail, name: 'Newsletters and drip sequences', body: 'Write a campaign, filter the list live by behaviour, and let a sequence follow up on its own. Opens, clicks, bounces and one-click unsubscribe are handled.', wide: true },
   { icon: Table2, name: 'Excel, both ways', body: 'A live link your team refreshes in Excel — or a real two-way sync, so edits in the sheet come back.' },
   { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work, where your agents can post too. No fifth tab.' },
@@ -49,6 +53,9 @@ const CAPS = [
   { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints the app uses.' },
   { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, straight from your documents.' },
   { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
+  // Both of these are free public data doing work a vendor usually meters.
+  { icon: Scale, name: 'Sanctions screening', body: 'Check a name against the OFAC lists before you invoice. Fuzzy-matched in Postgres, no per-query fee.' },
+  { icon: FileStack, name: 'PDF toolkit', body: 'Merge, split, rotate and watermark in your browser. The files never leave your machine.', href: '/pdf', cta: 'Open the PDF tools' },
   { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
 ];
 
@@ -104,7 +111,10 @@ const PLAN_CARDS = PLAN_ORDER.map((id) => ({
 const FAQ: { q: string; a: string; open?: boolean }[] = [
   { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together. That is what makes a question like "which contracts auto-renew, for clients who owe us money" a single query instead of an afternoon.' },
   { q: 'What does it cost to run at scale?', a: 'The price on this page is the price. Search, matching, reconciliation, segmentation and reporting all run in Postgres, so there is no usage meter underneath — no per-task automation billing, no per-contact marketing tier, and no AI tokens on our bill. If you self-host, your only cost is the database and a Node process.' },
-  { q: 'Is it open source?', a: 'Yes, MIT licensed. Clone the repo, run it against your own Supabase and Privy, and self-host for free. Or use the hosted version and skip the setup.' },
+  { q: 'Is it open source?', a: 'Yes, MIT licensed — not "open core" with the useful half behind a commercial licence. Clone the repo, run it against your own Supabase and Privy, and self-host for free, including the agents, the API and the MCP server. Or use the hosted version and skip the setup.' },
+  { q: 'My business is not deals and invoices. Does this fit?', a: 'That is what custom objects are for. Describe what you actually track — vehicles, patients, shipments, machines, cases — and RunButter proposes the record types and fields, or you build them by hand. Each one immediately gets a table, a form, search, CSV import and export, API access and agent access, and you decide which sidebar section it appears in. Rows are stored in a typed JSONB column rather than a generated table, so adding a record type is not a database migration and cannot affect anyone else’s data.' },
+  { q: 'What happens to my data if I stop paying?', a: 'You export it, or you keep running it. Every list exports to CSV, the REST API returns everything, and the whole application is MIT licensed — so the exit is "point the same code at your own Postgres", not a support ticket. There is no proprietary format and nothing is held back to make leaving hard.' },
+  { q: 'How do I update a self-hosted install?', a: 'Pull the new code, then apply any new migrations — in that order, because the app is written to tolerate a schema that is one step behind, not one step ahead. Migrations are numbered, idempotent and safe to re-run, `npm run migrate:status` tells you what is pending, and the Updates screen in Settings shows which version you are on. The full procedure is in the docs under Updating.' },
   { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
   { q: 'Can AI agents actually do work for me?', a: 'Yes. Define an agent with a role and a scoped set of tools, then run it on a task. It reads and updates records through the same verified endpoints the app uses, on your own AI key. By default it proposes changes for you to approve; you can let trusted agents run on their own within a step limit.' },
   { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
@@ -122,7 +132,7 @@ const INCLUDED: { group: string; items: string[] }[] = [
   { group: 'Marketing', items: ['Campaigns and budgets', 'Newsletters with AI drafting', 'Live segments and lead scoring', 'Drip sequences', 'Post studio with real previews', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Source attribution'] },
   { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar', 'Mind maps and content boards'] },
   { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
-  { group: 'Platform', items: ['AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'Roles and permissions', 'GDPR controls'] },
+  { group: 'Platform', items: ['Custom record types', 'AI workspace builder', 'AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'PDF toolkit, in the browser', 'Sanctions screening (OFAC)', 'Roles and permissions', 'GDPR controls'] },
 ];
 
 const MCP_SNIPPET = `{
@@ -281,9 +291,12 @@ export default function HomePage() {
                     <h3 className="text-sm font-medium text-primary">{c.name}</h3>
                   </div>
                   <p className="text-xs text-secondary leading-relaxed max-w-[42ch]">{c.body}</p>
+                  {/* The label used to be the string "See how agents work",
+                      hardcoded, because agents were the only linked tile. A
+                      second one made that a lie on its own card. */}
                   {c.href && (
                     <span className="mt-3 inline-flex items-center gap-1 text-xs text-primary font-medium">
-                      See how agents work <ArrowRight className="w-3.5 h-3.5" />
+                      {c.cta} <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                     </span>
                   )}
                 </div>
@@ -294,6 +307,49 @@ export default function HomePage() {
                 </Reveal>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Custom objects ───────────────────────────────────────────────────
+          Its own section rather than one more tile in the bento, because it is
+          the answer to the objection almost every non-software business brings:
+          "our work does not look like deals and invoices". The strip is the
+          argument — a wall of things nobody would expect a CRM to hold. */}
+      <section className="border-t border-subtle cv-auto">
+        <div className="py-20">
+          <div className="max-w-6xl mx-auto px-6">
+            <Reveal>
+              <div className="max-w-2xl">
+                <h2 className="text-2xl md:text-4xl font-medium tracking-tight">It also tracks whatever you track</h2>
+                <p className="text-secondary mt-3 leading-relaxed">
+                  Describe your business in a sentence and RunButter proposes the record types to add —
+                  or build them by hand, field by field. Each one gets a table, a form, search, import,
+                  export and agent access immediately, and you choose which sidebar section it lives in.
+                </p>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal variant="fade" className="mt-10">
+            <ObjectMarquee />
+          </Reveal>
+
+          <div className="max-w-6xl mx-auto px-6 mt-10">
+            <Reveal delay={80}>
+              <div className="grid sm:grid-cols-3 gap-x-10 gap-y-6">
+                {[
+                  ['No migrations', 'Rows live in one JSONB column behind a typed schema, so adding a record type never touches the database structure — and never risks anyone else’s data.'],
+                  ['Typed, not free text', 'Numbers, dates, currencies, relations and dropdowns are validated on the way in. A bad value is rejected, not quietly stored as text.'],
+                  ['Connected, not siloed', 'A relation field links your Vehicles to the Companies you already have, so the join works the same as any built-in.'],
+                ].map(([h, b]) => (
+                  <div key={h} className="border-t border-strong pt-4">
+                    <h3 className="text-sm font-medium text-primary">{h}</h3>
+                    <p className="text-xs text-secondary mt-2 leading-relaxed">{b}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
