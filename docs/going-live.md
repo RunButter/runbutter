@@ -292,6 +292,17 @@ public repository is a copy of the branch you already work on. The script
 refuses a dirty tree, refuses to run off `main`, and refuses a non-fast-forward
 push, because rewriting a public history breaks every clone and fork of it.
 
+It also refuses to run in a clone whose `origin` is not the working repository.
+That check is there because the mistake is easy and silent: an old clone
+pointing at a stale mirror answers `Already up to date` to `git pull` while
+sitting a hundred commits behind. If you are unsure which clone you are in,
+throw it away and take a fresh one — it costs a minute and removes the doubt:
+
+```bash
+git clone https://github.com/CasperCrypto/hirebtr.git
+cd hirebtr && npm run publish:oss
+```
+
 ### Then, in the repository settings
 
 1. **Description and topics** — `crm`, `erp`, `open-source`, `nextjs`,

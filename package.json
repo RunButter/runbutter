@@ -12,7 +12,7 @@
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs --status",
     "bundle:sql": "node scripts/bundle-sql.mjs",
-    "publish:oss": "bash scripts/publish-oss.sh"
+    "publish:oss": "node scripts/publish-oss.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

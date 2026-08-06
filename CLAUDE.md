@@ -574,6 +574,13 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
   (adds the `public` remote on first use, pushes `origin` first so the public copy can never be
   ahead of what Render is serving, and **refuses a non-fast-forward** — force-pushing a public repo
   rewrites history under everyone who cloned or forked it).
+- **`"Already up to date"` is not evidence that you are up to date.** An old local clone had
+  `origin` = `CasperCrypto/talent-insight` (the stale mirror), so `git pull` reported success while
+  sitting ~100 commits behind, and publishing from it would have pushed months-old code to the
+  public repo. `publish:oss` therefore **refuses to run unless `origin` is `CasperCrypto/hirebtr`**,
+  and prints the URL it actually found. The scripts are **Node, never bash** — this is run from
+  PowerShell, where a `.sh` is not executable and `bash` is on PATH only if Git for Windows was
+  installed with that option.
 - A cloud session can only reach the repo it was started from: `add_repo` refuses cross-owner adds,
   so a session on `CasperCrypto/hirebtr` **cannot push to `RunButter/runbutter`**. Publishing is a
   one-command local step, by design of the sandbox rather than by choice.
