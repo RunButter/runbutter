@@ -83,10 +83,40 @@ async function starCount(): Promise<number | null> {
   }
 }
 
-// Set NEXT_PUBLIC_PRODUCT_HUNT_ID after launching, and the badge appears. Until
-// then nothing renders — a "featured on Product Hunt" badge for a product that
-// has not been posted is the kind of small lie people check.
-const PH_ID = process.env.NEXT_PUBLIC_PRODUCT_HUNT_ID || '';
+// ── Product Hunt ────────────────────────────────────────────────────────────
+/**
+ * The launch badge. BOTH VALUES ARE COPIED VERBATIM from the snippet Product
+ * Hunt hands you — neither is constructed, and that is the whole point.
+ *
+ * The first version built the link itself, as `/posts/<slug>#<post_id>`, which
+ * is the URL shape every Product Hunt badge used for years. It now 302s to a
+ * `/products/<slug>?…&launch=<slug>` URL that returns a 512 after rendering
+ * for about a second. Nothing about that is our bug and nothing about it is
+ * fixable from here; the canonical `/products/<slug>/launches/<slug>` address
+ * in their own snippet just works. Guessing another vendor's URL scheme buys
+ * nothing and breaks the moment they reorganise their routes.
+ *
+ * Note also that a Product Hunt PRODUCT id and a LAUNCH POST id are different
+ * numbers with near-identical embed snippets, and putting one where the other
+ * belongs renders a broken image rather than raising anything. This is the post
+ * id, from `featured.svg?post_id=`.
+ *
+ * Defaulted rather than required, the same way REPO_URL is hardcoded above —
+ * this file is RunButter's own marketing chrome. `??` not `||`, so a fork can
+ * switch the badge off with an empty value; with `||` an empty string would
+ * fall back to ours and a fork's footer would quietly advertise us.
+ */
+const PH_POST_ID = process.env.NEXT_PUBLIC_PRODUCT_HUNT_POST_ID ?? '1199867';
+const PH_URL = process.env.NEXT_PUBLIC_PRODUCT_HUNT_URL
+  ?? 'https://www.producthunt.com/products/runbutter/launches/runbutter?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-runbutter';
+
+const phBadge = PH_POST_ID && PH_URL
+  ? {
+      href: PH_URL,
+      img: (theme: string) => `https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PH_POST_ID}&theme=${theme}`,
+      label: 'RunButter on Product Hunt',
+    }
+  : null;
 
 export async function MarketingFooter({ home = false }: { home?: boolean }) {
   const at = (hash: string) => (home ? hash : `/${hash}`);
@@ -177,28 +207,24 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
                 )}
               </a>
 
-              {PH_ID && (
-                <a
-                  href={`https://www.producthunt.com/posts/runbutter?utm_source=badge-featured&utm_medium=badge#${PH_ID}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Upvote RunButter on Product Hunt"
-                >
+              {phBadge && (
+                <a href={phBadge.href} target="_blank" rel="noopener noreferrer" aria-label={phBadge.label}>
                   {/* Two images rather than one: Product Hunt renders the badge
                       server-side per theme, so the light one on a dark footer is
-                      a white slab. eslint-disable because these are remote SVGs
-                      from another origin — next/image would proxy them through
-                      our own optimizer for no gain. */}
+                      a white slab. Height is pinned to h-8 to match the star
+                      button beside it — a badge at its native 54px next to a
+                      32px button reads as two rows pretending to be one.
+                      eslint-disable because these are remote SVGs from another
+                      origin: next/image would proxy them through our own
+                      optimizer for no gain. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PH_ID}&theme=light`}
-                    alt="RunButter on Product Hunt" width={200} height={36}
+                    src={phBadge.img('light')} alt={phBadge.label} width={250} height={54}
                     className="h-8 w-auto dark:hidden" loading="lazy"
                   />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${PH_ID}&theme=dark`}
-                    alt="RunButter on Product Hunt" width={200} height={36}
+                    src={phBadge.img('dark')} alt={phBadge.label} width={250} height={54}
                     className="h-8 w-auto hidden dark:block" loading="lazy"
                   />
                 </a>
