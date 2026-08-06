@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import SkillsSection from '@/components/crm/SkillsSection';
+import PluginExport from '@/components/crm/PluginExport';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
 
@@ -44,7 +45,12 @@ export default function SkillsPage() {
       <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
         <div className="max-w-5xl mx-auto">
           {privy && ws ? (
-            <SkillsSection skills={skills} ws={ws.id} privy={privy} onChange={() => ws && privy && reload(ws, privy)} />
+            <div className="space-y-4">
+              <SkillsSection skills={skills} ws={ws.id} privy={privy} onChange={() => ws && privy && reload(ws, privy)} />
+              {/* Below the library, not above it: exporting is what you do
+                  after you have skills worth exporting. */}
+              <PluginExport privy={privy} ws={ws.id} skills={skills} />
+            </div>
           ) : (
             <div className="rounded-lg border border-subtle bg-surface-sunken p-4 text-sm text-secondary">
               Sign in to create and import skills.

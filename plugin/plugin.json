@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "runbutter",
+  "version": "1.0.0",
+  "description": "Run a whole company from your agent: sales pipeline, invoices and ledger, files, hiring and compliance, over one relational Postgres core.",
+  "author": {
+    "name": "RunButter",
+    "url": "https://runbutter.app"
+  },
+  "homepage": "https://runbutter.app",
+  "repository": "https://github.com/RunButter/runbutter",
+  "license": "MIT",
+  "keywords": ["crm", "erp", "invoicing", "finance", "hiring", "compliance", "postgres", "mcp"]
+}

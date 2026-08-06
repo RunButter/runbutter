@@ -25,6 +25,14 @@ jobs:
       - name: Types
         run: npx tsc --noEmit
 
+      # The published plugin is a contract with other people's clients: a
+      # frontmatter name that stops matching its directory makes a conforming
+      # client SKIP the skill silently, which is exactly the kind of break
+      # nobody notices until someone opens an issue. --strict, so our own
+      # plugin is held to the quality rules too, not just the specification.
+      - name: Agent Plugin conformance
+        run: npm run check:plugin
+
       # The Privy id must be WELL-FORMED — the provider validates its shape
       # offline and throws on anything else, which fails the prerender of every
       # page. This one is fake and 25 characters, the shape Privy issues.

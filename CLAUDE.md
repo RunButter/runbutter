@@ -203,6 +203,37 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - `DEMO_DEALS` seeds the board through `create_pipeline_record` (not `create_record` — a pipeline
   record is not a CRUD object), resolving stages **by name** because the ids are per workspace.
 
+## Agent Plugins (`plugin/`, `lib/plugins/*`)
+- **Agent Plugins 1.0.0** (agent-plugins.org) is the vendor-neutral package format — TSC: Amazon,
+  Cursor, Microsoft, OpenAI, Vercel. A plugin is a directory: `plugin.json` (only `$schema` + `name`
+  required), `skills/<name>/SKILL.md`, `mcp.json`. It is a PACKAGING format only — no registry, no
+  distribution, no install mechanism.
+- **RunButter already spoke both halves before this existed.** `/api/mcp` is a Streamable HTTP MCP
+  server, and skills (0068) already ARE `SKILL.md` with `name`/`description` frontmatter — which is
+  why `plugin/` is mostly prose rather than plumbing.
+- **A PLUGIN CANNOT CARRY A CREDENTIAL AND THERE IS NOWHERE TO PUT ONE.** Spec §7.2: header values
+  are "visible package data, not a portable secret mechanism"; plugins "MUST NOT embed credentials";
+  clients "MUST NOT perform placeholder or environment-variable expansion" in urls or headers; and
+  v1 "defines no OAuth configuration or portable credential-reference fields". So `mcp.json` names
+  the endpoint and the human supplies the key client-side. Don't "improve" this into a one-click
+  install — that is a workspace key in a file people commit.
+- **The frontmatter `name` MUST equal the skill's directory name**, and a mismatch makes a
+  conforming client SKIP the skill in silence. That is the single easiest thing to break here, so
+  `npm run check:plugin` is a CI gate rather than a convention.
+- **`scripts/check-plugin.mjs` separates SPEC ERRORS from QUALITY WARNINGS**, and the distinction is
+  load-bearing: a user's exported skill with a two-line body is valid Agent Plugins and below our
+  bar for `plugin/`. Errors always fail; `--strict` (what CI runs on `plugin/`) also fails warnings.
+  It never fetches the schemas — the spec forbids clients doing that at load time, and a check that
+  breaks when a website is down is a check people start skipping.
+- **`lib/plugins/agent-plugin.ts` is the ONE builder**, shared by the repo's plugin and
+  `/api/plugins/export`, so a published plugin and an exported one cannot disagree about the format.
+  Skill slugs are deduped (`invoice-tone`, `invoice-tone-2`) because two rows can slug to one
+  directory, and YAML scalars are quoted + escaped because a skill called `Invoices: overdue` is
+  otherwise a parse error whose only symptom is a skipped skill.
+- **`lib/plugins/zip.ts` is a hand-written store-only ZIP writer**, no dependency — same call as
+  `lib/markdown.ts`. Fixed 1980 timestamps make exports byte-reproducible. It is deliberately not
+  Zip64/DEFLATE/encryption capable; if that changes, take a dependency rather than growing it.
+
 ## Documentation + the public repo
 - **`docs/*.md` is the single source for both surfaces** — GitHub renders it, and `/developers`
   renders the same files through `lib/markdown.ts` at build time. A docs-only copy is how an install
