@@ -1,5 +1,7 @@
 'use client';
 
+import { getAccessToken } from '@privy-io/react-auth';
+
 import { useState } from 'react';
 import { X, Loader2, Send, CheckCircle2 } from 'lucide-react';
 
@@ -19,8 +21,12 @@ export default function SendDocumentModal({
     if (!to.trim()) { setError('Recipient email is required.'); return; }
     setSending(true); setError('');
     try {
+      // The route verifies this against the claimed privyUserId before it
+      // reads the document, let alone emails it.
+      const token = await getAccessToken().catch(() => null);
       const res = await fetch('/api/finance/send-document', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
         body: JSON.stringify({ privyUserId, invoiceId, to: to.trim(), message: message.trim() }),
       });
       const data = await res.json();

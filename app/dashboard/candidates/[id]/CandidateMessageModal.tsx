@@ -1,5 +1,7 @@
 'use client';
 
+import { getAccessToken } from '@privy-io/react-auth';
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, Mail, Send, Loader2, Check } from 'lucide-react';
@@ -38,9 +40,10 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
         if (!subject.trim() || !body.trim()) return;
         setSending(true); setError('');
         try {
-            const res = await fetch('/api/email/candidate-message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const token = await getAccessToken().catch(() => null);
+                const res = await fetch('/api/email/candidate-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
                 body: JSON.stringify({ candidateId: candidate.id, subject, body, privyUserId }),
             });
             const data = await res.json();

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, getAccessToken } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import {
     DndContext,
@@ -220,9 +220,10 @@ export default function PipelinePage() {
         if (candidate && user) {
             // Persist to database
             try {
+                const token = await getAccessToken().catch(() => null);
                 const res = await fetch('/api/candidates/status', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
                     body: JSON.stringify({
                         candidateId: candidate.id,
                         status: candidate.status,

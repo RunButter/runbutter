@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { createAdminClient } from '@/lib/supabase';
 import { buildFA3 } from '@/lib/ksef/fa3';
 import { sendInvoiceToKSeF } from '@/lib/ksef/service';
@@ -17,6 +18,11 @@ export async function POST(req: Request) {
     if (!privyUserId || !invoiceId) {
       return NextResponse.json({ error: 'privyUserId and invoiceId are required' }, { status: 400 });
     }
+
+    // The identity in the body is a CLAIM until this verifies it against the
+    // Privy token — everything below acts as that user.
+    const auth = await authorizePrivy(req, privyUserId);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
 
     const admin = createAdminClient();
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase';
+import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { buildDocumentPdf } from '@/lib/pdf/document-pdf';
 
 export const runtime = 'nodejs';
@@ -10,9 +11,14 @@ export const runtime = 'nodejs';
  * Body: { privyUserId, invoiceId, to, message? }
  *
  * Emails a branded invoice/offer summary (with a link to the hosted document)
- * to a recipient via Resend, and marks the document as "sent". Authorization is
- * enforced by get_invoice_document, which only returns rows in the caller's
- * workspaces.
+ * to a recipient via Resend, and marks the document as "sent".
+ *
+ * get_invoice_document scopes to the CALLER'S workspaces — but it scopes to the
+ * privy id in the body, which until the 2026-08 sweep nothing verified. Anyone
+ * who knew a real user's Privy id and an invoice id could have this server email
+ * that invoice, share link included, to any address they chose. The identity is
+ * now verified against the token before the RPC is asked anything, which is the
+ * rule the rest of the codebase already follows.
  */
 const money = (n: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n || 0);
@@ -24,6 +30,9 @@ export async function POST(req: Request) {
     if (!privyUserId || !invoiceId || !to) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const auth = await authorizePrivy(req, privyUserId);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
 
     const admin = createAdminClient();
     const { data: doc, error } = await admin.rpc('get_invoice_document', { p_privy: privyUserId, p_id: invoiceId });

@@ -237,7 +237,14 @@ export async function convertOffer(privyUserId: string, offerId: string): Promis
 // Fetch a public CSV URL (e.g. a published Google Sheet) via our server route.
 export async function fetchSheetCsv(url: string): Promise<{ text?: string; error?: string }> {
   try {
-    const res = await fetch('/api/crm/fetch-csv', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    // The route verifies this token — it used to fetch any URL for anyone.
+    const { getAccessToken } = await import('@privy-io/react-auth');
+    const token = await getAccessToken().catch(() => null);
+    const res = await fetch('/api/crm/fetch-csv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
+      body: JSON.stringify({ url }),
+    });
     const data = await res.json();
     if (!res.ok) return { error: data.error || 'Fetch failed' };
     return { text: data.text };
