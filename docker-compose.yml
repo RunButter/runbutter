@@ -111,16 +111,23 @@ services:
       - ./docker/gateway.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - '${SUPABASE_PORT:-8000}:8000'
-    healthcheck:
-      # PostgREST answers OPTIONS at its root without a JWT, so this proves the
-      # whole chain — nginx up, rest reachable, database migrated — rather than
-      # just that nginx started. `depends_on` without a healthcheck only waits
-      # for the container, which is how a first boot races the migrations and
-      # greets someone with an empty workspace and a console full of 500s.
-      test: ['CMD', 'wget', '-qO-', '--method=OPTIONS', 'http://localhost:8000/rest/v1/']
-      interval: 3s
-      timeout: 3s
-      retries: 20
+    # NO HEALTHCHECK HERE, and that is a decision rather than an omission.
+    #
+    # There was one. It ran `wget --method=OPTIONS` — and nginx:alpine ships
+    # BUSYBOX wget, which has no --method. So the probe failed every single
+    # time, the gateway never became healthy, and `docker compose up --wait`
+    # gave up: a healthcheck written to protect the boot was the only thing
+    # breaking it.
+    #
+    # It is not needed either. `rest` and `storage` both wait on
+    # `migrate: service_completed_successfully`, so by the time this container
+    # starts, the schema is already applied — the ordering the probe was
+    # guarding is guaranteed by the dependency graph. Readiness after that is
+    # observed where it can actually be observed: the CI step polls the app for
+    # a 200, and a person watching `docker compose up` sees it come alive.
+    #
+    # If a probe is ever added back: busybox wget supports -q, -O, --spider,
+    # --header, -T and -S, and nothing else. Verify before trusting it.
 
   app:
     build:
@@ -133,9 +140,7 @@ services:
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
         NEXT_PUBLIC_PRIVY_APP_ID: ${PRIVY_APP_ID:?get a free app id at dashboard.privy.io}
     restart: unless-stopped
-    depends_on:
-      gateway:
-        condition: service_healthy
+    depends_on: [gateway]
     environment:
       NEXT_PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
