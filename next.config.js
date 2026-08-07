@@ -17,6 +17,26 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['@privy-io/react-auth'],
+  /**
+   * Privy reaches for wallet connectors it does not depend on.
+   *
+   * From 3.36 its bundle references `@farcaster/mini-app-solana`, which is an
+   * OPTIONAL peer it never installs. Webpack resolves imports statically, so it
+   * fails the whole build on a module that only matters to apps using Farcaster
+   * mini-apps — which this is not. `false` tells webpack to resolve it to an
+   * empty module rather than error, the same treatment the pino-pretty warnings
+   * already get from webpack's own optional handling.
+   *
+   * This is why merging that bump on its own broke the Render deploy: it
+   * installs clean and fails at build, so npm gives no warning at all.
+   */
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@farcaster/mini-app-solana': false,
+    };
+    return config;
+  },
   experimental: {
     // pdfkit must stay unbundled: it reads its font metrics from node_modules at
     // runtime. @firecrawl/pdf-inspector is a native .node addon, which webpack

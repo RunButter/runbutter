@@ -31,6 +31,31 @@ updates:
       - dependency-name: tailwindcss
         update-types: [version-update:semver-major]
 
+      # ── Packages whose MINOR bumps are migrations ────────────────────────
+      # The rules above only catch majors, which is why these two got through
+      # inside the "minor-and-patch" group, were merged, and failed the Render
+      # deploy. Both fail AFTER the push with the previous build still serving,
+      # which is the least visible way to break a deploy.
+      #
+      # These are full ignores, not major-only: the whole point is that a
+      # 0.8 -> 0.9 and a 3.13 -> 3.36 are the dangerous ones here.
+
+      # Needs @tiptap/core ^3, i.e. the Tiptap v2 -> v3 migration. The eight
+      # @tiptap/* packages move together or the install fails on peer
+      # dependencies, so this belongs in a branch with the Docs editor
+      # exercised by hand. Un-ignore it as part of that work.
+      - dependency-name: tiptap-markdown
+      # Same migration, same branch. Listed explicitly so a single-package bump
+      # (as in the closed #27) cannot be raised either.
+      - dependency-name: '@tiptap/*'
+
+      # >= 3.36 references @farcaster/mini-app-solana, an optional peer it does
+      # not install, so webpack fails the build. next.config.js already aliases
+      # that module away and the build then passes — but this is AUTH, and a
+      # passing build is not evidence that a login handshake still works. Lift
+      # this only alongside a real sign-in test against a real Privy app id.
+      - dependency-name: '@privy-io/react-auth'
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
