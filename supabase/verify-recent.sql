@@ -46,7 +46,15 @@ select * from (values
      and exists (
       select 1 from pg_proc p
        where p.proname = 'get_pipeline_board'
-         and pg_get_functiondef(p.oid) like '%organizations co%')))
+         and pg_get_functiondef(p.oid) like '%organizations co%')))),
+
+  ('0093 workspace can be renamed',
+   -- And that the repair ran: no workspace should still disagree with its
+   -- company about its own name.
+   (select to_regprocedure('public.rename_workspace(text,uuid,text)') is not null
+     and not exists (
+      select 1 from workspaces w join companies c on c.id = w.id
+       where coalesce(nullif(btrim(c.name), ''), '') <> '' and w.name is distinct from c.name)))
 ) as t(migration, applied)
 order by migration;
 

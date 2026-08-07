@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { Loader2, Upload, Check, Building2, ArrowRight, CheckCircle2, AlertTriangle, Image as ImageIcon } from 'lucide-react';
-import { getWorkspace, loadBranding, saveBranding } from '@/lib/crm/data';
+import { getWorkspace, loadBranding, saveBranding, renameWorkspace } from '@/lib/crm/data';
 import { uploadImage } from '@/lib/crm/upload';
 import { validateIban, formatIban } from '@/lib/finance/iban';
 import AppLoading from '@/components/ui/AppLoading';
+import Button from '@/components/ui/Button';
 
 interface Form {
   logo_url: string; legal_name: string; address: string; accent_color: string; invoice_footer: string;
@@ -82,6 +83,9 @@ export default function BrandingPage() {
   const privy = authenticated && user ? user.id : null;
   const [wsId, setWsId] = useState<string | null>(null);
   const [wsName, setWsName] = useState('Your company');
+  const [nameDraft, setNameDraft] = useState('');
+  const [renaming, setRenaming] = useState(false);
+  const [nameMsg, setNameMsg] = useState('');
   const [form, setForm] = useState<Form>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -94,7 +98,7 @@ export default function BrandingPage() {
     if (!privy) { setLoading(false); return; }
     getWorkspace(privy).then(async (ws) => {
       if (!ws) { setLoading(false); return; }
-      setWsId(ws.id); setWsName(ws.name);
+      setWsId(ws.id); setWsName(ws.name); setNameDraft(ws.name);
       const b = await loadBranding(privy, ws.id);
       if (b) setForm({
         logo_url: b.logo_url || '', legal_name: b.legal_name || '', address: b.address || '',
@@ -149,6 +153,21 @@ export default function BrandingPage() {
     if (res.error) setError(res.error); else setSaved(true);
   };
 
+  const doRename = async () => {
+    const next = nameDraft.trim();
+    if (!privy || !wsId || !next || next === wsName) return;
+    setRenaming(true); setNameMsg('');
+    const { name, error } = await renameWorkspace(privy, wsId, next);
+    setRenaming(false);
+    if (error) return setNameMsg(error);
+    setWsName(name || next);
+    // The sidebar reads the workspace from a module-level memo that
+    // renameWorkspace() already cleared, but it will not re-render on its own —
+    // it fetched once on mount. Say so rather than leaving someone staring at
+    // the old name wondering whether the rename took.
+    setNameMsg('✓ Renamed. The sidebar updates on your next page load.');
+  };
+
   const displayName = form.legal_name || wsName;
 
   return (
@@ -198,10 +217,42 @@ export default function BrandingPage() {
                   className="mt-2 w-full h-9 px-2.5 text-xs rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
               </div>
 
+              {/* The workspace's own name — the one in the sidebar and the
+                  switcher. It could not be changed anywhere until 0093, which
+                  is why a company that renamed itself kept seeing the old name
+                  for months: the only name with a form attached was the LEGAL
+                  one below, and that drives invoices, not the sidebar. */}
+              <div>
+                <label className="block text-xs font-semibold text-secondary mb-1">Workspace name</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={nameDraft}
+                    onChange={(e) => { setNameDraft(e.target.value); setNameMsg(''); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') doRename(); }}
+                    maxLength={80}
+                    placeholder="RunButter"
+                    className="flex-1 min-w-0 h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                  <Button variant="ghost" onClick={doRename}
+                    disabled={renaming || !nameDraft.trim() || nameDraft.trim() === wsName}>
+                    {renaming && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Rename
+                  </Button>
+                </div>
+                <p className="mt-1.5 text-2xs text-tertiary">
+                  What your team sees in the sidebar and the workspace switcher. Saved on its own —
+                  the Save button below covers everything else on this page.
+                </p>
+                {nameMsg && <p className={`mt-1 text-2xs ${nameMsg.startsWith('✓') ? 'text-success' : 'text-danger'}`}>{nameMsg}</p>}
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-secondary mb-1">Legal company name</label>
                 <input value={form.legal_name} onChange={(e) => set({ legal_name: e.target.value })} placeholder={wsName}
                   className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
+                <p className="mt-1.5 text-2xs text-tertiary">
+                  Optional, and a different fact: the registered entity that appears on invoices and
+                  documents — “RunButter Sp. z o.o.” where the workspace is just “RunButter”. Left
+                  empty, documents use the workspace name.
+                </p>
               </div>
 
               {/* Country-driven legal identity */}

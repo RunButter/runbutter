@@ -484,6 +484,30 @@ export interface WorkspaceBranding {
   email_from_name?: string | null; email_footer?: string | null;
   document_footer?: string | null;
 }
+/**
+ * Rename the workspace — the DISPLAY name, in both places it is stored (0093).
+ *
+ * Separate from saveBranding because it is not branding: `legal_name` is what
+ * goes on an invoice, and this is what colleagues call the place. Conflating
+ * them would let tidying up a sidebar quietly rewrite a document's issuer.
+ */
+export async function renameWorkspace(privyUserId: string, workspaceId: string, name: string): Promise<{ name?: string; error?: string }> {
+  const { data, error } = await rpc('rename_workspace', {
+    p_privy: privyUserId, p_workspace: workspaceId, p_name: name,
+  });
+  if (error) {
+    const m = error.message || '';
+    if (/FORBIDDEN/.test(m)) return { error: 'Only an owner or admin can rename the workspace.' };
+    if (/NAME_REQUIRED/.test(m)) return { error: 'Give the workspace a name.' };
+    if (/NAME_TOO_LONG/.test(m)) return { error: 'That name is too long (80 characters maximum).' };
+    if (/Could not find the function|schema cache/i.test(m)) return { error: 'Renaming needs migration 0093 — run it in Supabase.' };
+    return { error: m };
+  }
+  // The memo still holds the old name, and it is what the sidebar reads.
+  clearWorkspaceCache();
+  return { name: (data as string) || name };
+}
+
 export async function loadBranding(privyUserId: string, workspaceId: string): Promise<WorkspaceBranding | null> {
   const { data, error } = await rpc('get_workspace_branding', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error || !data) return null;

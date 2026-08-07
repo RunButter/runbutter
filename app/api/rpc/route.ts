@@ -37,6 +37,9 @@ const ALLOWED = new Set([
   'get_bank_accounts', 'delete_bank_account', 'reconcile_transaction',
   'suggest_transaction_matches', 'update_transactions_bulk', 'get_workspace_branding',
   'save_workspace_branding', 'get_nav_activity', 'get_treasury_dataset',
+  // Renaming a workspace (0093). Re-checks owner/admin in SQL, like every other
+  // write that changes what the whole workspace sees.
+  'rename_workspace',
   // marketing sites
   'create_site', 'delete_site', 'get_sites', 'get_site_stats', 'get_posts', 'get_post',
   'save_post', 'add_post_comment', 'set_post_comment_resolved',
