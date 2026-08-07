@@ -72,7 +72,7 @@ function Row({ line, i }: { line: Line; i: number }) {
 
   if (line.kind === 'tool') {
     return (
-      <div className="agent-line flex items-center gap-2 py-1" style={style}>
+      <div className="agent-line flex items-center gap-2.5 py-1.5" style={style}>
         <Terminal className="w-3 h-3 text-tertiary shrink-0" />
         <code className="text-2xs font-mono text-primary">{line.tool}</code>
         <span className="text-2xs text-tertiary truncate">{line.note}</span>
@@ -82,7 +82,7 @@ function Row({ line, i }: { line: Line; i: number }) {
 
   if (line.kind === 'approve') {
     return (
-      <div className="agent-line mt-3 rounded-lg border border-strong bg-surface-sunken p-3" style={style}>
+      <div className="agent-line mt-5 rounded-lg border border-strong bg-surface-sunken p-4" style={style}>
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
           <span className="text-2xs font-medium text-primary">Waiting for your approval</span>
@@ -99,7 +99,7 @@ function Row({ line, i }: { line: Line; i: number }) {
     );
   }
 
-  return <p className="agent-line text-xs sm:text-sm text-secondary leading-relaxed mt-2.5" style={style}>{line.text}</p>;
+  return <p className="agent-line text-xs sm:text-sm text-secondary leading-relaxed mt-4" style={style}>{line.text}</p>;
 }
 
 export default function AgentDemo() {
@@ -127,7 +127,7 @@ export default function AgentDemo() {
       <div className="grid md:grid-cols-[220px_1fr] divide-y md:divide-y-0 md:divide-x divide-subtle">
         {/* Ask something else. Radio semantics, not tabs: these pick which
             question was asked, they do not switch between views of one thing. */}
-        <div role="radiogroup" aria-label="Example questions" className="p-3 bg-surface-sunken/50">
+        <div role="radiogroup" aria-label="Example questions" className="p-4 sm:p-5 bg-surface-sunken/50">
           <p className="text-3xs font-medium uppercase tracking-wide text-tertiary px-1.5 mb-2">Ask</p>
           {CONVERSATIONS.map((c, i) => (
             <button key={c.short} role="radio" aria-checked={i === pick} aria-controls={`agent-convo-${i}`}
@@ -145,18 +145,20 @@ export default function AgentDemo() {
             mistake ProductPreview had, on the same page, where two thirds of
             the strongest copy would have existed only after a click and never
             in the HTML an agent or a crawler reads. */}
-        {/* Sized to the TALLEST transcript at each breakpoint (measured: 373px
-            desktop, 430px on a 390px-wide phone), so switching question never
-            moves the rest of the page. The dead space under the shorter two is
-            the price, and it is much cheaper than the content below jumping
-            110px every time someone clicks. */}
-        <div className="min-h-[440px] sm:min-h-[380px]">
+        {/* Sized to the TALLEST transcript at each breakpoint, so switching
+            question never moves the rest of the page. Re-MEASURED after the
+            spacing change (429px desktop, 478px on a 390px phone) rather than
+            left at the old numbers — a min-height that is quietly too small
+            stops doing its job without ever looking broken. The dead space
+            under the shorter two is the price, and much cheaper than the page
+            below jumping 130px on every click. */}
+        <div className="min-h-[490px] sm:min-h-[440px]">
           {CONVERSATIONS.map((c, i) => (
             <div
               // A changed key remounts the subtree, restarting the animations.
               // Only the active one needs it; the others keep a stable key.
               key={i === pick ? `${i}:${plays}` : `${i}`}
-              id={`agent-convo-${i}`} hidden={i !== pick} className="p-4 sm:p-5">
+              id={`agent-convo-${i}`} hidden={i !== pick} className="p-5 sm:p-7">
               <div className="flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-surface-sunken ring-1 ring-subtle flex items-center justify-center shrink-0 mt-0.5">
                   <User className="w-3 h-3 text-tertiary" />
@@ -164,8 +166,8 @@ export default function AgentDemo() {
                 <p className="text-sm text-primary font-medium leading-relaxed">{c.q}</p>
               </div>
 
-              <div className="mt-4 pl-1 sm:pl-7">
-                <div className="border-l border-subtle pl-3.5">
+              <div className="mt-5 pl-1 sm:pl-7">
+                <div className="border-l border-subtle pl-4 sm:pl-5">
                   {c.lines.map((l, n) => <Row key={n} line={l} i={n} />)}
                 </div>
               </div>

@@ -65,7 +65,7 @@ export default function PluginsPage() {
       <MarketingHeader />
 
       <section className="border-b border-subtle">
-        <div className="max-w-6xl mx-auto px-6 pt-16 pb-10">
+        <div className="max-w-6xl mx-auto px-6 pt-20 pb-16">
           <div className="max-w-2xl">
             <span className="text-2xs font-mono text-tertiary">Agent Plugins {SPEC_VERSION}</span>
             <h1 className="mt-2 text-3xl md:text-5xl font-medium tracking-[-0.02em] leading-[1.05]">
@@ -86,7 +86,7 @@ export default function PluginsPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-10">
+      <section className="max-w-6xl mx-auto px-6 py-14 md:py-20">
         <PluginBuilder />
       </section>
 
@@ -94,7 +94,7 @@ export default function PluginsPage() {
           Static prose, in the HTML, for the reader who arrived asking "what is
           a SKILL.md" rather than already knowing. */}
       <section className="border-t border-subtle bg-surface-sunken">
-        <div className="max-w-6xl mx-auto px-6 py-16 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12">
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 lg:gap-16">
           <div className="min-w-0">
             <h2 className="text-2xl md:text-3xl font-medium tracking-tight">What a plugin actually is</h2>
             <p className="text-secondary mt-3 leading-relaxed">
@@ -133,7 +133,7 @@ export default function PluginsPage() {
 
       {/* ── Where this leads ───────────────────────────────────────────────── */}
       <section className="border-t border-subtle">
-        <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Skills your agents can actually use</h2>
             <p className="text-secondary mt-3 leading-relaxed">

@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server } from 'lucide-react';
-import { buildPlugin, skillSlug, pluginSlug, isValidSkillName, SPEC_VERSION, type PluginFile } from '@/lib/plugins/agent-plugin';
+import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store } from 'lucide-react';
+import { buildPlugin, skillSlug, pluginSlug, isValidSkillName, parseToolList, resourcePath, SPEC_VERSION, type PluginFile } from '@/lib/plugins/agent-plugin';
 import { zipSync } from '@/lib/plugins/zip';
 
 /**
@@ -22,10 +22,118 @@ import { zipSync } from '@/lib/plugins/zip';
  * packages that fail in a client for reasons nobody could reproduce.
  */
 
-interface Draft { id: number; name: string; description: string; instructions: string }
+interface Res { path: string; purpose: string; content: string }
+interface Draft {
+  id: number; name: string; description: string; instructions: string;
+  whenToUse: string; allowedTools: string; resources: Res[];
+}
 
 let nextId = 1;
-const blank = (): Draft => ({ id: nextId++, name: '', description: '', instructions: '' });
+const blank = (): Draft => ({
+  id: nextId++, name: '', description: '', instructions: '',
+  whenToUse: '', allowedTools: '', resources: [],
+});
+
+/**
+ * The second level of progressive disclosure, offered as one click.
+ *
+ * `reference.md` and `examples.md` are the two the docs themselves use, and
+ * they are the two that actually change how a skill behaves: they let the
+ * instructions stay short (which is what keeps a skill reliable) while the long
+ * material sits one hop away, read only when the model decides it needs it.
+ */
+const RESOURCE_PRESETS: { label: string; res: Res }[] = [
+  {
+    label: 'reference.md',
+    res: {
+      path: 'reference.md',
+      purpose: 'Full detail — read when the summary in this file is not enough.',
+      content: `# Reference
+
+Put the long material here: the full API, the complete field list, the edge
+cases, the table nobody memorises.
+
+This file is NOT read every time the skill runs. It is read when the model
+decides it needs it, which is why it can be long without costing anything.
+`,
+    },
+  },
+  {
+    label: 'examples.md',
+    res: {
+      path: 'examples.md',
+      purpose: 'Worked examples of the expected output. Read before producing one.',
+      content: `# Examples
+
+## Good
+
+> A real example of the output you want, in full.
+
+Why it works: …
+
+## Bad
+
+> A real example of the output you do NOT want.
+
+Why it fails: …
+`,
+    },
+  },
+];
+
+/**
+ * The section structure a skill body actually wants.
+ *
+ * Taken from what the widely-used collections converge on (addyosmani/agent-skills
+ * runs every one of its 24 skills through Overview → When to use → Process →
+ * Rationalizations → Red flags → Verification). The two nobody thinks to write
+ * are the ones that do the most work:
+ *
+ *  - RATIONALIZATIONS pre-empts the excuses a model talks itself into. "The
+ *    tests are probably fine" is the sentence that precedes a broken deploy,
+ *    and naming it in the skill is what stops it.
+ *  - VERIFICATION turns a description into something checkable. Without it a
+ *    skill can report success having done nothing.
+ *
+ * Offered as a scaffold rather than enforced: a two-line skill is legitimate,
+ * and a builder that demands seven headings for it is a form, not a tool.
+ */
+const BODY_SCAFFOLD = `## Overview
+
+What this covers, in two or three sentences.
+
+## When to use this
+
+- Trigger: the situation that should bring you here.
+- Not for: the neighbouring case this is NOT about.
+
+## Process
+
+1. First step, stated as an instruction.
+2. Second step.
+3. Third step.
+
+## Rationalizations
+
+Excuses to refuse, and what to do instead:
+
+- "It is probably fine" -> check it, then say what you checked.
+- "The user did not ask for that" -> if it is part of the task, do it.
+
+## Red flags
+
+Stop if any of these is true:
+
+- A number you cannot show the source of.
+- A step you skipped and did not mention.
+
+## Verification
+
+Before reporting done:
+
+- [ ] Every step above actually ran.
+- [ ] Anything skipped is named explicitly.
+`;
 
 const TEMPLATES: { label: string; skill: Omit<Draft, 'id'> }[] = [
   {
@@ -44,6 +152,7 @@ const TEMPLATES: { label: string; skill: Omit<Draft, 'id'> }[] = [
 
 Banned: "seamless", "leverage", "reach out", "circle back", "at your earliest
 convenience", exclamation marks.`,
+      whenToUse: '', allowedTools: '', resources: [],
     },
   },
   {
@@ -68,6 +177,45 @@ Always:
 
 Never: offer a discount, offer a payment plan, or imply the debt is disputed.
 Those are decisions a person makes.`,
+      whenToUse: 'When the user asks to chase a payment, mentions an overdue invoice, or asks for a reminder email.',
+      allowedTools: '',
+      resources: [{
+        path: 'examples.md',
+        purpose: 'Worked reminders at each stage. Read before writing one.',
+        content: `# Examples
+
+## First reminder — 6 days late
+
+> Subject: Invoice 1042
+>
+> Hi Marta — invoice 1042 (due 1 March, $4,200) is still showing as unpaid on
+> our side. I have attached it again in case it went astray. Could you let me
+> know when it is likely to go out?
+
+Why it works: names the invoice and the original date, assumes an oversight,
+asks one question, and does not mention consequences.
+
+## Final notice — 44 days late
+
+> Subject: Invoice 1042, 44 days overdue
+>
+> Hi Marta — invoice 1042 for $4,200 was due on 1 March and is now 44 days
+> outstanding. Our agreed terms are net 30, after which the account is placed
+> on hold. I would rather not do that. Can you confirm a payment date this week?
+
+Why it works: factual, states the agreed terms rather than inventing a threat,
+and still leaves a way out.
+
+## Bad
+
+> Subject: URGENT!! Payment overdue!!!
+>
+> We understand your frustration but we must insist on immediate payment.
+
+Why it fails: invented frustration, exclamation marks, no invoice number, no
+date, and no specific ask.
+`,
+      }],
     },
   },
   {
@@ -88,6 +236,8 @@ Rules:
 
 Flag, in this order: anything overdue, anything that changed by more than a
 third, anything that stopped moving entirely.`,
+      whenToUse: 'When asked for a weekly summary, a Monday update, or "how did we do".',
+      allowedTools: '', resources: [],
     },
   },
 ];
@@ -124,6 +274,9 @@ export default function PluginBuilder() {
   const [pluginDescription, setPluginDescription] = useState('');
   const [author, setAuthor] = useState('');
   const [withMcp, setWithMcp] = useState(false);
+  // On by default: it is one small file and it is the difference between "here
+  // is a zip, put it somewhere" and a one-line install.
+  const [withMarketplace, setWithMarketplace] = useState(true);
   const [mcpUrl, setMcpUrl] = useState('https://runbutter.app/api/mcp');
   const [skills, setSkills] = useState<Draft[]>([{ ...blank(), ...TEMPLATES[0].skill }]);
   const [open, setOpen] = useState(0);
@@ -140,9 +293,17 @@ export default function PluginBuilder() {
     // A skill with no name has no directory to live in, so it is not a file
     // yet. Filtering here rather than erroring keeps the preview live while
     // someone is halfway through typing.
-    skills: skills.filter((s) => s.name.trim()),
+    skills: skills.filter((s) => s.name.trim()).map((s) => ({
+      name: s.name,
+      description: s.description,
+      instructions: s.instructions,
+      when_to_use: s.whenToUse,
+      allowed_tools: parseToolList(s.allowedTools),
+      resources: s.resources,
+    })),
     mcpUrl: withMcp && mcpUrl.trim() ? mcpUrl.trim() : undefined,
-  }), [pluginName, pluginDescription, author, skills, withMcp, mcpUrl]);
+    marketplace: withMarketplace,
+  }), [pluginName, pluginDescription, author, skills, withMcp, mcpUrl, withMarketplace]);
 
   const active = files.find((f) => f.path === shown) || files[0];
 
@@ -198,12 +359,12 @@ export default function PluginBuilder() {
   const bytes = () => zipSync(files);
 
   return (
-    <div className="grid lg:grid-cols-[1fr_1fr] gap-5 items-start">
+    <div className="grid lg:grid-cols-[1fr_1fr] gap-6 xl:gap-10 items-start">
       {/* ── Left: the form ───────────────────────────────────────────────── */}
-      <div className="space-y-4 min-w-0">
-        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 sm:p-5">
+      <div className="space-y-6 min-w-0">
+        <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-5 sm:p-6">
           <h3 className="text-sm font-medium text-primary">Plugin</h3>
-          <div className="mt-3 grid sm:grid-cols-2 gap-3">
+          <div className="mt-4 grid sm:grid-cols-2 gap-4">
             <label className="block">
               <span className="text-xs text-secondary block mb-1">Name</span>
               <input value={pluginName} onChange={(e) => setPluginName(e.target.value)} className="input-field" placeholder="my-team-skills" />
@@ -218,7 +379,19 @@ export default function PluginBuilder() {
             <input value={pluginDescription} onChange={(e) => setPluginDescription(e.target.value)} className="input-field" placeholder="How our team writes, bills and reports" />
           </label>
 
-          <div className="mt-4 pt-4 border-t border-subtle">
+          <div className="mt-5 pt-5 border-t border-subtle space-y-4">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" checked={withMarketplace} onChange={(e) => setWithMarketplace(e.target.checked)} className="mt-0.5 rounded border-strong accent-accent" />
+              <span className="min-w-0">
+                <span className="text-xs font-medium text-primary flex items-center gap-1.5"><Store className="w-3.5 h-3.5" /> Make it installable</span>
+                <span className="text-2xs text-tertiary block mt-0.5 leading-relaxed">
+                  Adds <code className="font-mono">.claude-plugin/marketplace.json</code>. Push the folder to a
+                  public repo and anyone installs it with{' '}
+                  <code className="font-mono">/plugin marketplace add you/repo</code> instead of copying files
+                  around.
+                </span>
+              </span>
+            </label>
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input type="checkbox" checked={withMcp} onChange={(e) => setWithMcp(e.target.checked)} className="mt-0.5 rounded border-strong accent-accent" />
               <span className="min-w-0">
@@ -243,7 +416,7 @@ export default function PluginBuilder() {
 
         {/* Skills */}
         <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card">
-          <div className="flex items-center gap-2 px-4 sm:px-5 h-12 border-b border-subtle">
+          <div className="flex items-center gap-2 px-5 sm:px-6 h-14 border-b border-subtle">
             <h3 className="text-sm font-medium text-primary flex-1">Skills</h3>
             <button onClick={() => { setSkills((xs) => [...xs, blank()]); setOpen(skills.length); }}
               className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-subtle text-secondary hover:text-primary text-2xs font-medium transition-colors">
@@ -253,7 +426,7 @@ export default function PluginBuilder() {
 
           {skills.map((s, i) => (
             <div key={s.id} className="border-b border-subtle last:border-b-0">
-              <div className="flex items-center gap-2 px-4 sm:px-5 h-11">
+              <div className="flex items-center gap-3 px-5 sm:px-6 h-12">
                 <button onClick={() => setOpen(open === i ? -1 : i)} className="flex-1 text-left min-w-0">
                   <span className="text-xs font-medium text-primary truncate block">{s.name.trim() || 'Untitled skill'}</span>
                   {s.name.trim() && <span className="text-3xs font-mono text-tertiary">skills/{skillSlug(s.name)}/SKILL.md</span>}
@@ -267,7 +440,7 @@ export default function PluginBuilder() {
                 )}
               </div>
               {open === i && (
-                <div className="px-4 sm:px-5 pb-4 space-y-3">
+                <div className="px-5 sm:px-6 pb-6 pt-1 space-y-4">
                   <label className="block">
                     <span className="text-xs text-secondary block mb-1">Name</span>
                     <input value={s.name} onChange={(e) => setSkill(s.id, { name: e.target.value })} className="input-field" placeholder="Invoice reminder tone" />
@@ -278,19 +451,110 @@ export default function PluginBuilder() {
                     </span>
                     <input value={s.description} onChange={(e) => setSkill(s.id, { description: e.target.value })} className="input-field" placeholder="How this company chases an unpaid invoice." />
                   </label>
-                  <label className="block">
-                    <span className="text-xs text-secondary block mb-1">Instructions</span>
-                    <textarea value={s.instructions} onChange={(e) => setSkill(s.id, { instructions: e.target.value })} rows={12}
+                  {/* NOT a <label> wrapper, because this row holds a button.
+                      A <button> inside a <label> is folded into the field's
+                      accessible name ("Instructions + structure") and a click
+                      on it is also forwarded to the labelled control. htmlFor
+                      keeps the association without nesting. */}
+                  <div className="block">
+                    <div className="text-xs text-secondary mb-1 flex items-center gap-2">
+                      <label htmlFor={`instr-${s.id}`}>Instructions</label>
+                      {/* Appends rather than replaces, and only offers itself
+                          when the body does not already have the headings —
+                          silently overwriting somebody's written skill because
+                          they mis-clicked is unforgivable in a tool with no
+                          undo. */}
+                      {!/^##\s/m.test(s.instructions) && (
+                        <button type="button"
+                          onClick={() => setSkill(s.id, { instructions: (s.instructions.trim() ? s.instructions.trimEnd() + '\n\n' : '') + BODY_SCAFFOLD })}
+                          className="ml-auto h-6 px-2 rounded-md border border-subtle text-2xs font-medium text-secondary hover:text-primary transition-colors">
+                          + structure
+                        </button>
+                      )}
+                    </div>
+                    <textarea id={`instr-${s.id}`} value={s.instructions} onChange={(e) => setSkill(s.id, { instructions: e.target.value })} rows={12}
                       className="input-field !h-auto py-2 resize-y font-mono text-2xs"
                       placeholder={'First reminder is friendly and assumes an oversight.\nAlways name the invoice number and the original due date.\nNever offer a discount or a payment plan.'} />
-                  </label>
+                  </div>
+
+                  {/* ── Supporting files ───────────────────────────────────
+                      The difference between a long prompt and a skill. These
+                      are read only when the model decides it needs them, so
+                      they can be as long as the material actually is without
+                      costing anything on the runs that don't touch them. */}
+                  <div className="pt-4 border-t border-subtle">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-primary flex items-center gap-1.5">
+                        <FolderPlus className="w-3.5 h-3.5" /> Supporting files
+                      </span>
+                      <span className="ml-auto flex gap-1.5">
+                        {RESOURCE_PRESETS.map((r) => (
+                          <button key={r.label} type="button"
+                            disabled={s.resources.some((x) => x.path === r.res.path)}
+                            onClick={() => setSkill(s.id, { resources: [...s.resources, { ...r.res }] })}
+                            className="h-6 px-2 rounded-md border border-subtle text-2xs font-mono text-secondary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            + {r.label}
+                          </button>
+                        ))}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-2xs text-tertiary leading-relaxed">
+                      Read only when needed, not on every run — so the long material lives here and the
+                      instructions above stay short. SKILL.md lists them automatically, which is what tells
+                      the model when to open one.
+                    </p>
+
+                    {s.resources.map((r, ri) => (
+                      <div key={ri} className="mt-2.5 rounded-lg border border-subtle p-2.5">
+                        <div className="flex items-center gap-2">
+                          <input value={r.path}
+                            onChange={(e) => setSkill(s.id, { resources: s.resources.map((x, n) => n === ri ? { ...x, path: e.target.value } : x) })}
+                            className="input-field !h-7 font-mono text-2xs flex-1" placeholder="reference.md" />
+                          <button type="button" aria-label={`Remove ${r.path}`}
+                            onClick={() => setSkill(s.id, { resources: s.resources.filter((_, n) => n !== ri) })}
+                            className="p-1 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input value={r.purpose}
+                          onChange={(e) => setSkill(s.id, { resources: s.resources.map((x, n) => n === ri ? { ...x, purpose: e.target.value } : x) })}
+                          className="input-field !h-7 text-2xs mt-1.5" placeholder="What is in it, and when should it be read?" />
+                        <textarea value={r.content} rows={6}
+                          onChange={(e) => setSkill(s.id, { resources: s.resources.map((x, n) => n === ri ? { ...x, content: e.target.value } : x) })}
+                          className="input-field !h-auto py-2 mt-1.5 resize-y font-mono text-2xs" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ── Optional frontmatter ───────────────────────────────── */}
+                  <div className="pt-4 border-t border-subtle space-y-3">
+                    <label className="block">
+                      <span className="text-xs text-secondary block mb-1">
+                        When to use <span className="text-tertiary">— optional, trigger phrases</span>
+                      </span>
+                      <input value={s.whenToUse} onChange={(e) => setSkill(s.id, { whenToUse: e.target.value })}
+                        className="input-field" placeholder="When the user asks to chase a payment, or mentions an overdue invoice." />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-secondary block mb-1">
+                        Pre-approved tools <span className="text-tertiary">— optional</span>
+                      </span>
+                      <input value={s.allowedTools} onChange={(e) => setSkill(s.id, { allowedTools: e.target.value })}
+                        className="input-field font-mono text-2xs" placeholder="Read Grep" />
+                      {/* Unlike a "suggested tools" hint, this one is real. */}
+                      <span className="text-2xs text-tertiary block mt-1 leading-relaxed">
+                        A real grant, not a hint: these run without asking during the turn the skill fires.
+                        Leave empty and every tool still asks.
+                      </span>
+                    </label>
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="text-2xs text-tertiary">Start from:</span>
           {TEMPLATES.map((t) => (
             <button key={t.label} onClick={() => { setSkills((xs) => [...xs, { ...blank(), ...t.skill }]); setOpen(skills.length); }}

@@ -35,12 +35,44 @@ export const MCP_SCHEMA = `https://agent-plugins.org/schemas/${SPEC_VERSION}/mcp
 
 export interface PluginFile { path: string; content: string }
 
+/**
+ * A file that lives BESIDE SKILL.md in the same skill directory.
+ *
+ * This is the second level of progressive disclosure and the thing that
+ * separates a real skill from a long prompt. SKILL.md is read when the skill
+ * fires; a resource is read only if the model decides it needs it — so an API
+ * reference or a table of examples costs nothing until the moment it is
+ * relevant, and can therefore be as long as it needs to be.
+ *
+ * `purpose` is not decoration. The client's docs are explicit that supporting
+ * files must be referenced FROM SKILL.md so the model knows what each one
+ * contains and when to load it; a file nobody described is a file nobody opens.
+ * That listing is generated from this field rather than left to the author.
+ */
+export interface SkillResource {
+  /** Relative to the skill directory: `reference.md`, `scripts/build.sh`. */
+  path: string;
+  content: string;
+  /** One line: what is in it and when to read it. */
+  purpose?: string;
+}
+
 export interface SkillSource {
   name: string;
   description: string;
   instructions: string;
   /** A UI hint on our side, never a grant — rendered as prose, not frontmatter. */
   suggested_tools?: string[];
+  /**
+   * Extra frontmatter for clients that read it. Optional everywhere: the
+   * portable spec requires only name and description, and a client that does
+   * not know a key ignores it, so these cost nothing in a client that does not
+   * support them.
+   */
+  when_to_use?: string;
+  /** A REAL pre-approval in Claude Code, unlike suggested_tools. */
+  allowed_tools?: string[];
+  resources?: SkillResource[];
 }
 
 export interface ManifestInput {
@@ -143,6 +175,24 @@ export function mcpJson(url: string, serverName = 'runbutter'): string {
   }, null, 2) + '\n';
 }
 
+/** `a, b` or `a b` -> ['a','b']. Accepts whatever someone types. */
+export function parseToolList(raw: string): string[] {
+  return (raw || '').split(/[,\s]+/).map((s) => s.trim()).filter(Boolean);
+}
+
+/** Resource paths are relative and must stay inside the skill directory. */
+export function resourcePath(raw: string): string {
+  const parts = (raw || '')
+    .replace(/\\/g, '/')
+    .split('/')
+    // `..` and absolute roots would write outside the skill — in a zip that is
+    // a path-traversal entry, which some extractors happily honour.
+    .filter((p) => p && p !== '.' && p !== '..')
+    .map((p) => p.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^[-.]+/, ''))
+    .filter(Boolean);
+  return parts.join('/');
+}
+
 export function skillMd(skill: SkillSource): string {
   const name = skillSlug(skill.name);
   // Required, 1–1024 chars, and it is what a model reads to decide whether the
@@ -151,20 +201,73 @@ export function skillMd(skill: SkillSource): string {
   const description = (skill.description || skill.name || name).slice(0, 1024);
 
   const tools = (skill.suggested_tools || []).filter(Boolean);
+  const allowed = (skill.allowed_tools || []).filter(Boolean);
+  const whenToUse = (skill.when_to_use || '').trim();
   const body = (skill.instructions || '').trim();
+  const resources = (skill.resources || []).filter((r) => resourcePath(r.path));
 
-  return [
+  const front = [
     '---',
     `name: ${yamlString(name)}`,
     `description: ${yamlString(description)}`,
+    // Optional keys are OMITTED when empty rather than written blank. A present
+    // key with an empty value is a value, and a client reading `allowed-tools:`
+    // as "an empty allow list" would strip every tool instead of not caring.
+    whenToUse ? `when_to_use: ${yamlString(whenToUse)}` : '',
+    allowed.length ? `allowed-tools: ${yamlString(allowed.join(' '))}` : '',
     '---',
+  ].filter(Boolean);
+
+  return [
+    ...front,
     '',
     body || `# ${skill.name}\n\n${description}`,
+    // The docs are explicit that supporting files have to be described FROM
+    // SKILL.md, because that description is the only thing telling the model
+    // what is in a file and whether this is the moment to open it. Generated
+    // rather than left to the author: an undescribed resource is dead weight
+    // in the package, and the failure is silent.
+    resources.length
+      ? '\n## Additional resources\n\n' + resources
+          .map((r) => `- \`${resourcePath(r.path)}\` — ${r.purpose?.trim() || 'read when relevant to the task.'}`)
+          .join('\n') + '\n'
+      : '',
     // Prose, deliberately, not frontmatter: in RunButter `suggested_tools` is a
     // hint for the picker and never a grant, and a client that read it as a
     // capability list would be reading it as something it has never been.
     tools.length ? `\n## Suggested tools\n\nThis skill tends to use: ${tools.join(', ')}.\n` : '',
   ].join('\n');
+}
+
+/**
+ * `.claude-plugin/marketplace.json` — what makes a package INSTALLABLE rather
+ * than merely well-formed.
+ *
+ * A conformant Agent Plugin directory is something you unzip and point a client
+ * at. A marketplace manifest is what lets someone run
+ * `/plugin marketplace add <repo>` and then `/plugin install <name>@<market>`,
+ * which is how every widely-used skill collection is actually distributed. It
+ * costs one small file and it is the difference between "here is a zip" and
+ * "here is a one-line install".
+ *
+ * Required by the schema: `name` (kebab-case), `owner.name`, and `plugins[]`,
+ * each entry needing `name` and `source`. `source: './'` points at the
+ * marketplace root, which is the directory containing `.claude-plugin/` — so a
+ * single-plugin repository IS its own marketplace with no nesting.
+ */
+export function marketplaceJson(input: ManifestInput & { ownerName?: string }): string {
+  const name = pluginSlug(input.name);
+  return JSON.stringify({
+    name: `${name}-marketplace`,
+    owner: { name: input.ownerName || input.author?.name || name },
+    plugins: [{
+      name,
+      source: './',
+      ...(input.description ? { description: input.description } : {}),
+      ...(input.version ? { version: input.version } : {}),
+      ...(input.author?.name ? { author: { name: input.author.name } } : {}),
+    }],
+  }, null, 2) + '\n';
 }
 
 /** The whole package, as files, ready for a zip or a filesystem write. */
@@ -173,8 +276,11 @@ export function buildPlugin(opts: {
   skills?: SkillSource[];
   mcpUrl?: string;
   extraFiles?: PluginFile[];
+  /** Emit `.claude-plugin/marketplace.json` so it installs in one command. */
+  marketplace?: boolean;
 }): PluginFile[] {
   const files: PluginFile[] = [{ path: 'plugin.json', content: manifestJson(opts.manifest) }];
+  if (opts.marketplace) files.push({ path: '.claude-plugin/marketplace.json', content: marketplaceJson(opts.manifest) });
   if (opts.mcpUrl) files.push({ path: 'mcp.json', content: mcpJson(opts.mcpUrl) });
 
   // Two skills that slug to the same directory would silently overwrite each
@@ -191,6 +297,18 @@ export function buildPlugin(opts: {
     }
     used.add(slug);
     files.push({ path: `skills/${slug}/SKILL.md`, content: skillMd({ ...s, name: slug }) });
+
+    // Supporting files land beside SKILL.md in the same directory. Paths are
+    // sanitised (see resourcePath) and de-duplicated: two entries writing the
+    // same path would produce two zip members with one name, and which one an
+    // extractor keeps is anyone's guess.
+    const seen = new Set<string>(['SKILL.md']);
+    for (const r of s.resources || []) {
+      const path = resourcePath(r.path);
+      if (!path || seen.has(path)) continue;
+      seen.add(path);
+      files.push({ path: `skills/${slug}/${path}`, content: r.content ?? '' });
+    }
   }
 
   return files.concat(opts.extraFiles || []);

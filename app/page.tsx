@@ -331,7 +331,7 @@ export default function HomePage() {
           seeing is the ORDER: the question, the tools it picked, and a write
           that stops for approval. So it plays. */}
       <section id="agents" className="border-t border-subtle cv-auto">
-        <div className="max-w-6xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
           <Reveal>
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Ask your workspace a real question</h2>
@@ -345,11 +345,11 @@ export default function HomePage() {
           {/* Inside the Reveal on purpose: the transcript's CSS animations are
               paused until .reveal-in lands, which is what stops the whole
               conversation playing out while it is still below the fold. */}
-          <Reveal delay={60} className="mt-10">
+          <Reveal delay={60} className="mt-12 md:mt-14">
             <AgentDemo />
           </Reveal>
           <Reveal delay={120}>
-            <p className="mt-5 text-xs text-tertiary">
+            <p className="mt-6 text-xs text-tertiary">
               Sample workspace. Every tool named above is a real one —{' '}
               <Link href="/ai-agents" className="text-primary font-medium hover:underline">see the full list and how scoping works</Link>.
             </p>
