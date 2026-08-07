@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, uploadLogo } from '@/lib/supabase';
+import { listHrCompanies } from '@/lib/hr/company';
 import { usePrivy } from '@privy-io/react-auth';
 import {
     Building2,
@@ -52,14 +53,23 @@ export default function SettingsPage() {
             setLoading(true);
             // Set the session variable for RLS
 
-            // Get company info
-            const { data: companyUser, error: companyError } = await supabase
-                .from('company_users')
-                .select('*, company:companies(*)')
-                .eq('privy_user_id', privyUserId)
-                .maybeSingle();
-
-            if (companyError) throw companyError;
+            // Via listHrCompanies, not a direct read. Two bugs in the old one:
+            // 0077 revoked the grant, so it raised `permission denied` — and
+            // .maybeSingle() throws "multiple rows returned" for anyone in two
+            // companies. Either way the code below treats it as "no company"
+            // and pushes an EXISTING customer to /auth/register, which is the
+            // exact failure 0077's own header warns about.
+            const mine = await listHrCompanies(privyUserId);
+            const active = mine.find((c) => c.active) ?? mine[0];
+            const companyUser = active
+                ? {
+                    company: {
+                        id: active.companyId, name: active.name,
+                        subdomain: active.subdomain, logo_url: active.logoUrl,
+                    },
+                    role: active.role,
+                  }
+                : null;
 
             if (!companyUser) {
                 router.push('/auth/register');
@@ -69,7 +79,8 @@ export default function SettingsPage() {
             setCompany(companyUser.company);
             setFormData({
                 name: companyUser.company.name,
-                subdomain: companyUser.company.subdomain,
+                // The form is a controlled input, so it needs '' rather than null.
+                subdomain: companyUser.company.subdomain ?? '',
             });
             setLogoPreview(companyUser.company.logo_url);
 
@@ -161,15 +172,25 @@ export default function SettingsPage() {
             }
 
             // 2. Update company info
-            const { error: updateError } = await supabase
-                .from('companies')
-                .update({
-                    name: formData.name,
-                    logo_url: logoUrl,
-                })
-                .eq('id', company.id);
+            // rename_workspace (0093) writes BOTH workspaces.name and
+            // companies.name, so the sidebar and the careers page cannot drift
+            // apart; save_workspace_branding carries the logo. The direct
+            // `companies` update this replaces has been denied since 0077.
+            const { error: nameError } = await rpc('rename_workspace', {
+                p_privy: user!.id, p_workspace: company.id, p_name: formData.name,
+            });
+            if (nameError) {
+                throw new Error(/rename_workspace|does not exist/i.test(nameError.message || '')
+                    ? 'Renaming needs migration 0093.'
+                    : nameError.message);
+            }
 
-            if (updateError) throw updateError;
+            if (logoUrl !== undefined) {
+                const { error: brandError } = await rpc('save_workspace_branding', {
+                    p_privy: user!.id, p_workspace: company.id, p_data: { logo_url: logoUrl },
+                });
+                if (brandError) throw new Error(brandError.message);
+            }
 
             setSuccess('Settings updated successfully!');
             setCompany({ ...company, name: formData.name, logo_url: logoUrl });

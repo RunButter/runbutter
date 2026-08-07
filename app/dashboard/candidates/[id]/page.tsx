@@ -18,6 +18,7 @@ const Radar = dynamic(() => import('@/components/charts/Charts').then((m) => m.R
 const TeamFitModal = dynamic(() => import('./TeamFitModal'), { ssr: false });
 import CandidateMessageModal from './CandidateMessageModal';
 import { rpc } from '@/lib/rpc';
+import { getWorkspace } from '@/lib/crm/data';
 import { useChartTokens } from '@/lib/chart-tokens';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
@@ -91,9 +92,12 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 }
             });
 
-            // Fetch company plan
-            const { data: comp } = await supabase.from('companies').select('plan').eq('id', can.company_id).single();
-            setCompanyPlan(comp?.plan || 'free');
+            // Plan from get_my_workspace, not a direct `companies` read — 0077
+            // revoked that grant, and this read swallowed its error, so every
+            // candidate page silently treated a paying workspace as 'free' and
+            // hid the features it had paid for.
+            const ws = await getWorkspace(user.id).catch(() => null);
+            setCompanyPlan(ws?.plan || 'free');
 
             // Activity log via verified RPC (activity_log is no longer anon-readable).
             const { data: acts } = await rpc('hr_candidate_activity', {

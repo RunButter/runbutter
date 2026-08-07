@@ -18013,6 +18013,9 @@ grant execute on function hr_delete_position(text, uuid)      to service_role;
  * value for `created_by`. Adding a key to the returned JSON is backward
  * compatible; every existing caller reads by name.
  *
+ * `logo_url` and `subdomain` join them so Settings can render the company
+ * without its own read of `companies`.
+ *
  * `open_positions` lets the company switcher say "6 roles are in your other
  * workspace" instead of rendering an empty list with no explanation — the
  * screens counted that with a cross-company read of `positions`, which 0077
@@ -18024,7 +18027,7 @@ begin
   if coalesce(trim(p_privy), '') = '' then return '[]'::jsonb; end if;
   return coalesce((select jsonb_agg(to_jsonb(x) order by x.created_at) from (
     select cu.id, cu.company_id, cu.role, cu.full_name, cu.email, cu.created_at,
-           c.name as company_name, c.plan, c.subdomain,
+           c.name as company_name, c.plan, c.subdomain, c.logo_url,
            coalesce(op.n, 0) as open_positions
       from company_users cu
       join companies c on c.id = cu.company_id
@@ -18100,6 +18103,48 @@ revoke all on function hr_get_assessment(text, uuid)         from public, anon, 
 revoke all on function hr_save_assessment(text, uuid, jsonb) from public, anon, authenticated;
 grant execute on function hr_get_assessment(text, uuid)         to service_role;
 grant execute on function hr_save_assessment(text, uuid, jsonb) to service_role;
+
+notify pgrst, 'reload schema';
+
+-- ── get_apply_branding gains neuro_profile ──────────────────────────────────
+/**
+ * Redefined IN FULL (0064's version), adding `neuro_profile`.
+ *
+ * The assessment page read that column straight off `positions` to choose which
+ * benchmark to score an applicant against. Anon lost that grant in 0077, and
+ * the read DISCARDED its error, so it silently fell back to 'hard-tech' — every
+ * applicant to every role scored against one profile, with nothing on screen or
+ * in the logs to say so. A wrong number reported confidently is worse than an
+ * error, so this closes it rather than leaving the fallback to do the work.
+ *
+ * This is the only anon-reachable function that already resolves a position, so
+ * it is the right place: no new public surface, and it keeps the same
+ * active-AND-published visibility rule, which means a hidden role still cannot
+ * be probed by id.
+ */
+create or replace function get_apply_branding(p_position_id uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v jsonb;
+begin
+  select jsonb_build_object(
+           'title', p.title,
+           'neuro_profile', p.neuro_profile,
+           'company_name', coalesce(nullif(w.legal_name, ''), c.name),
+           'logo_url', coalesce(nullif(w.logo_url, ''), c.logo_url),
+           'accent_color', nullif(w.accent_color, ''),
+           'apply_intro', nullif(w.apply_intro, '')
+         )
+    into v
+    from positions p
+    join companies c on c.id = p.company_id
+    left join workspaces w on w.id = c.id
+   where p.id = p_position_id
+     and p.is_active and p.is_published;
+
+  return v;   -- null when the position is missing or not public
+end $$;
+
+grant execute on function get_apply_branding(uuid) to authenticated, anon, service_role;
 
 notify pgrst, 'reload schema';
 
@@ -18220,7 +18265,7 @@ insert into schema_migrations (name, checksum, kind) values
   ('0091_get_record_assets.sql', '30bf1565e548', 'migration'),
   ('0092_pipeline_records_crud.sql', 'f382205cb6f1', 'migration'),
   ('0093_rename_workspace.sql', '57c2fbb325ef', 'migration'),
-  ('0094_hr_positions_rpc.sql', 'ec155ba12334', 'migration')
+  ('0094_hr_positions_rpc.sql', '8fcaadb26d51', 'migration')
 on conflict (name) do update set checksum = excluded.checksum, applied_at = now();
 
 notify pgrst, 'reload schema';

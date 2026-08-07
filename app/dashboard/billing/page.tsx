@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
+import { rpc } from '@/lib/rpc';
+import { getWorkspace } from '@/lib/crm/data';
 import {
     Check, CreditCard, CheckCircle2, ArrowRight, ShieldCheck, Sparkles, XCircle,
 } from 'lucide-react';
@@ -38,24 +39,22 @@ export default function BillingPage() {
         if (!ready) return;
         if (!authenticated || !user) { setLoading(false); return; }
         (async () => {
-            // limit(1), NOT maybeSingle(): a user can belong to several companies
-            // and maybeSingle() throws "multiple rows returned" for them.
-            const { data } = await supabase
-                .from('company_users')
-                .select('*, company:companies(*)')
-                .eq('privy_user_id', user.id)
-                .order('created_at', { ascending: true })   // deterministic: no ORDER BY = arbitrary company
-                .limit(1);
-            const row = data?.[0];
-            if (row?.company) {
-                setCompany(row.company);
-                // Seat count for the checkout quantity: how many people are in
-                // this workspace today.
-                const { count } = await supabase
-                    .from('company_users')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('company_id', row.company.id);
-                if (count && count > 0) setSeats(count);
+            // Both reads here lost their grant in 0077, and both failed
+            // SILENTLY: the page rendered with no company (so no plan shown)
+            // and a seat count stuck at its default — on the BILLING screen,
+            // where a wrong seat count is a wrong charge.
+            //
+            // Resolves the ACTIVE workspace rather than the oldest membership,
+            // matching every other screen; billing the company you are not
+            // looking at is its own kind of wrong.
+            const ws = await getWorkspace(user.id).catch(() => null);
+            if (ws?.id) {
+                setCompany({ id: ws.id, name: ws.name, plan: ws.plan } as any);
+                const { data: members } = await rpc('get_members', {
+                    p_privy: user.id, p_workspace: ws.id,
+                });
+                const n = Array.isArray(members) ? members.length : 0;
+                if (n > 0) setSeats(n);
             }
             setLoading(false);
         })();

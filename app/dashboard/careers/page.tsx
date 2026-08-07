@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { Globe2, Loader2, Eye, EyeOff, ExternalLink, Palette, Briefcase } from 'lucide-react';
+import { listPositions } from '@/lib/hr/positions';
 import { getWorkspace } from '@/lib/crm/data';
 import { rpc } from '@/lib/rpc';
 import { supabase } from '@/lib/supabase';
@@ -38,13 +39,17 @@ export default function CareersAdminPage() {
     if (w) {
       // workspace_id == company_id (0005), so the legacy ATS table keys off the
       // same uuid the platform side uses.
-      const { data, error: e } = await supabase
-        .from('positions')
-        .select('id, title, department, is_active, is_published')
-        .eq('company_id', w.id)
-        .order('created_at', { ascending: false });
-      if (e) setError(/is_published/.test(e.message) ? 'Run migration 0060 to manage the careers page.' : e.message);
-      else setRoles((data as Role[]) || []);
+      // hr_list_positions (0094), not a direct read: 0077 revoked the grant on
+      // `positions`, which is what surfaced here as
+      // "permission denied for table positions". The RPC scopes rows to the
+      // caller's company in SQL, so the company_id filter is no longer the
+      // thing keeping tenants apart.
+      try {
+        setRoles(await listPositions(privy) as unknown as Role[]);
+      } catch (err: any) {
+        const msg = err?.message || 'Could not load your roles.';
+        setError(/is_published/.test(msg) ? 'Run migration 0060 to manage the careers page.' : msg);
+      }
     }
     setLoading(false);
   }, [privy]);

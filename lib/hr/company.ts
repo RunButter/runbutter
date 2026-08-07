@@ -96,6 +96,9 @@ export interface HrCompanyOption {
   role: string | null;
   positions: number;
   active: boolean;
+  /** From companies, joined by get_my_hr_companies — Settings renders these. */
+  subdomain: string | null;
+  logoUrl: string | null;
 }
 
 /**
@@ -120,5 +123,7 @@ export async function listHrCompanies(privyUserId: string): Promise<HrCompanyOpt
     role: r.role ?? null,
     positions: r.open_positions ?? 0,
     active: r.company_id === active,
+    subdomain: r.subdomain ?? null,
+    logoUrl: r.logo_url ?? null,
   }));
 }

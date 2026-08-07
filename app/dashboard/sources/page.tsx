@@ -8,6 +8,7 @@ import {
     Radio, Plus, Copy, Check, Loader2, MousePointerClick, Users, TrendingUp, Link2,
 } from 'lucide-react';
 import { rpc } from '@/lib/rpc';
+import { listPositions } from '@/lib/hr/positions';
 import { useDialog } from '@/components/ui/Dialog';
 import { resolveHrCompanyId } from '@/lib/hr/company';
 
@@ -55,8 +56,11 @@ export default function SourcesPage() {
             const companyId = await resolveHrCompanyId(privyUserId);
 
             const [posRes, linksRes, attrRes] = await Promise.all([
+                // hr_list_positions (0094): the direct read lost its grant in
+                // 0077, so this dropdown was empty and every tracking link had
+                // no role to attach to.
                 companyId
-                    ? supabase.from('positions').select('id, title').eq('company_id', companyId).order('created_at', { ascending: false })
+                    ? listPositions(privyUserId).then((d) => ({ data: d })).catch(() => ({ data: [] as any[] }))
                     : Promise.resolve({ data: [] as any[] }),
                 rpc('get_tracking_links', { p_privy_user_id: privyUserId }),
                 rpc('get_source_attribution', { p_privy_user_id: privyUserId }),

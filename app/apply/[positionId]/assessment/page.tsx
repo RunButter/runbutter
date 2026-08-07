@@ -129,14 +129,19 @@ export default function AssessmentPage({ params }: { params: { positionId: strin
     const handleComplete = async () => {
         setSubmitting(true);
         try {
-            // 0. Fetch Position Neuro-Profile for benchmark
-            const { data: posData } = await supabase
-                .from('positions')
-                .select('neuro_profile')
-                .eq('id', params.positionId)
-                .single();
+            // 0. Position neuro-profile, for the benchmark.
+            //
+            // Via get_apply_branding, which is granted to anon; the direct read
+            // this replaces lost its grant in 0077 AND swallowed the error, so
+            // every applicant to every role was silently scored against
+            // 'hard-tech'. A confidently wrong score is worse than a failure,
+            // so the error is surfaced now rather than defaulted away.
+            const { data: posData, error: posError } = await supabase.rpc('get_apply_branding', {
+                p_position_id: params.positionId,
+            });
+            if (posError) throw new Error(`Could not load this role: ${posError.message}`);
 
-            const neuroProfile = posData?.neuro_profile || 'hard-tech';
+            const neuroProfile = (posData as any)?.neuro_profile || 'hard-tech';
 
             // 1. Calculate Personality Scores (Big 5)
             const getScoreForTrait = (trait: string) => {

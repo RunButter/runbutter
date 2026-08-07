@@ -143,16 +143,16 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         throw new Error('Please upload your CV/Resume');
       }
 
-      // Get position details to get company_id
-      const { data: position } = await supabase
-        .from('positions')
-        .select('company_id, title')
-        .eq('id', params.positionId)
-        .single();
-
-      if (!position) {
-        throw new Error('Position not found');
-      }
+      // NO position read here. This used to fetch company_id and title from
+      // `positions` directly, which 0077 revoked for anon — and the read
+      // DISCARDED its error, so `permission denied` arrived as a null row and
+      // surfaced to an applicant as "Position not found" on a position that
+      // exists and is open. Nothing was missing; the query was.
+      //
+      // It was also redundant twice over: apply_to_position resolves
+      // company_id and title from the position itself (and raises its own
+      // 'Position not found' when the id really is unknown), and the title is
+      // already on screen via get_apply_branding, which IS granted to anon.
 
       // Create the candidate + log the application in one SECURITY DEFINER RPC.
       // This replaces the direct anon table writes (candidates/activity_log are
@@ -215,7 +215,7 @@ export default function ApplyPage({ params }: { params: { positionId: string } }
         body: JSON.stringify({
           email: formData.email,
           name: formData.fullName,
-          position: position.title,
+          position: positionInfo?.title,
           company: positionInfo?.companyName,
           assessmentLink
         })
