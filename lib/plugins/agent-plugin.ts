@@ -79,8 +79,13 @@ export function pluginSlug(raw: string): string {
   const s = (raw || '')
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/\.{2,}/g, '.')
+    // Collapse ANY run of separators to a single one, not just repeats of the
+    // same character. Handling `--` and `..` separately left `.-` untouched, so
+    // "Acme Co. Skills" came out as `acme-co.-skills`: a period and a hyphen
+    // adjacent, which is not a separator anyone typed and reads as a typo in
+    // every install prompt that shows the name. The first character of the run
+    // wins, so "Co." keeps its period and a plain space stays a hyphen.
+    .replace(/[-.]{2,}/g, (m) => m[0])
     .replace(/^[-.]+|[-.]+$/g, '')
     .slice(0, 64)
     .replace(/[-.]+$/g, '');

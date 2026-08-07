@@ -30,7 +30,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ['/', 1, 'weekly'],
     ['/ai-agents', 0.9, 'monthly'],
     ['/developers', 0.9, 'weekly'],
-    ['/pdf', 0.7, 'monthly'],          // a free tool — its own reason to visit
+    // Free tools: each is its own reason to visit, from a search that has
+    // nothing to do with wanting a CRM.
+    ['/plugins', 0.8, 'monthly'],
+    ['/pdf', 0.7, 'monthly'],
     ['/contact', 0.4, 'yearly'],
     ['/privacy', 0.3, 'yearly'],
     ['/terms', 0.3, 'yearly'],
