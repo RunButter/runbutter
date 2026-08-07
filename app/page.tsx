@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound } from 'lucide-react';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public
@@ -33,9 +33,11 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
 // throughout — no hue.
-// 17 tiles, three of them spanning two columns: exactly 20 cells, so the
-// 4-column grid fills five clean rows with no ragged gap at the end. Keep that
+// 20 tiles, four of them spanning two columns: exactly 24 cells, so the
+// 4-column grid fills six clean rows with no ragged gap at the end. Keep that
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
+// The sum is `tiles + wideTiles`, and it has to stay a multiple of four; adding
+// one wide tile therefore costs two normal ones, not zero.
 const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string }[] = [
   // The one tile with a page of its own behind it — agents are the hardest
   // thing here to believe from a single sentence.
@@ -59,6 +61,11 @@ const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: stri
   { icon: Scale, name: 'Sanctions screening', body: 'Check a name against the OFAC lists before you invoice. Fuzzy-matched in Postgres, no per-query fee.' },
   { icon: FileStack, name: 'PDF toolkit', body: 'Merge, split, rotate and watermark in your browser. The files never leave your machine.', href: '/pdf', cta: 'Open the PDF tools' },
   { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
+  // Both of these were only ever in the flat inventory further down, which is
+  // the section people skim last.
+  { icon: NotebookPen, name: 'Docs and mind maps', body: 'Write next to the records, with an AI toolbar and boards for planning.' },
+  { icon: KeyRound, name: 'Roles and permissions', body: 'Owner, admin and member, with the audit log on Enterprise.' },
+  { icon: Puzzle, name: 'Agent skills, portable', body: 'Write a skill once and package it as an Agent Plugin — the vendor-neutral standard Amazon, Cursor, Microsoft, OpenAI and Vercel steer. Import from a GitHub repo, export yours back out, or build one free in the browser.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
 ];
 
 // Prices, names and limits are DERIVED from lib/plans.ts — the same file that

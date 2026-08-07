@@ -233,6 +233,19 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **`lib/plugins/zip.ts` is a hand-written store-only ZIP writer**, no dependency — same call as
   `lib/markdown.ts`. Fixed 1980 timestamps make exports byte-reproducible. It is deliberately not
   Zip64/DEFLATE/encryption capable; if that changes, take a dependency rather than growing it.
+- **The free builder is at `/plugins`, NOT `/skills`** — `app/(crm)/skills` already owns that path,
+  the same collision that pushed the agents marketing page to `/ai-agents`. It lives outside the
+  `(crm)` group so it gets marketing chrome and no Privy shell, and it is **entirely client-side**:
+  `agent-plugin.ts` and `zip.ts` are pure (TextEncoder + strings, no Node APIs), so the page that
+  generates `plugin/`, `/api/plugins/export` and the public builder are one implementation. Nothing
+  is uploaded — a skill is a system prompt, and posting your working instructions to a server to get
+  a zip back is a bad trade. Its warnings reuse **`check-plugin.mjs`'s own heuristics** (the
+  `use when|for|if` test), so the tool tells you what CI would.
+  - Warn only when a slug **loses** something. Warning that "House writing style" becomes
+    `house-writing-style` is true and useless, and firing on every title-cased name buried the three
+    warnings that mattered under three that did not.
+  - `pluginSlug` collapsed `--` and `..` separately, so `.-` survived: "Acme Co. Skills" came out
+    `acme-co.-skills`. It now collapses any run of `[-.]` to its FIRST character.
 
 ## SEO + being readable by machines
 - **`/robots.txt`, `/sitemap.xml` and `/llms.txt` did not exist** and 404'd in production. Metadata

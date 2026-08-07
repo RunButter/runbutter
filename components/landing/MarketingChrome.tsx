@@ -148,6 +148,11 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
         { label: 'Documentation', href: '/developers' },
         { label: 'Install guide', href: '/developers/install' },
         { label: 'REST API & MCP', href: '/developers/api' },
+        // The two free tools. They had no route into them from any page but the
+        // landing bento, which is the one place a stranger arriving from a
+        // search for "how to write a SKILL.md" will never be.
+        { label: 'Skill builder', href: '/plugins' },
+        { label: 'PDF toolkit', href: '/pdf' },
         { label: 'Roadmap', href: '/developers/roadmap' },
         { label: 'Contributing', href: '/developers/contributing' },
         { label: 'Report a bug', href: `${REPO_URL}/issues/new/choose`, external: true },
