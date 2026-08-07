@@ -1,0 +1,82 @@
+# Mirror main to the public repository, automatically.
+name: Mirror to RunButter
+
+# WHY THIS EXISTS. Cloud sessions push here, Render deploys from
+# RunButter/runbutter, and the gap between the two was being closed by hand:
+# open a laptop, run `npm run publish:oss`. That is a person doing a computer's
+# job, and it means nothing ships while the owner is away from a desk.
+#
+# THIS IS A BRIDGE, NOT A DESTINATION. The right end state is one repository —
+# start the cloud sessions from RunButter/runbutter and this file, publish-oss
+# and the whole two-repo apparatus all get deleted. Until then, this keeps the
+# public copy current without anyone opening a terminal.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # so it can be re-run from the GitHub mobile app
+
+concurrency:
+  group: mirror-main
+  cancel-in-progress: false  # never race two pushes at the same ref
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # Without the token this is a red X on every push, which teaches people to
+    # ignore red X's. Skipped is honest: not configured, not broken.
+    if: ${{ github.repository == 'CasperCrypto/hirebtr' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # a mirror needs the history, not a shallow tip
+
+      - name: Is the token configured?
+        id: check
+        env:
+          TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PUBLIC_REPO_TOKEN is not set — skipping. See docs/going-live.md to enable automatic mirroring."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Would this overwrite anything?
+        if: steps.check.outputs.configured == 'true'
+        env:
+          TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          git remote add public "https://x-access-token:${TOKEN}@github.com/RunButter/runbutter.git"
+          git fetch public main
+
+          # THE CHECK THAT MATTERS, and the reason this job is not one `git push`.
+          #
+          # The mirror is one-way. The moment a contributor's pull request is
+          # merged on RunButter/runbutter, the public repo has commits this one
+          # does not — and a force-push would delete a stranger's merged work
+          # while reporting success. So: if the public repo is ahead, stop and
+          # say exactly how to bring it back.
+          AHEAD=$(git rev-list --count HEAD..public/main)
+          if [ "$AHEAD" != "0" ]; then
+            echo "::error::RunButter/runbutter has $AHEAD commit(s) this repo does not — almost certainly a merged pull request."
+            echo ""
+            echo "Nothing was pushed. Bring them back here first:"
+            echo ""
+            echo "    git fetch public main && git merge public/main && git push origin main"
+            echo ""
+            echo "If this keeps happening, it is the signal to stop mirroring and"
+            echo "move development to RunButter/runbutter for good."
+            git log --oneline HEAD..public/main | head -20
+            exit 1
+          fi
+
+      - name: Publish
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          # No --force, ever. The check above already proved this is a
+          # fast-forward; if that somehow changed in the last few seconds, a
+          # rejected push is the correct outcome.
+          git push public HEAD:main
+          echo "::notice::Mirrored $(git rev-parse --short HEAD) to RunButter/runbutter"

@@ -278,6 +278,43 @@ This is the one time `--force` is right: it discards a LICENSE-only commit that
 this repository already contains, and there is nothing else there to lose. After
 the first push, never force again.
 
+### Automatic mirroring (set it up once, never open a terminal again)
+
+`npm run publish:oss` is a person doing a computer's job. A workflow can do it
+on every push instead, and the whole setup is doable from a phone browser.
+
+**1. Make a token.** github.com → your avatar → Settings → Developer settings →
+Personal access tokens → **Fine-grained tokens** → Generate new token.
+
+| Field | Value |
+| --- | --- |
+| Repository access | Only select repositories → `RunButter/runbutter` |
+| Permissions → Contents | **Read and write** |
+| Expiration | 1 year (put a reminder somewhere) |
+
+Nothing else. Contents is the only permission a push needs.
+
+**2. Store it.** `CasperCrypto/hirebtr` → Settings → Secrets and variables →
+Actions → New repository secret, named exactly:
+
+```
+PUBLIC_REPO_TOKEN
+```
+
+That is the whole setup. Every push to `main` now mirrors itself, and
+`.github/workflows/mirror.yml` skips quietly rather than failing red while the
+secret is unset.
+
+Because the token is *yours*, the push acts as you — so your Repository-admin
+bypass on the `main` ruleset applies and the pull-request requirement does not
+block it. A bot account would need adding to that bypass list separately.
+
+**It refuses to overwrite.** The workflow checks whether the public repo has
+commits this one does not before pushing anything. It will, the first time a
+contributor's pull request is merged — and rather than force-pushing over their
+work, it stops and prints the command to bring those commits back. That failure
+is also the signal that two repositories have stopped being worth it.
+
 ### Afterwards: every update
 
 Once the first push is done, publishing is one command:

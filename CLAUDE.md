@@ -615,6 +615,14 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
 - A cloud session can only reach the repo it was started from: `add_repo` refuses cross-owner adds,
   so a session on `CasperCrypto/hirebtr` **cannot push to `RunButter/runbutter`**. Publishing is a
   one-command local step, by design of the sandbox rather than by choice.
+- **`.github/workflows/mirror.yml` automates it** once `PUBLIC_REPO_TOKEN` is set (see
+  `docs/going-live.md`), so nobody has to open a terminal. It **refuses to push when the public repo
+  is ahead** — which happens the first time a contributor's PR merges there, and force-pushing would
+  delete their merged work while reporting success.
+- **THE MIRROR IS A BRIDGE AND IT EXPIRES.** It is one-way, so it is safe only while contributions
+  arrive through this repo. The moment PRs land on `RunButter/runbutter`, two repos stop being
+  tenable: move cloud sessions to the org repo, archive this one, and delete `mirror.yml`,
+  `publish:oss` and this whole section.
 - **The sandbox working tree sometimes rolls back to an old commit mid-session** (seen repeatedly,
   always to the same commit). Pushed work is safe; recover with
   `git fetch origin <branch> && git reset --hard origin/<branch>`, then `npm install` and recreate
