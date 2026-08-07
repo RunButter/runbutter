@@ -33,6 +33,11 @@ jobs:
       - name: Agent Plugin conformance
         run: npm run check:plugin
 
+      # Seconds, and it catches in the fast job what the compose job needs six
+      # minutes and a full image build to discover.
+      - name: The migrate image has what it imports
+        run: npm run check:docker
+
       # The Privy id must be WELL-FORMED — the provider validates its shape
       # offline and throws on anything else, which fails the prerender of every
       # page. This one is fake and 25 characters, the shape Privy issues.

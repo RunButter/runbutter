@@ -12,7 +12,18 @@ WORKDIR /app
 # script against fifteen kilobytes of JavaScript.
 RUN npm install --no-save pg@8
 
-COPY scripts/migrate.mjs ./scripts/
+# scripts/lib TOO, and that omission is the whole reason `docker compose up`
+# never worked for anyone. migrate.mjs imports LEGACY_ORDER from
+# ./lib/legacy-order.mjs; copying only the entrypoint gave the container a
+# script whose very first import fails, so the migrate service exited 1, the
+# services that wait on it never started, and the stack died before the app was
+# ever reached. It was invisible locally because `npm run migrate` runs in the
+# full repository, where that file is simply there.
+#
+# Copy the DIRECTORY the script actually needs, not the one file it is named
+# after. scripts/check-docker-copy.mjs now fails CI if an import escapes it.
+COPY scripts/migrate.mjs ./scripts/migrate.mjs
+COPY scripts/lib ./scripts/lib
 COPY supabase ./supabase
 
 CMD ["node", "scripts/migrate.mjs"]

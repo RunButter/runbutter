@@ -13,7 +13,8 @@
     "migrate:status": "node scripts/migrate.mjs --status",
     "bundle:sql": "node scripts/bundle-sql.mjs",
     "publish:oss": "node scripts/publish-oss.mjs",
-    "check:plugin": "node scripts/check-plugin.mjs plugin --strict"
+    "check:plugin": "node scripts/check-plugin.mjs plugin --strict",
+    "check:docker": "node scripts/check-docker-copy.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
