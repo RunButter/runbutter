@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store, ShieldAlert } from 'lucide-react';
 import { buildPlugin, skillSlug, pluginSlug, isValidSkillName, parseToolList, resourcePath, SPEC_VERSION, type PluginFile } from '@/lib/plugins/agent-plugin';
 import { zipSync } from '@/lib/plugins/zip';
+import { scanFiles } from '@/lib/plugins/scan';
 
 /**
  * A free Agent Plugin builder that runs ENTIRELY in the browser.
@@ -281,6 +282,7 @@ export default function PluginBuilder() {
   const [skills, setSkills] = useState<Draft[]>([{ ...blank(), ...TEMPLATES[0].skill }]);
   const [open, setOpen] = useState(0);
   const [shown, setShown] = useState<string | null>(null);
+  const [override, setOverride] = useState(false);
 
   const files: PluginFile[] = useMemo(() => buildPlugin({
     manifest: {
@@ -314,6 +316,23 @@ export default function PluginBuilder() {
    * empty description reports "invalid skill" and stops, with nothing pointing
    * at which of the two it was.
    */
+  /**
+   * Credentials in the files about to be zipped.
+   *
+   * Scanned from the GENERATED files rather than the form state, so anything
+   * that reaches the package is covered — instructions, descriptions, every
+   * supporting file, the manifest and mcp.json — without this needing to know
+   * which fields exist.
+   */
+  const secrets = useMemo(() => scanFiles(files), [files]);
+
+  // Re-arm the gate whenever the findings change. Without this, waving through
+  // one deliberate placeholder would leave the download unblocked for a REAL
+  // key pasted a minute later — an override that outlives what it was granted
+  // for is worse than no gate, because it looks like one.
+  const secretSig = secrets.map((f) => `${f.where}:${f.preview}`).join('|');
+  useEffect(() => { setOverride(false); }, [secretSig]);
+
   const notes = useMemo(() => {
     const out: string[] = [];
     const named = skills.filter((s) => s.name.trim());
@@ -571,8 +590,17 @@ export default function PluginBuilder() {
           <div className="flex items-center gap-2 px-4 h-12 border-b border-subtle bg-surface-sunken">
             <span className="text-xs font-medium text-primary flex-1 truncate">{pluginSlug(pluginName)}/</span>
             <CopyButton text={active?.content || ''} />
-            <button onClick={() => download(`${pluginSlug(pluginName)}.zip`, bytes())}
-              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-inverse text-inverse-fg text-2xs font-medium hover:opacity-90 transition-opacity">
+            {/* Blocked while a credential is in the package. This is the one
+                gate worth having: the output is a directory people commit and
+                push, and a key deleted in a later commit is still readable in
+                the one that added it. Overridable, because a skill teaching
+                someone what a key LOOKS like is legitimate and a tool that
+                cannot be argued with gets worked around instead. */}
+            <button
+              onClick={() => download(`${pluginSlug(pluginName)}.zip`, bytes())}
+              disabled={secrets.length > 0 && !override}
+              title={secrets.length > 0 && !override ? 'A credential was found in this package' : undefined}
+              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-inverse text-inverse-fg text-2xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed">
               <Download className="w-3 h-3" /> Download
             </button>
           </div>
@@ -595,6 +623,39 @@ export default function PluginBuilder() {
             {active?.content}
           </pre>
         </div>
+
+        {secrets.length > 0 && (
+          <div className="mt-3 rounded-xl border border-danger/40 bg-danger/5 p-3.5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <ShieldAlert className="w-3.5 h-3.5 text-danger" />
+              <span className="text-xs font-medium text-primary">
+                {secrets.length === 1 ? 'A credential is in this package' : `${secrets.length} credentials are in this package`}
+              </span>
+            </div>
+            <p className="text-2xs text-secondary leading-relaxed">
+              A plugin is a folder people commit and push. Once this is in a repository it stays readable in
+              that commit even after a later one removes it — so rotate anything real that got this far.
+            </p>
+            <ul className="mt-2.5 space-y-1.5">
+              {secrets.slice(0, 8).map((f, i) => (
+                <li key={i} className="text-2xs text-secondary flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="font-medium text-primary">{f.label}</span>
+                  <span className="font-mono text-tertiary">{f.where}</span>
+                  {/* Redacted: enough to locate, never enough to use. */}
+                  <span className="font-mono text-danger">{f.preview}</span>
+                </li>
+              ))}
+              {secrets.length > 8 && <li className="text-2xs text-tertiary">…and {secrets.length - 8} more.</li>}
+            </ul>
+            {!override && (
+              <button onClick={() => setOverride(true)}
+                className="mt-2.5 text-2xs text-tertiary hover:text-primary underline underline-offset-2">
+                These are placeholders — let me download anyway
+              </button>
+            )}
+            {override && <p className="mt-2.5 text-2xs text-tertiary">Download unblocked for this session.</p>}
+          </div>
+        )}
 
         {notes.length > 0 && (
           <div className="mt-3 rounded-xl border border-subtle bg-surface-sunken p-3.5">
