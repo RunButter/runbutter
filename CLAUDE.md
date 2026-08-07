@@ -293,6 +293,23 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **CI** (`.github/workflows/ci.yml`) = types, build with NO Stripe key, migrations from empty twice,
   and a stale-`schema.sql` check. **Dependabot is deliberately quiet** (monthly, grouped, no
   Next/React/Tailwind majors).
+- **Never merge a Dependabot PR without applying it to CURRENT main and building.** They branch from
+  whatever `main` was, so by the time you look they are 15–30 commits behind, and
+  `git checkout <branch> -- <dir>` silently REVERTS everything newer in that directory (it took out
+  three CI jobs once). Apply the version bumps in place instead. Two traps found in one sweep, both
+  of which fail *after* the push, with the old build still serving:
+  - **The `minor-and-patch` group is not all minor.** `tiptap-markdown 0.9.0` needs
+    `@tiptap/core ^3.0.1`, so it drags the whole Tiptap v2→v3 migration in behind a patch-shaped
+    label and `npm ci` dies with ERESOLVE.
+  - **`@privy-io/react-auth` ≥ 3.36 fails the build** on `Can't resolve '@farcaster/mini-app-solana'`,
+    an optional dep it references but does not bring. Held at 3.13.1.
+- **The eight `@tiptap/*` packages move together or not at all** — four declare `@tiptap/pm ^2.7.0`
+  as a peer, so bumping any one of them alone breaks the install. v3 is a deliberate branch with the
+  Docs editor exercised by hand, never a Dependabot merge.
+- **lucide 1.x removed brand marks.** `Github` and `Linkedin` now come from
+  `components/ui/BrandIcons.tsx`, which vendors lucide 0.454's **stroke** paths under ISC. Do not
+  "simplify" it to the filled glyphs in `MarketingChrome` — those are solid shapes from another
+  family and would make every GitHub button heavier than the icons beside it.
 - **`.gitignore` patterns must be anchored** (`/build/`, not `build/`). Unanchored, `build/` matched
   `app/api/workspace/build/` and the AI builder's route was silently never committed — it existed on
   one machine, and every deploy answered that route with an HTML 404, which surfaces as
@@ -632,8 +649,11 @@ is currently blocking something visible. Ask before assuming any is done.
 - **Cron jobs**: newsletters, sequences, posts, agents (`x-cron-secret: <service-role key>`);
   finance reminders and the Excel sweep (`CRON_SECRET`). Nothing sends or syncs without them.
 - **Publish a GitHub release**, or Settings → Updates stays blank.
-- **Merge the Dependabot PRs** on the org repo; the Stripe major needs a look at the API version
-  pinned in `lib/billing/stripe.ts`.
+- ~~Merge the Dependabot PRs~~ — done on this repo (2026-08). #24/#25/#26 applied and closed, #27
+  closed as unmergeable; see the CI section for what was held back and why. Two follow-ups remain,
+  each its own branch: **Tiptap v2→v3** (all eight packages plus `tiptap-markdown`) and
+  **`@privy-io/react-auth` ≥ 3.36** (needs the `@farcaster/mini-app-solana` resolution sorted). The
+  **Stripe major** still needs a look at the API version pinned in `lib/billing/stripe.ts`.
 
 ## Commits
 **This file IS committed** so cloud/web sessions (which clone from GitHub and never see local files)
