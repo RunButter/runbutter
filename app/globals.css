@@ -263,6 +263,70 @@
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
   }
+  /* Without JS nothing ever adds .reveal-in, so every section below the hero
+     stays at opacity 0 — the content is in the HTML but painted invisible.
+     Google runs JS and does not care; a text extractor that applies CSS, a
+     reader mode, or a browser with scripting off gets a blank page. The
+     from-state is only worth having when something can undo it. */
+  @media (scripting: none) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .agent-line { animation: none; }
+  }
+
+  /* ── Reading progress (MarketingChrome) ───────────────────────────────────
+     scaleX driven by the document's own scroll timeline. transform-only, so it
+     runs on the compositor; width would relayout the header on every frame. */
+  .scroll-progress { display: none; }
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .scroll-progress {
+        display: block;
+        position: absolute;
+        inset: auto 0 -1px 0;
+        height: 2px;
+        background: hsl(var(--text-primary));
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+        animation: scroll-progress linear both;
+        animation-timeline: scroll(root block);
+      }
+      @keyframes scroll-progress { to { transform: scaleX(1); } }
+    }
+  }
+
+  /* ── Agent transcript (components/landing/AgentDemo.tsx) ──────────────────
+     Each line fades in on its own animation-delay, so the sequence plays
+     itself with no timer and no observer. PAUSED until an ancestor Reveal adds
+     .reveal-in: otherwise the whole conversation would play out while it is
+     still two screens below the fold, and the visitor would scroll down to a
+     finished transcript and never see the point.
+
+     The from-state lives in CSS, never in the markup — no conditional render,
+     no `hidden` — so the full transcript is in the HTML for anything reading
+     the page as text. */
+  .agent-line {
+    animation: agent-line-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both paused;
+  }
+  .reveal-in .agent-line { animation-play-state: running; }
+  @keyframes agent-line-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* Not "instant" — no animation at all, so nothing depends on a delay that
+       never elapses. */
+    .agent-line { animation: none; }
+  }
+
+  /* Tab switch in the product window. Deliberately short and translate-only:
+     a panel is a few hundred nodes, and anything longer than ~200ms turns
+     "switch tab" into "wait for tab". */
+  .pp-panel-in { animation: pp-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @keyframes pp-panel-in {
+    from { opacity: 0; transform: translateY(6px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pp-panel-in { animation: none; }
+  }
 
   /* ── Hero artwork ─────────────────────────────────────────────────────────
      The engraving is a real full-bleed image; the ASCII field interacts on

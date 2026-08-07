@@ -30,6 +30,12 @@ export function MarketingHeader({ home = false }: { home?: boolean }) {
           <Link href="/auth/register" className="inline-flex items-center h-8 px-3 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">Start free</Link>
         </nav>
       </div>
+      {/* Reading progress. Scroll-driven CSS only — no listener, no rAF, no
+          state — so it costs nothing on the main thread and cannot jank the
+          scroll it is measuring. Browsers without animation-timeline get no
+          bar rather than a JS fallback: it is decoration, and a scroll handler
+          on every public page is a real cost to pay for one. */}
+      <div aria-hidden="true" className="scroll-progress" />
     </header>
   );
 }

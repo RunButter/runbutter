@@ -12,6 +12,7 @@ import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Comparison from '@/components/landing/Comparison';
 import FeatureWindows from '@/components/landing/FeatureWindows';
+import AgentDemo from '@/components/landing/AgentDemo';
 import Reveal from '@/components/landing/Reveal';
 import CopyCommand from '@/components/landing/CopyCommand';
 import ObjectMarquee from '@/components/landing/ObjectMarquee';
@@ -313,6 +314,39 @@ export default function HomePage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* ── Agents, shown rather than claimed ────────────────────────────────
+          The first bento tile says an agent reads and writes your workspace and
+          asks before it writes. That is the least believable sentence on the
+          page from a tile, and a screenshot cannot help, because the part worth
+          seeing is the ORDER: the question, the tools it picked, and a write
+          that stops for approval. So it plays. */}
+      <section id="agents" className="border-t border-subtle cv-auto">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <Reveal>
+            <div className="max-w-2xl">
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Ask your workspace a real question</h2>
+              <p className="text-secondary mt-3 leading-relaxed">
+                Because sales, finance, files and hiring are one database, an agent can answer across all of
+                them in a single pass — and it runs on your own AI key, so there is no per-token bill from us.
+                Writes wait for you until you decide an agent has earned otherwise.
+              </p>
+            </div>
+          </Reveal>
+          {/* Inside the Reveal on purpose: the transcript's CSS animations are
+              paused until .reveal-in lands, which is what stops the whole
+              conversation playing out while it is still below the fold. */}
+          <Reveal delay={60} className="mt-10">
+            <AgentDemo />
+          </Reveal>
+          <Reveal delay={120}>
+            <p className="mt-5 text-xs text-tertiary">
+              Sample workspace. Every tool named above is a real one —{' '}
+              <Link href="/ai-agents" className="text-primary font-medium hover:underline">see the full list and how scoping works</Link>.
+            </p>
+          </Reveal>
         </div>
       </section>
 
