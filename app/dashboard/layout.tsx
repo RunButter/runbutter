@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Menu, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { listHrCompanies } from '@/lib/hr/company';
 import NavRail from '@/components/crm/NavRail';
 import PlanGate from '@/components/PlanGate';
 import { type PlanFeature } from '@/lib/plans';
@@ -34,8 +34,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   async function loadCompanyData() {
     try {
-      const { data } = await supabase.from('company_users').select('*, company:companies(*)').eq('privy_user_id', user!.id).order('created_at', { ascending: true }).limit(1).maybeSingle();
-      if (data?.company) setCompany(data.company);
+      // Via get_my_hr_companies: the direct read of company_users has been
+      // denied since 0077, and because this catch is non-fatal the only symptom
+      // was the company name quietly missing from the shell.
+      const mine = await listHrCompanies(user!.id);
+      const active = mine.find((c) => c.active) ?? mine[0];
+      if (active) setCompany({ id: active.companyId, name: active.name } as any);
     } catch {
       /* non-fatal */
     }

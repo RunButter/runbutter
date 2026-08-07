@@ -4,11 +4,11 @@ import { getLimit, formatLimit } from '@/lib/plans';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { supabase } from '@/lib/supabase';
 import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import { resolveHrCompany } from '@/lib/hr/company';
+import { listPositions, savePosition } from '@/lib/hr/positions';
+import { getWorkspace } from '@/lib/crm/data';
 
 export default function NewPositionPage() {
     const router = useRouter();
@@ -76,73 +76,40 @@ export default function NewPositionPage() {
 
         try {
 
-            // Must resolve the SAME company the positions list reads, or a
-            // role is created into one company and listed from another.
-            const company = await resolveHrCompany(user.id);
-            if (!company) throw new Error('Your account is not linked to a company yet. Reload, or re-run onboarding.');
-            const companyUser = { company_id: company.companyId, id: company.membershipId };
+            // Plan comes from get_my_workspace (already proxied), NOT from a
+            // direct read of `companies` — that read is what produced
+            // "Could not check your plan: permission denied for table companies"
+            // once 0077 revoked the anon grant on the table.
+            const ws = await getWorkspace(user.id);
+            if (!ws?.id) throw new Error('Your account is not linked to a company yet. Reload, or re-run onboarding.');
 
-            // Enforce plan position limit
-            const { data: companyRow, error: planError } = await supabase
-                .from('companies').select('plan').eq('id', companyUser.company_id).maybeSingle();
-            // Also previously swallowed. A failed plan read fell through to
-            // getLimit(undefined) === the FREE limit of 1 position, so a paying
-            // customer got "your free plan allows 1 position" for no reason.
-            if (planError) throw new Error(`Could not check your plan: ${planError.message}`);
-
-            const { count: positionCount, error: countError } = await supabase
-                .from('positions')
-                .select('id', { count: 'exact', head: true })
-                .eq('company_id', companyUser.company_id);
-            if (countError) throw new Error(`Could not count existing positions: ${countError.message}`);
-
-            const maxPositions = getLimit(companyRow?.plan, 'maxPositions');
-            if ((positionCount ?? 0) >= maxPositions) {
-                throw new Error(`Your ${companyRow?.plan || 'free'} plan allows ${formatLimit(maxPositions)} position(s). Upgrade to add more.`);
+            const existing = await listPositions(user.id);
+            const maxPositions = getLimit(ws.plan, 'maxPositions');
+            if (existing.length >= maxPositions) {
+                throw new Error(`Your ${ws.plan || 'free'} plan allows ${formatLimit(maxPositions)} position(s). Upgrade to add more.`);
             }
-
-            const { data: position, error: postError } = await supabase
-                .from('positions')
-                .insert({
-                    company_id: companyUser.company_id,
-                    title: formData.title,
-                    description: formData.description,
-                    department: formData.department,
-                    location: formData.location,
-                    employment_type: formData.employment_type,
-                    neuro_profile: formData.neuro_profile,
-                    created_by: companyUser.id,
-                    is_active: true
-                })
-                .select()
-                .single();
-
-            if (postError) throw postError;
-
-            // Combine default questions with custom screening questions
-            const defaultQuestions = DEFAULT_PERSONALITY_QUESTIONS;
 
             const customQuestions = [
                 ...screeningQuestions.filter(q => q.text.trim() !== ''),
                 ...(openEndedQuestion.text.trim() !== '' ? [openEndedQuestion] : [])
             ];
 
-            // Create default assessment for this position
-            const { error: assessmentError } = await supabase.from('assessment_templates').insert({
-                company_id: companyUser.company_id,
-                position_id: position.id,
+            // One call, one transaction: the position and its default assessment
+            // are created together. The old two-step could leave a position with
+            // no assessment, which breaks the candidate flow with nothing to see.
+            const position = await savePosition(user.id, null, {
+                title: formData.title,
+                description: formData.description,
+                department: formData.department,
+                location: formData.location,
+                employment_type: formData.employment_type,
+                neuro_profile: formData.neuro_profile,
+                is_active: true,
+            }, {
                 name: `${formData.title} Assessment`,
                 description: `Standard assessment for ${formData.title}`,
-                questions: [...defaultQuestions, ...customQuestions],
-                is_default: true
+                questions: [...DEFAULT_PERSONALITY_QUESTIONS, ...customQuestions],
             });
-
-            // The position is already saved at this point, so don't pretend it
-            // failed — but a position with no assessment breaks the candidate
-            // flow silently, which is worse than an ugly message here.
-            if (assessmentError) {
-                throw new Error(`Position "${formData.title}" was created, but its assessment could not be: ${assessmentError.message}`);
-            }
 
             router.push('/dashboard/positions');
         } catch (err: any) {

@@ -75,6 +75,12 @@ const ALLOWED = new Set([
   // Interview schedule/edit/cancel run through /api/hr/interviews (0045), not
   // here, because they orchestrate Google Meet + the candidate email server-side.
   'hr_list_interviews', 'hr_create_candidate', 'hr_delete_candidate', 'hr_list_positions_min',
+  // 0094 — positions read/write. The positions screens used the browser client
+  // against `positions` and `companies` until 0077 revoked those grants, which
+  // surfaced as "permission denied for table companies" on create and an empty
+  // list everywhere else. These are the server-side path they never had.
+  'hr_list_positions', 'hr_get_position', 'hr_save_position', 'hr_delete_position',
+  'hr_get_assessment', 'hr_save_assessment',
   // 0076 — the browser's replacement for reading company_users directly.
   // ensure_workspace is deliberately ABSENT: it PROVISIONS, so it runs
   // server-side in /api/onboarding/provision behind a verified Privy token.

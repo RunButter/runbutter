@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
+import { getPosition, savePosition, getAssessment, saveAssessment } from '@/lib/hr/positions';
 import { DEFAULT_PERSONALITY_QUESTIONS } from '@/lib/questions';
 import { Briefcase, ArrowLeft, Loader2, Globe, Building2, Target, X, Plus, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -30,13 +31,11 @@ export default function EditPositionPage({ params }: { params: { id: string } })
 
     const loadPositionData = useCallback(async () => {
         try {
-            const { data: position, error: posError } = await supabase
-                .from('positions')
-                .select('*')
-                .eq('id', params.id)
-                .single();
-
-            if (posError) throw posError;
+            // hr_get_position (0094) — scoped to the caller's company in SQL,
+            // so a guessed id from another workspace returns null instead of a
+            // row. The direct read this replaces is denied outright since 0077.
+            const position = await getPosition(user!.id, params.id as string);
+            if (!position) throw new Error('That role no longer exists, or it belongs to another workspace.');
 
             setFormData({
                 title: position.title,
@@ -48,14 +47,9 @@ export default function EditPositionPage({ params }: { params: { id: string } })
             });
 
             // Fetch template
-            const { data: template, error: tmplError } = await supabase
-                .from('assessment_templates')
-                .select('*')
-                .eq('position_id', params.id)
-                .is('is_default', true)
-                .single();
+            const template = await getAssessment(user!.id, params.id as string).catch(() => null);
 
-            if (!tmplError && template) {
+            if (template) {
                 const mcqs = template.questions.filter((q: any) => q.category === 'screening' && q.type === 'choice');
                 const open = template.questions.find((q: any) => q.category === 'screening' && q.type === 'text');
 
@@ -119,19 +113,14 @@ export default function EditPositionPage({ params }: { params: { id: string } })
         setError('');
 
         try {
-            const { error: updateError } = await supabase
-                .from('positions')
-                .update({
-                    title: formData.title,
-                    description: formData.description,
-                    department: formData.department,
-                    location: formData.location,
-                    employment_type: formData.employment_type,
-                    neuro_profile: formData.neuro_profile,
-                })
-                .eq('id', params.id);
-
-            if (updateError) throw updateError;
+            await savePosition(user!.id, params.id as string, {
+                title: formData.title,
+                description: formData.description,
+                department: formData.department,
+                location: formData.location,
+                employment_type: formData.employment_type,
+                neuro_profile: formData.neuro_profile,
+            });
 
             // Update template
             const defaultQuestions = DEFAULT_PERSONALITY_QUESTIONS;
@@ -141,31 +130,15 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                 ...(openEndedQuestion.text.trim() !== '' ? [openEndedQuestion] : [])
             ];
 
-            // Upsert template (ensure one exists)
-            const { data: existingTmpl } = await supabase
-                .from('assessment_templates')
-                .select('id')
-                .eq('position_id', params.id)
-                .is('is_default', true)
-                .single();
-
-            if (existingTmpl) {
-                await supabase
-                    .from('assessment_templates')
-                    .update({ questions: [...defaultQuestions, ...customQuestions] })
-                    .eq('id', existingTmpl.id);
-            } else {
-                const companyId = user?.id ? await resolveHrCompanyId(user.id) : null;
-
-                await supabase.from('assessment_templates').insert({
-                    company_id: companyId,
-                    position_id: params.id,
-                    name: `${formData.title} Assessment`,
-                    description: `Standard assessment for ${formData.title}`,
-                    questions: [...defaultQuestions, ...customQuestions],
-                    is_default: true
-                });
-            }
+            // One upsert, server-side. The company is derived from the POSITION
+            // rather than passed in — the old insert took company_id from
+            // resolveHrCompanyId, so a person in two workspaces could file the
+            // template under the wrong one.
+            await saveAssessment(user!.id, params.id as string, {
+                name: `${formData.title} Assessment`,
+                description: `Standard assessment for ${formData.title}`,
+                questions: [...defaultQuestions, ...customQuestions],
+            });
 
             router.push('/dashboard/positions');
         } catch (err: any) {

@@ -8,6 +8,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/dashboard/PageHeader';
 import { useDialog } from '@/components/ui/Dialog';
+import { listPositions, deletePosition } from '@/lib/hr/positions';
 import { resolveHrCompany } from '@/lib/hr/company';
 import HrCompanyNotice from '@/components/crm/HrCompanyNotice';
 
@@ -40,29 +41,14 @@ export default function PositionsPage() {
                 setError('Your account is not linked to a company yet. Reload, or re-run onboarding.');
                 return;
             }
-            // Candidate counts used to be an embedded `candidates:candidates(count)`
-            // select. That made one PostgREST join failure empty the entire
-            // positions list — and the catch below hid why. Positions are fetched
-            // on their own now, and the counts are a separate, non-fatal query.
-            const { data, error: posError } = await supabase
-                .from('positions')
-                .select('*')
-                .eq('company_id', company.companyId)
-                .order('created_at', { ascending: false });
-
-            if (posError) throw posError;
-            const rows = data || [];
-
-            let counts = new Map<string, number>();
-            const { data: cand } = await supabase
-                .from('candidates')
-                .select('position_id')
-                .eq('company_id', company.companyId);
-            for (const c of (cand as any[]) || []) {
-                if (c.position_id) counts.set(c.position_id, (counts.get(c.position_id) ?? 0) + 1);
-            }
-
-            setPositions(rows.map((p: any) => ({ ...p, candidate_count: counts.get(p.id) ?? 0 })));
+            // hr_list_positions (0094), not the browser client: 0077 revoked the
+            // anon/authenticated grant on `positions`, so the direct read now
+            // returns `permission denied` and this list rendered EMPTY — which
+            // is indistinguishable from every role having been deleted.
+            // Applicant counts come back in the same call, so the separate
+            // candidates query (also revoked) is gone with it.
+            const rows = await listPositions(user!.id);
+            setPositions(rows.map((p) => ({ ...p, candidate_count: p.applicant_count ?? 0 })) as any);
         } catch (err: any) {
             // Previously `console.error` only, so every failure looked like "you
             // have no positions". Say what actually happened.
@@ -77,16 +63,13 @@ export default function PositionsPage() {
         if (!await confirmDialog('Are you sure you want to delete this position? All associated candidates and assessments will be removed.')) return;
 
         try {
-            const { error } = await supabase
-                .from('positions')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
+            // The RPC scopes the delete to the caller's company, so a stale id
+            // from another workspace deletes nothing rather than being trusted.
+            await deletePosition(user!.id, id);
             setPositions(positions.filter(p => p.id !== id));
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting position:', error);
-            notify('Failed to delete position');
+            notify(error?.message || 'Failed to delete position');
         }
     };
 

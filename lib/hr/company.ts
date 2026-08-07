@@ -1,6 +1,6 @@
 'use client';
 
-import { supabase } from '@/lib/supabase';
+import { rpc } from '@/lib/rpc';
 import { getWorkspace } from '@/lib/crm/data';
 
 /**
@@ -34,15 +34,15 @@ export interface HrCompany {
 
 export async function resolveHrCompany(privyUserId: string): Promise<HrCompany | null> {
   // 1. The active workspace, when this person is a member of it.
+  // `get_my_hr_companies` (0076), not a direct read: 0077 revoked the anon and
+  // authenticated grants on company_users, so `supabase.from('company_users')`
+  // now returns `permission denied` rather than rows. It failed SILENTLY here —
+  // the catch fell through to a null membershipId, so a position was created
+  // with no created_by and nobody saw an error.
+  const mine = await myHrCompanies(privyUserId);
   const ws = await getWorkspace(privyUserId).catch(() => null);
   if (ws?.id) {
-    const { data } = await supabase
-      .from('company_users')
-      .select('id, role, company_id')
-      .eq('privy_user_id', privyUserId)
-      .eq('company_id', ws.id)
-      .limit(1)
-      .maybeSingle();
+    const data = mine.find((m) => m.company_id === ws.id);
     if (data) return { companyId: data.company_id, membershipId: data.id, role: data.role ?? null };
     // Membership row missing but the workspace resolved — the legacy ATS row
     // was never created. Still return the id so reads work; writes needing
@@ -50,16 +50,18 @@ export async function resolveHrCompany(privyUserId: string): Promise<HrCompany |
     return { companyId: ws.id, membershipId: null, role: null };
   }
 
-  // 2. Fallback: oldest membership. ORDER BY is the point — without it this is
-  //    the very non-determinism described above.
-  const { data } = await supabase
-    .from('company_users')
-    .select('id, role, company_id')
-    .eq('privy_user_id', privyUserId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return data ? { companyId: data.company_id, membershipId: data.id, role: data.role ?? null } : null;
+  // 2. Fallback: oldest membership. The ORDER BY is the point — without it this
+  //    is the very non-determinism described above. get_my_hr_companies already
+  //    returns them oldest-first, so [0] is that row.
+  const oldest = mine[0];
+  return oldest ? { companyId: oldest.company_id, membershipId: oldest.id, role: oldest.role ?? null } : null;
+}
+
+/** company_users rows for this person, oldest first, via the verified proxy. */
+async function myHrCompanies(privyUserId: string): Promise<{ id: string; company_id: string; role: string | null }[]> {
+  const { data, error } = await rpc('get_my_hr_companies', { p_privy: privyUserId });
+  if (error || !Array.isArray(data)) return [];
+  return data as { id: string; company_id: string; role: string | null }[];
 }
 
 /** Convenience for the many callers that only need the id. */
@@ -106,33 +108,17 @@ export interface HrCompanyOption {
  * actually are, instead of showing nothing and no reason.
  */
 export async function listHrCompanies(privyUserId: string): Promise<HrCompanyOption[]> {
+  // One RPC where there used to be two direct reads — of `company_users` and
+  // `positions`, both revoked by 0077. get_my_hr_companies (extended in 0094)
+  // returns the name, the role and the open-position count per membership,
+  // already ordered oldest-first.
   const active = await resolveHrCompanyId(privyUserId).catch(() => null);
-  const { data, error } = await supabase
-    .from('company_users')
-    .select('company_id, role, companies(name)')
-    .eq('privy_user_id', privyUserId)
-    .order('created_at', { ascending: true });
-  if (error || !Array.isArray(data)) return [];
-
-  const ids = data.map((r: any) => r.company_id).filter(Boolean);
-  if (ids.length === 0) return [];
-
-  // One row per open position, counted client-side: `head: true` with a group-by
-  // isn't expressible through the JS client, and this list is at most a handful
-  // of companies.
-  const { data: rows } = await supabase
-    .from('positions')
-    .select('company_id')
-    .in('company_id', ids)
-    .eq('is_active', true);
-  const counts = new Map<string, number>();
-  for (const r of (rows as any[]) || []) counts.set(r.company_id, (counts.get(r.company_id) ?? 0) + 1);
-
-  return data.map((r: any) => ({
+  const mine = await myHrCompanies(privyUserId) as any[];
+  return mine.map((r) => ({
     companyId: r.company_id,
-    name: (Array.isArray(r.companies) ? r.companies[0]?.name : r.companies?.name) || 'Untitled company',
+    name: r.company_name || 'Untitled company',
     role: r.role ?? null,
-    positions: counts.get(r.company_id) ?? 0,
+    positions: r.open_positions ?? 0,
     active: r.company_id === active,
   }));
 }
