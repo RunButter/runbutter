@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Github, Star, ArrowUpRight } from 'lucide-react';
+import { Star, ArrowUpRight } from 'lucide-react';
+import { Github } from '@/components/ui/BrandIcons';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Github, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound } from 'lucide-react';
+import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound } from 'lucide-react';
+import { Github } from '@/components/ui/BrandIcons';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
 // never reports into someone else's stats; production only. Site ids are public

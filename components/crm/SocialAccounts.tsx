@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Linkedin, Plus, Trash2, Power, AlertTriangle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Power, AlertTriangle, Loader2 } from 'lucide-react';
+import { Linkedin } from '@/components/ui/BrandIcons';
 import { useDialog } from '@/components/ui/Dialog';
 import { getWorkspace } from '@/lib/crm/data';
 import {

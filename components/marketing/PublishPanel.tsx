@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Send, Check, AlertTriangle, Clock, ExternalLink, Loader2, Linkedin } from 'lucide-react';
+import { Send, Check, AlertTriangle, Clock, ExternalLink, Loader2 } from 'lucide-react';
+import { Linkedin } from '@/components/ui/BrandIcons';
 import { getWorkspace } from '@/lib/crm/data';
 import {
   loadSocialAccounts, loadPostTargets, savePostTargets, publishNow,

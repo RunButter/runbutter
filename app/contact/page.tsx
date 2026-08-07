@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Mail, Send, CheckCircle2, Clock, ShieldCheck, Github, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, Send, CheckCircle2, Clock, ShieldCheck, Loader2 } from 'lucide-react';
+import { Github } from '@/components/ui/BrandIcons';
 import Logo from '@/components/Logo';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

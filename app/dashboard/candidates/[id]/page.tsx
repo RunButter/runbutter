@@ -5,11 +5,8 @@ import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import { scheduleInterview } from '@/lib/hr/manage';
-import {
-    User, Mail, Phone, Linkedin, Calendar, Briefcase,
-    FileText, CheckCircle, Clock, AlertCircle, Loader2, ArrowLeft,
-    Send, ChevronRight, Brain, Target, BarChart, TrendingUp, Users
-} from 'lucide-react';
+import { User, Mail, Phone, Calendar, Briefcase, FileText, CheckCircle, Clock, AlertCircle, Loader2, ArrowLeft, Send, ChevronRight, Brain, Target, BarChart, TrendingUp, Users } from 'lucide-react';
+import { Linkedin } from '@/components/ui/BrandIcons';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 // Chart.js (~110 kB) and the team-fit modal both load on demand: the radar sits

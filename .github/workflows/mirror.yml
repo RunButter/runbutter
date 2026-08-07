@@ -27,7 +27,7 @@ jobs:
     # ignore red X's. Skipped is honest: not configured, not broken.
     if: ${{ github.repository == 'CasperCrypto/hirebtr' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0     # a mirror needs the history, not a shallow tip
           # THE LINE THIS JOB FAILED WITHOUT.

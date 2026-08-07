@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import {
-  ArrowRight, Github, Bot, ShieldCheck, Clock, NotebookPen, Plug, Puzzle, Coins,
-  Wallet, AlarmClock, TrendingUp, UserSearch, FileSearch, Handshake, Sunrise,
-} from 'lucide-react';
+import { ArrowRight, Bot, ShieldCheck, Clock, NotebookPen, Plug, Puzzle, Coins, Wallet, AlarmClock, TrendingUp, UserSearch, FileSearch, Handshake, Sunrise } from 'lucide-react';
+import { Github } from '@/components/ui/BrandIcons';
 import Reveal from '@/components/landing/Reveal';
 import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { TOOL_CATALOG, TOOL_GROUPS, READ_TOOLS, WRITE_TOOLS } from '@/lib/agents/catalog';

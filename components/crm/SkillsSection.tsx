@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Github, Check } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check } from 'lucide-react';
+import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
