@@ -24,9 +24,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state: 0001–0091 reported applied by the owner; 0092 is NEW and pending.** 0092 is what
-  gives the Deals board a create path — until it runs, "New" on `/pipelines/sales/board` returns
-  *"Deals need migration 0092"* and the board stays read-only. Do not take that on trust when
+- **Schema state: 0001–0092 reported applied by the owner; 0093 is NEW and pending.** 0093 is what
+  lets a workspace be renamed — until it runs, Settings → Branding answers *"Renaming needs
+  migration 0093"* and the sidebar keeps whatever name signup wrote, forever. Do not take that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -584,6 +584,21 @@ Same rule as the cost rule above: prefer public/government data + local computat
   `app/`, render the **real component** with mock props, check computed styles, then delete it.
 - **To test a theme, set `localStorage['hb-theme']` and reload** — toggling the `.dark` class live races
   `useThemeSync()` and returns mixed readings.
+
+## Owner actions outstanding (not code — things only the owner can do)
+These are the difference between "shipped" and "working", and every one of them
+is currently blocking something visible. Ask before assuming any is done.
+- **Run migration 0093** (rename). 0092 is applied.
+- **`npm run publish:oss` once more**, then set **`PUBLIC_REPO_TOKEN`** in
+  `CasperCrypto/hirebtr` → Settings → Secrets → Actions, and mirroring becomes automatic
+  (`.github/workflows/mirror.yml`, steps in `docs/going-live.md`).
+- **`npm publish`** `packages/create-runbutter` — the README's `npx create-runbutter` 404s until then.
+- **`POST /api/sanctions/refresh`** once, or screening answers `no_data` forever.
+- **Cron jobs**: newsletters, sequences, posts, agents (`x-cron-secret: <service-role key>`);
+  finance reminders and the Excel sweep (`CRON_SECRET`). Nothing sends or syncs without them.
+- **Publish a GitHub release**, or Settings → Updates stays blank.
+- **Merge the Dependabot PRs** on the org repo; the Stripe major needs a look at the API version
+  pinned in `lib/billing/stripe.ts`.
 
 ## Commits
 **This file IS committed** so cloud/web sessions (which clone from GitHub and never see local files)
