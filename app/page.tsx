@@ -18,6 +18,7 @@ import Reveal from '@/components/landing/Reveal';
 import CopyCommand from '@/components/landing/CopyCommand';
 import ObjectMarquee from '@/components/landing/ObjectMarquee';
 import StructuredData from '@/components/landing/StructuredData';
+import BorderBeam from '@/components/ui/BorderBeam';
 import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
@@ -42,31 +43,31 @@ const MODULES = [
 const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string }[] = [
   // The one tile with a page of its own behind it — agents are the hardest
   // thing here to believe from a single sentence.
-  { icon: Bot, name: 'AI agents', body: 'Give an agent a role and scoped tools. It reads and updates your workspace on your own AI key, and asks before it writes unless you let it run.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
+  { icon: Bot, name: 'AI agents', body: 'A role, scoped tools, your own AI key. It asks before it writes.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
   // Wide, and early, because it is the answer to "but my business is not a
   // software company" — the objection every vertical-shaped buyer arrives with.
-  { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments, kilns. Describe what you track and it gets a table, a form, search, import, export and agent access — no code, no migration.', wide: true },
-  { icon: Mail, name: 'Newsletters and drip sequences', body: 'Write a campaign, filter the list live by behaviour, and let a sequence follow up on its own. Opens, clicks, bounces and one-click unsubscribe are handled.', wide: true },
-  { icon: Table2, name: 'Excel, both ways', body: 'A live link your team refreshes in Excel — or a real two-way sync, so edits in the sheet come back.' },
-  { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work, where your agents can post too. No fifth tab.' },
-  { icon: Zap, name: 'Automations', body: 'When something happens, do something: fire webhooks, send email, create records.' },
-  { icon: PenLine, name: 'E-signatures', body: 'Send a document, they sign in the browser. No account, no third-party seat.' },
-  { icon: FileInput, name: 'Custom forms', body: 'Publish a form, every answer lands as a record in your workspace.' },
-  { icon: FileSearch, name: 'Files that become data', body: 'Upload contracts and CVs; the text is indexed next to the ledger and searchable.' },
-  { icon: Link2, name: 'Short links', body: 'Your own branded shortener, with click tracking on every campaign link.' },
-  { icon: FileBarChart, name: 'Scheduled reports', body: 'A PDF of the numbers that matter, in the right inboxes every Monday.' },
-  { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints the app uses.' },
-  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland, straight from your documents.' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP, via VIES and Biała lista.' },
+  { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments, kilns. Describe what you track and it gets a table, a form, search and agent access.', wide: true },
+  { icon: Mail, name: 'Newsletters and drip sequences', body: 'Campaigns, live segments and drips that follow up on their own. Opens, bounces and unsubscribes handled.', wide: true },
+  { icon: Table2, name: 'Excel, both ways', body: 'A live link, or a real two-way sync so edits in the sheet come back.' },
+  { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work. Your agents post there too.' },
+  { icon: Zap, name: 'Automations', body: 'When something happens, do something.' },
+  { icon: PenLine, name: 'E-signatures', body: 'They sign in the browser. No account, no extra seat.' },
+  { icon: FileInput, name: 'Custom forms', body: 'Every answer lands as a record.' },
+  { icon: FileSearch, name: 'Files that become data', body: 'Contracts and CVs, indexed next to the ledger.' },
+  { icon: Link2, name: 'Short links', body: 'Your own shortener, with click tracking.' },
+  { icon: FileBarChart, name: 'Scheduled reports', body: 'The numbers that matter, in the right inboxes on Monday.' },
+  { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints.' },
+  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland.' },
+  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP.' },
   // Both of these are free public data doing work a vendor usually meters.
-  { icon: Scale, name: 'Sanctions screening', body: 'Check a name against the OFAC lists before you invoice. Fuzzy-matched in Postgres, no per-query fee.' },
-  { icon: FileStack, name: 'PDF toolkit', body: 'Merge, split, rotate and watermark in your browser. The files never leave your machine.', href: '/pdf', cta: 'Open the PDF tools' },
-  { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logging, anonymization, cookieless analytics.' },
+  { icon: Scale, name: 'Sanctions screening', body: 'OFAC lists, matched in Postgres. No per-query fee.' },
+  { icon: FileStack, name: 'PDF toolkit', body: 'Merge, split, watermark. The files never leave your machine.', href: '/pdf', cta: 'Open the PDF tools' },
+  { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logs, anonymization, cookieless analytics.' },
   // Both of these were only ever in the flat inventory further down, which is
   // the section people skim last.
-  { icon: NotebookPen, name: 'Docs and mind maps', body: 'Write next to the records, with an AI toolbar and boards for planning.' },
-  { icon: KeyRound, name: 'Roles and permissions', body: 'Owner, admin and member, with the audit log on Enterprise.' },
-  { icon: Puzzle, name: 'Agent skills, portable', body: 'Write a skill once and package it as an Agent Plugin — the vendor-neutral standard Amazon, Cursor, Microsoft, OpenAI and Vercel steer. Import from a GitHub repo, export yours back out, or build one free in the browser.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
+  { icon: NotebookPen, name: 'Docs and mind maps', body: 'Write next to the records, with boards for planning.' },
+  { icon: KeyRound, name: 'Roles and permissions', body: 'Owner, admin, member. Audit log on Enterprise.' },
+  { icon: Puzzle, name: 'Agent skills, portable', body: 'Write a skill once, package it as an Agent Plugin. Import from GitHub, export yours back out.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
 ];
 
 // Prices, names and limits are DERIVED from lib/plans.ts — the same file that
@@ -119,18 +120,18 @@ const PLAN_CARDS = PLAN_ORDER.map((id) => ({
 // because OAuth verification requires the homepage to visibly explain why we ask
 // for user data — a reviewer should not have to click an accordion to find it.
 const FAQ: { q: string; a: string; open?: boolean }[] = [
-  { q: 'Is it really one workspace for everything?', a: 'Yes. Sales, finance, marketing, projects, and recruiting share one relational core. A company, a person, a deal, a campaign, and an invoice are all connected records, not separate apps you glue together. That is what makes a question like "which contracts auto-renew, for clients who owe us money" a single query instead of an afternoon.' },
-  { q: 'What does it cost to run at scale?', a: 'The price on this page is the price. Search, matching, reconciliation, segmentation and reporting all run in Postgres, so there is no usage meter underneath — no per-task automation billing, no per-contact marketing tier, and no AI tokens on our bill. If you self-host, your only cost is the database and a Node process.' },
-  { q: 'Is it open source?', a: 'Yes, MIT licensed — not "open core" with the useful half behind a commercial licence. Clone the repo, run it against your own Supabase and Privy, and self-host for free, including the agents, the API and the MCP server. Or use the hosted version and skip the setup.' },
+  { q: 'Is it really one workspace for everything?', a: 'Yes. A company, a person, a deal, a campaign and an invoice are connected records in one database, not separate apps you glue together. That is what makes "which contracts auto-renew, for clients who owe us money" a single query instead of an afternoon.' },
+  { q: 'What does it cost to run at scale?', a: 'The price on this page is the price. Everything runs in Postgres, so there is no usage meter underneath: no per-task automation billing, no per-contact marketing tier, no AI tokens on our bill.' },
+  { q: 'Is it open source?', a: 'Yes, MIT — not "open core" with the useful half held back. Self-host everything including the agents, the API and the MCP server, or use the hosted version and skip the setup.' },
   { q: 'My business is not deals and invoices. Does this fit?', a: 'That is what custom objects are for. Describe what you actually track — vehicles, patients, shipments, machines, cases — and RunButter proposes the record types and fields, or you build them by hand. Each one immediately gets a table, a form, search, CSV import and export, API access and agent access, and you decide which sidebar section it appears in. Rows are stored in a typed JSONB column rather than a generated table, so adding a record type is not a database migration and cannot affect anyone else’s data.' },
-  { q: 'What happens to my data if I stop paying?', a: 'You export it, or you keep running it. Every list exports to CSV, the REST API returns everything, and the whole application is MIT licensed — so the exit is "point the same code at your own Postgres", not a support ticket. There is no proprietary format and nothing is held back to make leaving hard.' },
+  { q: 'What happens to my data if I stop paying?', a: 'You export it, or you keep running it. Every list exports to CSV, the API returns everything, and the code is MIT — so the exit is "point the same code at your own Postgres", not a support ticket.' },
   { q: 'How do I update a self-hosted install?', a: 'Pull the new code, then apply any new migrations — in that order, because the app is written to tolerate a schema that is one step behind, not one step ahead. Migrations are numbered, idempotent and safe to re-run, `npm run migrate:status` tells you what is pending, and the Updates screen in Settings shows which version you are on. The full procedure is in the docs under Updating.' },
-  { q: 'Do I pay per AI token?', a: 'Never. The core runs on native Postgres: search, matching, reconciliation, and reporting all run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
-  { q: 'Can AI agents actually do work for me?', a: 'Yes. Define an agent with a role and a scoped set of tools, then run it on a task. It reads and updates records through the same verified endpoints the app uses, on your own AI key. By default it proposes changes for you to approve; you can let trusted agents run on their own within a step limit.' },
-  { q: 'Does it handle invoicing and taxes?', a: 'Create branded PDF invoices and offers, convert an accepted quote to an invoice in one click, and export KSeF FA(3) e-invoices for Poland. A bank-transaction ledger reconciles incoming payments to the right invoice automatically.' },
-  { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet in seconds, with automatic column matching. Export any list back to CSV with one click. Your data is always yours.' },
+  { q: 'Do I pay per AI token?', a: 'Never. Search, matching and reporting run in the database. AI writing and agents use your own API key, so there is no per-token markup from us.' },
+  { q: 'Can AI agents actually do work for me?', a: 'Yes. Give an agent a role and scoped tools, and it reads and updates records through the same verified endpoints the app uses. By default it proposes changes for you to approve.' },
+  { q: 'Does it handle invoicing and taxes?', a: 'Branded PDF invoices and offers, one-click quote-to-invoice, and KSeF FA(3) export for Poland. A bank ledger reconciles incoming payments automatically.' },
+  { q: 'Can I bring my existing data?', a: 'Import from CSV or a published Google Sheet, with automatic column matching. Export any list back with one click.' },
   { q: 'My team lives in Excel. Do we have to stop?', a: 'No, and there are two ways to keep working the way you already do. The simple one is a live link you paste into Excel once (Data → Get Data → From Web); after that, Refresh All pulls today’s numbers, and the link is read-only so it cannot change anything. The second is a real two-way sync with a workbook in OneDrive or SharePoint: edits people make in the sheet come back into RunButter, and the sheet is refreshed to match. Rows you delete in Excel are never deleted here — a filter or a sort looks identical to a deletion over Microsoft’s API, so deleting stays something you do deliberately in the app.' },
-  { q: 'Is my data private and secure?', a: 'Every workspace is isolated, access runs through audited server-side functions that verify your session token, and GDPR controls are built in on higher plans. Analytics are first-party and cookieless.' },
+  { q: 'Is my data private and secure?', a: 'Every workspace is isolated and access runs through audited server-side functions that verify your session token. Analytics are first-party and cookieless.' },
   { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details, then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
 ];
 
@@ -154,6 +155,12 @@ const MCP_SNIPPET = `{
     }
   }
 }`;
+
+/** Beams a card only when it is the one being recommended. */
+function BeamIf({ on, children }: { on: boolean; children: React.ReactNode }) {
+  if (!on) return <>{children}</>;
+  return <BorderBeam size="pulse" colorVariant="accent" className="flex w-full [--beam-radius:0.75rem]">{children}</BorderBeam>;
+}
 
 export default function HomePage() {
   return (
@@ -243,8 +250,7 @@ export default function HomePage() {
             Run your whole company, smooth as butter.
           </p>
           <p className="mt-2.5 text-sm md:text-base text-secondary max-w-xl mx-auto leading-relaxed">
-            Sales, invoicing, marketing, projects and hiring on one relational core —
-            plus AI agents that run on your own key.
+            Sales, invoicing, marketing, projects and hiring on one core — plus agents on your own key.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <div className="hidden sm:block"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
@@ -262,7 +268,20 @@ export default function HomePage() {
               drops ProductPreview out of its own stacking context and lets this
               blur paint OVER the window — it read as a washed-out screenshot. */}
           <div aria-hidden className="absolute -z-[1] -inset-x-4 -top-10 bottom-0 rounded-[3rem] bg-canvas/60 blur-2xl pointer-events-none" />
-          <Reveal variant="zoom" className="relative"><ProductPreview /></Reveal>
+          {/* The beam rides the hero window because that is the one thing the
+              page wants you to look at. --beam-radius matches the window's own
+              rounding, or the ring corners cut across the card.
+
+              MONO, not sunset. This page is deliberately hueless (see the note
+              on the bento above), and an orange-to-pink rim on it read as a
+              stray magenta line rather than as light travelling the edge. The
+              sunset variant exists and is one word away for a page that wants
+              colour; this one does not. */}
+          <Reveal variant="zoom" className="relative">
+            <BorderBeam size="pulse-inner" colorVariant="mono" className="[--beam-radius:1rem]">
+              <ProductPreview />
+            </BorderBeam>
+          </Reveal>
         </div>
       </section>
 
@@ -288,7 +307,7 @@ export default function HomePage() {
           <Reveal>
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Everything else, already in the box</h2>
-              <p className="text-secondary mt-3 leading-relaxed">The tools that usually mean five more subscriptions, built in and connected to the same records. Fast, keyboard-first, no extra cost.</p>
+              <p className="text-secondary mt-3 leading-relaxed">Five more subscriptions, built in and on the same records.</p>
             </div>
           </Reveal>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -337,9 +356,7 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Ask your workspace a real question</h2>
               <p className="text-secondary mt-3 leading-relaxed">
-                Because sales, finance, files and hiring are one database, an agent can answer across all of
-                them in a single pass — and it runs on your own AI key, so there is no per-token bill from us.
-                Writes wait for you until you decide an agent has earned otherwise.
+                One database, so an agent answers across all of it in a single pass — on your own AI key. Writes wait for you.
               </p>
             </div>
           </Reveal>
@@ -370,9 +387,7 @@ export default function HomePage() {
               <div className="max-w-2xl">
                 <h2 className="text-2xl md:text-4xl font-medium tracking-tight">It also tracks whatever you track</h2>
                 <p className="text-secondary mt-3 leading-relaxed">
-                  Describe your business in a sentence and RunButter proposes the record types to add —
-                  or build them by hand, field by field. Each one gets a table, a form, search, import,
-                  export and agent access immediately, and you choose which sidebar section it lives in.
+                  Describe your business in a sentence and RunButter proposes the record types — or build them by hand. Each one gets a table, a form, search and agent access immediately.
                 </p>
               </div>
             </Reveal>
@@ -386,9 +401,9 @@ export default function HomePage() {
             <Reveal delay={80}>
               <div className="grid sm:grid-cols-3 gap-x-10 gap-y-6">
                 {[
-                  ['No migrations', 'Rows live in one JSONB column behind a typed schema, so adding a record type never touches the database structure — and never risks anyone else’s data.'],
-                  ['Typed, not free text', 'Numbers, dates, currencies, relations and dropdowns are validated on the way in. A bad value is rejected, not quietly stored as text.'],
-                  ['Connected, not siloed', 'A relation field links your Vehicles to the Companies you already have, so the join works the same as any built-in.'],
+                  ['No migrations', 'Rows live in one JSONB column, so a new record type never touches the database structure.'],
+                  ['Typed, not free text', 'Numbers, dates, currencies and relations are validated on the way in. A bad value is rejected.'],
+                  ['Connected, not siloed', 'A relation field links Vehicles to the Companies you already have.'],
                 ].map(([h, b]) => (
                   <div key={h} className="border-t border-strong pt-4">
                     <h3 className="text-sm font-medium text-primary">{h}</h3>
@@ -422,8 +437,7 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">One workspace instead of five subscriptions</h2>
               <p className="text-secondary mt-3 leading-relaxed">
-                Everything below is included and runs on the same records. A deal knows its company,
-                an invoice knows its client, a candidate becomes a team member. Nothing to integrate.
+                A deal knows its company, an invoice knows its client, a candidate becomes a team member. Nothing to integrate.
               </p>
             </div>
           </Reveal>
@@ -455,8 +469,7 @@ export default function HomePage() {
             <div className="min-w-0">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Open, and built for agents</h2>
               <p className="text-secondary mt-4 leading-relaxed max-w-[52ch]">
-                One REST API, signed webhooks, and a native MCP server so AI agents read and write your
-                workspace directly. Self-host the whole thing, or start on the hosted plan.
+                One REST API, signed webhooks and a native MCP server. Self-host it all, or start hosted.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
@@ -501,13 +514,14 @@ export default function HomePage() {
           <Reveal>
             <div className="text-center max-w-2xl mx-auto">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Simple, transparent pricing</h2>
-              <p className="text-secondary mt-3">Start free with no credit card, upgrade as you grow. No per-token AI bill, ever.</p>
+              <p className="text-secondary mt-3">No credit card. No per-token AI bill, ever.</p>
             </div>
           </Reveal>
           <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
             {PLAN_CARDS.map((pl, i) => (
               <Reveal key={pl.name} delay={i * 50} className="flex">
-                <div className={`rounded-xl p-5 flex flex-col w-full bg-surface border transition-colors ${pl.highlight ? 'border-strong ring-1 ring-strong' : 'border-subtle hover:border-strong'}`}>
+                <BeamIf on={pl.highlight}>
+                <div className={`rounded-xl p-5 flex flex-col w-full bg-surface border transition-colors ${pl.highlight ? 'border-transparent' : 'border-subtle hover:border-strong'}`}>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-primary">{pl.name}</h3>
                     {pl.highlight && <span className="text-2xs font-medium bg-inverse text-inverse-fg rounded px-1.5 py-0.5">Popular</span>}
@@ -523,6 +537,7 @@ export default function HomePage() {
                   </ul>
                   <Link href={pl.href} className={`h-9 rounded-md text-sm font-medium text-center inline-flex items-center justify-center transition-opacity ${pl.highlight ? 'bg-inverse text-inverse-fg hover:opacity-90' : 'bg-surface border border-subtle text-primary hover:bg-surface-hover'}`}>{pl.cta}</Link>
                 </div>
+                </BeamIf>
               </Reveal>
             ))}
           </div>
@@ -557,7 +572,7 @@ export default function HomePage() {
               <div className="absolute inset-0 opacity-40"><AsciiField colors={['160,160,168', '120,120,130']} baseAlpha={0.05} peakAlpha={0.4} /></div>
               <div className="relative pointer-events-none">
                 <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-inverse-fg">Everything, running smooth.</h2>
-                <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for every team, with AI agents doing the busywork. Set it up in minutes.</p>
+                <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for every team. Set it up in minutes.</p>
                 <div className="pointer-events-auto mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse-fg text-inverse text-sm font-medium hover:opacity-90 transition-opacity">
                     Start free <ArrowRight className="w-4 h-4" />
