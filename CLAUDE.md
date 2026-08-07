@@ -653,7 +653,12 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
   so a session on `CasperCrypto/hirebtr` **cannot push to `RunButter/runbutter`**. Publishing is a
   one-command local step, by design of the sandbox rather than by choice.
 - **`.github/workflows/mirror.yml` automates it** once `PUBLIC_REPO_TOKEN` is set (see
-  `docs/going-live.md`), so nobody has to open a terminal. It **refuses to push when the public repo
+  `docs/going-live.md`), so nobody has to open a terminal. **The token needs BOTH Contents and
+  Workflows write** (classic: `repo` + `workflow`) — GitHub refuses any PAT that touches
+  `.github/workflows/` without it, so the mirror works until the first commit that changes CI and
+  then fails on that commit only. The checkout step also needs `persist-credentials: false`, or
+  checkout's own `http.extraheader` overrides the token and the push goes out as
+  `github-actions[bot]`, which has no access to another org. It **refuses to push when the public repo
   is ahead** — which happens the first time a contributor's PR merges there, and force-pushing would
   delete their merged work while reporting success.
 - **THE MIRROR IS A BRIDGE AND IT EXPIRES.** It is one-way, so it is safe only while contributions

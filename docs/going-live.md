@@ -290,9 +290,20 @@ Personal access tokens → **Fine-grained tokens** → Generate new token.
 | --- | --- |
 | Repository access | Only select repositories → `RunButter/runbutter` |
 | Permissions → Contents | **Read and write** |
+| Permissions → **Workflows** | **Read and write** |
 | Expiration | 1 year (put a reminder somewhere) |
 
-Nothing else. Contents is the only permission a push needs.
+**Workflows is not optional**, and it is the one everybody misses. GitHub
+refuses to let any personal access token create or update a file under
+`.github/workflows/` without it, whatever else the token can do — so the mirror
+pushes fine until the first commit that touches CI, and then fails with:
+
+```
+refusing to allow a Personal Access Token to create or update workflow
+`.github/workflows/mirror.yml` without `workflow` scope
+```
+
+Using a **classic** token instead? Tick both `repo` **and** `workflow`.
 
 **2. Store it.** `CasperCrypto/hirebtr` → Settings → Secrets and variables →
 Actions → New repository secret, named exactly:
