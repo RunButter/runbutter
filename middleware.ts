@@ -131,7 +131,15 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
+  // robots.txt, sitemap.xml and llms.txt are EXCLUDED deliberately.
+  //
+  // They matched before, so every crawler request ran this whole function —
+  // including constructing a Supabase client — to reach a static file. That is
+  // latency on the requests we least want to be slow, and worse, it puts a
+  // hard dependency on NEXT_PUBLIC_SUPABASE_* in front of the three URLs a
+  // search engine reads first: any throw here is a 5xx to Googlebot, and
+  // "Sitemap could not be read" is all it will ever tell you.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|llms\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

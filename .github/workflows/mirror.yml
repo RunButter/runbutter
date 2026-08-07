@@ -30,6 +30,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0     # a mirror needs the history, not a shallow tip
+          # THE LINE THIS JOB FAILED WITHOUT.
+          #
+          # checkout writes its own credentials into .git/config as
+          # `http.https://github.com/.extraheader`, holding the automatic
+          # GITHUB_TOKEN. That header applies to EVERY github.com URL and takes
+          # precedence over a token embedded in a remote's URL — so the push
+          # went out as github-actions[bot], which has no access to another
+          # org, and returned 403.
+          #
+          # The fetch succeeded and proved nothing: RunButter/runbutter is
+          # public, so anonymous read works and the first real test of the
+          # credential was the push itself.
+          persist-credentials: false
 
       - name: Is the token configured?
         id: check
