@@ -499,3 +499,72 @@
 
   .doc-prose img { max-width: 100%; height: auto; border-radius: 0.5rem; border: 1px solid hsl(var(--border-subtle)); }
 }
+
+/* ── BorderBeam (components/ui/BorderBeam.tsx) ────────────────────────────────
+   A conic gradient painted on a pseudo-element one pixel proud of the card,
+   with an xor mask punching out the middle so only the rim shows. Rotating the
+   angle reads as light travelling around the edge.
+
+   Registering --beam-angle as an <angle> is the load-bearing part: an
+   unregistered custom property animates as a STRING, which forces a style
+   recalculation every frame on every descendant. Registered, the browser
+   interpolates it on the compositor and the animation is free. */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.beam {
+  position: relative;
+  border-radius: var(--beam-radius, 1rem);
+  isolation: isolate;
+}
+.beam::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--beam-width, 1.5px) * -1);
+  border-radius: inherit;
+  padding: var(--beam-width, 1.5px);
+  background: conic-gradient(from var(--beam-angle), transparent 0deg,
+              var(--beam-a) 40deg, var(--beam-b) 90deg, transparent 150deg, transparent 360deg);
+  /* xor keeps the padding ring and discards the middle, which is what makes
+     this a border rather than a glowing rectangle behind the card. */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Colour variants, on tokens rather than literals so both themes work. */
+.beam-accent  { --beam-a: hsl(var(--accent)); --beam-b: hsl(var(--accent) / 0.35); }
+.beam-mono    { --beam-a: hsl(var(--text-primary)); --beam-b: hsl(var(--text-primary) / 0.25); }
+.beam-sunset  { --beam-a: hsl(24 95% 58%); --beam-b: hsl(330 81% 60%); }
+
+/* Sizes. `pulse-inner` also breathes the ring's opacity, which is the
+   difference between "a light is moving" and "this card is alive". */
+.beam-thin        { --beam-width: 1px; }
+.beam-pulse       { --beam-width: 1.5px; }
+.beam-pulse-inner { --beam-width: 2px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (background: conic-gradient(from var(--beam-angle), red, blue)) {
+    .beam::before { animation: beam-spin 5s linear infinite; }
+    .beam-pulse-inner::before { animation: beam-spin 5s linear infinite, beam-breathe 2.6s ease-in-out infinite; }
+    .beam-hover::before { animation-play-state: paused; opacity: 0; transition: opacity .25s; }
+    .beam-hover:hover::before { animation-play-state: running; opacity: 1; }
+  }
+}
+@keyframes beam-spin { to { --beam-angle: 360deg; } }
+@keyframes beam-breathe { 50% { opacity: .55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* A light crawling round a card carries no information, so there is nothing
+     to preserve — a flat ring, no animation. */
+  .beam::before {
+    animation: none;
+    background: hsl(var(--border-strong));
+  }
+}

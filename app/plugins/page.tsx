@@ -48,15 +48,13 @@ const LAYOUT = `my-team-skills/
 
 const RULES: [string, string][] = [
   ['A skill is a file, not code',
-   'SKILL.md is YAML frontmatter with a name and a description, then Markdown instructions. That is the whole format. There is nothing to compile and nothing to run.'],
+   'YAML frontmatter with a name and a description, then Markdown. Nothing to compile, nothing to run.'],
   ['The description is the important line',
-   'It is what a model reads to decide whether the skill applies to what it is doing right now. "How this company chases an unpaid invoice" gets picked up; "invoice stuff" does not. It is required, and capped at 1024 characters.'],
+   'It is what a model reads to decide whether the skill applies right now. "How this company chases an unpaid invoice" gets picked up; "invoice stuff" does not.'],
   ['The name must match the directory',
-   'A skill in skills/invoice-reminder-tone/ must have name: invoice-reminder-tone in its frontmatter. Names are 1–64 characters, lowercase letters, digits and single hyphens. A mismatch is reported as "invalid skill" with no clue which half was wrong, so the builder above derives both from one field.'],
-  ['Instructions are prose, addressed to the model',
-   'Write the rules a new colleague would need, including the ones you would only say out loud: what to never do, what to check first, which wording is banned. Vague instructions produce vague behaviour.'],
+   'A mismatch is reported as "invalid skill" with no clue which half was wrong, so the builder derives both from one field.'],
   ['A plugin cannot carry your API key',
-   `Agent Plugins ${SPEC_VERSION} treats header values as visible package data and forbids embedding credentials, and clients must not expand environment variables into URLs or headers. Whoever installs the plugin provides their own key. Anything offering you a shortcut around that is writing a secret into a file people commit to git.`],
+   `The spec treats header values as visible package data and forbids embedded credentials. Whoever installs supplies their own key — anything offering a shortcut is writing a secret into a file people commit.`],
 ];
 
 export default function PluginsPage() {
@@ -65,23 +63,18 @@ export default function PluginsPage() {
       <MarketingHeader />
 
       <section className="border-b border-subtle">
-        <div className="max-w-6xl mx-auto px-6 pt-20 pb-16">
+        <div className="max-w-6xl mx-auto px-6 pt-24 md:pt-32 pb-20 md:pb-24">
           <div className="max-w-2xl">
             <span className="text-2xs font-mono text-tertiary">Agent Plugins {SPEC_VERSION}</span>
-            <h1 className="mt-2 text-3xl md:text-5xl font-medium tracking-[-0.02em] leading-[1.05]">
+            <h1 className="mt-3 text-4xl md:text-6xl font-medium tracking-[-0.03em] leading-[1.02]">
               Build an agent skill.<br />
               <span className="text-secondary">Free, in your browser.</span>
             </h1>
-            <p className="mt-5 text-secondary leading-relaxed">
-              Write down how your team actually does something, and get a packaged Agent Plugin out —
-              a conformant <code className="font-mono text-primary">plugin.json</code>,{' '}
-              <code className="font-mono text-primary">SKILL.md</code> files that match the spec&apos;s naming
-              rules, and an optional <code className="font-mono text-primary">mcp.json</code>. It installs into
-              Claude Code, Cursor and anything else that reads the standard.
+            <p className="mt-6 text-base md:text-lg text-secondary leading-relaxed max-w-lg">
+              Write down how your team does something. Get a package that installs into Claude Code,
+              Cursor and anything else reading the standard.
             </p>
-            <p className="mt-3 text-sm text-tertiary leading-relaxed">
-              No account, no upload, no limit. This page makes the zip in your tab.
-            </p>
+            <p className="mt-3 text-sm text-tertiary">No account. Nothing uploaded. The zip is made in this tab.</p>
           </div>
         </div>
       </section>
@@ -112,7 +105,7 @@ export default function PluginsPage() {
           </div>
 
           <div className="min-w-0">
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Five things worth knowing</h2>
+            <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Worth knowing</h2>
             <dl className="mt-6 space-y-5">
               {RULES.map(([h, b]) => (
                 <div key={h} className="border-t border-strong pt-4">

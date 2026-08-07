@@ -7,6 +7,8 @@ import { zipSync } from '@/lib/plugins/zip';
 import { scanFiles } from '@/lib/plugins/scan';
 import { unzip } from '@/lib/plugins/unzip';
 import { importPlugin } from '@/lib/plugins/import';
+import { PLATFORMS, platformById, losses, type PlatformId, type BuildInput } from '@/lib/plugins/platforms';
+import BorderBeam from '@/components/ui/BorderBeam';
 
 /**
  * A free Agent Plugin builder that runs ENTIRELY in the browser.
@@ -279,7 +281,7 @@ export default function PluginBuilder() {
   const [withMcp, setWithMcp] = useState(false);
   // On by default: it is one small file and it is the difference between "here
   // is a zip, put it somewhere" and a one-line install.
-  const [withMarketplace, setWithMarketplace] = useState(true);
+  const [platform, setPlatform] = useState<PlatformId>('agent-plugin');
   const [mcpUrl, setMcpUrl] = useState('https://runbutter.app/api/mcp');
   const [skills, setSkills] = useState<Draft[]>([{ ...blank(), ...TEMPLATES[0].skill }]);
   const [open, setOpen] = useState(0);
@@ -288,7 +290,10 @@ export default function PluginBuilder() {
   const [dragging, setDragging] = useState(false);
   const [importNote, setImportNote] = useState('');
 
-  const files: PluginFile[] = useMemo(() => buildPlugin({
+  // One project, described once. The chosen platform decides the LAYOUT and
+  // nothing else — which is the whole point of keeping adapters in one file
+  // instead of scattering `if (target === …)` through the builder.
+  const project: BuildInput = useMemo(() => ({
     manifest: {
       name: pluginName,
       version: '0.1.0',
@@ -308,10 +313,22 @@ export default function PluginBuilder() {
       resources: s.resources,
     })),
     mcpUrl: withMcp && mcpUrl.trim() ? mcpUrl.trim() : undefined,
-    marketplace: withMarketplace,
-  }), [pluginName, pluginDescription, author, skills, withMcp, mcpUrl, withMarketplace]);
+  }), [pluginName, pluginDescription, author, skills, withMcp, mcpUrl]);
+
+  const files: PluginFile[] = useMemo(
+    () => platformById(platform).build(project), [platform, project]);
+  const dropped = useMemo(() => losses(platform, project), [platform, project]);
 
   const active = files.find((f) => f.path === shown) || files[0];
+
+  // The path shown beside a skill comes from the FILES, not from a second copy
+  // of the prefix rule. Project skills live under .claude/skills/, and a hint
+  // that says otherwise is a small lie people act on.
+  const pathOf = (name: string) => {
+    const slug = skillSlug(name);
+    return files.find((f) => f.path.endsWith(`/${slug}/SKILL.md`))?.path || `skills/${slug}/SKILL.md`;
+  };
+
 
   /**
    * Problems worth saying out loud, in the order someone hits them.
@@ -414,7 +431,7 @@ export default function PluginBuilder() {
       if (p.author) setAuthor(p.author);
       setWithMcp(!!p.mcpUrl);
       if (p.mcpUrl) setMcpUrl(p.mcpUrl);
-      setWithMarketplace(p.hadMarketplace);
+      setPlatform(p.hadMarketplace ? 'claude-marketplace' : 'agent-plugin');
       setSkills(p.skills.map((s) => ({ ...blank(), ...s })));
       setOpen(0);
       setShown(null);
@@ -455,35 +472,41 @@ export default function PluginBuilder() {
             <input value={pluginDescription} onChange={(e) => setPluginDescription(e.target.value)} className="input-field" placeholder="How our team writes, bills and reports" />
           </label>
 
-          <div className="mt-5 pt-5 border-t border-subtle space-y-4">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input type="checkbox" checked={withMarketplace} onChange={(e) => setWithMarketplace(e.target.checked)} className="mt-0.5 rounded border-strong accent-accent" />
-              <span className="min-w-0">
-                <span className="text-xs font-medium text-primary flex items-center gap-1.5"><Store className="w-3.5 h-3.5" /> Make it installable</span>
-                <span className="text-2xs text-tertiary block mt-0.5 leading-relaxed">
-                  Adds <code className="font-mono">.claude-plugin/marketplace.json</code>. Push the folder to a
-                  public repo and anyone installs it with{' '}
-                  <code className="font-mono">/plugin marketplace add you/repo</code> instead of copying files
-                  around.
-                </span>
-              </span>
-            </label>
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input type="checkbox" checked={withMcp} onChange={(e) => setWithMcp(e.target.checked)} className="mt-0.5 rounded border-strong accent-accent" />
-              <span className="min-w-0">
-                <span className="text-xs font-medium text-primary flex items-center gap-1.5"><Server className="w-3.5 h-3.5" /> Include an MCP server</span>
-                <span className="text-2xs text-tertiary block mt-0.5 leading-relaxed">
-                  Adds <code className="font-mono">mcp.json</code> so the plugin also gives an agent tools, not just instructions.
-                </span>
-              </span>
+          {/* ── Target ────────────────────────────────────────────────────
+              Two checkboxes asked people to know what a marketplace manifest
+              is. A target asks what they are actually trying to do. */}
+          <div className="mt-6 pt-6 border-t border-subtle">
+            <span className="text-xs text-secondary block mb-2.5">Build for</span>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {PLATFORMS.map((pf) => {
+                const on = pf.id === platform;
+                const card = (
+                  <button type="button" onClick={() => setPlatform(pf.id)} aria-pressed={on}
+                    className={`w-full h-full text-left rounded-xl p-3 transition-colors ${
+                      on ? 'bg-surface ring-1 ring-strong' : 'bg-surface-sunken/60 hover:bg-surface-hover'}`}>
+                    <span className="text-xs font-medium text-primary block">{pf.label}</span>
+                    <span className="text-2xs text-tertiary block mt-0.5 leading-relaxed">{pf.blurb}</span>
+                  </button>
+                );
+                // The beam marks the ACTIVE target only. Every card glowing at
+                // once would be decoration; one is a pointer.
+                return on
+                  ? <BorderBeam key={pf.id} size="pulse-inner" colorVariant="accent">{card}</BorderBeam>
+                  : <div key={pf.id}>{card}</div>;
+              })}
+            </div>
+            <p className="mt-2.5 text-2xs text-tertiary leading-relaxed">{platformById(platform).notes}</p>
+
+            <label className="flex items-center gap-2.5 cursor-pointer mt-5 pt-5 border-t border-subtle">
+              <input type="checkbox" checked={withMcp} onChange={(e) => setWithMcp(e.target.checked)} className="rounded border-strong accent-accent" />
+              <span className="text-xs font-medium text-primary flex items-center gap-1.5"><Server className="w-3.5 h-3.5" /> Bring an MCP server</span>
             </label>
             {withMcp && (
               <>
                 <input value={mcpUrl} onChange={(e) => setMcpUrl(e.target.value)} className="input-field mt-2.5 font-mono text-2xs" placeholder="https://example.com/mcp" />
                 {/* Spec §7.2, and the reason there is no field for a key here. */}
                 <p className="mt-2 text-2xs text-tertiary leading-relaxed">
-                  No API key goes in this file. Agent Plugins {SPEC_VERSION} treats header values as visible package
-                  data and forbids embedding credentials, so whoever installs the plugin supplies their own.
+                  No API key goes in this file — the spec forbids it. Whoever installs supplies their own.
                 </p>
               </>
             )}
@@ -505,7 +528,7 @@ export default function PluginBuilder() {
               <div className="flex items-center gap-3 px-5 sm:px-6 h-12">
                 <button onClick={() => setOpen(open === i ? -1 : i)} className="flex-1 text-left min-w-0">
                   <span className="text-xs font-medium text-primary truncate block">{s.name.trim() || 'Untitled skill'}</span>
-                  {s.name.trim() && <span className="text-3xs font-mono text-tertiary">skills/{skillSlug(s.name)}/SKILL.md</span>}
+                  {s.name.trim() && <span className="text-3xs font-mono text-tertiary">{pathOf(s.name)}</span>}
                 </button>
                 {skills.length > 1 && (
                   <button onClick={() => { setSkills((xs) => xs.filter((x) => x.id !== s.id)); setOpen(0); }}
@@ -737,6 +760,16 @@ export default function PluginBuilder() {
           </div>
         )}
 
+        {dropped.length > 0 && (
+          <div className="mt-3 rounded-xl border border-subtle bg-surface-sunken p-3.5">
+            <span className="text-xs font-medium text-primary block mb-1.5">{platformById(platform).label}</span>
+            <ul className="space-y-1">
+              {dropped.map((d) => <li key={d} className="text-2xs text-secondary leading-relaxed">{d}</li>)}
+            </ul>
+            <p className="mt-2 text-2xs text-tertiary">{platformById(platform).install}</p>
+          </div>
+        )}
+
         {notes.length > 0 && (
           <div className="mt-3 rounded-xl border border-subtle bg-surface-sunken p-3.5">
             <div className="flex items-center gap-1.5 mb-2">
@@ -749,11 +782,6 @@ export default function PluginBuilder() {
           </div>
         )}
 
-        <p className="mt-3 text-2xs text-tertiary leading-relaxed">
-          Everything above is built in this tab. Nothing is uploaded and nothing is stored — a skill is a
-          system prompt, and pasting your working instructions into someone else&apos;s server to get a zip
-          back is a bad trade.
-        </p>
       </div>
     </div>
   );
