@@ -234,6 +234,28 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `lib/markdown.ts`. Fixed 1980 timestamps make exports byte-reproducible. It is deliberately not
   Zip64/DEFLATE/encryption capable; if that changes, take a dependency rather than growing it.
 
+## SEO + being readable by machines
+- **`/robots.txt`, `/sitemap.xml` and `/llms.txt` did not exist** and 404'd in production. Metadata
+  and OG tags were already good; there was simply nothing telling a crawler the docs existed.
+- **AI crawlers are ALLOWED on purpose.** The reflex to block GPTBot/ClaudeBot/PerplexityBot is for
+  publishers whose product is the words on the page. Ours is not: an answer engine describing this
+  accurately to someone asking "open source CRM I can self-host" is free distribution to exactly the
+  right person. The app routes are disallowed; the marketing and docs are not.
+- **The sitemap is GENERATED from `lib/docs-nav.ts`.** A hand-kept list goes stale silently and then
+  advertises 404s, which is worse than having none.
+- **`/llms.txt` is generated from `lib/plans.ts`, `lib/docs-nav.ts` and `lib/agents/catalog.ts`** —
+  the same sources the product reads. A file whose whole purpose is to be believed by a machine must
+  not contain a number a human has to remember to update; that is precisely how the pricing in this
+  very file drifted a whole model behind reality.
+  - It caught a live bug on its first run: Enterprise is `perSeat: true` with `price: 'Custom'`, so
+    reading the flag printed *"Custom per seat/month"*. The price string lies and so does the flag —
+    it takes `perSeat && priceValue > 0`.
+- **`StructuredData.tsx` emits SoftwareApplication + Organization + FAQPage**, with the FAQ array
+  PASSED IN from the page rather than duplicated. Structured data must describe what a human can
+  see; Google treats an FAQPage whose questions are not on screen as spam, and sharing the array is
+  what keeps that true after the next edit. **No `aggregateRating`** — there are no reviews, and
+  inventing a star count is the same lie as a fabricated sparkline.
+
 ## Documentation + the public repo
 - **`docs/*.md` is the single source for both surfaces** — GitHub renders it, and `/developers`
   renders the same files through `lib/markdown.ts` at build time. A docs-only copy is how an install

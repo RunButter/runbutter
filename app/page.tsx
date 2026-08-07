@@ -15,6 +15,7 @@ import FeatureWindows from '@/components/landing/FeatureWindows';
 import Reveal from '@/components/landing/Reveal';
 import CopyCommand from '@/components/landing/CopyCommand';
 import ObjectMarquee from '@/components/landing/ObjectMarquee';
+import StructuredData from '@/components/landing/StructuredData';
 import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
@@ -149,6 +150,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-canvas text-primary antialiased">
       {TRACK && <Script defer src="/t.js" data-site={ANALYTICS_SITE_ID} strategy="afterInteractive" />}
+      {/* FAQ is passed in rather than duplicated: structured data has to
+          describe what is actually on the page, and sharing the array is what
+          guarantees it still will be after the next edit. */}
+      <StructuredData faq={FAQ} />
 
       <MarketingHeader home />
 

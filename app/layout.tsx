@@ -4,7 +4,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import Providers from './providers';
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://runbutter.app';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
