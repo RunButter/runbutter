@@ -491,7 +491,7 @@ export default function PluginBuilder() {
                 // The beam marks the ACTIVE target only. Every card glowing at
                 // once would be decoration; one is a pointer.
                 return on
-                  ? <BorderBeam key={pf.id} size="pulse-inner" colorVariant="accent">{card}</BorderBeam>
+                  ? <BorderBeam key={pf.id} size="sm" colorVariant="ocean" strength={0.7}>{card}</BorderBeam>
                   : <div key={pf.id}>{card}</div>;
               })}
             </div>

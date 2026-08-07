@@ -214,7 +214,7 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
                 </span>
                 {stars !== null && (
                   <span className="h-8 inline-flex items-center px-2.5 border-l border-subtle bg-surface-sunken tabular-nums text-secondary">
-                    {stars.toLocaleString()}
+                    {stars.toLocaleString('en-US')}
                   </span>
                 )}
               </a>

@@ -1,55 +1,61 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { BorderBeam as Beam, type BorderBeamProps } from 'border-beam';
 
 /**
- * An animated gradient border that travels around a card.
+ * `border-beam` (MIT, Jakub Antalik), wrapped for one reason.
  *
- * The published component this follows lives behind a domain the build sandbox
- * cannot reach, so this is a clean-room implementation of the same API rather
- * than a copy — which is the right way round anyway: it uses our own semantic
- * tokens, so it works in both themes instead of carrying a second palette.
+ * THE PACKAGE'S `theme` PROP DEFAULTS TO 'dark', AND ITS 'auto' READS
+ * `prefers-color-scheme`. Ours does not work that way: the toggle writes
+ * `hb-theme` to localStorage and puts a `.dark` class on <html>, precisely so a
+ * visitor can override their OS. Passing 'auto' would therefore light the beam
+ * for the wrong background every time someone on a dark laptop chooses light
+ * mode — a bug that only shows up for people who touched the toggle, which is
+ * the bug you never catch by looking at your own screen.
  *
- * HOW IT WORKS. A `conic-gradient` is painted on a pseudo-element one pixel
- * larger than the card, and a `mask` with `xor` composition punches the middle
- * out, leaving only the rim. Rotating the gradient's angle then reads as light
- * travelling around the edge. The alternative — four animated edges, or an SVG
- * `stroke-dasharray` — either breaks on rounded corners or forces a repaint per
- * frame.
+ * So the theme is resolved from the class the rest of the app already uses, and
+ * re-resolved when it changes. A MutationObserver rather than a state
+ * subscription because the class is set by an inline script before React boots
+ * (the no-flash snippet in layout.tsx), so there is no provider to read at
+ * first paint.
  *
- * `@property --beam-angle` is what makes it cheap: registering the custom
- * property as an `<angle>` lets the browser interpolate it on the compositor.
- * Without the registration a custom property animates as a STRING, which means
- * a style recalculation every frame on every descendant — the exact thing that
- * made the hero canvas cost 2 seconds of blocked main thread earlier.
- *
- * Degrades to a plain static ring where `@property` is unsupported, and stops
- * entirely under prefers-reduced-motion: a light crawling around a card carries
- * no information, so there is nothing to preserve when someone asks for less.
+ * Everything else is the package's own API — size, colorVariant, strength,
+ * duration, brightness. This adds no styling of its own.
  */
-
-export type BeamSize = 'pulse-inner' | 'pulse' | 'thin';
-export type BeamColor = 'sunset' | 'accent' | 'mono';
 
 export default function BorderBeam({
   children,
-  size = 'pulse',
-  colorVariant = 'accent',
-  className = '',
-  /** Off until hovered — for a grid where every card beaming at once is noise. */
-  onHoverOnly = false,
-}: {
-  children: ReactNode;
-  size?: BeamSize;
-  colorVariant?: BeamColor;
-  className?: string;
-  onHoverOnly?: boolean;
-}) {
-  return (
-    <div
-      className={`beam beam-${size} beam-${colorVariant} ${onHoverOnly ? 'beam-hover' : ''} ${className}`}
-    >
-      {children}
-    </div>
-  );
+  ...props
+}: Omit<BorderBeamProps, 'children' | 'theme'> & { children: ReactNode }) {
+  // Start 'light': it matches the server render, so the first paint agrees with
+  // the markup and there is no hydration mismatch. The observer corrects it
+  // immediately if the page is actually dark.
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const read = () => setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    read();
+    setMounted(true);
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => mo.disconnect();
+  }, []);
+
+  // ── Why the beam only appears after mount ────────────────────────────────
+  // The package injects a <style> block declaring @property custom properties
+  // whose NAMES carry a useId suffix, and its text content differs between the
+  // server render and the client's. React reports that as a hydration mismatch
+  // (#425 -> #418 -> #423) and throws away the server tree for this subtree.
+  //
+  // The fix is NOT to render the whole thing client-only: `children` here is
+  // the hero product window, the pricing table and two bento tiles, all of
+  // which must stay in the server HTML for crawlers and for anything reading
+  // the page as text. So the CHILDREN render on the server exactly as before,
+  // and only the decorative wrapper is added once mounted. With JS off the
+  // result is no beam and all of the content, which is the right way round.
+  if (!mounted) return <div className={props.className}>{children}</div>;
+
+  return <Beam theme={theme} {...props}>{children}</Beam>;
 }

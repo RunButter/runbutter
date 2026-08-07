@@ -113,14 +113,14 @@ function DealCard({ title, sub, amount }: { title: string; sub?: string; amount?
 
 function Column({ name, count, children }: { name: string; count: number; children: React.ReactNode }) {
   return (
-    <div className="w-[210px] shrink-0">
+    <div className="w-[210px] shrink-0 flex flex-col min-h-0">
       <div className="flex items-center gap-1.5 mb-2 px-0.5">
         <span className="text-2xs font-medium text-primary">{name}</span>
         <span className="text-3xs font-mono text-tertiary">{count}</span>
       </div>
       {/* Fills the window rather than a fixed height, so the columns can't
           overflow the shorter phone layout. */}
-      <div className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-2 h-full">{children}</div>
+      <div className="rounded-xl bg-surface-sunken ring-1 ring-subtle p-2 h-full overflow-hidden">{children}</div>
     </div>
   );
 }
@@ -156,6 +156,49 @@ const TABS: { id: Tab; label: string; heading: string }[] = [
   { id: 'projects', label: 'Projects', heading: 'Projects' },
   { id: 'hr', label: 'HR', heading: 'Recruiting' },
 ];
+
+/**
+ * The activity strip along the bottom of every tab.
+ *
+ * The window is 680px tall and the Sales board filled 214 of them, so two
+ * thirds of the hero's centrepiece was empty canvas. That reads as an
+ * unfinished screenshot rather than a product. Every real workspace view has a
+ * recent-activity rail; adding it fills the space with the thing that actually
+ * makes software look alive — evidence that other people are using it.
+ */
+function ActivityFeed({ rows }: { rows: [string, string, string][] }) {
+  return (
+    <div className="mt-3">
+      <div className="text-3xs font-medium uppercase tracking-wide text-tertiary mb-2">Recent activity</div>
+      <div className="space-y-px">
+        {rows.map((r, i) => (
+          <div key={r[1]}
+            className="pp-row flex items-center gap-2.5 h-8 px-2 -mx-2 rounded-md hover:bg-surface-hover transition-colors"
+            style={{ animationDelay: `${120 + i * 70}ms` }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-strong shrink-0" />
+            <span className="text-2xs text-secondary truncate flex-1"><span className="text-primary font-medium">{r[0]}</span> {r[1]}</span>
+            <span className="text-3xs font-mono text-tertiary shrink-0">{r[2]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** A small labelled progress bar — the shape every funnel and budget wants. */
+function Meter({ label, value, pct }: { label: string; value: string; pct: number }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-2xs text-secondary">{label}</span>
+        <span className="text-2xs font-mono text-primary tabular-nums">{value}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-surface-sunken ring-1 ring-subtle overflow-hidden">
+        <div className="pp-meter h-full rounded-full bg-inverse/80" style={{ ['--pp-pct' as any]: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
 
 export default function ProductPreview() {
   const [tab, setTab] = useState<Tab>('sales');
@@ -213,7 +256,7 @@ export default function ProductPreview() {
         </div>
       </div>
 
-      <div className="flex h-[380px] sm:h-[560px] lg:h-[680px]">
+      <div className="flex h-[380px] sm:h-[560px] lg:h-[620px]">
         {/* mini nav rail (hidden on phones so the content gets the full width) */}
         <div className="hidden sm:flex w-12 shrink-0 border-r border-subtle bg-surface-sunken flex-col items-center gap-2 py-4">
           <div className="w-5 h-5 rounded-md bg-inverse mb-1.5" />
@@ -232,11 +275,35 @@ export default function ProductPreview() {
           </div>
           <div className="p-4 overflow-hidden">
           <Panelled id="sales" tab={tab}>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-              <Column name="Lead" count={2}><DealCard title="Northwind" sub="northwind.io" amount="$24,000" /><DealCard title="Cobalt" amount="$8,000" /></Column>
-              <Column name="Proposal" count={1}><DealCard title="Vertex" sub="vertex.co" amount="$60,000" /></Column>
-              <Column name="Won" count={2}><DealCard title="Pulse" amount="$36,000" /><DealCard title="Lumen" amount="$12,000" /></Column>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <Stat label="Pipeline" value="$164k" icon={Target} spark={[42, 51, 47, 63, 58, 74, 81]} />
+              <Stat label="Won this month" value="$48k" icon={Check} trend="22%" />
+              <Stat label="Win rate" value="34%" icon={ArrowUpRight} />
+              <Stat label="Avg. cycle" value="18d" icon={Clock} />
             </div>
+            <div className="mt-3 h-[248px] sm:h-[268px] flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Column name="Lead" count={3}>
+                <DealCard title="Northwind" sub="northwind.io" amount="$24,000" />
+                <DealCard title="Cobalt" sub="cobalt.dev" amount="$8,000" />
+                <DealCard title="Ridgeway" amount="$15,500" />
+              </Column>
+              <Column name="Proposal" count={2}>
+                <DealCard title="Vertex" sub="vertex.co" amount="$60,000" />
+                <DealCard title="Kestrel" sub="kestrel.io" amount="$9,200" />
+              </Column>
+              <Column name="Negotiation" count={1}>
+                <DealCard title="Halcyon" sub="halcyon.com" amount="$31,000" />
+              </Column>
+              <Column name="Won" count={2}>
+                <DealCard title="Pulse" sub="pulse.app" amount="$36,000" />
+                <DealCard title="Lumen" amount="$12,000" />
+              </Column>
+            </div>
+            <ActivityFeed rows={[
+              ['Vertex', 'moved to Proposal', '2m'],
+              ['Anna K.', 'logged a call with Halcyon', '18m'],
+              ['Invoice 1042', 'sent to Pulse', '1h'],
+            ]} />
           </Panelled>
 
           <Panelled id="finance" tab={tab}>
@@ -262,6 +329,16 @@ export default function ProductPreview() {
                   </div>
                 ))}
               </Panel>
+              <div className="card-surface p-3.5 grid sm:grid-cols-3 gap-x-6 gap-y-3">
+                <Meter label="Current" value="$41,200" pct={62} />
+                <Meter label="1–30 days" value="$18,400" pct={28} />
+                <Meter label="30+ days" value="$6,900" pct={10} />
+              </div>
+              <ActivityFeed rows={[
+                ['Pulse', 'paid invoice 1038 — $36,000', '9m'],
+                ['Reminder', 'sent for invoice 1003', '3h'],
+                ['Expense', 'reconciled against the ledger', '5h'],
+              ]} />
             </div>
           </Panelled>
 
@@ -281,15 +358,61 @@ export default function ProductPreview() {
                   ))}
                 </div>
               </div>
+              <Panel>
+                <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-3.5 h-9 items-center bg-surface-sunken text-3xs font-semibold text-tertiary uppercase tracking-wide">
+                  <span>Source</span><span className="text-right">Visitors</span><span className="text-right">Signups</span>
+                </div>
+                {[['Organic search', '1,204', '82'],
+                  ['GitHub', 'momentum', '—'],
+                  ['Newsletter', '388', '41'],
+                  ['Direct', '512', '29']].map((r) => (
+                  <div key={r[0]} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3.5 h-10 items-center border-t border-subtle text-2xs">
+                    <span className="text-secondary">{r[0]}</span>
+                    <span className="text-right font-mono text-primary tabular-nums">{r[1]}</span>
+                    <span className="text-right font-mono text-primary tabular-nums">{r[2]}</span>
+                  </div>
+                ))}
+              </Panel>
             </div>
           </Panelled>
 
           <Panelled id="projects" tab={tab}>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-              <Column name="Todo" count={2}><DealCard title="Wire Stripe billing" sub="David R." /><DealCard title="Customer interviews" sub="Lena F." /></Column>
-              <Column name="In progress" count={1}><DealCard title="Design landing page" sub="Anna K." /></Column>
-              <Column name="Done" count={1}><DealCard title="Set up CI/CD" sub="Sara L." /></Column>
+            <div className="h-[236px] flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Column name="Todo" count={3}>
+                <DealCard title="Wire Stripe billing" sub="David R." />
+                <DealCard title="Customer interviews" sub="Lena F." />
+                <DealCard title="Migrate the file store" sub="Unassigned" />
+              </Column>
+              <Column name="In progress" count={2}>
+                <DealCard title="Design landing page" sub="Anna K." />
+                <DealCard title="Agent approval flow" sub="Marcus O." />
+              </Column>
+              <Column name="Review" count={1}>
+                <DealCard title="Import: CSV column matching" sub="Sara L." />
+              </Column>
+              <Column name="Done" count={2}>
+                <DealCard title="Set up CI/CD" sub="Sara L." />
+                <DealCard title="Deal board drag + drop" sub="David R." />
+              </Column>
             </div>
+            <div className="mt-3 card-surface p-3.5">
+              <div className="text-3xs font-medium uppercase tracking-wide text-tertiary mb-2.5">This quarter</div>
+              <div className="space-y-2">
+                {[['Billing', 18, 62], ['Agents', 34, 44], ['Imports', 8, 26]].map(([n, off, w]) => (
+                  <div key={n as string} className="flex items-center gap-2.5">
+                    <span className="text-2xs text-secondary w-16 shrink-0">{n}</span>
+                    <div className="flex-1 h-2 rounded-full bg-surface-sunken ring-1 ring-subtle relative overflow-hidden">
+                      <div className="pp-meter absolute inset-y-0 rounded-full bg-inverse/70"
+                        style={{ left: `${off}%`, ['--pp-pct' as any]: `${w}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <ActivityFeed rows={[
+              ['Anna K.', 'moved Design landing page to In progress', '12m'],
+              ['CI', 'passed on 4 commits', '40m'],
+            ]} />
           </Panelled>
 
           <Panelled id="hr" tab={tab}>
@@ -312,6 +435,12 @@ export default function ProductPreview() {
                 </div>
               ))}
             </Panel>
+            <div className="mt-3 card-surface p-3.5 grid sm:grid-cols-4 gap-x-6 gap-y-3">
+              <Meter label="Applied" value="34" pct={100} />
+              <Meter label="Screened" value="17" pct={50} />
+              <Meter label="Interviewed" value="8" pct={24} />
+              <Meter label="Offered" value="2" pct={6} />
+            </div>
           </Panelled>
           </div>
         </div>

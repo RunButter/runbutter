@@ -12,6 +12,7 @@ import AsciiField from '@/components/landing/AsciiField';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Comparison from '@/components/landing/Comparison';
+import SavingsCalculator from '@/components/landing/SavingsCalculator';
 import FeatureWindows from '@/components/landing/FeatureWindows';
 import AgentDemo from '@/components/landing/AgentDemo';
 import Reveal from '@/components/landing/Reveal';
@@ -40,10 +41,10 @@ const MODULES = [
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
 // The sum is `tiles + wideTiles`, and it has to stay a multiple of four; adding
 // one wide tile therefore costs two normal ones, not zero.
-const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string }[] = [
+const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string; beam?: boolean }[] = [
   // The one tile with a page of its own behind it — agents are the hardest
   // thing here to believe from a single sentence.
-  { icon: Bot, name: 'AI agents', body: 'A role, scoped tools, your own AI key. It asks before it writes.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
+  { icon: Bot, beam: true, name: 'AI agents', body: 'A role, scoped tools, your own AI key. It asks before it writes.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
   // Wide, and early, because it is the answer to "but my business is not a
   // software company" — the objection every vertical-shaped buyer arrives with.
   { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments, kilns. Describe what you track and it gets a table, a form, search and agent access.', wide: true },
@@ -67,7 +68,7 @@ const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: stri
   // the section people skim last.
   { icon: NotebookPen, name: 'Docs and mind maps', body: 'Write next to the records, with boards for planning.' },
   { icon: KeyRound, name: 'Roles and permissions', body: 'Owner, admin, member. Audit log on Enterprise.' },
-  { icon: Puzzle, name: 'Agent skills, portable', body: 'Write a skill once, package it as an Agent Plugin. Import from GitHub, export yours back out.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
+  { icon: Puzzle, beam: true, name: 'Agent skills, portable', body: 'Write a skill once, package it as an Agent Plugin. Import from GitHub, export yours back out.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
 ];
 
 // Prices, names and limits are DERIVED from lib/plans.ts — the same file that
@@ -159,7 +160,7 @@ const MCP_SNIPPET = `{
 /** Beams a card only when it is the one being recommended. */
 function BeamIf({ on, children }: { on: boolean; children: React.ReactNode }) {
   if (!on) return <>{children}</>;
-  return <BorderBeam size="pulse" colorVariant="accent" className="flex w-full [--beam-radius:0.75rem]">{children}</BorderBeam>;
+  return <BorderBeam size="md" colorVariant="ocean" strength={0.7} className="flex w-full">{children}</BorderBeam>;
 }
 
 export default function HomePage() {
@@ -278,7 +279,7 @@ export default function HomePage() {
               sunset variant exists and is one word away for a page that wants
               colour; this one does not. */}
           <Reveal variant="zoom" className="relative">
-            <BorderBeam size="pulse-inner" colorVariant="mono" className="[--beam-radius:1rem]">
+            <BorderBeam size="pulse-inner" colorVariant="mono" strength={0.55} staticColors>
               <ProductPreview />
             </BorderBeam>
           </Reveal>
@@ -334,9 +335,15 @@ export default function HomePage() {
                   )}
                 </div>
               );
+              const linked = c.href ? <Link href={c.href} className="block h-full">{tile}</Link> : tile;
               return (
                 <Reveal key={c.name} delay={i * 40} className={c.wide ? 'sm:col-span-2' : ''}>
-                  {c.href ? <Link href={c.href} className="block h-full">{tile}</Link> : tile}
+                  {/* Two tiles beam: AI agents and the skill builder. Both are
+                      the ones with a page behind them, so the beam points at
+                      somewhere to go. Beaming all twenty would be a texture. */}
+                  {c.beam
+                    ? <BorderBeam size="md" colorVariant="ocean" strength={0.7} className="block h-full">{linked}</BorderBeam>
+                    : linked}
                 </Reveal>
               );
             })}
@@ -502,6 +509,25 @@ export default function HomePage() {
               </div>
               <pre className="bg-inverse text-inverse-fg/90 text-xs font-mono leading-relaxed p-4 overflow-x-auto">{MCP_SNIPPET}</pre>
             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── What it replaces, in your own numbers ─────────────────────────
+          Sits directly before the comparison table: the table says WHAT is
+          replaced, this says what that is worth to you specifically. */}
+      <section id="savings" className="border-t border-subtle cv-auto">
+        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
+          <Reveal>
+            <div className="max-w-2xl">
+              <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Count what you are already paying</h2>
+              <p className="text-secondary mt-3 leading-relaxed">
+                Tick what you have and put in your own figures. We are not going to guess at anyone else&apos;s price list.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={60} className="mt-10">
+            <SavingsCalculator />
           </Reveal>
         </div>
       </section>
