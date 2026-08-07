@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store, ShieldAlert } from 'lucide-react';
+import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store, ShieldAlert, Upload } from 'lucide-react';
 import { buildPlugin, skillSlug, pluginSlug, isValidSkillName, parseToolList, resourcePath, SPEC_VERSION, type PluginFile } from '@/lib/plugins/agent-plugin';
 import { zipSync } from '@/lib/plugins/zip';
 import { scanFiles } from '@/lib/plugins/scan';
+import { unzip } from '@/lib/plugins/unzip';
+import { importPlugin } from '@/lib/plugins/import';
 
 /**
  * A free Agent Plugin builder that runs ENTIRELY in the browser.
@@ -283,6 +285,8 @@ export default function PluginBuilder() {
   const [open, setOpen] = useState(0);
   const [shown, setShown] = useState<string | null>(null);
   const [override, setOverride] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [importNote, setImportNote] = useState('');
 
   const files: PluginFile[] = useMemo(() => buildPlugin({
     manifest: {
@@ -371,6 +375,59 @@ export default function PluginBuilder() {
     }
     return out;
   }, [skills, pluginName]);
+
+  /**
+   * Load dropped files into the editor.
+   *
+   * REPLACES the project rather than merging into it. Merging sounds friendlier
+   * and produces a silent mess — two manifests, duplicate skill names, an mcp
+   * url from one and a description from the other — with no undo. Replacing is
+   * one obvious thing, and the previous state is still on disk in whatever the
+   * user just dropped.
+   */
+  async function takeFiles(list: FileList | null) {
+    const picked = Array.from(list || []);
+    if (!picked.length) return;
+    setImportNote('Reading…');
+    try {
+      const entries: { path: string; content: string }[] = [];
+      for (const f of picked) {
+        if (/\.zip$/i.test(f.name)) {
+          entries.push(...(await unzip(await f.arrayBuffer())));
+        } else {
+          // webkitRelativePath is set when a whole FOLDER is chosen, and it is
+          // the only way to learn the directory a SKILL.md sat in — which is
+          // the skill's name. Without it every file looks top-level.
+          const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath;
+          entries.push({ path: rel || f.name, content: await f.text() });
+        }
+      }
+      if (!entries.length) return setImportNote('Nothing readable in that.');
+
+      const p = importPlugin(entries);
+      if (!p.skills.length) {
+        return setImportNote('No SKILL.md found. A skill is a directory containing one.');
+      }
+
+      if (p.name) setPluginName(p.name);
+      if (p.description) setPluginDescription(p.description);
+      if (p.author) setAuthor(p.author);
+      setWithMcp(!!p.mcpUrl);
+      if (p.mcpUrl) setMcpUrl(p.mcpUrl);
+      setWithMarketplace(p.hadMarketplace);
+      setSkills(p.skills.map((s) => ({ ...blank(), ...s })));
+      setOpen(0);
+      setShown(null);
+      setImportNote(
+        `Loaded ${p.skills.length} skill${p.skills.length === 1 ? '' : 's'}` +
+        (p.ignored.length ? ` — ${p.ignored.length} other file${p.ignored.length === 1 ? '' : 's'} ignored.` : '.'),
+      );
+    } catch (e: any) {
+      // A corrupt archive is the user's problem to see, not something to
+      // swallow into a dead drop zone.
+      setImportNote(e?.message || 'Could not read that file.');
+    }
+  }
 
   const setSkill = (id: number, patch: Partial<Draft>) =>
     setSkills((xs) => xs.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -572,6 +629,29 @@ export default function PluginBuilder() {
             </div>
           ))}
         </div>
+
+        {/* ── Bring what you already have ─────────────────────────────────
+            The builder could only create, which made it useless to anyone with
+            existing skills — i.e. everyone worth reaching. Drop a zip or a
+            folder and it loads into the editor; export closes the loop. */}
+        <label
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); takeFiles(e.dataTransfer.files); }}
+          className={`block rounded-xl border border-dashed p-4 text-center cursor-pointer transition-colors ${
+            dragging ? 'border-accent bg-accent/5' : 'border-strong hover:bg-surface-hover'}`}>
+          <input type="file" multiple accept=".zip,.md,.json" className="sr-only"
+            onChange={(e) => { takeFiles(e.target.files); e.target.value = ''; }} />
+          <span className="text-xs font-medium text-primary flex items-center justify-center gap-1.5">
+            <Upload className="w-3.5 h-3.5" /> Import a plugin
+          </span>
+          <span className="text-2xs text-tertiary block mt-1 leading-relaxed">
+            Drop a <span className="font-mono">.zip</span> or a folder of{' '}
+            <span className="font-mono">SKILL.md</span> files. A repo download, a{' '}
+            <span className="font-mono">.claude/skills/</span> folder or a single file all work.
+          </span>
+          {importNote && <span className="text-2xs text-secondary block mt-2">{importNote}</span>}
+        </label>
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="text-2xs text-tertiary">Start from:</span>
