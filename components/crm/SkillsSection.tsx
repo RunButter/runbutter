@@ -188,6 +188,17 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
             Public repositories only. Looks for <span className="font-mono">SKILL.md</span> files. Nothing is saved
             until you choose — read what you install, it becomes part of your agent&apos;s instructions.
           </p>
+          {/* A repo link and a subfolder link both work, and neither is obvious
+              from the placeholder. Clicking fills the box rather than opening
+              GitHub, because the next thing you want is to scan it. */}
+          {!found && !busy && (
+            <p className="text-2xs text-tertiary">
+              Try{' '}
+              <button type="button" onClick={() => setUrl('github.com/anthropics/skills')}
+                className="font-mono text-accent hover:underline">anthropics/skills</button>
+              {' '}— a subfolder works too, e.g. <span className="font-mono">…/tree/main/document-skills</span>.
+            </p>
+          )}
 
           {err && <div className="rounded-md border border-danger/30 bg-danger/5 p-2.5 text-xs text-danger">{err}</div>}
 
