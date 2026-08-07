@@ -36,15 +36,27 @@ edition" with the good parts removed.
 ## Quick start
 
 ```bash
+npx create-runbutter
+```
+
+That checks your machine, clones, generates every secret, asks for a free Privy
+app id and starts the containers. Open <http://localhost:3000>.
+
+<details>
+<summary>Or do it by hand</summary>
+
+```bash
 git clone https://github.com/RunButter/runbutter.git && cd runbutter
 cp .env.docker.example .env
-node scripts/gen-keys.mjs --env >> .env    # secrets, generated
+node scripts/gen-keys.mjs --write .env      # secrets, generated in place
 #  ↳ paste a free Privy app id into .env (dashboard.privy.io, 2 minutes)
 docker compose up
 ```
 
+</details>
+
 Postgres, PostgREST, storage, the whole schema and the app — five containers,
-one command, no SQL pasted anywhere. Open <http://localhost:3000>.
+one command, no SQL pasted anywhere.
 
 Prefer hosted Postgres? `npm run migrate` applies the schema to any Supabase
 project in one command. No terminal at all? Paste

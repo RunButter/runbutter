@@ -1,0 +1,14 @@
+{
+  "name": "create-runbutter",
+  "version": "1.0.0",
+  "description": "Set up a self-hosted RunButter — the open company OS — in one command.",
+  "bin": { "create-runbutter": "bin/index.mjs" },
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "files": ["bin", "README.md"],
+  "keywords": ["runbutter", "crm", "erp", "self-hosted", "company-os", "postgres"],
+  "homepage": "https://runbutter.app",
+  "repository": { "type": "git", "url": "git+https://github.com/RunButter/runbutter.git", "directory": "packages/create-runbutter" },
+  "license": "MIT",
+  "author": "RunButter"
+}

@@ -114,7 +114,7 @@ jobs:
       - name: Compose an .env
         run: |
           cp .env.docker.example .env
-          node scripts/gen-keys.mjs --env >> .env
+          node scripts/gen-keys.mjs --write .env
           # Well-formed but fake — Privy validates the SHAPE offline and throws
           # on anything else, which would fail the app's prerender. Nothing is
           # contacted.

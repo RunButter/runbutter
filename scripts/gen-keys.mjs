@@ -4,6 +4,7 @@
  *
  *   node scripts/gen-keys.mjs        print them
  *   node scripts/gen-keys.mjs --env  print them as .env lines to paste
+ *   node scripts/gen-keys.mjs --write .env   merge them INTO a file, in place
  *
  * WHY A SCRIPT RATHER THAN DEFAULTS IN THE COMPOSE FILE. Supabase's own
  * self-host guide ships a well-known demo JWT secret and the two keys signed
@@ -21,6 +22,7 @@
  */
 
 import crypto from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const b64u = (b) => Buffer.from(b).toString('base64')
   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -48,6 +50,40 @@ const service = jwt({ role: 'service_role', iss: 'runbutter', iat: now, exp }, j
 const master = crypto.randomBytes(32).toString('base64');
 const cron = crypto.randomBytes(24).toString('base64url');
 
+// ── --write <file>: merge into an existing .env, in place ───────────────────
+// `--env >> .env` was the documented flow and it APPENDS. Every one of these
+// keys already exists (empty) in .env.docker.example, so the result had each of
+// them twice. dotenv and Docker Compose both take the last value, so it worked
+// — right up until someone edited the first one, the one with the explanatory
+// comment above it, and watched their change be ignored. Merging writes each
+// key exactly once, in the place the comments describe.
+const writeIdx = process.argv.indexOf('--write');
+if (writeIdx !== -1) {
+  const file = process.argv[writeIdx + 1];
+  if (!file) { console.error('--write needs a path, e.g. --write .env'); process.exit(1); }
+
+  const pairs = {
+    JWT_SECRET: jwtSecret, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_KEY: service,
+    SECRETS_MASTER_KEY: master, CRON_SECRET: cron,
+  };
+  let text = existsSync(file) ? readFileSync(file, 'utf8') : '';
+  const kept = [];
+  for (const [k, v] of Object.entries(pairs)) {
+    // Only ever replaces a key that is EMPTY or absent. A file that already has
+    // real secrets in it must not be silently reissued — that would invalidate
+    // every session and orphan everything sealed with the old master key.
+    const re = new RegExp(`^${k}=(.*)$`, 'm');
+    const m = text.match(re);
+    if (m && m[1].trim()) { kept.push(k); continue; }
+    if (m) text = text.replace(re, `${k}=${v}`);
+    else text += (text.endsWith('\n') || !text ? '' : '\n') + `${k}=${v}\n`;
+  }
+  writeFileSync(file, text);
+  console.log(`✓ ${file} — ${Object.keys(pairs).length - kept.length} key(s) generated`);
+  if (kept.length) console.log(`  kept the values already set: ${kept.join(', ')}`);
+  process.exit(0);
+}
+
 if (process.argv.includes('--env')) {
   console.log(`JWT_SECRET=${jwtSecret}`);
   console.log(`SUPABASE_ANON_KEY=${anon}`);
@@ -64,7 +100,7 @@ Paste these into your .env:
   SECRETS_MASTER_KEY=${master}
   CRON_SECRET=${cron}
 
-  Or: node scripts/gen-keys.mjs --env >> .env
+  Or, merged into an existing file:  node scripts/gen-keys.mjs --write .env
 
 SUPABASE_SERVICE_KEY bypasses row-level security on every table. It belongs in
 the server environment and nowhere else — never in a browser, never in a repo.

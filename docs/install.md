@@ -28,7 +28,7 @@ A wrong value fails at the login screen, not at build time.
 ```bash
 git clone https://github.com/RunButter/runbutter.git && cd runbutter
 cp .env.docker.example .env
-node scripts/gen-keys.mjs --env >> .env    # generates the secrets
+node scripts/gen-keys.mjs --write .env    # generates the secrets
 #  ↳ paste your Privy app id into .env as PRIVY_APP_ID
 docker compose up
 ```
