@@ -86,7 +86,11 @@ const ALLOWED = new Set([
   // server-side in /api/onboarding/provision behind a verified Privy token.
   'get_my_hr_companies',
   // Agents (0043)
-  'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs',
+  // get_agent_run (0095) reads ONE run by id and is what the browser polls
+  // while a run is in flight. append_agent_run_step is deliberately ABSENT —
+  // it is service_role only, because a client that could write steps could
+  // forge a transcript of work that never happened.
+  'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs', 'get_agent_run',
   // Skills (0068) — reusable instruction packs attached to agents.
   'get_skills', 'save_skill', 'delete_skill',
   // Post Studio board (0069) — positions + edges for the content-plan canvas.

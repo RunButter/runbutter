@@ -97,8 +97,32 @@ async function post(path: string, body: any): Promise<any> {
   return j;
 }
 
-export function runAgentTask(privy: string, ws: string, agentId: string, task: string) {
-  return post('/api/agents/run', { privyUserId: privy, workspaceId: ws, agentId, task });
+/**
+ * `runId` is minted HERE, by the caller, and sent with the task.
+ *
+ * The route does not answer until the whole loop has finished, so an id that
+ * came back in the response would arrive exactly when the live view stopped
+ * being useful. Naming the run up front is what lets `getAgentRun` poll it from
+ * the first second. `create_agent_run` (0095) falls back to a server id rather
+ * than writing into an existing row, so a chosen id can never collide its way
+ * into somebody else's run.
+ */
+export function runAgentTask(privy: string, ws: string, agentId: string, task: string, runId?: string) {
+  return post('/api/agents/run', { privyUserId: privy, workspaceId: ws, agentId, task, runId });
+}
+
+/**
+ * One run, by id — what the modal polls while the loop is still going (0095).
+ *
+ * Returns null both for "not found" and for a run in another workspace, which
+ * is the same answer on purpose: a poll that could tell those apart would
+ * confirm which run ids exist. A null here means "nothing to show yet", and the
+ * caller keeps polling — the row appears a moment after the request starts.
+ */
+export async function getAgentRun(privy: string, runId: string): Promise<AgentRun | null> {
+  const { data, error } = await rpc('get_agent_run', { p_privy: privy, p_id: runId });
+  if (error || !data) return null;
+  return data as AgentRun;
 }
 
 export function approveRun(privy: string, ws: string, runId: string) {

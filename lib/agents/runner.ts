@@ -53,6 +53,18 @@ export interface RunOutcome {
   result: string;        // final text
 }
 
+/**
+ * Called as each step happens, so the browser can watch.
+ *
+ * The runner still returns the complete `steps` array and `finish_agent_run`
+ * still writes it — this is a progress feed, not the record. It is therefore
+ * fire-and-report-nothing: an implementation that throws must not take a run
+ * down, so the call site swallows failures. Keeping that contract here rather
+ * than inside the loop is what lets the runner stay usable from the scheduled
+ * dispatcher, which has nobody watching and passes no callback at all.
+ */
+export type StepSink = (step: any, replaceLast?: boolean) => Promise<void> | void;
+
 function toolSpecs(allowed: string[], allowedObjects: string[]): ToolSpec[] {
   const objectNote = allowedObjects.length
     ? ` Only these objects are permitted: ${allowedObjects.join(', ')}.`
@@ -64,11 +76,27 @@ function toolSpecs(allowed: string[], allowedObjects: string[]): ToolSpec[] {
   }));
 }
 
-export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvider, apiKey: string, model: string, baseUrl: string | undefined, task: string, skills: SkillDef[] = []): Promise<RunOutcome> {
+export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvider, apiKey: string, model: string, baseUrl: string | undefined, task: string, skills: SkillDef[] = [], onStep?: StepSink): Promise<RunOutcome> {
   const allowed = agent.allowed_tools?.length ? agent.allowed_tools : ['list_objects', 'list_records', 'search_records', 'get_record'];
   const specs = toolSpecs(allowed, agent.allowed_objects || []);
   const steps: any[] = [];
   const proposed: any[] = [];
+
+  /**
+   * Record a step: into the array that becomes the run, and out to whoever is
+   * watching. Every `steps.push` in this function goes through here so the two
+   * cannot drift — a step that reached the transcript but never the live view
+   * would show as a run that stalled and then jumped.
+   *
+   * The sink's failures are swallowed on purpose. Progress is a nicety; the
+   * run is not allowed to fail because a progress write did.
+   */
+  const record = async (step: any, replaceLast = false) => {
+    if (replaceLast && steps.length) steps[steps.length - 1] = step;
+    else steps.push(step);
+    if (!onStep) return;
+    try { await onStep(step, replaceLast); } catch { /* the transcript still lands at the end */ }
+  };
 
   const system =
     `You are "${agent.name}"${agent.role ? `, a ${agent.role}` : ''}, an AI agent operating inside RunButter, a business workspace.\n` +
@@ -88,12 +116,12 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
     try {
       turn = await agentTurn(provider, apiKey, model, system, history, specs, baseUrl);
     } catch (e: any) {
-      steps.push({ type: 'error', message: e?.message || 'AI call failed' });
+      await record({ type: 'error', message: e?.message || 'AI call failed' });
       return { status: 'error', steps, proposed, result: e?.message || 'AI call failed' };
     }
     history = turn.history;
 
-    if (turn.text) steps.push({ type: 'thought', text: turn.text });
+    if (turn.text) await record({ type: 'thought', text: turn.text });
 
     if (!turn.toolCalls.length) {
       // model finished
@@ -106,8 +134,12 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
 
     // Execute (or queue) each tool call, then feed results back.
     for (const call of turn.toolCalls) {
+      // The call is announced BEFORE it runs. A tool that takes four seconds
+      // should show as a tool that is taking four seconds, not appear
+      // retroactively once it has already finished.
+      await record({ type: 'tool', name: call.name, args: call.args, status: 'running' });
       const res = await handleCall(ctx, agent, call, allowed, proposed);
-      steps.push({ type: 'tool', name: call.name, args: call.args, result: res });
+      await record({ type: 'tool', name: call.name, args: call.args, result: res }, true);
       history = appendToolResult(provider, history, call, res);
     }
   }

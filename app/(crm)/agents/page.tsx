@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight,
@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
-  listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun,
+  listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun, getAgentRun,
   DEFAULT_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, TOOL_CATALOG, TOOL_GROUPS,
   SCHEDULE_LABEL,
   type Agent, type AgentRun,
@@ -426,20 +426,99 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
   );
 }
 
+/**
+ * The run as it happens.
+ *
+ * Two decisions worth keeping:
+ *
+ *  - THE LIST GROWS DOWNWARD AND SCROLLS ITSELF. A panel that jumps to the top
+ *    on every new step makes a fast run unreadable, and one that never scrolls
+ *    hides the thing that is actually happening now.
+ *  - A TOOL STILL RUNNING LOOKS DIFFERENT FROM ONE THAT FINISHED. The runner
+ *    announces a call before executing it, so `status: 'running'` is the four
+ *    seconds a lookup actually takes. Rendering that identically to a completed
+ *    call would throw away the only part of this that reads as live.
+ *
+ * `result` is deliberately not rendered. A tool result is a JSON blob that can
+ * be a hundred records; what a person watching wants is which tool, on what,
+ * and whether it came back. The full transcript is one click away afterwards.
+ */
+function LiveSteps({ steps, name }: { steps: any[]; name: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { box.current?.scrollTo({ top: box.current.scrollHeight, behavior: 'smooth' }); }, [steps.length]);
+
+  return (
+    <div className="rounded-md border border-subtle bg-surface-sunken">
+      <div className="flex items-center gap-2 px-3 h-8 border-b border-subtle">
+        <Loader2 className="w-3 h-3 animate-spin text-accent" />
+        <span className="text-2xs text-secondary">{name} is working</span>
+        <span className="ml-auto text-2xs text-tertiary tabular-nums">{steps.length} step{steps.length === 1 ? '' : 's'}</span>
+      </div>
+      <div ref={box} className="max-h-56 overflow-y-auto p-3 space-y-1.5">
+        {steps.map((s, i) => {
+          if (s.type === 'thought') {
+            return <p key={i} className="text-2xs text-secondary leading-relaxed">{s.text}</p>;
+          }
+          if (s.type === 'error') {
+            return <p key={i} className="text-2xs text-danger leading-relaxed">{s.message}</p>;
+          }
+          const running = s.status === 'running';
+          const proposed = s.result?.proposed;
+          const failed = s.result?.error;
+          return (
+            <div key={i} className="flex items-center gap-1.5 text-2xs font-mono">
+              {running
+                ? <Loader2 className="w-3 h-3 animate-spin text-tertiary shrink-0" />
+                : failed
+                  ? <X className="w-3 h-3 text-danger shrink-0" />
+                  : <Check className={`w-3 h-3 shrink-0 ${proposed ? 'text-warning' : 'text-success'}`} />}
+              <span className={running ? 'text-tertiary' : 'text-secondary'}>
+                {s.name}{s.args?.object ? `(${s.args.object})` : ''}
+              </span>
+              {proposed && <span className="text-warning not-italic">proposed</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Run modal ─────────────────────────────────────────────────────────────────
 function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; privy: string; onClose: () => void }) {
   const [task, setTask] = useState('');
   const [busy, setBusy] = useState(false);
   const [out, setOut] = useState<any | null>(null);
+  const [live, setLive] = useState<any[]>([]);
   const [err, setErr] = useState('');
   const examples = AGENT_TEMPLATES.find((t) => t.name === agent.name)?.examples ?? [];
 
+  /**
+   * Run, and watch it happen.
+   *
+   * The POST does not answer until the loop has finished, so the id is minted
+   * here and the run polled alongside the request that is still in flight.
+   * Polling rather than SSE for the same reason team chat polls: Realtime needs
+   * anon-key RLS policies on the table, which would undo the /api/rpc proxy
+   * every other read goes through.
+   *
+   * The poll is stopped by the `finally`, not by the run's own status — the
+   * request settling is the authoritative end, and a poll that outlived it
+   * would keep firing against a modal the user has already closed.
+   */
   const run = async () => {
     if (!task.trim()) return;
-    setBusy(true); setErr(''); setOut(null);
-    try { setOut(await runAgentTask(privy, ws, agent.id, task)); }
+    const runId = crypto.randomUUID();
+    setBusy(true); setErr(''); setOut(null); setLive([]);
+
+    const timer = setInterval(async () => {
+      const row = await getAgentRun(privy, runId);
+      if (row?.steps?.length) setLive(row.steps);
+    }, 1200);
+
+    try { setOut(await runAgentTask(privy, ws, agent.id, task, runId)); }
     catch (e: any) { setErr(e.message || 'Run failed'); }
-    finally { setBusy(false); }
+    finally { clearInterval(timer); setBusy(false); }
   };
   const approve = async () => {
     setBusy(true);
@@ -474,17 +553,20 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
           </Button>
 
           {/* An agent turn is the longest wait in the product — it can call
-              several tools against a BYO key before it says anything. So the
-              wait gets its own panel where the answer will land, rather than
-              only a spinner inside the button the user just pressed. */}
+              several tools against a BYO key before it says anything. Until
+              0095 that wait was a spinner over a transcript being built in
+              memory, which is why the most interesting thing the product does
+              was invisible the entire time it was happening. */}
           {busy && !out && (
-            <ThinkingLine
-              kind="composing"
-              size="avatar"
-              label={`${agent.name} is working`}
-              hint="Reading your workspace and deciding what to do"
-              className="rounded-md border border-subtle bg-surface-sunken py-6"
-            />
+            live.length
+              ? <LiveSteps steps={live} name={agent.name} />
+              : <ThinkingLine
+                  kind="composing"
+                  size="avatar"
+                  label={`${agent.name} is working`}
+                  hint="Reading your workspace and deciding what to do"
+                  className="rounded-md border border-subtle bg-surface-sunken py-6"
+                />
           )}
 
           {err && <div className="rounded-md border border-danger/30 bg-danger/5 p-2.5 text-xs text-danger">{err}</div>}

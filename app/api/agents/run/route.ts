@@ -49,8 +49,14 @@ export async function POST(req: Request) {
   const model = agent.model || (secret as any).model || defaultModel(provider);
   const baseUrl = (secret as any).base_url || undefined;
 
+  // The browser mints the run id so it can poll from the first second — this
+  // response does not arrive until the whole loop is done. It cannot collide
+  // its way into someone else's run: create_agent_run falls back to a fresh id
+  // rather than writing into an existing row (0095).
+  const wantedId = typeof b?.runId === 'string' && /^[0-9a-f-]{36}$/i.test(b.runId) ? b.runId : null;
   const { data: runId } = await admin.rpc('create_agent_run', {
     p_workspace: workspaceId, p_agent_id: agentId, p_agent_name: agent.name, p_task: task, p_privy: privyUserId,
+    p_id: wantedId,
   });
 
   // Attached skills (0068). Read with the workspace scoped in SQL, so an agent
@@ -71,7 +77,23 @@ export async function POST(req: Request) {
     admin, workspace: workspaceId, privy: privyUserId,
     agentId, agentName: agent.name, runId: (runId as string) ?? null,
   };
-  const outcome = await runAgent(ctx, agent, provider, apiKey, model, baseUrl, task, skills);
+  /**
+   * Stream each step into the run row so the browser can watch (0095).
+   *
+   * Only when there is a run to write to — `create_agent_run` returning nothing
+   * is not fatal to the run itself, and a null id would make every step a
+   * pointless round trip. Errors are already swallowed by the runner: progress
+   * is a nicety, and a run must not fail because a progress write did.
+   */
+  const onStep = runId
+    ? async (step: any, replaceLast?: boolean) => {
+        await admin.rpc('append_agent_run_step', {
+          p_id: runId, p_step: step, p_replace_last: !!replaceLast,
+        });
+      }
+    : undefined;
+
+  const outcome = await runAgent(ctx, agent, provider, apiKey, model, baseUrl, task, skills, onStep);
 
   await admin.rpc('finish_agent_run', {
     p_id: runId, p_status: outcome.status,
