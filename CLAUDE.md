@@ -385,6 +385,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - The HR RPCs (`search_candidates_for_recruiter`, `get_candidate_details`) are **not in the
   migrations folder** — they live in the DB from the legacy ATS. Verify arg names against real
   call sites in `app/dashboard/candidates/*`, not against the migrations.
+- **`alwaysPropose` is stronger than `write`, and only one tool has it.** `write` means "a human
+  approves unless the workspace chose `auto`"; **`alwaysPropose` means a human approves and `auto`
+  gets no say**. It exists for changing the SHAPE of a workspace rather than its contents:
+  `propose_object` creates nothing on any autonomy setting. A wrong record is one row to fix; a wrong
+  object is a table, a page, a nav entry, an agent tool target and a CSV feed row, made from a
+  sentence somebody typed — which is exactly why `/api/workspace/build` returns a plan a person
+  applies, and an agent reaching the same SQL must not be the way round it. The tool still RUNS when
+  proposed: it validates through `normalizeBlueprint` and the runner stores THAT, not the model's raw
+  arguments, so the card a person approves is the plan that applies. Approval goes through
+  `executeProposed` → the same `save_custom_object`/`save_custom_field` calls the manual builder uses.
+  **There is no third path into the schema.**
+  - `normalizeBlueprint` now keeps **exactly one primary field**. `save_custom_field` demotes every
+    other whenever one is marked, so a plan carrying two silently applied the LAST — while the
+    preview showed both as the name field. A preview that disagrees with what applies is the one
+    thing it must never do.
 - **`lib/agents/catalog.ts` is the ONE tool list** — name, label, group, write-flag. `tools.ts`
   (the executor) can't be imported by a client component because it pulls in the admin client, so
   the builder used to keep a hand-written copy; that copy sat at 4 read tools while the executor

@@ -247,9 +247,7 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
           {run.proposed?.length > 0 && (
             <div className="rounded-md border border-warning/30 bg-warning/5 p-2.5">
               <div className="font-medium text-primary mb-1.5">{run.proposed.length} proposed change(s)</div>
-              {run.proposed.map((p: any, i: number) => (
-                <div key={i} className="font-mono text-2xs text-secondary">{p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 80)}</div>
-              ))}
+              {run.proposed.map((p: any, i: number) => <Proposal key={i} p={p} />)}
               {run.status === 'awaiting_approval' && (
                 <Button size="sm" variant="primary" className="mt-2" onClick={approve} disabled={busy}>
                   {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Approve &amp; apply
@@ -427,6 +425,55 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
 }
 
 /**
+ * One proposed change, as something a person can actually decide about.
+ *
+ * A record write is one line — the object and the fields being set is genuinely
+ * all there is to say. A NEW OBJECT is not: approving it creates a table, a
+ * page, a nav entry, an agent tool target and a CSV feed row, and
+ * `propose_object(vehicles) {"singular":"Vehicle",…}` truncated at 80
+ * characters is not something anybody can consent to. So the object case gets
+ * the shape drawn out: what it will be called, where it will live, and every
+ * field with its type.
+ *
+ * The plan shown here is the plan that applies. `propose_object` runs its
+ * arguments through the same normalizer the AI workspace builder uses and the
+ * runner stores THAT, not the model's raw arguments — so a field the normalizer
+ * dropped is missing from this list rather than appearing here and vanishing on
+ * approval.
+ */
+function Proposal({ p }: { p: any }) {
+  if (p?.name !== 'propose_object') {
+    return (
+      <div className="font-mono text-2xs text-secondary truncate">
+        {p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 70)}
+      </div>
+    );
+  }
+  const o = p.args || {};
+  const fields: any[] = Array.isArray(o.fields) ? o.fields : [];
+  return (
+    <div className="rounded border border-subtle bg-surface p-2 mt-1">
+      <div className="flex items-baseline gap-1.5 flex-wrap">
+        <span className="text-xs font-medium text-primary">New object: {o.plural || o.singular}</span>
+        <span className="font-mono text-2xs text-tertiary">{o.slug}</span>
+        {o.group && <Badge tone="neutral">{o.group}</Badge>}
+      </div>
+      {o.description && <p className="text-2xs text-tertiary mt-1 leading-relaxed">{o.description}</p>}
+      <ul className="mt-1.5 space-y-0.5">
+        {fields.map((f, i) => (
+          <li key={i} className="flex items-baseline gap-1.5 text-2xs">
+            <span className="text-secondary">{f.label}</span>
+            <span className="font-mono text-tertiary">{f.type}{f.relation_to ? ` → ${f.relation_to}` : ''}</span>
+            {f.primary && <span className="text-accent">name field</span>}
+            {f.required && <span className="text-tertiary">required</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
  * The run as it happens.
  *
  * Two decisions worth keeping:
@@ -577,9 +624,7 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
               {out.proposed?.length > 0 && (
                 <div className="rounded border border-warning/30 bg-warning/5 p-2">
                   <div className="font-medium text-primary mb-1">{out.proposed.length} proposed change(s)</div>
-                  {out.proposed.map((p: any, i: number) => (
-                    <div key={i} className="font-mono text-2xs text-secondary truncate">{p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 70)}</div>
-                  ))}
+                  {out.proposed.map((p: any, i: number) => <Proposal key={i} p={p} />)}
                   {out.status === 'awaiting_approval' && (
                     <Button size="sm" variant="primary" className="mt-2" onClick={approve} disabled={busy}>
                       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Approve &amp; apply

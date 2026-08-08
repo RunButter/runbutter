@@ -16,9 +16,22 @@ export interface ToolInfo {
   label: string;
   group: ToolGroup;
   write?: true;
+  /**
+   * Proposed for a human ALWAYS — even for an agent set to `auto`.
+   *
+   * `write` means "a human approves this unless the workspace said otherwise".
+   * This means "a human approves this, and the workspace does not get a say".
+   * It exists for exactly one class of action: changing the SHAPE of the
+   * workspace rather than its contents. A wrong record is one row to fix; a
+   * wrong object is a table in the nav, a page, an agent tool target and a CSV
+   * feed row, created from a sentence somebody typed. The AI workspace builder
+   * has always returned a plan a person applies for this reason — an agent
+   * reaching the same functions must not be the way round it.
+   */
+  alwaysPropose?: true;
 }
 
-export type ToolGroup = 'Records' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
+export type ToolGroup = 'Records' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -58,11 +71,14 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // The only tools that reach OUTSIDE the workspace. The agent picks a saved
   // connection by id; it never supplies a URL, so what it can reach is bounded
   // by what a workspace owner already set up in Settings → Integrations.
+  // Shape, not contents. See alwaysPropose.
+  { name: 'propose_object', label: 'Propose a new object', group: 'Workspace', write: true, alwaysPropose: true },
+
   { name: 'list_connections', label: 'List connections', group: 'Connections' },
   { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },
 ];
 
-export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Research', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
+export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Workspace', 'Research', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
 
 /**
  * Read tools. screen_sanctions is here despite appending to its own audit trail:
@@ -73,6 +89,10 @@ export const READ_TOOLS = TOOL_CATALOG.filter((t) => !t.write).map((t) => t.name
 export const WRITE_TOOLS = TOOL_CATALOG.filter((t) => t.write).map((t) => t.name);
 
 export const isWriteTool = (name: string) => WRITE_TOOLS.includes(name);
+
+/** Tools an `auto` agent still may not execute on its own. */
+export const ALWAYS_PROPOSE_TOOLS = TOOL_CATALOG.filter((t) => t.alwaysPropose).map((t) => t.name);
+export const isAlwaysProposed = (name: string) => ALWAYS_PROPOSE_TOOLS.includes(name);
 export const toolLabel = (name: string) => TOOL_CATALOG.find((t) => t.name === name)?.label ?? name;
 
 /** The safe default for a brand-new agent: it can look, not touch. */

@@ -13,6 +13,11 @@ import { runDispatcher, signWebhook } from '@/lib/automations/dispatcher';
 import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
 import { isSafeOutboundUrl } from '@/lib/security/http';
+// blueprint.ts has ZERO imports on purpose (it is read by a route handler that
+// must not pull in the browser Supabase client), which is exactly what makes it
+// safe to import HERE too — the agent tool and the AI builder then validate a
+// proposed object against one vocabulary instead of two that drift.
+import { normalizeBlueprint, FIELD_TYPES, OBJECT_ICON_NAMES, type BlueprintObject } from '@/lib/workspace/blueprint';
 
 /**
  * `agentId`, `agentName` and `runId` are OPTIONAL because /api/mcp has none of
@@ -88,6 +93,22 @@ export const TOOLS = [
   { name: 'get_record_notes', description: 'Research notes already recorded on one record, newest first. Read this BEFORE researching so you do not repeat work someone (or you) already did.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Record type, e.g. companies.' }, id: { type: 'string', description: 'Record id.' } }, required: ['object', 'id'] } },
   { name: 'add_record_note', description: 'Record ONE observed fact on a record, so it is there next time. State only what you actually observed — never a guess, an inference presented as fact, or a confidence score. `source` is required and must be checkable: a URL, a file name, or the tool you used (e.g. "search_files"). If you cannot say where it came from, do not record it.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: 'Record type, e.g. companies.' }, id: { type: 'string', description: 'Record id.' }, body: { type: 'string', description: 'One fact, in a sentence. Not a summary of the whole run.' }, source: { type: 'string', description: 'Where it came from — a URL, a file name, or the tool used. Required.' }, source_url: { type: 'string', description: 'The URL, when there is one.' }, kind: { type: 'string', enum: ['observation', 'action'], description: 'observation = something you found out; action = something you did.' }, observed_at: { type: 'string', description: 'ISO date the fact was true, if it differs from today.' } }, required: ['object', 'id', 'body', 'source'] } },
 
+  { name: 'propose_object', description: 'Propose a NEW record type (object) for this workspace when the user tracks something none of the existing objects covers. Never creates anything: it returns a plan a person approves. Do not use it for something a built-in already handles — link to one with a relation field instead.', inputSchema: { type: 'object', properties: {
+    singular: { type: 'string', description: 'One record, e.g. "Vehicle"' },
+    plural: { type: 'string', description: 'Many, e.g. "Vehicles"' },
+    group: { type: 'string', description: 'Nav section, e.g. "Fleet"' },
+    icon: { type: 'string', enum: [...OBJECT_ICON_NAMES] },
+    description: { type: 'string' },
+    fields: { type: 'array', items: { type: 'object', properties: {
+      label: { type: 'string' },
+      key: { type: 'string' },
+      type: { type: 'string', enum: [...FIELD_TYPES] },
+      options: { type: 'array', items: { type: 'string' }, description: 'For type "select" only.' },
+      relation_to: { type: 'string', description: 'For type "relation": the slug it points at, e.g. "companies".' },
+      required: { type: 'boolean' },
+      primary: { type: 'boolean', description: 'Exactly one field is the name the record is called by.' },
+    }, required: ['label', 'type'] } },
+  }, required: ['singular', 'fields'] } },
   { name: 'list_connections', description: 'Outgoing connections this workspace has set up (Slack, Discord, Zapier, Make, n8n or a generic webhook). Returns their ids and labels so you can send to one — the destination URLs are not exposed.', inputSchema: { type: 'object', properties: {} } },
   { name: 'call_connection', description: 'Send a message and optional structured data to one of this workspace\'s saved connections. Use it to post to Slack/Discord or to hand data to Zapier/Make/n8n. Call list_connections first to get an id. You cannot specify a URL — only a saved connection.', inputSchema: { type: 'object', properties: { connection_id: { type: 'string', description: 'id from list_connections.' }, message: { type: 'string', description: 'Human-readable text. This is what shows up in a Slack or Discord channel.' }, data: { type: 'object', description: 'Optional structured payload for automation tools.' } }, required: ['connection_id', 'message'] } },
 ] as const;
@@ -344,6 +365,40 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
         };
       }
       return row;
+    }
+
+
+    /**
+     * ── Shape, not contents ──────────────────────────────────────────────────
+     *
+     * The one tool that changes what the workspace IS rather than what is in
+     * it. It validates a proposed object against the same normalizer the AI
+     * workspace builder uses and returns the cleaned plan — it creates nothing,
+     * ever, on any autonomy setting, because the runner classifies it
+     * `alwaysPropose`. Applying happens in `executeProposed` after a person has
+     * read it.
+     *
+     * ONE TOOL, NOT create_object + add_field. A half-created object with no
+     * fields is worse than none, and approval should be one decision about
+     * "Vehicles with six fields", not seven separate ones a person clicks
+     * through without reading. It also means the thing shown to the human is
+     * exactly the thing that gets applied.
+     */
+    case 'propose_object': {
+      const { blueprint, warnings } = normalizeBlueprint({
+        summary: String(args?.description || ''),
+        objects: [args || {}],
+      });
+      const obj = blueprint.objects[0];
+      if (!obj) {
+        throw new Error(
+          `That object could not be used: ${warnings.join('; ') || 'no singular name given'}. ` +
+          `Field types are: ${FIELD_TYPES.join(', ')}.`,
+        );
+      }
+      // Reported back to the model so it can fix a dropped field on the next
+      // step rather than proposing a plan it thinks is complete and is not.
+      return { proposal: obj, warnings, note: 'Not created. This is a proposal for a human to approve.' };
     }
 
     // ── Outbound ──────────────────────────────────────────────────────────────

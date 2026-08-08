@@ -6,6 +6,7 @@
 //   • everything (each turn + tool call + result) is logged to the run
 import { agentTurn, appendToolResult, type AIProvider, type ToolSpec, type AgentToolCall } from '@/lib/ai/providers';
 import { TOOLS, callTool, isWriteTool, OBJECTS, type ToolCtx } from '@/lib/agents/tools';
+import { isAlwaysProposed } from '@/lib/agents/catalog';
 
 export interface AgentDef {
   id: string; name: string; role: string; instructions: string;
@@ -106,6 +107,13 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
     (agent.autonomy === 'suggest'
       ? ` You are in SUGGEST mode: your create/update calls are NOT executed — they are recorded as proposals for a human to approve. Still call them to propose changes, then summarise what you proposed.`
       : ` You are in AUTO mode: create/update calls execute immediately. Be careful and precise.`) +
+    // Said explicitly, and in both modes. An `auto` agent has just been told
+    // its writes execute; without this it reports "I created a Vehicles object"
+    // about a proposal nobody has approved yet, which is a lie the transcript
+    // then carries.
+    (allowed.includes('propose_object')
+      ? ` One exception in both modes: propose_object NEVER creates anything. It returns a plan a person approves. Say you proposed it, never that you created it.`
+      : '') +
     skillBlock(skills);
 
   let history: any[] = [{ role: 'user', content: task }];
@@ -158,13 +166,31 @@ async function handleCall(ctx: ToolCtx, agent: AgentDef, call: AgentToolCall, al
   if (obj && agent.allowed_objects?.length && !agent.allowed_objects.includes(obj)) {
     return { error: `Object "${obj}" is not permitted for this agent.` };
   }
-  if (isWriteTool(call.name)) {
-    if (agent.autonomy === 'suggest') {
-      proposed.push({ name: call.name, args: call.args });
-      return { proposed: true, note: 'Recorded for human approval (not executed).' };
-    }
-    // auto mode: execute the write
+  // Some tools are proposed WHATEVER the workspace chose. They change the shape
+  // of the workspace rather than its contents — a wrong record is one row to
+  // fix, a wrong object is a table, a page, a nav entry and an agent tool
+  // target, made from a sentence somebody typed. The AI workspace builder has
+  // always returned a plan a person applies for exactly this reason, and an
+  // agent reaching the same SQL must not be the way round it. `auto` is a
+  // decision about the workspace's data, never about its schema.
+  if (isAlwaysProposed(call.name)) {
+    // The tool still RUNS — it validates and normalises without writing, and
+    // what it returns is what the person reads and what approval applies.
+    // Storing the model's raw arguments instead would show a plan that is not
+    // the plan that would apply: a dropped field would appear on the card and
+    // then be missing from the object.
+    let checked: any;
+    try { checked = await callTool(ctx, call.name, call.args); }
+    catch (e: any) { return { error: e?.message || 'tool failed' }; }
+    proposed.push({ name: call.name, args: checked?.proposal ?? call.args });
+    return { ...checked, proposed: true };
   }
+
+  if (isWriteTool(call.name) && agent.autonomy === 'suggest') {
+    proposed.push({ name: call.name, args: call.args });
+    return { proposed: true, note: 'Recorded for human approval (not executed).' };
+  }
+
   try {
     return await callTool(ctx, call.name, call.args);
   } catch (e: any) {
@@ -172,12 +198,68 @@ async function handleCall(ctx: ToolCtx, agent: AgentDef, call: AgentToolCall, al
   }
 }
 
-// Execute a batch of previously-proposed writes (the approval step).
+/**
+ * Execute a batch of previously-proposed writes (the approval step).
+ *
+ * `propose_object` is the one entry that cannot simply be re-called: running it
+ * again would validate the plan a second time and still create nothing. So
+ * approval is where it becomes real, through the SAME `save_custom_object` /
+ * `save_custom_field` calls the manual builder and the AI workspace builder use.
+ * There is no third path into the schema — which is the whole reason this is
+ * safe to expose to an agent at all.
+ */
 export async function executeProposed(ctx: ToolCtx, proposed: any[]): Promise<any[]> {
   const results: any[] = [];
   for (const p of proposed) {
-    try { results.push({ name: p.name, args: p.args, result: await callTool(ctx, p.name, p.args) }); }
-    catch (e: any) { results.push({ name: p.name, args: p.args, result: { error: e?.message || 'failed' } }); }
+    try {
+      const result = p.name === 'propose_object'
+        ? await applyObject(ctx, p.args)
+        : await callTool(ctx, p.name, p.args);
+      results.push({ name: p.name, args: p.args, result });
+    } catch (e: any) { results.push({ name: p.name, args: p.args, result: { error: e?.message || 'failed' } }); }
   }
   return results;
+}
+
+/**
+ * Create an approved object and its fields.
+ *
+ * The object first, then each field in order — `save_custom_field` needs the
+ * object's id, and `p_position` is the index so the record page shows the
+ * columns in the order the person approved rather than in insertion-race order.
+ *
+ * A field that fails does NOT abort the rest. Losing one column out of six is a
+ * thing somebody can add by hand in ten seconds; losing the object because its
+ * fifth field had a bad relation target means re-approving the whole plan.
+ * Every failure is returned, because a silent partial build is the worst of the
+ * three outcomes.
+ */
+async function applyObject(ctx: ToolCtx, obj: any): Promise<any> {
+  const { data: objectId, error } = await ctx.admin.rpc('save_custom_object', {
+    p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: null,
+    p_slug: obj?.slug || '', p_singular: obj?.singular || '', p_plural: obj?.plural || '',
+    p_icon: obj?.icon || 'Table2', p_group: obj?.group || 'Workspace',
+    p_description: obj?.description || '',
+  });
+  if (error) throw new Error(error.message);
+
+  const failed: string[] = [];
+  const fields: any[] = Array.isArray(obj?.fields) ? obj.fields : [];
+  for (let i = 0; i < fields.length; i++) {
+    const f = fields[i];
+    const { error: fErr } = await ctx.admin.rpc('save_custom_field', {
+      p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: objectId, p_id: null,
+      p_key: f?.key || '', p_label: f?.label || '', p_type: f?.type || 'text',
+      p_options: Array.isArray(f?.options) ? f.options : [],
+      p_relation_to: f?.relation_to || null,
+      p_required: !!f?.required, p_primary: !!f?.primary, p_position: i,
+    });
+    if (fErr) failed.push(`${f?.label || f?.key}: ${fErr.message}`);
+  }
+
+  return {
+    created: true, object_id: objectId, slug: obj?.slug,
+    fields_created: fields.length - failed.length,
+    ...(failed.length ? { fields_failed: failed } : {}),
+  };
 }

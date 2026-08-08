@@ -181,6 +181,20 @@ export function normalizeBlueprint(raw: any): NormalizeResult {
       });
     }
 
+    // EXACTLY ONE PRIMARY, decided here rather than left to SQL.
+    //
+    // `save_custom_field` demotes every other field whenever one is marked
+    // primary, so a plan carrying two would silently apply the LAST of them —
+    // while the plan a person read showed both as the name field. That is the
+    // one thing a preview must never do, and it is not hypothetical: a model
+    // asked for a plate number and a VIN marks both as the identifier often
+    // enough to matter. First wins, because it is the one the reader saw first.
+    const primaries = fields.filter((f) => f.primary);
+    if (primaries.length > 1) {
+      for (const f of primaries.slice(1)) f.primary = false;
+      warnings.push(`Only one field can name a record — keeping “${primaries[0].label}”.`);
+    }
+
     // Every object needs something to be called, or its table is a column of
     // "Untitled". If nothing is marked, the first text field is it; if there
     // are no fields at all, one is added.
