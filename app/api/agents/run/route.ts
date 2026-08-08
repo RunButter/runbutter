@@ -98,6 +98,11 @@ export async function POST(req: Request) {
   await admin.rpc('finish_agent_run', {
     p_id: runId, p_status: outcome.status,
     p_steps: outcome.steps, p_proposed: outcome.proposed, p_result: outcome.result,
+    // What the provider counted (0096), plus the model that did it — the same
+    // agent run on haiku and on opus are not comparable costs, and the agent's
+    // model can change between runs.
+    p_input_tokens: outcome.usage.input, p_output_tokens: outcome.usage.output,
+    p_cached_tokens: outcome.usage.cached, p_model: model,
   });
 
   return NextResponse.json({ runId, ...outcome });

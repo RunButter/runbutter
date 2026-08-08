@@ -4,7 +4,7 @@
 //   • a per-run step cap bounds the loop
 //   • 'suggest' agents never execute writes — they queue them for approval
 //   • everything (each turn + tool call + result) is logged to the run
-import { agentTurn, appendToolResult, type AIProvider, type ToolSpec, type AgentToolCall } from '@/lib/ai/providers';
+import { agentTurn, appendToolResult, noUsage, addUsage, type AIProvider, type ToolSpec, type AgentToolCall, type Usage } from '@/lib/ai/providers';
 import { TOOLS, callTool, isWriteTool, OBJECTS, type ToolCtx } from '@/lib/agents/tools';
 import { isAlwaysProposed } from '@/lib/agents/catalog';
 
@@ -52,6 +52,8 @@ export interface RunOutcome {
   steps: any[];          // audit log
   proposed: any[];       // writes awaiting approval (suggest mode)
   result: string;        // final text
+  /** What the provider said this run cost. Counted, never estimated. */
+  usage: Usage;
 }
 
 /**
@@ -82,6 +84,11 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
   const specs = toolSpecs(allowed, agent.allowed_objects || []);
   const steps: any[] = [];
   const proposed: any[] = [];
+  // Accumulated across every turn, including the turn that failed — a run that
+  // died on step nine still spent the tokens from steps one to eight, and a
+  // cost report that quietly drops them under-reports exactly the runs somebody
+  // is trying to investigate.
+  let usage: Usage = noUsage();
 
   /**
    * Record a step: into the array that becomes the run, and out to whoever is
@@ -125,9 +132,10 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
       turn = await agentTurn(provider, apiKey, model, system, history, specs, baseUrl);
     } catch (e: any) {
       await record({ type: 'error', message: e?.message || 'AI call failed' });
-      return { status: 'error', steps, proposed, result: e?.message || 'AI call failed' };
+      return { status: 'error', steps, proposed, usage, result: e?.message || 'AI call failed' };
     }
     history = turn.history;
+    usage = addUsage(usage, turn.usage);
 
     if (turn.text) await record({ type: 'thought', text: turn.text });
 
@@ -135,7 +143,7 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
       // model finished
       return {
         status: proposed.length ? 'awaiting_approval' : 'done',
-        steps, proposed,
+        steps, proposed, usage,
         result: turn.text || (proposed.length ? `Proposed ${proposed.length} change(s) for approval.` : 'Done.'),
       };
     }
@@ -155,7 +163,7 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
   // Ran out of steps.
   return {
     status: proposed.length ? 'awaiting_approval' : 'done',
-    steps, proposed,
+    steps, proposed, usage,
     result: `Reached the ${maxSteps}-step limit.` + (proposed.length ? ` ${proposed.length} change(s) awaiting approval.` : ''),
   };
 }

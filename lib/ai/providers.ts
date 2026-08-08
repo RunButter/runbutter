@@ -81,7 +81,50 @@ export interface ToolSpec { name: string; description: string; parameters: any }
 export interface AgentToolCall { id: string; name: string; args: any }
 export interface AgentTurn { text: string; toolCalls: AgentToolCall[] }
 // `history` is an opaque provider-shaped message list the runner threads back in.
-export interface AgentTurnResult extends AgentTurn { history: any[] }
+export interface AgentTurnResult extends AgentTurn { history: any[]; usage: Usage }
+
+/**
+ * What a turn cost, as the provider itself reported it.
+ *
+ * COUNTED, NEVER ESTIMATED. Every provider returns this on every response and
+ * RunButter threw it away, so nobody could answer "what did that agent cost" —
+ * the one question a BYO-key customer actually has. `cached` is the part of
+ * `input` that was served from a prompt cache; it is a subset, not an addition,
+ * which is why the UI must never add the two together.
+ *
+ * All zeros is a legitimate answer: a gateway that omits `usage` is common, and
+ * reporting zero is honest where inventing a number from character counts is
+ * not. The UI says "not reported" rather than "0" for exactly that reason.
+ */
+export interface Usage { input: number; output: number; cached: number }
+
+export const noUsage = (): Usage => ({ input: 0, output: 0, cached: 0 });
+export const addUsage = (a: Usage, b: Usage): Usage => ({
+  input: a.input + b.input, output: a.output + b.output, cached: a.cached + b.cached,
+});
+
+const num = (v: any) => (typeof v === 'number' && isFinite(v) && v > 0 ? Math.round(v) : 0);
+
+/** Anthropic: cache reads are reported OUTSIDE input_tokens, so they are added
+ *  back to make `input` mean "everything that went in" on every provider. */
+const anthropicUsage = (u: any): Usage => ({
+  input: num(u?.input_tokens) + num(u?.cache_read_input_tokens) + num(u?.cache_creation_input_tokens),
+  output: num(u?.output_tokens),
+  cached: num(u?.cache_read_input_tokens),
+});
+
+/** OpenAI-compatible: prompt_tokens already INCLUDES the cached part. */
+const openaiUsage = (u: any): Usage => ({
+  input: num(u?.prompt_tokens),
+  output: num(u?.completion_tokens),
+  cached: num(u?.prompt_tokens_details?.cached_tokens),
+});
+
+const geminiUsage = (u: any): Usage => ({
+  input: num(u?.promptTokenCount),
+  output: num(u?.candidatesTokenCount),
+  cached: num(u?.cachedContentTokenCount),
+});
 
 const AGENT_MAX_TOKENS = 2048;
 
@@ -94,7 +137,17 @@ export async function agentTurn(
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
-        model, max_tokens: AGENT_MAX_TOKENS, system, messages: history,
+        model, max_tokens: AGENT_MAX_TOKENS, messages: history,
+        // ── The single biggest waste in an agent run ────────────────────────
+        // Tools and the system prompt are IDENTICAL on every turn of a loop
+        // that runs up to 40 of them, and were re-sent and re-billed in full
+        // each time. Anthropic orders the prompt tools → system → messages, so
+        // one breakpoint at the end of `system` caches both.
+        //
+        // It is a hint, not a contract: below the model's minimum cacheable
+        // length the header is ignored and the call behaves exactly as before,
+        // which is why this needs no fallback path.
+        system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
         tools: tools.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
       }),
     });
@@ -104,7 +157,7 @@ export async function agentTurn(
     const text = blocks.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('').trim();
     const toolCalls: AgentToolCall[] = blocks.filter((b: any) => b.type === 'tool_use')
       .map((b: any) => ({ id: b.id, name: b.name, args: b.input || {} }));
-    return { text, toolCalls, history: [...history, { role: 'assistant', content: blocks }] };
+    return { text, toolCalls, history: [...history, { role: 'assistant', content: blocks }], usage: anthropicUsage(d.usage) };
   }
 
   if (provider === 'gemini') {
@@ -117,7 +170,7 @@ export async function agentTurn(
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
     const text = (d.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('').trim();
-    return { text, toolCalls: [], history: [...history, { role: 'assistant', content: text }] };
+    return { text, toolCalls: [], history: [...history, { role: 'assistant', content: text }], usage: geminiUsage(d.usageMetadata) };
   }
 
   // OpenAI chat format (openai / openrouter / custom)
@@ -142,7 +195,7 @@ export async function agentTurn(
   const toolCalls: AgentToolCall[] = (m.tool_calls || []).map((c: any) => ({
     id: c.id, name: c.function?.name, args: safeJson(c.function?.arguments),
   }));
-  return { text: (m.content || '').trim(), toolCalls, history: [...history, m] };
+  return { text: (m.content || '').trim(), toolCalls, history: [...history, m], usage: openaiUsage(d.usage) };
 }
 
 // Append a tool result to history in the provider's expected shape.

@@ -91,6 +91,9 @@ const ALLOWED = new Set([
   // it is service_role only, because a client that could write steps could
   // forge a transcript of work that never happened.
   'get_agents', 'save_agent', 'set_agent_enabled', 'delete_agent', 'get_agent_runs', 'get_agent_run',
+  // Token spend by agent (0096). Aggregated in SQL — the runs list caps at 50,
+  // so summing it in the browser would report a month's cost from whatever fit.
+  'get_agent_usage',
   // Skills (0068) — reusable instruction packs attached to agents.
   'get_skills', 'save_skill', 'delete_skill',
   // Post Studio board (0069) — positions + edges for the content-plan canvas.

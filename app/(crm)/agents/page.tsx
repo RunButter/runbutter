@@ -11,8 +11,8 @@ import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   listAgents, saveAgent, deleteAgent, setAgentEnabled, listRuns, runAgentTask, approveRun, getAgentRun,
   DEFAULT_TOOLS, WRITE_TOOLS, AGENT_OBJECTS, TOOL_CATALOG, TOOL_GROUPS,
-  SCHEDULE_LABEL,
-  type Agent, type AgentRun,
+  SCHEDULE_LABEL, getAgentUsage,
+  type Agent, type AgentRun, type AgentUsage,
 } from '@/lib/crm/agents';
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import { listSkills, type Skill } from '@/lib/crm/skills';
@@ -67,6 +67,8 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  // null until 0096 has been run, or when nothing has spent anything yet.
+  const [usage, setUsage] = useState<AgentUsage | null>(null);
   // A workspace's own objects (0087) have to be scopeable too, or an agent can
   // only ever be restricted to the built-ins — and allowed_objects is a
   // whitelist, so a custom object left out is one an agent scoped at all can
@@ -77,10 +79,11 @@ export default function AgentsPage() {
   const [running, setRunning] = useState<Agent | null>(null);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
-    const [a, r, sk, co] = await Promise.all([
+    const [a, r, sk, co, u] = await Promise.all([
       listAgents(p, w.id), listRuns(p, w.id), listSkills(p, w.id), loadCustomObjects(p, w.id),
+      getAgentUsage(p, w.id, 30),
     ]);
-    setAgents(a); setRuns(r); setSkills(sk);
+    setAgents(a); setRuns(r); setSkills(sk); setUsage(u);
     setCustomObjects(co.rows.filter((o) => o.enabled).map((o) => o.slug));
     setLoading(false);
   }, []);
@@ -201,6 +204,8 @@ export default function AgentsPage() {
           )}
 
           {/* Run history */}
+          {usage && <UsagePanel usage={usage} />}
+
           {runs.length > 0 && (
             <section>
               <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Recent runs</h2>
@@ -421,6 +426,98 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
         </div>
       </div>
     </div>
+  );
+}
+
+const compact = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n < 10_000_000 ? 1 : 0)}M`
+  : n >= 1_000 ? `${(n / 1_000).toFixed(n < 10_000 ? 1 : 0)}k`
+  : String(n);
+
+/**
+ * What the agents cost, in the only unit that is a fact.
+ *
+ * NO DOLLAR FIGURE, deliberately, and it is the harder choice. Money is what
+ * someone wants to see — but converting tokens to money needs a per-model price
+ * table, and this codebase already learned what happens to a number a human has
+ * to remember to update: the pricing in CLAUDE.md sat a whole model behind
+ * reality for months. A stale price on a cost dashboard is worse than no price,
+ * because it is the number people would forward to their finance team. Tokens
+ * come from the provider on every response and cannot go stale.
+ *
+ * `cached` is a SUBSET of `input`, never added to it. The share is the whole
+ * point of the panel: it is the part of the bill prompt caching already removed,
+ * and it moved from zero the day the runner started marking the tools-and-system
+ * prefix as cacheable.
+ *
+ * `unreported` is shown whenever it is non-zero. Plenty of OpenAI-compatible
+ * gateways omit `usage` entirely, and a confident total quietly missing an
+ * unknown share of the spend is exactly the kind of authoritative-looking wrong
+ * number this project refuses everywhere else.
+ */
+function UsagePanel({ usage }: { usage: AgentUsage }) {
+  const t = usage.totals;
+  if (!t.runs) return null;
+  const cachedShare = t.input > 0 ? Math.round((t.cached / t.input) * 100) : 0;
+  const top = usage.by_agent.filter((a) => a.input + a.output > 0).slice(0, 6);
+  const max = Math.max(1, ...top.map((a) => a.input + a.output));
+
+  return (
+    <section>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">
+        AI usage · last {usage.days} days
+      </h2>
+      <div className="rounded-lg border border-subtle bg-surface p-4">
+        <div className="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <div className="text-md font-medium text-primary tabular-nums">{compact(t.input + t.output)}</div>
+            <div className="text-2xs text-tertiary">tokens over {t.runs} run{t.runs === 1 ? '' : 's'}</div>
+          </div>
+          <div>
+            <div className="text-md font-medium text-primary tabular-nums">{compact(t.output)}</div>
+            <div className="text-2xs text-tertiary">written by the model</div>
+          </div>
+          <div>
+            <div className={`text-md font-medium tabular-nums ${cachedShare > 0 ? 'text-success' : 'text-primary'}`}>
+              {cachedShare}%
+            </div>
+            <div className="text-2xs text-tertiary">of input served from cache</div>
+          </div>
+        </div>
+
+        {/* The one actionable line. Said only when it is true. */}
+        <p className="mt-3 text-2xs text-secondary leading-relaxed">
+          {cachedShare > 0
+            ? <>Your agents re-send the same tools and instructions on every step of every run. That prefix is
+              marked cacheable, so {cachedShare}% of it was billed at your provider&apos;s cache rate rather than in full.</>
+            : <>Nothing has been served from cache yet. Caching applies from the second step of a run onward,
+              and only on providers that support it — Anthropic and OpenAI do.</>}
+        </p>
+
+        {t.unreported > 0 && (
+          <p className="mt-1.5 text-2xs text-tertiary leading-relaxed">
+            {t.unreported} run{t.unreported === 1 ? '' : 's'} reported no usage at all, so {t.unreported === 1 ? 'it is' : 'they are'} missing
+            from these totals. Some OpenAI-compatible gateways do not return token counts.
+          </p>
+        )}
+
+        {top.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-subtle space-y-1.5">
+            {top.map((a) => (
+              <div key={a.agent_id || a.name} className="flex items-center gap-3">
+                <span className="text-2xs text-secondary w-32 truncate shrink-0">{a.name || 'Deleted agent'}</span>
+                <span className="flex-1 h-1 rounded-full bg-surface-sunken overflow-hidden">
+                  <span className="block h-full rounded-full bg-accent" style={{ width: `${((a.input + a.output) / max) * 100}%` }} />
+                </span>
+                <span className="text-2xs font-mono text-tertiary w-24 text-right shrink-0 tabular-nums">
+                  {compact(a.input + a.output)} · {a.runs} run{a.runs === 1 ? '' : 's'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

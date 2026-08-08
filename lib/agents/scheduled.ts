@@ -90,6 +90,10 @@ export async function runScheduledAgents(admin: SupabaseClient, limit = 5): Prom
       await admin.rpc('finish_agent_run', {
         p_id: runId, p_status: outcome.status,
         p_steps: outcome.steps, p_proposed: outcome.proposed, p_result: outcome.result,
+        // An unattended run is the one whose cost nobody would otherwise
+        // notice, so this is the call site where the counts matter most (0096).
+        p_input_tokens: outcome.usage.input, p_output_tokens: outcome.usage.output,
+        p_cached_tokens: outcome.usage.cached, p_model: model,
       });
       stats.ran++;
     } catch {

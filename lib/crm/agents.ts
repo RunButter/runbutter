@@ -84,6 +84,32 @@ export async function listRuns(privy: string, ws: string): Promise<AgentRun[]> {
   return Array.isArray(data) ? data : [];
 }
 
+/**
+ * Token spend by agent over a window (0096).
+ *
+ * `cached` is a SUBSET of `input`, never an addition — adding them
+ * double-counts the cheap half of the bill. `unreported` is the number of runs
+ * whose provider returned no usage at all, which the panel has to show: without
+ * it a confident total would be missing an unknown share of the spend.
+ */
+export interface AgentUsageRow {
+  agent_id: string | null; name: string; model: string;
+  runs: number; input: number; output: number; cached: number;
+}
+export interface AgentUsage {
+  days: number;
+  totals: { runs: number; input: number; output: number; cached: number; unreported: number };
+  by_agent: AgentUsageRow[];
+}
+
+export async function getAgentUsage(privy: string, ws: string, days = 30): Promise<AgentUsage | null> {
+  const { data, error } = await rpc('get_agent_usage', { p_privy: privy, p_workspace: ws, p_days: days });
+  // A missing function means 0096 has not been run. The panel hides itself
+  // rather than showing an error over a feature nobody asked for yet.
+  if (error || !data) return null;
+  return data as AgentUsage;
+}
+
 // Run / approve go through dedicated verified routes (they use the BYO AI key).
 async function post(path: string, body: any): Promise<any> {
   const token = await getAccessToken().catch(() => null);
