@@ -25,12 +25,19 @@ export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.l
 // ~1k tokens comfortably fits a one-page draft.
 const MAX_OUTPUT_TOKENS = 1024;
 
-export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string): Promise<string> {
+/**
+ * `maxTokens` is per call because 1024 is the right ceiling for a one-page draft
+ * and the wrong one for a whole skill: a SKILL.md with an output contract, a
+ * worked example and a verification checklist runs past it, and the truncation
+ * arrives as invalid JSON with no clue attached. Callers that need more say so;
+ * the default stays low for the affordability reason above.
+ */
+export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string, maxTokens: number = MAX_OUTPUT_TOKENS): Promise<string> {
   if (provider === 'claude') {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model, max_tokens: MAX_OUTPUT_TOKENS, system, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }] }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
@@ -40,7 +47,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   if (provider === 'gemini') {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS } }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens } }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
@@ -57,7 +64,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: MAX_OUTPUT_TOKENS, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: maxTokens, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);

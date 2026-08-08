@@ -15,9 +15,15 @@ import { SITE_URL } from '@/lib/site';
  * Plugin, of which skills are one part.
  *
  * Outside the (crm) route group on purpose, so it gets the marketing chrome
- * and no Privy shell. It is a public tool with no account and no server call —
- * the whole builder is client-side — which is what makes it worth linking to
+ * and no Privy shell. The builder itself is entirely client-side: no account,
+ * no server call, nothing uploaded — which is what makes it worth linking to
  * from anywhere.
+ *
+ * ONE EXCEPTION, and the copy has to say so. "Describe it" posts the
+ * description to /api/plugins/generate, which needs a signed-in account and the
+ * workspace's own AI key. Everything else still happens in the tab. A page that
+ * advertised "nothing uploaded" while one button uploaded something would be
+ * lying about the one property people come here for.
  *
  * The explanatory prose below the tool is not filler. This page's job is to be
  * the answer when somebody asks what a SKILL.md is, and that answer has to be
@@ -28,7 +34,7 @@ import { SITE_URL } from '@/lib/site';
 
 const TITLE = 'Free Agent Plugin & Skill builder';
 const DESCRIPTION =
-  'Build an Agent Plugin in your browser — write skills, get a spec-conformant plugin.json, SKILL.md files and mcp.json, and download the zip. No account, nothing uploaded, MIT.';
+  'Build an Agent Plugin in your browser — write skills, get a spec-conformant plugin.json, SKILL.md files and mcp.json, and download the zip. Scored against every rule that can be checked without running it. Free, MIT.';
 
 export const metadata: Metadata = {
   title: `${TITLE} — RunButter`,
@@ -74,7 +80,7 @@ export default function PluginsPage() {
               Write down how your team does something. Get a package that installs into Claude Code,
               Cursor and anything else reading the standard.
             </p>
-            <p className="mt-3 text-sm text-tertiary">No account. Nothing uploaded. The zip is made in this tab.</p>
+            <p className="mt-3 text-sm text-tertiary">The zip is made in this tab — nothing is uploaded and no account is needed. Only “Describe it”, which writes a skill on your own AI key, talks to a server.</p>
           </div>
         </div>
       </section>
