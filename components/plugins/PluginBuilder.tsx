@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, AlertTriangle, Server, FolderPlus, Store, ShieldAlert, Upload } from 'lucide-react';
+import { Download, FileJson, FileText, Plus, Trash2, Copy, Check, ChevronDown, Server, FolderPlus, ShieldAlert, Upload } from 'lucide-react';
 import { buildPlugin, skillSlug, pluginSlug, isValidSkillName, parseToolList, resourcePath, SPEC_VERSION, type PluginFile } from '@/lib/plugins/agent-plugin';
 import { zipSync } from '@/lib/plugins/zip';
-import { scanFiles } from '@/lib/plugins/scan';
+import { lintProject, measureFiles, type LintCategory } from '@/lib/plugins/lint';
+import { scoreProject, type CategoryScore } from '@/lib/plugins/quality';
 import { unzip } from '@/lib/plugins/unzip';
 import { importPlugin } from '@/lib/plugins/import';
 import { PLATFORMS, platformById, losses, type PlatformId, type BuildInput } from '@/lib/plugins/platforms';
@@ -145,8 +146,10 @@ const TEMPLATES: { label: string; skill: Omit<Draft, 'id'> }[] = [
     label: 'House writing style',
     skill: {
       name: 'House writing style',
-      description: 'How we write to customers. Use for any outbound email, changelog entry or release note.',
-      instructions: `Write the way a competent colleague talks.
+      description: 'How we write to customers. Use for any outbound email, changelog entry or release note. Not for internal notes or code comments.',
+      instructions: `## Rules
+
+Write the way a competent colleague talks.
 
 - Lead with the answer, then the reason. Never the other way round.
 - One idea per sentence. Cut every adverb that is not load-bearing.
@@ -156,7 +159,32 @@ const TEMPLATES: { label: string; skill: Omit<Draft, 'id'> }[] = [
 - If you do not know, say so and say who does.
 
 Banned: "seamless", "leverage", "reach out", "circle back", "at your earliest
-convenience", exclamation marks.`,
+convenience", exclamation marks.
+
+## Output
+
+Plain text, no headings. A subject line under 50 characters, then at most three
+short paragraphs. No sign-off block — the sending client adds one.
+
+## Examples
+
+> Subject: Your March invoice is ready
+>
+> Invoice 1042 went out this morning, due 1 April. Nothing has changed since
+> February except the seat count, which is now 14.
+>
+> Reply here if that count is wrong and I will reissue it.
+
+Why it works: the answer is the first sentence, every number is exact, there is
+one question, and nothing is padded.
+
+## Verification
+
+Before sending:
+
+- [ ] The subject says what happened, not "Update".
+- [ ] Every name and number is one you can point at a source for.
+- [ ] No banned word survived.`,
       whenToUse: '', allowedTools: '', resources: [],
     },
   },
@@ -164,8 +192,10 @@ convenience", exclamation marks.`,
     label: 'Invoice reminder tone',
     skill: {
       name: 'Invoice reminder tone',
-      description: 'How this company chases an unpaid invoice. Use when writing any payment reminder, first notice through final.',
-      instructions: `First reminder (1–14 days late): assume an oversight. Friendly, three
+      description: 'How this company chases an unpaid invoice. Use when writing any payment reminder, first notice through final. Not for a first invoice, a quote or a dispute.',
+      instructions: `## Stages
+
+First reminder (1–14 days late): assume an oversight. Friendly, three
 sentences, no consequences mentioned.
 
 Second (15–30): state the invoice number, the original due date and the days
@@ -181,7 +211,25 @@ Always:
   someone has paid most of it is the fastest way to lose them.
 
 Never: offer a discount, offer a payment plan, or imply the debt is disputed.
-Those are decisions a person makes.`,
+Those are decisions a person makes.
+
+## Output
+
+An email. Subject line naming the invoice number, then three to six sentences of
+prose — never a bulleted list. A reminder that looks like a form gets treated
+like one.
+
+## Verification
+
+Before sending:
+
+- [ ] The invoice number and the original due date both appear.
+- [ ] The payment status was checked, not assumed.
+- [ ] The stage matches the days outstanding.
+
+If the payment status cannot be read, do not send. Say the status is unknown and
+stop — chasing an invoice somebody already paid costs more than a late reminder
+does.`,
       whenToUse: 'When the user asks to chase a payment, mentions an overdue invoice, or asks for a reminder email.',
       allowedTools: '',
       resources: [{
@@ -227,10 +275,11 @@ date, and no specific ask.
     label: 'Weekly numbers review',
     skill: {
       name: 'Weekly numbers review',
-      description: 'How to read the week and what counts as worth flagging. Use for any recurring numbers summary or status report.',
-      instructions: `Report only what moved, and say by how much against what baseline.
+      description: 'How to read the week and what counts as worth flagging. Use for any recurring numbers summary or status report. Not for a one-off question about a single metric.',
+      instructions: `## Rules
 
-Rules:
+Report only what moved, and say by how much against what baseline.
+
 - Compare to the same weekday range last week, not to a rolling average — the
   average hides a weekend.
 - Never report a percentage without the absolute number underneath it. "Up 50%"
@@ -240,7 +289,35 @@ Rules:
   a similar one and do not estimate.
 
 Flag, in this order: anything overdue, anything that changed by more than a
-third, anything that stopped moving entirely.`,
+third, anything that stopped moving entirely.
+
+## Output
+
+A markdown table — metric, this week, last week, change — then at most three
+bullets under it saying what to do about the rows worth acting on. Nothing else.
+
+## Examples
+
+> | Metric | This week | Last week | Change |
+> |---|---|---|---|
+> | Signups | 41 | 33 | +8 |
+> | Overdue invoices | 6 | 2 | +4 |
+> | Demo bookings | — | 12 | not available |
+>
+> - Overdue invoices tripled in a week; four of the six are one customer.
+> - Demo bookings could not be read this week, so the number is missing rather
+>   than zero.
+
+Why it works: absolute numbers beside every change, a missing value shown as
+missing, and the commentary only covers rows that need a decision.
+
+## Verification
+
+Before reporting:
+
+- [ ] Every percentage has its absolute number beside it.
+- [ ] The current partial period was dropped.
+- [ ] Nothing that could not be computed was quietly filled in.`,
       whenToUse: 'When asked for a weekly summary, a Monday update, or "how did we do".',
       allowedTools: '', resources: [],
     },
@@ -274,6 +351,43 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+/**
+ * One category row: the bar, the number, and the reasons behind it.
+ *
+ * The reasons are behind a click rather than always open. Eight categories with
+ * every finding expanded is a page of red text that reads as "this is broken"
+ * whatever the score says, and the thing someone needs first is which ONE of the
+ * eight is dragging the number down.
+ */
+function ScoreRow({ c, open, onToggle }: { c: CategoryScore; open: boolean; onToggle: () => void }) {
+  // Colour carries no information the number doesn't; it is there so the eye
+  // lands on the low row first. The amber band is wide because a single missing
+  // thing costs 40 points — at a 70 cutoff every ordinary gap came out red, and
+  // eight red bars say "this is broken" about a package that is merely
+  // improvable.
+  const tone = c.score >= 85 ? 'bg-success' : c.score >= 45 ? 'bg-warning' : 'bg-danger';
+  return (
+    <div>
+      <button onClick={onToggle} aria-expanded={open}
+        className="w-full flex items-center gap-3 h-8 text-left group">
+        <ChevronDown className={`w-3 h-3 text-tertiary shrink-0 transition-transform ${open ? '' : '-rotate-90'}`} />
+        <span className="text-2xs text-secondary group-hover:text-primary transition-colors w-[104px] shrink-0">{c.label}</span>
+        <span className="flex-1 h-1 rounded-full bg-surface-sunken overflow-hidden">
+          <span className={`block h-full rounded-full ${tone}`} style={{ width: `${c.score}%` }} />
+        </span>
+        <span className="text-2xs font-mono text-secondary w-7 text-right shrink-0">{c.score}</span>
+      </button>
+      {open && (
+        <ul className="pl-[124px] pr-1 pb-2 space-y-1">
+          {c.reasons.map((r, i) => (
+            <li key={i} className="text-2xs text-tertiary leading-relaxed">{r}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function PluginBuilder() {
   const [pluginName, setPluginName] = useState('my-team-skills');
   const [pluginDescription, setPluginDescription] = useState('');
@@ -289,6 +403,10 @@ export default function PluginBuilder() {
   const [override, setOverride] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [importNote, setImportNote] = useState('');
+  // `undefined` means nobody has chosen, so the weakest category opens itself —
+  // which is the one row worth reading. Once a row is clicked the choice sticks,
+  // rather than the panel reshuffling under the cursor on the next keystroke.
+  const [pinnedCat, setPinnedCat] = useState<LintCategory | null | undefined>(undefined);
 
   // One project, described once. The chosen platform decides the LAYOUT and
   // nothing else — which is the whole point of keeping adapters in one file
@@ -331,21 +449,28 @@ export default function PluginBuilder() {
 
 
   /**
-   * Problems worth saying out loud, in the order someone hits them.
+   * Everything checkable, in one pass.
    *
-   * These are spec rules, not taste: a client that reads an invalid name or an
-   * empty description reports "invalid skill" and stops, with nothing pointing
-   * at which of the two it was.
+   * The linter runs over the project AND over the generated files, so the
+   * credential scan covers anything that reaches the package — instructions,
+   * descriptions, every supporting file, the manifest and mcp.json — without
+   * this component needing to know which fields exist.
    */
+  const { findings, secrets } = useMemo(() => lintProject(project, files), [project, files]);
+
   /**
-   * Credentials in the files about to be zipped.
+   * The two token figures worth telling someone apart.
    *
-   * Scanned from the GENERATED files rather than the form state, so anything
-   * that reaches the package is covered — instructions, descriptions, every
-   * supporting file, the manifest and mcp.json — without this needing to know
-   * which fields exist.
+   * SKILL.md is read in full every time the skill fires; a supporting file is
+   * read only when the model decides it needs it. Reporting one total would hide
+   * the entire reason supporting files exist — 8k tokens sitting in a reference
+   * costs nothing on the runs that never open it, and 8k in the body costs it
+   * every single time.
    */
-  const secrets = useMemo(() => scanFiles(files), [files]);
+  const report = useMemo(
+    () => scoreProject(findings, { skillCount: project.skills.length, ...measureFiles(files) }),
+    [findings, files, project.skills.length],
+  );
 
   // Re-arm the gate whenever the findings change. Without this, waving through
   // one deliberate placeholder would leave the download unblocked for a REAL
@@ -353,45 +478,6 @@ export default function PluginBuilder() {
   // for is worse than no gate, because it looks like one.
   const secretSig = secrets.map((f) => `${f.where}:${f.preview}`).join('|');
   useEffect(() => { setOverride(false); }, [secretSig]);
-
-  const notes = useMemo(() => {
-    const out: string[] = [];
-    const named = skills.filter((s) => s.name.trim());
-    if (!named.length) out.push('Add at least one skill — a plugin with no skills installs but does nothing.');
-
-    for (const s of named) {
-      const slug = skillSlug(s.name);
-      if (!isValidSkillName(slug)) out.push(`“${s.name}” cannot be turned into a valid directory name.`);
-      // Only when the slug LOSES something. Warning that "House writing style"
-      // becomes house-writing-style is true and useless: lowercasing and
-      // hyphenating spaces is the expected, correct behaviour, and firing on
-      // every ordinary title-cased name buried the warnings that matter under
-      // three that did not.
-      else if (slug !== s.name.trim().toLowerCase().replace(/\s+/g, '-')) {
-        out.push(`“${s.name}” becomes skills/${slug}/ — names are lowercase letters, digits and single hyphens, so the rest is dropped.`);
-      }
-      if (!s.description.trim()) out.push(`“${s.name}” has no description. That line is what a model reads to decide whether the skill applies, so without it the skill is effectively invisible.`);
-      else if (s.description.length > 1024) out.push(`“${s.name}” description is ${s.description.length} characters; the limit is 1024.`);
-      // Same heuristic scripts/check-plugin.mjs applies in CI. A description
-      // that says only WHAT a skill does leaves the model guessing about WHEN,
-      // and getting that told to you here beats finding out from a linter
-      // later — or never, because most people will never run one.
-      else if (!/\buse (when|for|if)\b/i.test(s.description)) {
-        out.push(`“${s.name}” describes what it does but not when to use it. Adding “Use when…” is what makes a model reach for it at the right moment.`);
-      }
-      if (!s.instructions.trim()) out.push(`“${s.name}” has no instructions yet.`);
-      else if (s.instructions.trim().length < 40) out.push(`“${s.name}” has very little for a model to act on.`);
-    }
-
-    // buildPlugin suffixes collisions rather than dropping one, but silently.
-    const slugs = named.map((s) => skillSlug(s.name));
-    if (new Set(slugs).size !== slugs.length) out.push('Two skills produce the same directory name; the duplicates are numbered so nothing is lost.');
-
-    if (pluginSlug(pluginName) !== pluginName.trim().toLowerCase().replace(/\s+/g, '-')) {
-      out.push(`The plugin is named ${pluginSlug(pluginName)} in the manifest.`);
-    }
-    return out;
-  }, [skills, pluginName]);
 
   /**
    * Load dropped files into the editor.
@@ -445,6 +531,16 @@ export default function PluginBuilder() {
       setImportNote(e?.message || 'Could not read that file.');
     }
   }
+
+  const worstCat = useMemo(() => {
+    const weak = report.categories.filter((c) => c.score < 100);
+    if (!weak.length) return null;
+    // Ties broken by weight: at equal scores the category that moves the total
+    // most is the one worth opening.
+    return weak.sort((a, b) => a.score - b.score || b.weight - a.weight)[0].category;
+  }, [report]);
+  const openCat = pinnedCat === undefined ? worstCat : pinnedCat;
+  const setOpenCat = (c: LintCategory | null) => setPinnedCat(c);
 
   const setSkill = (id: number, patch: Partial<Draft>) =>
     setSkills((xs) => xs.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -760,6 +856,37 @@ export default function PluginBuilder() {
           </div>
         )}
 
+        {/* ── The score ───────────────────────────────────────────────────
+            Deliberately below the package rather than above it: the files are
+            what someone came for, and a report card at the top of the page
+            would read as a gate. */}
+        <div className="mt-3 rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4 sm:p-5">
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-2xl font-medium text-primary tabular-nums leading-none">{report.overall}</span>
+            <span className="text-2xs text-tertiary">/ 100</span>
+            <span className="ml-auto text-2xs text-tertiary">Quality</span>
+          </div>
+          <p className="mt-1.5 text-2xs text-secondary leading-relaxed">{report.verdict}</p>
+
+          <div className="mt-3.5 pt-1 border-t border-subtle">
+            {report.categories.map((c) => (
+              <ScoreRow key={c.category} c={c} open={openCat === c.category}
+                onToggle={() => setOpenCat(openCat === c.category ? null : c.category)} />
+            ))}
+          </div>
+
+          {/* The one measurement on this page, and it is an estimate — said so
+              here rather than in a tooltip nobody opens. */}
+          <p className="mt-3 pt-3 border-t border-subtle text-2xs text-tertiary leading-relaxed">
+            ≈{report.tokensPerRun.toLocaleString('en-US')} tokens load every time a skill fires
+            {report.tokensOnDemand > 0 && <>, ≈{report.tokensOnDemand.toLocaleString('en-US')} more only when the model opens a supporting file</>}.
+            {' '}Estimated from length, not counted with a tokenizer.
+          </p>
+          <p className="mt-1.5 text-2xs text-tertiary leading-relaxed">
+            This scores how the skill is <em>written</em> — nothing has been run.
+          </p>
+        </div>
+
         {dropped.length > 0 && (
           <div className="mt-3 rounded-xl border border-subtle bg-surface-sunken p-3.5">
             <span className="text-xs font-medium text-primary block mb-1.5">{platformById(platform).label}</span>
@@ -770,17 +897,6 @@ export default function PluginBuilder() {
           </div>
         )}
 
-        {notes.length > 0 && (
-          <div className="mt-3 rounded-xl border border-subtle bg-surface-sunken p-3.5">
-            <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-warning" />
-              <span className="text-xs font-medium text-primary">Worth fixing before you ship</span>
-            </div>
-            <ul className="space-y-1.5">
-              {notes.map((n) => <li key={n} className="text-2xs text-secondary leading-relaxed">{n}</li>)}
-            </ul>
-          </div>
-        )}
 
       </div>
     </div>
