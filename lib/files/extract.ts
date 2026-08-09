@@ -17,6 +17,7 @@
 import mammoth from 'mammoth';
 import { pdfText } from '@/lib/pdf/server-text';
 import { inspectPdf, pdfMarkdown, preferMarkdown } from '@/lib/pdf/inspect';
+import { xlsxText, pptxText } from '@/lib/files/office';
 
 export type ExtractStatus = 'text_layer' | 'ocr' | 'vision' | 'skipped' | 'failed';
 
@@ -228,6 +229,10 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
   const ext = extOf(name);
   const isPdf = ext === 'pdf' || mime === 'application/pdf';
   const isDocx = ext === 'docx' || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  const isXlsx = ext === 'xlsx' || ext === 'xlsm'
+    || mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  const isPptx = ext === 'pptx'
+    || mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
   const isImage = IMAGE_EXT.includes(ext) || mime.startsWith('image/');
   const isTextual = TEXTUAL_EXT.includes(ext) || mime.startsWith('text/') || mime === 'application/json';
 
@@ -293,6 +298,25 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
       return { text: clean(value || ''), status: 'text_layer', pages: null, error: null };
     }
 
+    // ── The Office formats that are ZIPs of XML ────────────────────────────
+    // Not a spreadsheet engine: a cell yields its stored value, which is what
+    // the file contains and what a reader would see. Formulas are not
+    // evaluated, and a date stays the serial number xlsx stores — one guessed
+    // wrong in a search index is worse than the number it came from.
+    if (isXlsx) {
+      const text = clean(await xlsxText(bytes));
+      return text
+        ? { text, status: 'text_layer', pages: null, error: null }
+        : { text: '', status: 'skipped', pages: null, error: 'The workbook has no readable cell text — it may be charts or images only.' };
+    }
+
+    if (isPptx) {
+      const text = clean(await pptxText(bytes));
+      return text
+        ? { text, status: 'text_layer', pages: null, error: null }
+        : { text: '', status: 'skipped', pages: null, error: 'The deck has no readable text — its slides may be images.' };
+    }
+
     if (isTextual) {
       return { text: clean(bytes.toString('utf8')), status: 'text_layer', pages: null, error: null };
     }
@@ -307,8 +331,12 @@ export async function extractFile(bytes: Buffer, name: string, mime = ''): Promi
       };
     }
 
-    if (ext === 'doc') {
-      return { text: '', status: 'skipped', pages: null, error: 'Legacy .doc is not readable. Save it as .docx or PDF.' };
+    // The pre-2007 binary formats are a different container entirely — not a
+    // ZIP of XML — so the reader above cannot help, and saying which file to
+    // save beats a generic "no extractor".
+    if (ext === 'doc' || ext === 'xls' || ext === 'ppt') {
+      const modern = ext === 'doc' ? '.docx' : ext === 'xls' ? '.xlsx' : '.pptx';
+      return { text: '', status: 'skipped', pages: null, error: `Legacy .${ext} is not readable. Save it as ${modern} or PDF.` };
     }
 
     return { text: '', status: 'skipped', pages: null, error: `No text extractor for .${ext || 'this file type'}.` };

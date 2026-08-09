@@ -35,7 +35,7 @@ const STATUS_TONE: Record<ExtractStatus, Tone> = {
 function iconFor(name: string, mime: string | null) {
   const ext = (name.split('.').pop() || '').toLowerCase();
   if ((mime || '').startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'gif', 'tif', 'tiff'].includes(ext)) return ImageIcon;
-  if (['csv', 'tsv', 'xlsx', 'xls'].includes(ext)) return FileSpreadsheet;
+  if (['csv', 'tsv', 'xlsx', 'xlsm', 'xls'].includes(ext)) return FileSpreadsheet;
   if (['pdf', 'docx', 'doc', 'txt', 'md'].includes(ext)) return FileText;
   return FileIcon;
 }
@@ -259,7 +259,7 @@ export default function FilesPage() {
             <EmptyState
               icon={FolderOpen}
               title="No files yet"
-              description="Drop a contract, invoice or CV here. PDFs and Word documents are read and made searchable automatically."
+              description="Drop a contract, invoice, spreadsheet or CV here. PDFs, Word documents, spreadsheets and decks are read and made searchable automatically."
               action={
                 <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
                   <Upload className="w-3.5 h-3.5" /> Choose a file

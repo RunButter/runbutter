@@ -14,11 +14,37 @@ Migration: `0065_files.sql`. Screen: **Workspace → Files**.
 |---|---|---|---|
 | PDF with a text layer | `pdfjs-dist`, locally | `text_layer` | none |
 | DOCX | `mammoth`, locally | `text_layer` | none |
+| XLSX / XLSM | `lib/files/office.ts`, locally | `text_layer` | none |
+| PPTX (slides + speaker notes) | `lib/files/office.ts`, locally | `text_layer` | none |
 | txt / md / csv / json / html / xml / yaml / log | UTF-8 decode | `text_layer` | none |
 | Photo of a receipt, scanned image | self-hosted vision endpoint or MinerU, **if configured** | `ocr` | none (your own server) |
 | Scanned PDF | self-hosted MinerU, **if configured** | `ocr` | none (your own server) |
 | …with no OCR configured | stored, listed, not searchable by content | `skipped` | none |
-| Legacy `.doc`, archives, unknown | stored, listed, not searchable | `skipped` | none |
+| Legacy `.doc` / `.xls` / `.ppt`, archives, unknown | stored, listed, not searchable | `skipped` | none |
+
+### Spreadsheets and decks are ZIPs of XML
+
+`.xlsx` and `.pptx` are read by `lib/files/office.ts` with **no dependency** —
+both formats are a ZIP containing XML, and the repo already owns a
+dependency-free ZIP reader (`lib/plugins/unzip.ts`, written for the plugin
+builder). A spreadsheet library or a native Office binary would bring formula
+engines, rendering and a runtime for a job that is "get the words out for a
+search index". A native addon would also have to be kept in
+`serverComponentsExternalPackages` **and** `outputFileTracingIncludes`, or the
+Docker image ships without it and degrades only in production.
+
+Two things it deliberately does not do:
+
+- **Formulas are not evaluated.** A cell yields its stored value — what the file
+  actually contains, and what someone opening it would see.
+- **Dates stay as the serial numbers xlsx stores them.** Converting one needs
+  the workbook's epoch and its display format, and a date guessed wrong in a
+  search index is worse than the number it came from.
+
+Most strings in a workbook are not in the sheet: they live once in
+`sharedStrings.xml` and the cells hold an index into it. A reader that only
+walked the sheets would return the numbers and none of the words — which is
+worse than not indexing at all, because search would look like it worked.
 
 Nothing here calls a metered API. That is the same cost rule that governs resume
 parsing: extraction and search are Postgres and local libraries, and any AI is
