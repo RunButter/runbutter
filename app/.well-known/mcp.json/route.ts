@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { TOOL_CATALOG, TOOL_GROUPS, WRITE_TOOLS } from '@/lib/agents/catalog';
+import { TOOL_CATALOG, TOOL_GROUPS, WRITE_TOOLS, ALWAYS_PROPOSE_TOOLS } from '@/lib/agents/catalog';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,12 +56,20 @@ export async function GET() {
       // proceed unattended: a write tool from a `suggest` agent produces a
       // proposal a human has to approve, not an effect.
       write: Boolean(t.write),
+      // A tool that is classified `write` and yet cannot write anything, on any
+      // setting — it returns a plan a human approves. Without this flag an
+      // external client reads `write: true` and reports that it created an
+      // object it merely proposed, which is the exact lie this document exists
+      // to prevent.
+      ...(t.alwaysPropose ? { proposesOnly: true } : {}),
     })),
     toolGroups: TOOL_GROUPS,
     writeTools: WRITE_TOOLS,
+    proposesOnlyTools: ALWAYS_PROPOSE_TOOLS,
     notes: [
       'Tenancy is enforced in SQL, not in the tool layer. A key can only ever reach its own workspace.',
-      'Agents in this product have three autonomy levels; a suggest-mode agent proposes writes for human approval.',
+      'Agents have two autonomy levels: `suggest` proposes writes for human approval, `auto` executes them.',
+      'Tools in proposesOnlyTools return a plan and never write, on either autonomy level — they change the SHAPE of a workspace rather than its contents, and a person applies them.',
       'add_record_note requires a checkable `source` and has no confidence field — record observed facts, never guesses.',
       'screen_sanctions returns status "no_data" when no list has been imported. That is not "clear".',
     ],
