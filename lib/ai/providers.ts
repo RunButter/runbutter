@@ -1,7 +1,7 @@
 // BYO-key AI adapter. The user supplies their own provider key (stored encrypted);
 // RunButter just proxies the call, so there is no platform token cost. No SDKs —
 // plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
-import { isSafeOutboundUrl } from '@/lib/security/http';
+import { isAllowedAiHost, aiAllowlistIsEmpty } from '@/lib/security/http';
 
 export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
@@ -15,9 +15,25 @@ export const PROVIDERS: ProviderDef[] = [
   { id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'] },
   { id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
   { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model; ids ending in :free cost nothing)', models: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5'] },
-  { id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, Ollama, LiteLLM…', models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'] },
+  { id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, LiteLLM… or your own Ollama/vLLM when self-hosting (see AI_ALLOWED_HOSTS)', models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'] },
 ];
 export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
+
+/**
+ * Why a private base URL was refused, and what to do about it.
+ *
+ * The old message was "points at a private/unsafe host", which is true and
+ * useless to the person it happens to: someone self-hosting who has just
+ * pointed RunButter at their own Ollama has done nothing wrong and has no way
+ * to guess that an env var decides it.
+ */
+function privateHostMessage(base: string): string {
+  let host = base;
+  try { const u = new URL(base); host = u.port ? `${u.hostname}:${u.port}` : u.hostname; } catch { /* keep the raw string */ }
+  return aiAllowlistIsEmpty()
+    ? `This deployment will not call ${host}: it is a private address. If you are self-hosting and this is your own model server, add it to AI_ALLOWED_HOSTS (e.g. AI_ALLOWED_HOSTS=${host}) and restart. On runbutter.app, expose the model over a public https URL instead — our servers cannot reach your network.`
+    : `${host} is a private address and is not in AI_ALLOWED_HOSTS. Add it there and restart. Cloud metadata addresses stay blocked whatever the list says.`;
+}
 
 // Explicit output ceiling on EVERY provider. Without it, OpenAI-compatible
 // gateways assume the model max (e.g. 16k) and pre-check affordability against
@@ -60,7 +76,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
   if (!base) throw new Error('Custom provider needs a base URL (e.g. https://api.groq.com/openai/v1)');
   // Re-check stored URLs at call time too (SSRF guard; rows may predate 0038 validation).
-  if (provider === 'custom' && !isSafeOutboundUrl(base)) throw new Error('Custom base URL points at a private/unsafe host');
+  if (provider === 'custom' && !isAllowedAiHost(base)) throw new Error(privateHostMessage(base));
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
@@ -178,7 +194,7 @@ export async function agentTurn(
     ? (baseUrl || '').replace(/\/+$/, '')
     : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
   if (!base) throw new Error('Custom provider needs a base URL');
-  if (provider === 'custom' && !isSafeOutboundUrl(base)) throw new Error('Custom base URL points at a private/unsafe host');
+  if (provider === 'custom' && !isAllowedAiHost(base)) throw new Error(privateHostMessage(base));
   const messages = [{ role: 'system', content: system }, ...history];
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
