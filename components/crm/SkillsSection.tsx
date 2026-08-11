@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
-import { saveSkill, deleteSkill, importSkillsFromGithub, type Skill, type SkillPreview } from '@/lib/crm/skills';
+import { saveSkill, deleteSkill, importSkillsFromGithub, generateSkill, type Skill, type SkillPreview } from '@/lib/crm/skills';
+import { lintProject } from '@/lib/plugins/lint';
+import { scoreProject } from '@/lib/plugins/quality';
+import { buildPlugin, skillSlug } from '@/lib/plugins/agent-plugin';
 import Thinking from '@/components/ui/Thinking';
 
 /**
@@ -21,12 +24,21 @@ export default function SkillsSection({
   const { confirm: confirmDialog } = useDialog();
   const [editing, setEditing] = useState<Partial<Skill> | null>(null);
   const [importing, setImporting] = useState(false);
+  // Writing a skill with AI used to exist only on the PUBLIC /plugins page,
+  // which cannot save into a workspace — so a signed-in user had to leave the
+  // app, generate, download a zip, and paste it back in by hand. It lands in
+  // the editor rather than being saved, because a generated skill becomes part
+  // of an agent's system prompt and a person should read it first.
+  const [describing, setDescribing] = useState(false);
 
   return (
     <section>
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary">Skills</h2>
         <div className="flex items-center gap-1.5">
+          <Button size="sm" variant="ghost" onClick={() => setDescribing(true)}>
+            <Sparkles className="w-3.5 h-3.5" /> Describe it
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
             <Github className="w-3.5 h-3.5" /> Import
           </Button>
@@ -74,6 +86,12 @@ export default function SkillsSection({
         <SkillEditor initial={editing} onClose={() => setEditing(null)}
           onSave={async (s) => { await saveSkill(privy, ws, s); setEditing(null); onChange(); }} />
       )}
+      {describing && (
+        <DescribeModal
+          onClose={() => setDescribing(false)}
+          onDraft={(draft) => { setDescribing(false); setEditing(draft); }} />
+      )}
+
       {importing && (
         <ImportModal ws={ws} privy={privy} onClose={() => setImporting(false)} onDone={() => { setImporting(false); onChange(); }} />
       )}
@@ -86,6 +104,26 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
   const [saving, setSaving] = useState(false);
   const set = (k: keyof Skill, v: any) => setS((p) => ({ ...p, [k]: v }));
   const tooLong = (s.instructions || '').length > 20000;
+
+  /**
+   * The same score the public builder shows, on the screen where workspace
+   * skills are actually written. It was only ever visible at /plugins, so the
+   * skills an agent here follows every day were the ones nobody checked.
+   *
+   * Errors and warnings only. `idea`-severity findings are fine to ignore, and
+   * a modal is not the place to argue about them.
+   */
+  const review = useMemo(() => {
+    const name = (s.name || '').trim();
+    if (!name || !(s.instructions || '').trim()) return null;
+    const project = {
+      manifest: { name: skillSlug(name) },
+      skills: [{ name, description: s.description || '', instructions: s.instructions || '' }],
+    };
+    const { findings } = lintProject(project as any, buildPlugin(project as any));
+    const report = scoreProject(findings, { skillCount: 1, perRunChars: (s.instructions || '').length, onDemandChars: 0 });
+    return { score: report.overall, notes: findings.filter((f) => f.severity !== 'idea').map((f) => f.fix || f.message) };
+  }, [s.name, s.description, s.instructions]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
@@ -112,6 +150,24 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
               {(s.instructions || '').length.toLocaleString()} / 20,000 characters
             </span>
           </label>
+          {review && (
+            <div className="rounded-md border border-subtle bg-surface-sunken p-3">
+              <div className="flex items-baseline gap-2">
+                <span className={`text-sm font-medium tabular-nums ${review.score >= 85 ? 'text-success' : review.score >= 45 ? 'text-warning' : 'text-danger'}`}>
+                  {review.score}
+                </span>
+                <span className="text-2xs text-tertiary">/ 100 · how it is written, nothing has been run</span>
+              </div>
+              {review.notes.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {review.notes.slice(0, 4).map((n, i) => (
+                    <li key={i} className="text-2xs text-secondary leading-relaxed">{n}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {s.source === 'github' && s.source_url && (
             <p className="text-2xs text-tertiary">Imported from <span className="font-mono">{s.source_url}</span></p>
           )}
@@ -243,6 +299,67 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
             </Button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Describe a skill and get a draft, without leaving the workspace.
+ *
+ * Calls the same route the public builder uses: it writes, lints the draft
+ * against every structural check, and hands the findings back to the model
+ * until they are gone or the budget is spent. It runs on the workspace's own AI
+ * key, so a missing key is a real and common answer and gets a link rather than
+ * a shrug.
+ *
+ * The result opens in the editor. It is NOT saved: a generated skill becomes
+ * part of a system prompt agents follow, which is exactly the kind of thing a
+ * person should read once before it is real.
+ */
+function DescribeModal({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Partial<Skill>) => void }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const go = async () => {
+    if (!text.trim() || busy) return;
+    setBusy(true); setErr('');
+    try {
+      const r = await generateSkill(text.trim());
+      if (r.error || !r.skill) { setErr(r.error || 'Could not write that skill.'); return; }
+      onDraft(r.skill);
+    } catch (e: any) {
+      setErr(e?.message || 'Could not reach the server.');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
+      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
+          <h3 className="text-sm font-medium text-primary flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Describe a skill</h3>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          <p className="text-2xs text-tertiary leading-relaxed">
+            Say what it should do in your own words. It gets written, checked against every rule
+            in the quality panel, and rewritten until they pass — then opens in the editor for you
+            to read before it is saved.
+          </p>
+          <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} rows={4} disabled={busy}
+            onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') go(); }}
+            className="input-field !h-auto py-2 resize-y text-2xs"
+            placeholder="How we handle a refund request: when to approve on the spot, when it goes to a manager, and what to say either way." />
+          {err && <p className="text-2xs text-danger leading-relaxed">{err}</p>}
+          <p className="text-2xs text-tertiary">Runs on your workspace AI key — set one in Account → AI keys.</p>
+        </div>
+        <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" disabled={busy || !text.trim()} onClick={go}>
+            {busy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Writing and checking…</> : <><Sparkles className="w-3.5 h-3.5" /> Write it</>}
+          </Button>
+        </div>
       </div>
     </div>
   );
