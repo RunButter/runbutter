@@ -568,6 +568,34 @@ Same rule as the cost rule above: prefer public/government data + local computat
 - **IBAN validation** (`lib/finance/iban.ts`) — ISO 13616 mod-97 + length table, entirely local.
 - **Company logos** (`lib/crm/logo.ts`) — favicon endpoints keyed off the `domain` we already store,
   initials fallback via `CompanyLogo`.
+- **QR codes** (`/qr`, `lib/qr/render.ts`) — `qrcode-generator` (MIT) does the Reed-Solomon and
+  masking; the DRAWING is ours, because the library emits a fixed-size table that neither prints nor
+  recolours. In the browser, like `/pdf`: a QR is usually a private link.
+  - **The library defaults to ISO-8859-1.** "Zażółć gęślą jaźń" produced a code a reader could FIND
+    and then decoded to an EMPTY STRING. Fixed by `stringToBytes = TextEncoder` at module load —
+    **not** `stringToBytesFuncs['UTF-8']`, which exists on the CommonJS export and not on the ESM one
+    a browser bundle gets, so reaching for it throws at load and takes the page down. `tsc` and
+    `next build` passed every broken version; only decoding the output caught any of it.
+  - **Every visual choice here is measured by decoding, never reasoned about.** Dot radius 0.42 never
+    scanned, 0.46 scanned at 320px and failed at 640px, 0.5 (touching circles) scanned at both. An
+    inset on rounded modules decoded at 480px and failed at 1036px, so modules are full-bleed.
+    Scaling 37 modules to exactly 1024px gives 27.68px each and made dots undecodable at EVERY
+    correction level — `qrPng` uses whole pixels per module with a floor of 12.
+  - **Finder patterns are drawn as whole shapes**, never as styled modules: a reader locates a code by
+    their 1:1:3:1:1 ratio before it decodes anything, and rounding each module softens exactly that.
+  - **`qrScans()` exists because no static rule was true.** Dots are data-dependent — one payload
+    decodes at M, the next needs Q. So the page decodes what it is showing with jsQR (a strict
+    reference decoder; phones are more forgiving, so a pass is a strong guarantee and a fail reads as
+    "marginal"). **That check is what makes offering a logo defensible** — the alternative fails at
+    the printer, after five hundred flyers.
+  - A logo clears 6% of the AREA and those modules are **removed, not covered** — painting over them
+    leaves both the data and the logo in the same square for any renderer that ignores z-order.
+    Capped at 12%. `logoHref` accepts a `data:image/(png|jpeg|webp)` URI ONLY: a remote href in an
+    exported SVG breaks when the signed URL expires and turns every copy into a beacon.
+    `imageToDataUri` re-encodes through a canvas, so an SVG logo becomes pixels and the workspace
+    branding mark works without shipping somebody else's SVG. The image is drawn strictly INSIDE the
+    cleared box, which is why the scan check can ignore it and still be honest, and `qrPng`
+    composites it in a second draw — smoothing off for the code, on for the logo.
 - **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts` + `lib/pdf/convert.ts`) — merge/split/extract/delete/
   rotate/watermark/images→PDF on `pdf-lib`, plus **PDF→images and PDF→Markdown** on the already-
   installed `pdfjs-dist`. All **in the browser**, so files never upload.

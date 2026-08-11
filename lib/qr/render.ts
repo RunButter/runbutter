@@ -83,6 +83,19 @@ export interface QrOptions {
    * failure lands at the printer.
    */
   logoAreaPct?: number;
+  /**
+   * The mark drawn into that cleared middle, as a `data:image/…` URI.
+   *
+   * A URI, NOT A URL, and refused if it is anything else. Two reasons, both
+   * real. An exported SVG carrying `href="https://…"` renders as a broken box
+   * the moment the link expires — and a workspace logo lives in a private
+   * bucket behind a signed URL, so that is hours, not years. It also turns
+   * every copy of the file into a beacon: opening the poster fetches from us
+   * and tells us who opened it. `imageToDataUri` below is how a URL becomes
+   * one of these, and it re-encodes through a canvas, so what lands here is
+   * always a PNG we drew — never somebody else's SVG with a script in it.
+   */
+  logoHref?: string | null;
 }
 
 /** Below this, a styled code stops decoding. Measured — see qrPng. */
@@ -124,7 +137,7 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
   const {
     ec = 'M', margin = 4, dark = '#000000', light = '#ffffff',
     moduleStyle = 'square', eyeStyle = 'square', eyeColor, gradient = null,
-    logoAreaPct = 0,
+    logoAreaPct = 0, logoHref = null,
   } = opts;
   if (!text) throw new Error('Nothing to encode.');
 
@@ -225,18 +238,60 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
 
   // crispEdges only when everything is square. On curves it disables
   // antialiasing and the dots come out jagged — the opposite of the point.
+  // It is on the paths rather than the <svg> so it never reaches the logo,
+  // which would come out with hard-edged, aliased curves.
   const rendering = moduleStyle === 'square' && eyeStyle === 'square' ? ' shape-rendering="crispEdges"' : '';
 
+  const clearBox = clear ? { x: clearLo + margin, y: clearLo + margin, size: clear } : null;
+
+  /**
+   * The logo sits ENTIRELY INSIDE the cleared box, inset by a tenth of it.
+   *
+   * That containment is the whole safety argument. Modules in the box are
+   * already gone, so an image that stays within it removes nothing further —
+   * which is why `qrScans` can check the code without the picture and still be
+   * telling the truth. An image allowed to overhang would cover live modules
+   * that the check believed were readable, and the answer on screen would be
+   * about a different code than the one being downloaded.
+   *
+   * `xMidYMid meet` rather than `slice`: a wide wordmark is letterboxed inside
+   * the box instead of cropped, which is what somebody expects when they tick
+   * a box labelled "our logo".
+   */
+  const inset = clearBox ? clearBox.size * 0.1 : 0;
+  const logo = clearBox && dataUri(logoHref)
+    ? `<image href="${logoHref}" x="${clearBox.x + inset}" y="${clearBox.y + inset}" ` +
+      `width="${clearBox.size - inset * 2}" height="${clearBox.size - inset * 2}" ` +
+      `preserveAspectRatio="xMidYMid meet"/>`
+    : '';
+
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"${rendering}>` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">` +
     defs +
     `<rect width="${size}" height="${size}" fill="${esc(light)}"/>` +
-    `<path d="${data}" fill="${gradient ? 'url(#qg)' : esc(dark)}"/>` +
-    `<path d="${eyes}" fill="${esc(eyeColor || dark)}" fill-rule="evenodd"/>` +
+    `<path d="${data}" fill="${gradient ? 'url(#qg)' : esc(dark)}"${rendering}/>` +
+    `<path d="${eyes}" fill="${esc(eyeColor || dark)}" fill-rule="evenodd"${rendering}/>` +
+    logo +
     `</svg>`;
 
-  return { svg, modules: count, clearBox: clear ? { x: clearLo + margin, y: clearLo + margin, size: clear } : null };
+  return { svg, modules: count, clearBox };
 }
+
+/**
+ * Is this a picture we made?
+ *
+ * Deliberately narrow. A remote href expires and beacons (see `logoHref`), and
+ * an `image/svg+xml` data URI is a document rather than a picture — harmless in
+ * an `<img>`, but this SVG is also inserted into the page for the preview, and
+ * a rule that depends on where the string ends up is a rule that breaks the
+ * first time somebody reuses it. `imageToDataUri` re-encodes everything to PNG,
+ * so nothing legitimate is turned away by only accepting raster.
+ *
+ * The base64 alphabet is checked too, because this string goes into an
+ * attribute unescaped — no quote can survive the test, so none can close it.
+ */
+const dataUri = (v: unknown): v is string =>
+  typeof v === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v);
 
 const circle = (cx: number, cy: number, r: number) =>
   `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0z`;
@@ -279,7 +334,21 @@ function esc(v: string): string {
  * widths, which is the classic "prints fine, scans badly" bug.
  */
 export async function qrPng(text: string, pixels = 1024, opts: QrOptions = {}): Promise<Uint8Array> {
-  const { svg, modules } = qrSvg(text, opts);
+  /**
+   * The QR is rasterised WITHOUT the logo and the logo is drawn on afterwards,
+   * for two independent reasons.
+   *
+   * An SVG loaded through an `<img>` runs in secure static mode, and what that
+   * permits an `<image href="data:…">` to do is not something to bet a download
+   * on: if a browser declines, the export loses the logo silently, which is the
+   * exact class of bug this file keeps finding.
+   *
+   * The second reason is the one that matters even where it works. Smoothing is
+   * off for the QR, because interpolating module edges is what makes a code
+   * scan badly — and the same setting applied to a logo gives jagged, aliased
+   * curves. Two draws means each gets the filtering it wants.
+   */
+  const { svg, modules, clearBox } = qrSvg(text, { ...opts, logoHref: null });
   const total = modules + (opts.margin ?? 4) * 2;
 
   /**
@@ -315,12 +384,89 @@ export async function qrPng(text: string, pixels = 1024, opts: QrOptions = {}): 
     // Nearest-neighbour: smoothing a QR is actively harmful.
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(img, 0, 0, side, side);
+
+    if (clearBox && dataUri(opts.logoHref)) {
+      const mark = await loadImage(opts.logoHref).catch(() => null);
+      // A logo that will not decode must not cost somebody their QR code. The
+      // space stays cleared, which is what the code was built for anyway.
+      if (mark) {
+        const inset = clearBox.size * 0.1;
+        const box = (clearBox.size - inset * 2) * scale;
+        // `contain`, matching the SVG's xMidYMid meet — a wide wordmark is
+        // letterboxed, never cropped, and never stretched.
+        const k = Math.min(box / mark.width, box / mark.height);
+        const w = mark.width * k, h = mark.height * k;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(mark, (clearBox.x + inset) * scale + (box - w) / 2, (clearBox.y + inset) * scale + (box - h) / 2, w, h);
+      }
+    }
+
     const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/png'));
     if (!blob) throw new Error('Could not encode the PNG.');
     return new Uint8Array(await blob.arrayBuffer());
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    // Only meaningful for remote sources, and harmless for a data URI. Without
+    // it a cross-origin logo taints the canvas and `toBlob` throws a security
+    // error at download time rather than at load time — the failure arrives at
+    // the one moment it cannot be explained.
+    img.crossOrigin = 'anonymous';
+    img.onload = () => res(img);
+    img.onerror = () => rej(new Error('Could not load that image.'));
+    img.src = src;
+  });
+}
+
+/**
+ * Turn any image — an uploaded file, a branding logo behind a signed URL — into
+ * the `data:image/png;base64,…` that `logoHref` accepts.
+ *
+ * IT RE-ENCODES THROUGH A CANVAS rather than base64-ing the bytes it was given,
+ * and that is the point rather than an implementation detail. Whatever went in,
+ * what comes out is a PNG this code drew: an SVG logo with a script in it
+ * becomes pixels, an eight-megapixel photo becomes 512px, and a file whose
+ * extension lied about its type simply fails to load.
+ *
+ * 512px because it is drawn into roughly a quarter of a 1024px code — twice the
+ * pixels it can use, so it stays sharp if somebody exports larger, without
+ * carrying a megabyte of base64 inside an SVG.
+ *
+ * Throws on a cross-origin image served without CORS headers. That is a real
+ * answer the caller should show, not something to paper over: the browser will
+ * not let us read those pixels, and no amount of retrying changes it.
+ */
+export async function imageToDataUri(src: string, max = 512): Promise<string> {
+  const img = await loadImage(src);
+  const k = Math.min(1, max / Math.max(img.width || 1, img.height || 1));
+  const w = Math.max(1, Math.round((img.width || max) * k));
+  const h = Math.max(1, Math.round((img.height || max) * k));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not read that image.');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, w, h);
+  // PNG, not JPEG: a logo on a transparent background is the normal case, and
+  // JPEG would fill it black.
+  const out = canvas.toDataURL('image/png');
+  canvas.width = 0; canvas.height = 0;
+  if (!dataUri(out)) throw new Error('Could not read that image.');
+  return out;
+}
+
+/** Read a picked file without it leaving the tab. */
+export async function fileToDataUri(file: File, max = 512): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try { return await imageToDataUri(url, max); }
+  finally { URL.revokeObjectURL(url); }
 }
 
 // ── Does it actually scan? ──────────────────────────────────────────────────
@@ -348,7 +494,11 @@ export async function qrPng(text: string, pixels = 1024, opts: QrOptions = {}): 
 export async function qrScans(text: string, opts: QrOptions = {}): Promise<boolean | null> {
   if (typeof document === 'undefined') return null;
   try {
-    const { svg, modules } = qrSvg(text, opts);
+    // Without the logo, on purpose. The picture is drawn strictly inside the
+    // cleared box (see `qrSvg`), so it covers nothing the decoder would have
+    // read — and rendering it here would make the check depend on an image
+    // load, turning a slow network into "your code does not scan".
+    const { svg, modules } = qrSvg(text, { ...opts, logoHref: null });
     const total = modules + (opts.margin ?? 4) * 2;
     const scale = Math.max(MIN_PX_PER_MODULE, Math.round(1024 / total));
     const side = total * scale;
