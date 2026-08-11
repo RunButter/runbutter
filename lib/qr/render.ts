@@ -56,12 +56,23 @@ import qrcode from 'qrcode-generator';
  */
 export type EcLevel = 'L' | 'M' | 'Q' | 'H';
 
+/** How the data modules are drawn. Only `square` can collapse runs. */
+export type ModuleStyle = 'square' | 'rounded' | 'dots';
+/** The three corner squares — most of what makes a code look designed. */
+export type EyeStyle = 'square' | 'rounded' | 'circle';
+
 export interface QrOptions {
   ec?: EcLevel;
   /** Quiet zone in modules. The spec says 4; less and some readers refuse. */
   margin?: number;
   dark?: string;
   light?: string;
+  moduleStyle?: ModuleStyle;
+  eyeStyle?: EyeStyle;
+  /** Defaults to `dark`. A separate eye colour is most of a designed look. */
+  eyeColor?: string;
+  /** Gradient across the DATA modules only — the eyes stay solid. */
+  gradient?: { from: string; to: string } | null;
 }
 
 export interface QrResult { svg: string; modules: number }
@@ -78,7 +89,10 @@ export interface QrResult { svg: string; modules: number }
  * perfectly fine to a person.
  */
 export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
-  const { ec = 'M', margin = 4, dark = '#000000', light = '#ffffff' } = opts;
+  const {
+    ec = 'M', margin = 4, dark = '#000000', light = '#ffffff',
+    moduleStyle = 'square', eyeStyle = 'square', eyeColor, gradient = null,
+  } = opts;
   if (!text) throw new Error('Nothing to encode.');
 
   // Type 0 asks the library to pick the smallest version that fits. It throws
@@ -95,28 +109,103 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
   const count = qr.getModuleCount();
   const size = count + margin * 2;
 
-  let d = '';
-  for (let row = 0; row < count; row++) {
-    let run = 0;
-    for (let col = 0; col <= count; col++) {
-      const on = col < count && qr.isDark(row, col);
-      if (on) { run++; continue; }
-      if (run) {
-        // Horizontal runs collapse into one rectangle each — typically a third
-        // of the elements a per-module path would emit.
-        d += `M${col - run + margin} ${row + margin}h${run}v1h-${run}z`;
-        run = 0;
+  /**
+   * The three finder patterns, drawn as WHOLE SHAPES rather than styled modules.
+   *
+   * A reader locates a code by the 1:1:3:1:1 ratio of these corners before it
+   * decodes anything. Rounding each of their modules individually softens that
+   * ratio, which is exactly how a beautiful QR becomes one nobody's phone can
+   * find. So they are excluded here and redrawn below.
+   */
+  const inEye = (r: number, c: number) =>
+    (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
+
+  let data = '';
+  if (moduleStyle === 'square') {
+    // Runs collapse into one rectangle each — a third of the elements a
+    // per-module path emits, and identical on screen.
+    for (let row = 0; row < count; row++) {
+      let run = 0, start = 0;
+      for (let col = 0; col <= count; col++) {
+        const on = col < count && qr.isDark(row, col) && !inEye(row, col);
+        if (on) { if (!run) start = col; run++; continue; }
+        if (run) { data += `M${start + margin} ${row + margin}h${run}v1h-${run}z`; run = 0; }
+      }
+    }
+  } else {
+    // Styled modules cannot merge, so this is one shape each. A styled code is
+    // almost always a short URL — 29 to 45 modules, well under a thousand
+    // shapes — and `square` stays available for the dense ones.
+    // 0.5 — TOUCHING circles, not separated ones, and this is measured rather
+    // than chosen for looks. Decoding our own output at two raster sizes: 0.42
+    // never scanned at all, 0.46 scanned at 320px and FAILED at 640px, and 0.5
+    // scanned at both, with and without a gradient. A separated dot leaves too
+    // little ink for a binariser to recover the module grid, and the size
+    // dependence is the worst version of that — it works on the screen you
+    // tested and fails on the poster.
+    const r = moduleStyle === 'dots' ? 0.5 : 0.3;
+    for (let row = 0; row < count; row++) {
+      for (let col = 0; col < count; col++) {
+        if (!qr.isDark(row, col) || inEye(row, col)) continue;
+        const x = col + margin, y = row + margin;
+        data += moduleStyle === 'dots'
+          ? circle(x + 0.5, y + 0.5, r)
+          : roundedRect(x + 0.04, y + 0.04, 0.92, 0.92, r);
       }
     }
   }
 
+  let eyes = '';
+  for (const [er, ecol] of [[0, 0], [0, count - 7], [count - 7, 0]] as const) {
+    eyes += eyeShape(er + margin, ecol + margin, eyeStyle);
+  }
+
+  const defs = gradient
+    ? `<defs><linearGradient id="qg" x1="0" y1="0" x2="1" y2="1">` +
+      `<stop offset="0" stop-color="${esc(gradient.from)}"/>` +
+      `<stop offset="1" stop-color="${esc(gradient.to)}"/></linearGradient></defs>`
+    : '';
+
+  // crispEdges only when everything is square. On curves it disables
+  // antialiasing and the dots come out jagged — the opposite of the point.
+  const rendering = moduleStyle === 'square' && eyeStyle === 'square' ? ' shape-rendering="crispEdges"' : '';
+
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"${rendering}>` +
+    defs +
     `<rect width="${size}" height="${size}" fill="${esc(light)}"/>` +
-    `<path d="${d}" fill="${esc(dark)}"/>` +
+    `<path d="${data}" fill="${gradient ? 'url(#qg)' : esc(dark)}"/>` +
+    `<path d="${eyes}" fill="${esc(eyeColor || dark)}" fill-rule="evenodd"/>` +
     `</svg>`;
 
   return { svg, modules: count };
+}
+
+const circle = (cx: number, cy: number, r: number) =>
+  `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0z`;
+
+function roundedRect(x: number, y: number, w: number, h: number, r: number): string {
+  const rr = Math.min(r, w / 2, h / 2);
+  return `M${x + rr} ${y}h${w - 2 * rr}a${rr} ${rr} 0 0 1 ${rr} ${rr}v${h - 2 * rr}` +
+    `a${rr} ${rr} 0 0 1 ${-rr} ${rr}h${-(w - 2 * rr)}a${rr} ${rr} 0 0 1 ${-rr} ${-rr}v${-(h - 2 * rr)}` +
+    `a${rr} ${rr} 0 0 1 ${rr} ${-rr}z`;
+}
+
+/**
+ * One finder pattern: a 7x7 ring around a 3x3 centre.
+ *
+ * Drawn ring-plus-centre under `fill-rule="evenodd"`, so the gap between them
+ * is a real hole rather than a light-coloured square painted over the top —
+ * which matters the moment the code sits on anything but white.
+ */
+function eyeShape(y: number, x: number, style: EyeStyle): string {
+  if (style === 'circle') {
+    return circle(x + 3.5, y + 3.5, 3.5) + circle(x + 3.5, y + 3.5, 2.5) + circle(x + 3.5, y + 3.5, 1.5);
+  }
+  if (style === 'rounded') {
+    return roundedRect(x, y, 7, 7, 1.75) + roundedRect(x + 1, y + 1, 5, 5, 1.25) + roundedRect(x + 2, y + 2, 3, 3, 0.75);
+  }
+  return `M${x} ${y}h7v7h-7z` + `M${x + 1} ${y + 1}h5v5h-5z` + `M${x + 2} ${y + 2}h3v3h-3z`;
 }
 
 /** Colours come from a form, and a form is untrusted even when it is your own. */
