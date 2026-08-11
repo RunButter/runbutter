@@ -568,9 +568,20 @@ Same rule as the cost rule above: prefer public/government data + local computat
 - **IBAN validation** (`lib/finance/iban.ts`) — ISO 13616 mod-97 + length table, entirely local.
 - **Company logos** (`lib/crm/logo.ts`) — favicon endpoints keyed off the `domain` we already store,
   initials fallback via `CompanyLogo`.
-- **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts`) — merge/split/extract/delete/rotate/watermark/images→PDF
-  on the already-installed `pdf-lib`, **in the browser**, so files never upload. pdf-lib restructures
-  documents but does not re-encode streams, so **compression is not offered** — don't add it here.
+- **PDF tools** (`/pdf`, `lib/pdf/toolkit.ts` + `lib/pdf/convert.ts`) — merge/split/extract/delete/
+  rotate/watermark/images→PDF on `pdf-lib`, plus **PDF→images and PDF→Markdown** on the already-
+  installed `pdfjs-dist`. All **in the browser**, so files never upload.
+  - Both converters **compose the selection first**, so the output matches the thumbnails —
+    reordering, rotation and deletions included — instead of re-implementing the ordering rules.
+  - `pdfToMarkdown` infers headings from font size against the **median** (a mean is dragged up by
+    one title), paragraphs from line gaps, and reading order from position. It does **NOT** recover
+    tables — those are spatial, and reconstructing them is what `lib/pdf/inspect.ts` does with a
+    native library server-side. Pages with no text layer are **named** in the result, never silently
+    dropped.
+  - **Compression is still not offered.** pdf-lib restructures documents but does not re-encode
+    streams, so the only "compression" it could do is rasterising pages to JPEG — which shrinks the
+    file by destroying the text layer. A smaller PDF that can no longer be searched or copied from
+    is not the thing anybody asked for.
 - **Spreadsheet feed (0078)** — `GET /api/v1/records?object=…&format=csv&key=hb_…` + the
   **Connect to Excel** panel in Settings → Integrations. Excel's "Get Data → From Web" can't send an
   Authorization header from its dialog, so the key rides in the query string, bounded by two rules:

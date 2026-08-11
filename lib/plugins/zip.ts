@@ -31,7 +31,15 @@ function crc32(bytes: Uint8Array): number {
   return (c ^ 0xffffffff) >>> 0;
 }
 
-export interface ZipEntry { path: string; content: string }
+/**
+ * `content` may be bytes as well as text.
+ *
+ * Store-only compression works on bytes either way, and PNG and JPEG are
+ * already compressed — deflating them again costs CPU to save nothing. This is
+ * what lets the PDF page hand back a page-per-image archive without a
+ * dependency, and without a second zip writer that would drift from this one.
+ */
+export interface ZipEntry { path: string; content: string | Uint8Array }
 
 export function zipSync(entries: ZipEntry[]): Uint8Array {
   const enc = new TextEncoder();
@@ -51,7 +59,7 @@ export function zipSync(entries: ZipEntry[]): Uint8Array {
 
   for (const e of entries) {
     const name = enc.encode(e.path);
-    const data = enc.encode(e.content);
+    const data = typeof e.content === 'string' ? enc.encode(e.content) : e.content;
     const crc = crc32(data);
 
     // Local file header. Version 2.0, no flags, method 0 (store), and a fixed

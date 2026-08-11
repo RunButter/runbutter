@@ -9,7 +9,7 @@ import {
 import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import {
   FileText, Loader2, Download, ShieldCheck, RotateCw, Trash2, Stamp,
-  Image as ImageIcon, Scissors, CheckSquare, Square, Undo2, X,
+  Image as ImageIcon, Scissors, CheckSquare, Square, Undo2, X, FileCode,
 } from 'lucide-react';
 import {
   loadPdf, composePdf, watermarkPdf, imagesToPdf, downloadBytes,
@@ -17,6 +17,8 @@ import {
 } from '@/lib/pdf/toolkit';
 import { openForRender, renderThumbnail } from '@/lib/pdf/render';
 import PageTile, { type EditorPage } from '@/components/pdf/PageTile';
+import { pagesToImages, pdfToMarkdown } from '@/lib/pdf/convert';
+import { zipSync } from '@/lib/plugins/zip';
 import EmptyState from '@/components/ui/EmptyState';
 
 /**
@@ -148,6 +150,50 @@ export default function PdfToolsPage() {
     downloadBytes(await composePdf(files, toComposed(list)), selected.size ? 'selected-pages.pdf' : 'document.pdf');
   });
 
+  /**
+   * Both converters COMPOSE THE SELECTION FIRST.
+   *
+   * Rendering the original files directly would ignore everything the page is
+   * for — the reordering, the rotation, the deletions. Building the PDF the
+   * user is actually looking at and converting THAT means the images and the
+   * markdown match the thumbnails, with no second implementation of the
+   * ordering rules.
+   */
+  const currentSelection = () => (selected.size ? pages.filter((p) => selected.has(p.key)) : pages);
+  const composedBytes = async () => {
+    const bytes = await composePdf(files, toComposed(currentSelection()));
+    // A fresh ArrayBuffer: pdf-lib can return a view onto a larger pooled
+    // buffer, and pdfjs would then parse the surrounding bytes as the document.
+    return bytes.slice().buffer as ArrayBuffer;
+  };
+
+  const asImages = () => run('images', async () => {
+    const buf = await composedBytes();
+    const count = currentSelection().length;
+    const imgs = await pagesToImages(buf, Array.from({ length: count }, (_, i) => i), { dpi: 150, format: 'png' });
+    if (!imgs.length) throw new Error('No pages to render.');
+    // One page downloads as the image itself. A zip containing a single PNG is
+    // an extra step for no reason.
+    if (imgs.length === 1) return downloadBytes(imgs[0].bytes, imgs[0].name, 'image/png');
+    downloadBytes(
+      zipSync(imgs.map((i) => ({ path: i.name, content: i.bytes }))),
+      'pages.zip', 'application/zip',
+    );
+  });
+
+  const asMarkdown = () => run('markdown', async () => {
+    const { markdown, emptyPages } = await pdfToMarkdown(await composedBytes(), { pageBreaks: true });
+    if (!markdown) {
+      throw new Error('No text layer in these pages — they are scans. Markdown needs selectable text.');
+    }
+    downloadBytes(new TextEncoder().encode(markdown), 'document.md', 'text/markdown');
+    // Reported rather than silently short: a page that contributed nothing is
+    // the difference between a complete conversion and a partial one.
+    if (emptyPages.length) {
+      setError(`Converted, but page${emptyPages.length > 1 ? 's' : ''} ${emptyPages.join(', ')} had no text layer (scans) and ${emptyPages.length > 1 ? 'are' : 'is'} missing.`);
+    }
+  });
+
   const splitEach = () => run('split', async () => {
     const list = selected.size ? pages.filter((p) => selected.has(p.key)) : pages;
     const width = String(list.length).length;
@@ -191,6 +237,18 @@ export default function PdfToolsPage() {
           <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
             Add PDFs
           </button>
+          {pages.length > 0 && (
+            <>
+              <button onClick={asImages} disabled={!!busy} title={`Render ${scope} as PNG at 150 dpi`}
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
+                {busy === 'images' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />} Images
+              </button>
+              <button onClick={asMarkdown} disabled={!!busy} title={`Extract ${scope} as Markdown`}
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
+                {busy === 'markdown' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileCode className="w-3.5 h-3.5" />} Markdown
+              </button>
+            </>
+          )}
           {pages.length > 0 && (
             <button onClick={exportPages} disabled={!!busy}
               className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
