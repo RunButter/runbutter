@@ -162,6 +162,30 @@ by hand.
   no platform key; nothing AI works until you add yours, and it spends your
   credit, not ours.
 
+## Is it working? — `GET /api/health`
+
+```
+curl -s https://your-instance/api/health
+{"status":"ok","database":{"ok":true,"ms":12},"storage":{"ok":true,"ms":31}}
+```
+
+It actually reaches Postgres and actually reaches storage rather than returning
+`ok` because the process is running — a health check that stays green while the
+database is unreachable is worse than none, since that is the one failure it
+exists to catch.
+
+| `status` | HTTP | Meaning |
+|---|---|---|
+| `ok` | 200 | Database and storage both answered |
+| `degraded` | 200 | Database fine, storage not — most screens still work, uploads do not |
+| `error` | 503 | Database unreachable. The instance cannot serve a page; take it out of rotation |
+
+Point an uptime checker or a container health probe at it. No authentication
+(a checker cannot log in), and for that reason it returns no versions, no
+project ids, no hostnames and no counts — `error` is a short reason like
+`database timed out`, never the driver's message, which routinely contains the
+connection string.
+
 ## When something is wrong
 
 | Symptom | Cause |
@@ -172,5 +196,6 @@ by hand.
 | Newsletter says sent, nothing arrives | No cron on `/api/newsletters/send`, or no `RESEND_API_KEY` |
 | Unsubscribe links point at the wrong host | `NEXT_PUBLIC_SITE_URL` not set |
 | Sanctions screening returns `no_data` | `POST /api/sanctions/refresh` once to ingest the OFAC lists |
+| Not sure whether the instance is up | `GET /api/health` — see above |
 
 More in [Support](./support.md).
