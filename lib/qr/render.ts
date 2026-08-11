@@ -322,3 +322,57 @@ export async function qrPng(text: string, pixels = 1024, opts: QrOptions = {}): 
     URL.revokeObjectURL(url);
   }
 }
+
+// ── Does it actually scan? ──────────────────────────────────────────────────
+
+/**
+ * Decode the code we just drew, and say whether a reader got the text back.
+ *
+ * WHY THIS EXISTS RATHER THAN A RULE. Every static rule I tried was wrong.
+ * Dots are data-dependent: at one module count a short URL decodes at every
+ * correction level, a careers URL needs H, a Wi-Fi string needs Q, and Polish
+ * text with a € sign fails at all three. No setting the UI could publish would
+ * be true for the next thing somebody types. So the code is checked rather than
+ * predicted, which is also the only honest way to offer a logo — the failure it
+ * causes lands at the printer, after five hundred flyers.
+ *
+ * jsQR is a STRICT reference decoder. Phone cameras are generally more
+ * forgiving, so a pass here is a strong guarantee and a fail is "marginal",
+ * not "impossible" — which is exactly how the UI words it. Being wrong in that
+ * direction is the right way round.
+ *
+ * Rasterised the way `qrPng` does — whole pixels per module, no smoothing —
+ * because a check against a different image than the one people download would
+ * be worse than none.
+ */
+export async function qrScans(text: string, opts: QrOptions = {}): Promise<boolean | null> {
+  if (typeof document === 'undefined') return null;
+  try {
+    const { svg, modules } = qrSvg(text, opts);
+    const total = modules + (opts.margin ?? 4) * 2;
+    const scale = Math.max(MIN_PX_PER_MODULE, Math.round(1024 / total));
+    const side = total * scale;
+
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    try {
+      await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = () => rej(new Error('render')); img.src = url; });
+      const canvas = document.createElement('canvas');
+      canvas.width = side; canvas.height = side;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, side, side);
+      ctx.drawImage(img, 0, 0, side, side);
+      const px = ctx.getImageData(0, 0, side, side);
+      const { default: jsQR } = await import('jsqr');
+      const got = jsQR(px.data, side, side);
+      canvas.width = 0; canvas.height = 0;
+      return got?.data === text;
+    } finally { URL.revokeObjectURL(url); }
+  } catch {
+    // A check that cannot run must not read as a failure — null means unknown,
+    // and the UI says nothing rather than crying wolf.
+    return null;
+  }
+}

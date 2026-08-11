@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { QrCode, Download, Copy, Check, Loader2 } from 'lucide-react';
-import { qrSvg, qrPng, type EcLevel, type ModuleStyle, type EyeStyle } from '@/lib/qr/render';
+import { useEffect, useMemo, useState } from 'react';
+import { QrCode, Download, Copy, Check, Loader2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { qrSvg, qrPng, qrScans, type EcLevel, type ModuleStyle, type EyeStyle } from '@/lib/qr/render';
 import { downloadBytes } from '@/lib/pdf/toolkit';
 import PageHeader from '@/components/dashboard/PageHeader';
 
@@ -52,6 +52,9 @@ export default function QrPage() {
   const [eyeStyle, setEyeStyle] = useState<EyeStyle>('square');
   const [eyeColor, setEyeColor] = useState('');
   const [gradTo, setGradTo] = useState('');
+  const [logo, setLogo] = useState(false);
+  // null = not checked yet or unknowable. See qrScans.
+  const [scans, setScans] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -63,14 +66,36 @@ export default function QrPage() {
     if (!encoded.trim()) return null;
     const style = { ec, dark, moduleStyle, eyeStyle,
       eyeColor: eyeColor || undefined,
-      gradient: gradTo ? { from: dark, to: gradTo } : null };
+      gradient: gradTo ? { from: dark, to: gradTo } : null,
+      logoAreaPct: logo ? 6 : 0 };
     try { return { ...qrSvg(encoded, style), error: '' }; }
     catch (e: any) { return { svg: '', modules: 0, error: e?.message || 'Could not encode that.' }; }
-  }, [encoded, ec, dark, moduleStyle, eyeStyle, eyeColor, gradTo]);
+  }, [encoded, ec, dark, moduleStyle, eyeStyle, eyeColor, gradTo, logo]);
 
   const styleOpts = () => ({ ec, dark, moduleStyle, eyeStyle,
     eyeColor: eyeColor || undefined,
-    gradient: gradTo ? { from: dark, to: gradTo } : null });
+    gradient: gradTo ? { from: dark, to: gradTo } : null,
+    logoAreaPct: logo ? 6 : 0 });
+
+  /**
+   * Check the code we are actually showing, every time it changes.
+   *
+   * Debounced and cancellable: this rasterises and decodes a megapixel image,
+   * and running it on every keystroke would make typing feel heavy. `alive`
+   * stops a slow check from overwriting the answer for a newer code — the
+   * classic stale-async bug, and here it would tell somebody their working code
+   * is broken.
+   */
+  useEffect(() => {
+    if (!result?.svg) { setScans(null); return; }
+    let alive = true;
+    setScans(null);
+    const t = setTimeout(() => {
+      qrScans(encoded, styleOpts()).then((ok) => { if (alive) setScans(ok); }, () => { if (alive) setScans(null); });
+    }, 350);
+    return () => { alive = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.svg]);
 
   const savePng = async () => {
     setBusy(true);
@@ -87,7 +112,7 @@ export default function QrPage() {
     <>
       <PageHeader title="QR codes" />
       <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
-        <div className="max-w-3xl mx-auto grid md:grid-cols-[1fr_auto] gap-6 items-start">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-[1fr_360px] gap-8 items-start">
 
           <div className="space-y-5 min-w-0">
             <div className="flex flex-wrap gap-1.5">
@@ -173,6 +198,20 @@ export default function QrPage() {
             </div>
 
 
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" checked={logo} onChange={(e) => setLogo(e.target.checked)}
+                className="mt-0.5 rounded border-strong accent-accent" />
+              <span>
+                <span className="text-xs text-primary block">Leave room for a logo</span>
+                {/* The modules are REMOVED, not covered — and the check below
+                    is what makes offering this defensible at all. */}
+                <span className="text-2xs text-tertiary block leading-relaxed">
+                  Clears 6% in the middle. Drop your mark into the gap in any editor — the check below
+                  confirms the code still reads.
+                </span>
+              </span>
+            </label>
+
             {/* Said plainly because it is the mistake people make: a pale code
                 on white looks stylish on screen and does not scan on paper. */}
             <p className="text-2xs text-tertiary leading-relaxed">
@@ -181,13 +220,41 @@ export default function QrPage() {
             </p>
           </div>
 
-          <div className="w-full md:w-64 shrink-0">
-            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
+          <div className="w-full md:sticky md:top-20">
+            <div className="rounded-2xl bg-surface ring-1 ring-subtle shadow-card p-5">
+              {/* Always on white, at any theme. A QR is printed and scanned off
+                  paper; showing it on a dark card would preview something
+                  nobody will ever hold. The CARD follows the theme, the code
+                  does not. */}
               {result?.svg ? (
-                <div className="rounded-lg overflow-hidden" dangerouslySetInnerHTML={{ __html: result.svg }} />
+                <div className="rounded-xl overflow-hidden bg-white p-3 [&>svg]:w-full [&>svg]:h-auto"
+                  dangerouslySetInnerHTML={{ __html: result.svg }} />
               ) : (
-                <div className="aspect-square rounded-lg bg-surface-sunken flex items-center justify-center">
-                  <QrCode className="w-8 h-8 text-tertiary" />
+                <div className="aspect-square rounded-xl bg-surface-sunken flex flex-col items-center justify-center gap-2">
+                  <QrCode className="w-10 h-10 text-tertiary" />
+                  <span className="text-2xs text-tertiary">Type something to see it</span>
+                </div>
+              )}
+
+              {result?.svg && (
+                <div className="mt-3 flex items-start gap-1.5">
+                  {scans === null ? (
+                    <span className="text-2xs text-tertiary flex items-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Checking that it scans…
+                    </span>
+                  ) : scans ? (
+                    <span className="text-2xs text-success flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> Checked — a reader gets your text back.
+                    </span>
+                  ) : (
+                    <span className="text-2xs text-warning flex items-start gap-1.5 leading-relaxed">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                      <span>
+                        A strict reader could not read this one. Phones are more forgiving, but do not print it
+                        without testing — try square modules, or raise the error correction.
+                      </span>
+                    </span>
+                  )}
                 </div>
               )}
 
