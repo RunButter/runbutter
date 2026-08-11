@@ -73,9 +73,41 @@ export interface QrOptions {
   eyeColor?: string;
   /** Gradient across the DATA modules only — the eyes stay solid. */
   gradient?: { from: string; to: string } | null;
+  /**
+   * Percentage of the code's AREA cleared in the middle for a logo.
+   *
+   * Measured, not guessed. Decoding our own output: 6% clears reliably at every
+   * error-correction level; 10% needs Q or better and fails at M. So the UI
+   * offers 6% and `qrSvg` refuses more than 12% outright — beyond that the
+   * error correction is being asked to reconstruct more than it can, and the
+   * failure lands at the printer.
+   */
+  logoAreaPct?: number;
 }
 
-export interface QrResult { svg: string; modules: number }
+/** Below this, a styled code stops decoding. Measured — see qrPng. */
+export const MIN_PX_PER_MODULE = 12;
+
+/**
+ * The error correction a given look actually needs.
+ *
+ * A logo removes modules outright and dots give a binariser less ink to work
+ * with, so both want more redundancy than the default. Returning the level
+ * rather than silently overriding it means the UI can SAY why it changed.
+ */
+export function requiredEc(opts: { moduleStyle?: ModuleStyle; logoAreaPct?: number }): EcLevel | null {
+  const pct = opts.logoAreaPct || 0;
+  if (pct > 6) return 'Q';
+  if (pct > 0) return 'M';
+  return null;
+}
+
+export interface QrResult {
+  svg: string;
+  modules: number;
+  /** Where a logo may be drawn, in module units — null when none was asked for. */
+  clearBox: { x: number; y: number; size: number } | null;
+}
 
 /**
  * Build the SVG.
@@ -92,6 +124,7 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
   const {
     ec = 'M', margin = 4, dark = '#000000', light = '#ffffff',
     moduleStyle = 'square', eyeStyle = 'square', eyeColor, gradient = null,
+    logoAreaPct = 0,
   } = opts;
   if (!text) throw new Error('Nothing to encode.');
 
@@ -120,6 +153,25 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
   const inEye = (r: number, c: number) =>
     (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
 
+  /**
+   * The clear zone for a logo.
+   *
+   * Modules under it are NOT DRAWN rather than covered over. Painting a logo on
+   * top leaves the modules present in any renderer that ignores z-order — an
+   * SVG-to-PDF converter, a print RIP — and the code then has both the data and
+   * the logo fighting in the same square. Removing them is the honest version,
+   * and it is what the error correction is being asked to recover.
+   *
+   * Capped at 12%: above that the correction cannot reconstruct what was taken,
+   * whatever level it is set to.
+   */
+  const clearPct = Math.max(0, Math.min(12, logoAreaPct));
+  const clear = clearPct ? Math.ceil(count * Math.sqrt(clearPct / 100)) : 0;
+  const clearLo = Math.floor((count - clear) / 2);
+  const clearHi = clearLo + clear;
+  const inLogo = (r: number, c: number) =>
+    clear > 0 && r >= clearLo && r < clearHi && c >= clearLo && c < clearHi;
+
   let data = '';
   if (moduleStyle === 'square') {
     // Runs collapse into one rectangle each — a third of the elements a
@@ -127,7 +179,7 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
     for (let row = 0; row < count; row++) {
       let run = 0, start = 0;
       for (let col = 0; col <= count; col++) {
-        const on = col < count && qr.isDark(row, col) && !inEye(row, col);
+        const on = col < count && qr.isDark(row, col) && !inEye(row, col) && !inLogo(row, col);
         if (on) { if (!run) start = col; run++; continue; }
         if (run) { data += `M${start + margin} ${row + margin}h${run}v1h-${run}z`; run = 0; }
       }
@@ -146,11 +198,16 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
     const r = moduleStyle === 'dots' ? 0.5 : 0.3;
     for (let row = 0; row < count; row++) {
       for (let col = 0; col < count; col++) {
-        if (!qr.isDark(row, col) || inEye(row, col)) continue;
+        if (!qr.isDark(row, col) || inEye(row, col) || inLogo(row, col)) continue;
         const x = col + margin, y = row + margin;
+        // FULL BLEED — no inset. An inset leaves a gap on every side, which is
+        // the same thing that made 0.42-radius dots undecodable: a binariser
+        // recovers the module grid from ink, and shaving it costs more than it
+        // looks. Rounded modules now fill their cell exactly and only the
+        // corners are cut.
         data += moduleStyle === 'dots'
           ? circle(x + 0.5, y + 0.5, r)
-          : roundedRect(x + 0.04, y + 0.04, 0.92, 0.92, r);
+          : roundedRect(x, y, 1, 1, r);
       }
     }
   }
@@ -178,7 +235,7 @@ export function qrSvg(text: string, opts: QrOptions = {}): QrResult {
     `<path d="${eyes}" fill="${esc(eyeColor || dark)}" fill-rule="evenodd"/>` +
     `</svg>`;
 
-  return { svg, modules: count };
+  return { svg, modules: count, clearBox: clear ? { x: clearLo + margin, y: clearLo + margin, size: clear } : null };
 }
 
 const circle = (cx: number, cy: number, r: number) =>
@@ -224,7 +281,23 @@ function esc(v: string): string {
 export async function qrPng(text: string, pixels = 1024, opts: QrOptions = {}): Promise<Uint8Array> {
   const { svg, modules } = qrSvg(text, opts);
   const total = modules + (opts.margin ?? 4) * 2;
-  const scale = Math.max(1, Math.round(pixels / total));
+
+  /**
+   * A WHOLE number of pixels per module, with a FLOOR.
+   *
+   * Both halves are measured. Scaling a 37-unit code to exactly 1024 gives
+   * 27.68 px per module, and the uneven module widths that produces made dots
+   * undecodable at every error-correction level — the classic "looks fine,
+   * scans badly" failure. Rounding to a whole number fixed it outright.
+   *
+   * The floor is the second half: with integer scaling the remaining failures
+   * were all at roughly 10 px per module, which is what a DENSE code (more
+   * data, or higher correction) produces at a fixed target size. So the target
+   * is a minimum rather than a maximum — a denser code comes out as a larger
+   * image instead of an unreadable one. Square modules survive smaller, but not
+   * by enough to be worth two rules.
+   */
+  const scale = Math.max(MIN_PX_PER_MODULE, Math.round(pixels / total));
   const side = total * scale;
 
   const img = new Image();
