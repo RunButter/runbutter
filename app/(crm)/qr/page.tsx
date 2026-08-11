@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { QrCode, Download, Copy, Check, Loader2 } from 'lucide-react';
-import { qrSvg, qrPng, type EcLevel } from '@/lib/qr/render';
+import { qrSvg, qrPng, type EcLevel, type ModuleStyle, type EyeStyle } from '@/lib/qr/render';
 import { downloadBytes } from '@/lib/pdf/toolkit';
 import PageHeader from '@/components/dashboard/PageHeader';
 
@@ -48,6 +48,10 @@ export default function QrPage() {
   const [value, setValue] = useState('');
   const [ec, setEc] = useState<EcLevel>('M');
   const [dark, setDark] = useState('#000000');
+  const [moduleStyle, setModuleStyle] = useState<ModuleStyle>('square');
+  const [eyeStyle, setEyeStyle] = useState<EyeStyle>('square');
+  const [eyeColor, setEyeColor] = useState('');
+  const [gradTo, setGradTo] = useState('');
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -57,13 +61,20 @@ export default function QrPage() {
   // and a live preview is the whole point of a generator.
   const result = useMemo(() => {
     if (!encoded.trim()) return null;
-    try { return { ...qrSvg(encoded, { ec, dark }), error: '' }; }
+    const style = { ec, dark, moduleStyle, eyeStyle,
+      eyeColor: eyeColor || undefined,
+      gradient: gradTo ? { from: dark, to: gradTo } : null };
+    try { return { ...qrSvg(encoded, style), error: '' }; }
     catch (e: any) { return { svg: '', modules: 0, error: e?.message || 'Could not encode that.' }; }
-  }, [encoded, ec, dark]);
+  }, [encoded, ec, dark, moduleStyle, eyeStyle, eyeColor, gradTo]);
+
+  const styleOpts = () => ({ ec, dark, moduleStyle, eyeStyle,
+    eyeColor: eyeColor || undefined,
+    gradient: gradTo ? { from: dark, to: gradTo } : null });
 
   const savePng = async () => {
     setBusy(true);
-    try { downloadBytes(await qrPng(encoded, 1024, { ec, dark }), 'qr.png', 'image/png'); }
+    try { downloadBytes(await qrPng(encoded, 1024, styleOpts()), 'qr.png', 'image/png'); }
     finally { setBusy(false); }
   };
 
@@ -112,17 +123,61 @@ export default function QrPage() {
               <p className="mt-1.5 text-2xs text-tertiary leading-relaxed">{EC_LEVELS.find((l) => l.id === ec)!.note}</p>
             </div>
 
-            <label className="flex items-center gap-2.5">
-              <input type="color" value={dark} onChange={(e) => setDark(e.target.value)}
-                className="w-8 h-8 rounded-md border border-subtle bg-surface cursor-pointer" />
-              <span className="text-xs text-secondary">Colour</span>
-              {/* Said plainly because it is the mistake people make: a pale code
-                  on white looks stylish on screen and does not scan on paper. */}
-              <span className="text-2xs text-tertiary">Dark on light scans best — a light colour may not scan at all.</span>
-            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-secondary block mb-1.5">Modules</span>
+                <div className="flex gap-1.5">
+                  {(['square', 'rounded', 'dots'] as ModuleStyle[]).map((m) => (
+                    <button key={m} onClick={() => setModuleStyle(m)}
+                      className={`h-7 px-2.5 rounded-md text-2xs font-medium capitalize transition-colors ${
+                        moduleStyle === m ? 'bg-inverse text-inverse-fg' : 'text-secondary ring-1 ring-subtle hover:bg-surface-sunken'}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-secondary block mb-1.5">Corners</span>
+                <div className="flex gap-1.5">
+                  {(['square', 'rounded', 'circle'] as EyeStyle[]).map((m) => (
+                    <button key={m} onClick={() => setEyeStyle(m)}
+                      className={`h-7 px-2.5 rounded-md text-2xs font-medium capitalize transition-colors ${
+                        eyeStyle === m ? 'bg-inverse text-inverse-fg' : 'text-secondary ring-1 ring-subtle hover:bg-surface-sunken'}`}>
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <label className="flex items-center gap-2">
+                <input type="color" value={dark} onChange={(e) => setDark(e.target.value)}
+                  className="w-8 h-8 rounded-md border border-subtle bg-surface cursor-pointer" />
+                <span className="text-xs text-secondary">Colour</span>
+              </label>
+              {/* Both optional and both off by default. A generator that opens
+                  on a gradient makes every code look like a template. */}
+              <label className="flex items-center gap-2">
+                <input type="color" value={eyeColor || dark} onChange={(e) => setEyeColor(e.target.value)}
+                  className="w-8 h-8 rounded-md border border-subtle bg-surface cursor-pointer" />
+                <span className="text-xs text-secondary">Corners</span>
+                {eyeColor && <button onClick={() => setEyeColor('')} className="text-2xs text-tertiary hover:text-primary underline underline-offset-2">reset</button>}
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="color" value={gradTo || dark} onChange={(e) => setGradTo(e.target.value)}
+                  className="w-8 h-8 rounded-md border border-subtle bg-surface cursor-pointer" />
+                <span className="text-xs text-secondary">Gradient</span>
+                {gradTo && <button onClick={() => setGradTo('')} className="text-2xs text-tertiary hover:text-primary underline underline-offset-2">off</button>}
+              </label>
+            </div>
+
+
+            {/* Said plainly because it is the mistake people make: a pale code
+                on white looks stylish on screen and does not scan on paper. */}
             <p className="text-2xs text-tertiary leading-relaxed">
-              Generated in this tab. Nothing is uploaded, so an unlisted link stays unlisted.
+              Dark on light scans best — a pale colour may not scan at all. Generated in this tab,
+              so an unlisted link stays unlisted.
             </p>
           </div>
 
