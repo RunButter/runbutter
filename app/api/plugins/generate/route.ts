@@ -46,7 +46,7 @@ export const dynamic = 'force-dynamic';
  */
 
 const MAX_ATTEMPTS = 3;          // one write + up to two repairs
-const GENERATE_MAX_TOKENS = 3072;
+const GENERATE_MAX_TOKENS = 4096;
 
 const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
@@ -110,7 +110,11 @@ export async function POST(req: Request) {
       // a draft, and handing back a worse experience than "here is your skill,
       // three things left to fix" would be silly.
       if (best) break;
-      return NextResponse.json({ error: e?.message || 'The AI request failed.' }, { status: 502 });
+      const truncated = e?.name === 'TruncatedReply';
+      return NextResponse.json(
+        { error: e?.message || 'The AI request failed.' },
+        { status: truncated ? 422 : 502 },
+      );
     }
     lastReply = reply;
 

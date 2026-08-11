@@ -73,6 +73,8 @@ function examples(): string {
 
 const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
+const BUILD_MAX_TOKENS = 4096;
+
 /**
  * Pull the JSON out of a reply.
  *
@@ -124,15 +126,31 @@ export async function POST(req: Request) {
       provider, apiKey, model, SYSTEM,
       `${examples()}\n\nBusiness: ${text}\n`,
       (secret as any).base_url || undefined,
+      // A blueprint is up to 4 objects of 10 fields each as JSON, and a
+      // reasoning model spends output tokens thinking before it writes any of
+      // it. At the 2048 default that ran out mid-object and surfaced as "the
+      // model did not return a plan", which blamed the description.
+      BUILD_MAX_TOKENS,
     );
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'The AI request failed.' }, { status: 502 });
+    // A truncated reply explains itself and is the user's to act on (pick a
+    // different model, ask for less) — not a 502, which reads as our outage.
+    const truncated = e?.name === 'TruncatedReply';
+    return NextResponse.json(
+      { error: e?.message || 'The AI request failed.' },
+      { status: truncated ? 422 : 502 },
+    );
   }
 
   const raw = extractJson(reply);
   if (!raw) {
     return NextResponse.json({
-      error: 'The model did not return a plan. Try describing the business in a sentence or two.',
+      // Says what actually happened. The old text advised rewording the
+      // description, which cannot help when the reply was empty or was JSON the
+      // parser could not read.
+      error: reply.trim()
+        ? 'The model replied, but not with a plan it could read. Try a different model — some are much better at returning strict JSON.'
+        : 'The model returned nothing at all. Check the key and model name in Account → AI keys.',
       detail: reply.slice(0, 300),
     }, { status: 422 });
   }

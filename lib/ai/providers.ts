@@ -39,7 +39,49 @@ function privateHostMessage(base: string): string {
 // gateways assume the model max (e.g. 16k) and pre-check affordability against
 // that ceiling — free/low-credit accounts get rejected before a single token.
 // ~1k tokens comfortably fits a one-page draft.
-const MAX_OUTPUT_TOKENS = 1024;
+const MAX_OUTPUT_TOKENS = 2048;
+
+/**
+ * The reply was cut off, and that is a different failure from a bad reply.
+ *
+ * WHY THIS IS ITS OWN ERROR. Three of the five callers parse the reply as JSON.
+ * A truncated reply fails that parse, and the message the user got was "The
+ * model did not return a plan. Try describing the business in a sentence or
+ * two." — advice that cannot work, about a cause that was never mentioned, on a
+ * request that was billed in full. Rewording the description does nothing when
+ * the ceiling is the problem.
+ *
+ * REASONING MODELS MADE THIS ROUTINE. A model that thinks before answering
+ * spends OUTPUT tokens doing it, so at a 1024 ceiling it can exhaust the budget
+ * before writing a single character of JSON. That is why this started showing
+ * up with Kimi and DeepSeek-R1 through OpenRouter and not with gpt-4o.
+ */
+class TruncatedReply extends Error {
+  constructor(maxTokens: number, wroteNothing: boolean) {
+    super(
+      wroteNothing
+        ? `The model used its entire ${maxTokens}-token budget thinking and never wrote an answer. Reasoning models (Kimi, DeepSeek-R1, o1) need a larger ceiling — or pick a non-reasoning model like gpt-4o-mini or claude-haiku for this.`
+        : `The model's reply was cut off at ${maxTokens} tokens, so it is incomplete. Ask for something smaller, or use a model that answers more concisely.`,
+    );
+    this.name = 'TruncatedReply';
+  }
+}
+
+/**
+ * Reasoning models emit their thinking inline, in one of two shapes: a
+ * `<think>` block inside the content, or a separate `reasoning` field with the
+ * answer in `content`. The block form breaks JSON extraction, because a chain
+ * of thought is full of braces and "first { to last }" then spans the thinking
+ * and the answer together.
+ */
+function stripThinking(text: string): string {
+  return text
+    .replace(/<think(?:ing)?>[\s\S]*?<\/think(?:ing)?>/gi, '')
+    // An unclosed block means the reply was cut off mid-thought; everything
+    // after the opening tag is thinking, not answer.
+    .replace(/<think(?:ing)?>[\s\S]*$/i, '')
+    .trim();
+}
 
 /**
  * `maxTokens` is per call because 1024 is the right ceiling for a one-page draft
@@ -57,7 +99,9 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
-    return (d.content || []).map((b: any) => b.text || '').join('').trim();
+    const text = stripThinking((d.content || []).map((b: any) => b.text || '').join(''));
+    if (d.stop_reason === 'max_tokens') throw new TruncatedReply(maxTokens, !text);
+    return text;
   }
 
   if (provider === 'gemini') {
@@ -67,7 +111,10 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
-    return (d.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('').trim();
+    const c = d.candidates?.[0];
+    const text = stripThinking((c?.content?.parts || []).map((p: any) => p.text || '').join(''));
+    if (c?.finishReason === 'MAX_TOKENS') throw new TruncatedReply(maxTokens, !text);
+    return text;
   }
 
   // openai, openrouter, and custom endpoints all speak the OpenAI chat format
@@ -84,7 +131,15 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);
-  return (d.choices?.[0]?.message?.content || '').trim();
+  const choice = d.choices?.[0];
+  const text = stripThinking(choice?.message?.content || '');
+  // `length` is the OpenAI-compatible word for "hit max_tokens". OpenRouter
+  // passes it through from whichever upstream served the request.
+  if (choice?.finish_reason === 'length') throw new TruncatedReply(maxTokens, !text);
+  // A model that returned only `reasoning` and no content did the same thing
+  // without admitting it — some gateways report `stop` regardless.
+  if (!text && choice?.message?.reasoning) throw new TruncatedReply(maxTokens, true);
+  return text;
 }
 
 // ── Tool-calling (agent runner) ──────────────────────────────────────────────
