@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { runDispatcher } from '@/lib/automations/dispatcher';
 import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
@@ -35,6 +36,16 @@ interface Ctx {
   privy: string;
   scope: 'full' | 'read';
   fromQuery: boolean;
+}
+
+/**
+ * `apiAccess` is a Business feature and nothing enforced it. The gate belongs
+ * HERE rather than on key creation, because a key outlives the plan that made
+ * it — a workspace that downgrades keeps working keys forever otherwise.
+ */
+async function gate(ctx: Ctx): Promise<Response | null> {
+  const denied = await checkFeature(ctx.workspace, 'apiAccess');
+  return denied ? NextResponse.json(planDeniedBody(denied), { status: 402 }) : null;
 }
 
 async function auth(req: Request): Promise<Ctx | null> {
@@ -90,6 +101,8 @@ export async function GET(req: Request) {
   if (!rl.ok) return tooMany(rl.retryAfterS);
   const ctx = await auth(req);
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
+  const denied = await gate(ctx);
+  if (denied) return denied;
   const params = new URL(req.url).searchParams;
   const object = params.get('object') || '';
   const allowed = await allowedObjects(ctx);
@@ -109,6 +122,8 @@ export async function POST(req: Request) {
   if (!rl.ok) return tooMany(rl.retryAfterS);
   const ctx = await auth(req);
   if (!ctx) return NextResponse.json({ error: 'Invalid or missing API key' }, { status: 401 });
+  const denied = await gate(ctx);
+  if (denied) return denied;
   // Rule 2: the transport decides, not the scope. A key that arrived in a URL
   // never writes, so a leaked feed link can only ever read.
   if (ctx.fromQuery || ctx.scope === 'read') {

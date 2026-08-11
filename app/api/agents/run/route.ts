@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
+import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { openSecret } from '@/lib/crypto/secrets';
 import { PROVIDERS, type AIProvider } from '@/lib/ai/providers';
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
 
   const auth = await authorizePrivy(req, privyUserId);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
+
+  // AI agents are a Business feature: the /agents page was gated in the React
+  // tree and this route was not. Checked before the AI key is decrypted — no
+  // reason to touch a secret for a call that is about to be refused.
+  const planDenied = await checkFeature(workspaceId, 'aiAgents');
+  if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
 
   const admin = createAdminClient();
 

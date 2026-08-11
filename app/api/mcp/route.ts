@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { TOOLS as WORKSPACE_TOOLS, callTool, type ToolCtx } from '@/lib/agents/tools';
 import { isWriteTool } from '@/lib/agents/catalog';
@@ -78,6 +79,11 @@ export async function POST(req: Request) {
   if (method === 'tools/call') {
     const ctx = await auth(req);
     if (!ctx) return rpcError(id, -32001, 'Invalid or missing API key (Authorization: Bearer hb_...)', 401);
+    // The gate sits on the CALL, not on discovery. `tools/list` stays open so a
+    // client can still describe the product accurately; refusing to list would
+    // read as a broken server rather than an unpaid feature.
+    const denied = await checkFeature(ctx.workspace, 'apiAccess');
+    if (denied) return rpcError(id, -32003, planDeniedBody(denied).error, 402);
     if (ctx.scope === 'read' && isWriteTool(params?.name)) {
       return rpcError(id, -32002, `This API key is read-only, so "${params?.name}" is not permitted. Create a full-access key to write.`, 403);
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase';
+import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
@@ -46,6 +47,10 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
   const { data: ws } = await admin.rpc('get_my_workspace', { p_privy: v.userId });
   if (!ws?.id) return NextResponse.json({ error: 'No workspace found for your account.' }, { status: 400 });
+
+  // Before the PDF is uploaded, so a refused request leaves nothing in storage.
+  const planDenied = await checkFeature(ws.id, 'eSignatures');
+  if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
 
   // Store the original privately.
   await ensureBucket(admin);
