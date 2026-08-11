@@ -49,6 +49,7 @@
     "pdfjs-dist": "^4.10.38",
     "pdfkit": "^0.19.1",
     "pg": "^8.22.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",

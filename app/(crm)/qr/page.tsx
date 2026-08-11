@@ -1,0 +1,171 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { QrCode, Download, Copy, Check, Loader2 } from 'lucide-react';
+import { qrSvg, qrPng, type EcLevel } from '@/lib/qr/render';
+import { downloadBytes } from '@/lib/pdf/toolkit';
+import PageHeader from '@/components/dashboard/PageHeader';
+
+/**
+ * A QR generator, in the tab.
+ *
+ * It sits beside the PDF tools and follows the same rule: a QR usually encodes
+ * a URL, and a URL is often a private one — an unlisted form, a signing link, a
+ * record. Sending those to a generator service to get a picture back is a bad
+ * trade for something the browser can do in a millisecond.
+ *
+ * NO LOGO OVERLAY, and that is a deliberate omission rather than a missing
+ * feature. Punching a logo into the middle destroys modules and relies on error
+ * correction to survive it; it usually works, and when it does not it fails at
+ * the printer, on a poster, after somebody paid for five hundred of them. If
+ * that is wanted it needs a scan test in the UI, not a checkbox.
+ */
+
+const PRESETS: { label: string; hint: string; build: (v: string) => string }[] = [
+  { label: 'Link', hint: 'https://…', build: (v) => v.trim() },
+  { label: 'Email', hint: 'name@company.com', build: (v) => `mailto:${v.trim()}` },
+  { label: 'Phone', hint: '+48 600 000 000', build: (v) => `tel:${v.replace(/[^\d+]/g, '')}` },
+  // Wi-Fi is the one people cannot guess the syntax of, and it is the single
+  // most common non-URL QR in a shop or an office.
+  { label: 'Wi-Fi', hint: 'NetworkName : password', build: (v) => {
+    const [ssid, ...rest] = v.split(':');
+    const pass = rest.join(':').trim();
+    const esc = (s: string) => s.trim().replace(/([\\;,":])/g, '\\$1');
+    return `WIFI:T:${pass ? 'WPA' : 'nopass'};S:${esc(ssid || '')};${pass ? `P:${esc(pass)};` : ''};`;
+  } },
+  { label: 'Text', hint: 'Anything at all', build: (v) => v },
+];
+
+const EC_LEVELS: { id: EcLevel; label: string; note: string }[] = [
+  { id: 'L', label: 'L', note: '~7% recoverable — smallest code' },
+  { id: 'M', label: 'M', note: '~15% — the usual choice' },
+  { id: 'Q', label: 'Q', note: '~25%' },
+  { id: 'H', label: 'H', note: '~30% — densest, for rough surfaces' },
+];
+
+export default function QrPage() {
+  const [preset, setPreset] = useState(0);
+  const [value, setValue] = useState('');
+  const [ec, setEc] = useState<EcLevel>('M');
+  const [dark, setDark] = useState('#000000');
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const encoded = PRESETS[preset].build(value);
+
+  // Recomputed on every keystroke, which is fine: encoding is sub-millisecond
+  // and a live preview is the whole point of a generator.
+  const result = useMemo(() => {
+    if (!encoded.trim()) return null;
+    try { return { ...qrSvg(encoded, { ec, dark }), error: '' }; }
+    catch (e: any) { return { svg: '', modules: 0, error: e?.message || 'Could not encode that.' }; }
+  }, [encoded, ec, dark]);
+
+  const savePng = async () => {
+    setBusy(true);
+    try { downloadBytes(await qrPng(encoded, 1024, { ec, dark }), 'qr.png', 'image/png'); }
+    finally { setBusy(false); }
+  };
+
+  const saveSvg = () => {
+    if (!result?.svg) return;
+    downloadBytes(new TextEncoder().encode(result.svg), 'qr.svg', 'image/svg+xml');
+  };
+
+  return (
+    <>
+      <PageHeader title="QR codes" />
+      <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
+        <div className="max-w-3xl mx-auto grid md:grid-cols-[1fr_auto] gap-6 items-start">
+
+          <div className="space-y-5 min-w-0">
+            <div className="flex flex-wrap gap-1.5">
+              {PRESETS.map((p, i) => (
+                <button key={p.label} onClick={() => setPreset(i)}
+                  className={`h-7 px-2.5 rounded-md text-2xs font-medium transition-colors ${
+                    i === preset ? 'bg-inverse text-inverse-fg' : 'text-secondary ring-1 ring-subtle hover:bg-surface-sunken'}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="block">
+              <span className="text-xs text-secondary block mb-1">
+                {PRESETS[preset].label}
+                {preset === 3 && <span className="text-tertiary"> — network name, then a colon, then the password</span>}
+              </span>
+              <textarea autoFocus value={value} onChange={(e) => setValue(e.target.value)} rows={preset === 4 ? 5 : 2}
+                className="input-field !h-auto py-2 resize-y text-sm" placeholder={PRESETS[preset].hint} />
+            </label>
+
+            <div>
+              <span className="text-xs text-secondary block mb-1.5">Error correction</span>
+              <div className="flex gap-1.5">
+                {EC_LEVELS.map((l) => (
+                  <button key={l.id} onClick={() => setEc(l.id)} title={l.note}
+                    className={`h-7 w-9 rounded-md text-2xs font-medium transition-colors ${
+                      ec === l.id ? 'bg-inverse text-inverse-fg' : 'text-secondary ring-1 ring-subtle hover:bg-surface-sunken'}`}>
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-2xs text-tertiary leading-relaxed">{EC_LEVELS.find((l) => l.id === ec)!.note}</p>
+            </div>
+
+            <label className="flex items-center gap-2.5">
+              <input type="color" value={dark} onChange={(e) => setDark(e.target.value)}
+                className="w-8 h-8 rounded-md border border-subtle bg-surface cursor-pointer" />
+              <span className="text-xs text-secondary">Colour</span>
+              {/* Said plainly because it is the mistake people make: a pale code
+                  on white looks stylish on screen and does not scan on paper. */}
+              <span className="text-2xs text-tertiary">Dark on light scans best — a light colour may not scan at all.</span>
+            </label>
+
+            <p className="text-2xs text-tertiary leading-relaxed">
+              Generated in this tab. Nothing is uploaded, so an unlisted link stays unlisted.
+            </p>
+          </div>
+
+          <div className="w-full md:w-64 shrink-0">
+            <div className="rounded-xl bg-surface ring-1 ring-subtle shadow-card p-4">
+              {result?.svg ? (
+                <div className="rounded-lg overflow-hidden" dangerouslySetInnerHTML={{ __html: result.svg }} />
+              ) : (
+                <div className="aspect-square rounded-lg bg-surface-sunken flex items-center justify-center">
+                  <QrCode className="w-8 h-8 text-tertiary" />
+                </div>
+              )}
+
+              {result?.error && <p className="mt-3 text-2xs text-danger leading-relaxed">{result.error}</p>}
+
+              {result?.svg && (
+                <>
+                  <p className="mt-3 text-2xs text-tertiary tabular-nums">
+                    {result.modules}×{result.modules} modules · {encoded.length} characters
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <button onClick={savePng} disabled={busy}
+                      className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-2xs font-medium hover:opacity-90 disabled:opacity-50">
+                      {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />} PNG
+                    </button>
+                    <button onClick={saveSvg}
+                      className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken text-2xs font-medium">
+                      <Download className="w-3 h-3" /> SVG
+                    </button>
+                    <button onClick={() => { navigator.clipboard.writeText(result.svg).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1400); }, () => {}); }}
+                      className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken text-2xs font-medium">
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} SVG code
+                    </button>
+                  </div>
+                  <p className="mt-2 text-2xs text-tertiary leading-relaxed">
+                    SVG for print and anything that resizes. PNG for Word, social and most print shops.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

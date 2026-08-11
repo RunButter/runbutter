@@ -1,7 +1,7 @@
 import {
   // Built-in nav — every icon lib/crm/registry.ts declares.
   ArrowLeftRight, BarChart3, BookOpen, Bot, Briefcase, Building2, Calendar, Columns3, CreditCard,
-  FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare,
+  FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
   Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap,
@@ -33,7 +33,7 @@ import { OBJECT_ICON_NAMES } from '@/lib/workspace/blueprint';
  */
 export const ICON_REGISTRY: Record<string, LucideIcon> = {
   ArrowLeftRight, BarChart3, BookOpen, Bot, Briefcase, Building2, Calendar, Columns3, CreditCard,
-  FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare,
+  FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
   Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap,

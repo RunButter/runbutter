@@ -236,6 +236,9 @@ export const NAV = [
     // the business. Free-form canvas, so it belongs to no pillar.
     { slug: 'maps', label: 'Maps', icon: 'Waypoints', href: '/maps' },
     { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
+    // Beside the PDF tools rather than under Marketing: it is a utility, not a
+    // campaign — the thing it most often encodes is a link somebody already has.
+    { slug: 'qr', label: 'QR codes', icon: 'QrCode', href: '/qr' },
   ]},
   { group: 'Sales', items: [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
