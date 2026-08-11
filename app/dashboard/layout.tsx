@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Menu, Loader2 } from 'lucide-react';
-import { listHrCompanies } from '@/lib/hr/company';
+import { getWorkspace } from '@/lib/crm/data';
 import NavRail from '@/components/crm/NavRail';
 import PlanGate from '@/components/PlanGate';
 import { type PlanFeature } from '@/lib/plans';
@@ -24,24 +24,32 @@ const ROUTE_FEATURE: [string, PlanFeature][] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, ready, authenticated } = usePrivy();
-  const [company, setCompany] = useState<any>(null);
+  // The PLAN only. It used to be a whole company row read straight from
+  // `company_users` joined to `companies` — both revoked from the browser by
+  // 0077, so the read returned nothing and `plan` came through undefined.
+  const [plan, setPlan] = useState<string | undefined>(undefined);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (ready && authenticated && user) loadCompanyData();
+    if (ready && authenticated && user) loadPlan();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, authenticated, user]);
 
-  async function loadCompanyData() {
+  /**
+   * Read the plan the way the rest of the product does: `get_my_workspace`
+   * through the /api/rpc proxy, which returns `workspaces.plan`. Stripe writes
+   * `companies.plan` and 0090's trigger mirrors it across, so this is the same
+   * value — reached by a path that still works after 0077.
+   *
+   * Left undefined on any failure. PlanGate renders rather than walls when the
+   * plan is unknown, so a bad read costs nothing instead of locking somebody out.
+   */
+  async function loadPlan() {
     try {
-      // Via get_my_hr_companies: the direct read of company_users has been
-      // denied since 0077, and because this catch is non-fatal the only symptom
-      // was the company name quietly missing from the shell.
-      const mine = await listHrCompanies(user!.id);
-      const active = mine.find((c) => c.active) ?? mine[0];
-      if (active) setCompany({ id: active.companyId, name: active.name } as any);
+      const ws = await getWorkspace(user!.id);
+      if (ws?.plan) setPlan(ws.plan);
     } catch {
-      /* non-fatal */
+      /* leave it unknown — see PlanGate */
     }
   }
 
@@ -75,11 +83,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
         <div className="flex-1 overflow-y-auto bg-canvas">
-          {company && requiredFeature ? (
-            <PlanGate plan={company.plan} feature={requiredFeature}>{children}</PlanGate>
-          ) : (
-            children
-          )}
+          {requiredFeature
+            ? <PlanGate plan={plan} feature={requiredFeature}>{children}</PlanGate>
+            : children}
         </div>
       </main>
     </div>

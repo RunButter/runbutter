@@ -61,7 +61,10 @@ export async function getWorkspace(privyUserId: string): Promise<WorkspaceContex
     const { data, error } = await rpc('get_my_workspace', { p_privy: privyUserId });
     if (error || !data) return null;
     const d = data as any;
-    const ws: WorkspaceContext = { id: d.id, name: d.name, role: d.role || 'member', plan: d.plan || 'free' };
+    // NOT coerced to 'free'. An empty plan means "we did not learn it", and
+    // PlanGate has to be able to tell that apart from a genuine Free workspace
+    // or it walls off paying customers whenever a read comes back thin.
+    const ws: WorkspaceContext = { id: d.id, name: d.name, role: d.role || 'member', plan: d.plan || '' };
     wsCache = { key: privyUserId, value: ws };
     return ws;
   })();

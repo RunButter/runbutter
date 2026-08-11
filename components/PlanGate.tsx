@@ -12,10 +12,28 @@ interface Props {
     children: React.ReactNode;
 }
 
-// Renders children if the plan includes `feature`, otherwise a blurred
-// upgrade lock that names the cheapest plan which unlocks it.
+/**
+ * Renders children if the plan includes `feature`, otherwise a blurred upgrade
+ * lock naming the cheapest plan that unlocks it.
+ *
+ * AN UNKNOWN PLAN IS NOT "free". This used to read `plan || 'free'`, so every
+ * way of failing to LEARN the plan — a read that returned nothing, a workspace
+ * row whose column had not synced, a request that failed — presented as the
+ * cheapest tier and put an upgrade wall in front of a paying customer. That is
+ * exactly what happened to an Enterprise account on Source tracking: the HR
+ * dashboard read `companies.plan` through a browser client against a table
+ * migration 0077 had revoked, got nothing back, and locked the owner out of a
+ * feature they had paid for.
+ *
+ * So: only gate on a plan we actually know. The cost of getting this wrong in
+ * one direction is a free user seeing a page for a moment; in the other it is a
+ * customer who is paying being told to pay again. Those are not comparable, and
+ * the code should not treat them as if they were.
+ */
 export default function PlanGate({ plan, feature, label, children }: Props) {
-    const p = (plan || 'free') as SubscriptionPlan;
+    const known = String(plan ?? '').trim();
+    if (!known) return <>{children}</>;
+    const p = known as SubscriptionPlan;
     if (isFeatureAllowed(p, feature)) return <>{children}</>;
 
     const needed = minPlanFor(feature);
