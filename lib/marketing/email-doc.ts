@@ -94,7 +94,15 @@ export function newDocBlock(type: DocBlockType): { type: string; data: any } {
     case 'Heading':
       return { type, data: { props: { text: 'A heading', level: 'h2' }, style: { ...style, textAlign: 'left' } } };
     case 'Text':
-      return { type, data: { props: { text: 'Write something here.' }, style: { ...style, fontSize: 16, textAlign: 'left' } } };
+      // `markdown: true` is what makes a blank line a paragraph.
+      //
+      // Without it Waypoint renders the string into one div and every newline
+      // collapses to a space — so the editor's own hint ("a blank line starts a
+      // new paragraph") was false, and every multi-paragraph template arrived as
+      // a wall. It also buys **bold**, _italic_ and [links](…) for free, and
+      // links written this way are still click-tracked because the rewrite
+      // happens on the rendered HTML rather than on the document.
+      return { type, data: { props: { text: 'Write something here.', markdown: true }, style: { ...style, fontSize: 16, textAlign: 'left' } } };
     case 'Image':
       return { type, data: { props: { url: '', alt: '', contentAlignment: 'middle' }, style: { padding: pad(16, 24, 16, 24) } } };
     case 'Button':
@@ -233,6 +241,13 @@ export function normalizeDoc(raw: any): EmailDoc {
   for (const [k, v] of Object.entries<any>(raw)) {
     if (!v || typeof v !== 'object' || typeof v.type !== 'string') continue;
     if (++n > 200) break;   // the cap that stops one row becoming an unbounded render
+    // Text written before markdown was switched on would otherwise keep
+    // rendering as one collapsed paragraph forever. Defaulting it on read fixes
+    // existing drafts without a migration, and an explicit `false` is honoured.
+    if (v.type === 'Text' && v.data?.props && v.data.props.markdown === undefined) {
+      out[k] = { type: v.type, data: { ...v.data, props: { ...v.data.props, markdown: true } } };
+      continue;
+    }
     out[k] = { type: v.type, data: v.data ?? {} };
   }
   if (!out[ROOT]) return emptyDoc();
@@ -399,73 +414,167 @@ export function docToText(doc: EmailDoc, ctx: RenderCtx): string {
 // ── Starting points ─────────────────────────────────────────────────────────
 
 /**
- * Layouts to start from, as documents.
+ * Layouts to start from.
  *
  * They are ALSO the few-shot examples the AI drafter is shown — the same rule as
  * `lib/workspace/templates.ts`. Two separate sets drift, and then improving a
  * preset stops improving what the model produces.
  *
- * Accent is passed in so a preset opens in the workspace's own brand colour
- * rather than in ours, which is the difference between "a template" and "our
+ * ── THEY CARRY REAL COPY, NOT LOREM ─────────────────────────────────────────
+ * The first version shipped "A heading" and "Write something here", which is
+ * the honest thing to put in a blank block and the wrong thing to put in a
+ * template: a template's job is to show you the SHAPE of an email that works,
+ * and a page of placeholder text shows you nothing you could not have guessed.
+ * Every line below is one somebody could send after changing the nouns.
+ *
+ * ── AND REAL SPACING ────────────────────────────────────────────────────────
+ * The single biggest difference between an email that looks designed and one
+ * that looks generated is white space. These use 40px top padding, 28px side
+ * padding, and generous gaps between sections — roughly double what a naive
+ * default gives you, and the reason the first set looked cramped.
+ *
+ * `accent` is passed in so a preset opens in the workspace's own brand colour
+ * rather than ours, which is the difference between "a template" and "our
  * newsletter" on first sight.
  */
+
+/** Shorthands, so a preset reads as a layout rather than as JSON. */
+const P = (top: number, bottom: number, side = 28) => ({ top, right: side, bottom, left: side });
+const heading = (text: string, level: 'h1' | 'h2' | 'h3', padding: any, align: 'left' | 'center' = 'left', color?: string) =>
+  ({ type: 'Heading', data: { props: { text, level }, style: { padding, textAlign: align, ...(color ? { color } : {}) } } });
+const text = (t: string, padding: any, opts: { size?: number; align?: 'left' | 'center'; color?: string } = {}) =>
+  ({ type: 'Text', data: { props: { text: t, markdown: true }, style: { padding, fontSize: opts.size ?? 16, textAlign: opts.align ?? 'left', ...(opts.color ? { color: opts.color } : {}) } } });
+const button = (label: string, accent: string, padding: any, align: 'left' | 'center' = 'left', textColor = '#FFFFFF') =>
+  ({ type: 'Button', data: { props: { text: label, url: '', buttonStyle: 'rounded', buttonTextColor: textColor, buttonBackgroundColor: accent, size: 'large' }, style: { padding, textAlign: align } } });
+const divider = (color = '#E8E8EC') =>
+  ({ type: 'Divider', data: { props: { lineColor: color, lineHeight: 1 }, style: { padding: P(8, 8) } } });
+const image = (padding: any) =>
+  ({ type: 'Image', data: { props: { url: '', alt: '', contentAlignment: 'middle' }, style: { padding } } });
+
+/** An eyebrow: the small uppercase line that gives a newsletter an identity. */
+const eyebrow = (t: string, accent: string) =>
+  ({ type: 'Text', data: { props: { text: t.toUpperCase(), markdown: true }, style: { padding: P(40, 4), fontSize: 12, color: accent, fontWeight: 'bold' } } });
+
+/** Assemble a document from an ordered list of blocks. */
+function doc(canvas: { backdrop: string; canvasColor: string; textColor: string; font: string }, blocks: any[]): EmailDoc {
+  const out: EmailDoc = {};
+  const ids: string[] = [];
+  for (const b of blocks) { const id = newBlockId(); out[id] = b; ids.push(id); }
+  return {
+    [ROOT]: { type: 'EmailLayout', data: {
+      backdropColor: canvas.backdrop, canvasColor: canvas.canvasColor,
+      textColor: canvas.textColor, fontFamily: canvas.font, childrenIds: ids } },
+    ...out,
+  };
+}
+
+const LIGHT = { backdrop: '#F4F4F6', canvasColor: '#FFFFFF', textColor: '#1F2024', font: 'MODERN_SANS' };
+
 export const DOC_PRESETS: {
   key: string; name: string; description: string; build: (accent: string) => EmailDoc;
 }[] = [
   {
+    key: 'letter', name: 'Letter', description: 'Just words. The format that lands in the inbox most reliably.',
+    build: (a) => doc(LIGHT, [
+      heading('A quick note about what changed', 'h2', P(40, 12)),
+      text('Hi there,\n\nOpen with the point rather than the preamble — the first line is what decides whether the rest gets read.\n\nThen the detail, in short paragraphs. If somebody skims this and takes away one thing, make sure it is the thing in the first line.\n\nThanks for reading.', P(0, 20)),
+      button('Read the full story', a, P(0, 40)),
+    ]),
+  },
+  {
+    key: 'announcement', name: 'Announcement', description: 'Eyebrow, big headline, one action. For launches.',
+    build: (a) => doc(LIGHT, [
+      eyebrow('New', a),
+      heading('The thing you have been waiting for', 'h1', P(0, 16)),
+      text('What it is, in one sentence a stranger would understand. What changes for the reader, in a second.', P(0, 8), { size: 17 }),
+      image(P(20, 24, 0)),
+      button('See what is new', a, P(0, 40)),
+    ]),
+  },
+  {
+    key: 'update', name: 'Product update', description: 'Several changes, each with a heading and a line.',
+    build: (a) => doc(LIGHT, [
+      eyebrow('Product update', a),
+      heading('Three things shipped this month', 'h2', P(0, 8)),
+      text('Short intro on why this month mattered.', P(0, 20), { color: '#6B6C75' }),
+      divider(),
+      heading('The first thing', 'h3', P(16, 4)),
+      text('One or two lines on what it does and who it is for.', P(0, 12), { size: 15 }),
+      heading('The second thing', 'h3', P(8, 4)),
+      text('Again: what it does, who it helps.', P(0, 12), { size: 15 }),
+      heading('The third thing', 'h3', P(8, 4)),
+      text('And the last one.', P(0, 20), { size: 15 }),
+      button('See the full changelog', a, P(0, 40)),
+    ]),
+  },
+  {
+    key: 'digest', name: 'Digest', description: 'An intro and a list of links. For roundups.',
+    build: (a) => doc(LIGHT, [
+      eyebrow('This month', a),
+      heading('Five things worth your time', 'h2', P(0, 8)),
+      text('A sentence on why this issue earns the two minutes.', P(0, 16), { color: '#6B6C75' }),
+      divider(),
+      heading('The first piece', 'h3', P(16, 2)),
+      text('One line on why it matters. Add the link on the heading or below.', P(0, 14), { size: 15, color: '#6B6C75' }),
+      divider(),
+      heading('The second piece', 'h3', P(16, 2)),
+      text('And its line.', P(0, 14), { size: 15, color: '#6B6C75' }),
+      divider(),
+      heading('The third piece', 'h3', P(16, 2)),
+      text('And its line.', P(0, 32), { size: 15, color: '#6B6C75' }),
+    ]),
+  },
+  {
+    key: 'event', name: 'Event', description: 'When, where, and one button that says yes.',
+    build: (a) => doc(LIGHT, [
+      eyebrow('You are invited', a),
+      heading('An evening about the thing', 'h1', P(0, 12), 'center'),
+      text('Thursday 14 May · 18:30\nSomewhere good, in your city', P(0, 8), { align: 'center', size: 17 }),
+      text('Two sentences on what the evening is and who else will be there. People decide on the room, not the topic.', P(8, 24), { align: 'center', color: '#6B6C75' }),
+      button('Save me a seat', a, P(0, 16), 'center'),
+      text('Free, and there will be food.', P(0, 40), { align: 'center', size: 13, color: '#8A8B93' }),
+    ]),
+  },
+  {
+    key: 'twoup', name: 'Two up', description: 'Two things side by side, stacked on a phone.',
+    build: (a) => doc(LIGHT, [
+      heading('Two things at once', 'h2', P(40, 8)),
+      text('One line of framing before the split.', P(0, 16), { color: '#6B6C75' }),
+      { type: 'ColumnsContainer', data: {
+        props: { columnsCount: 2, columnsGap: 24, contentAlignment: 'top',
+          columns: [{ childrenIds: [] }, { childrenIds: [] }] },
+        style: { padding: P(0, 24) } } },
+      text('Columns hold text and images side by side. Use the panel to fill each side.', P(0, 16), { size: 14, color: '#8A8B93' }),
+      button('See both', a, P(0, 40)),
+    ]),
+  },
+  {
+    key: 'bold', name: 'Bold', description: 'Dark, large type, one action. For something that matters.',
+    build: (a) => doc(
+      { backdrop: '#0A0A0C', canvasColor: '#141418', textColor: '#F2F2F4', font: 'HEAVY_SANS' },
+      [
+        heading('One thing, said loudly', 'h1', P(48, 16), 'center', '#FFFFFF'),
+        text('A single sentence underneath, with nothing else competing with it.', P(0, 28), { align: 'center', size: 17, color: '#A9AAB4' }),
+        button('Go', a, P(0, 48), 'center'),
+      ],
+    ),
+  },
+  {
+    key: 'welcome', name: 'Welcome', description: 'The first email somebody gets. Sets expectations.',
+    build: (a) => doc(LIGHT, [
+      heading('Welcome aboard', 'h1', P(40, 12)),
+      text('Thanks for signing up. Here is what happens next, so nothing is a surprise.', P(0, 20), { size: 17 }),
+      divider(),
+      heading('What you will get', 'h3', P(16, 4)),
+      text('One email a month, on the first Tuesday. Product news and nothing else.', P(0, 12), { size: 15 }),
+      heading('How to leave', 'h3', P(8, 4)),
+      text('The unsubscribe link at the bottom of every email works immediately, no questions.', P(0, 24), { size: 15 }),
+      button('Start here', a, P(0, 40)),
+    ]),
+  },
+  {
     key: 'blank', name: 'Blank', description: 'A canvas and nothing on it.',
     build: () => emptyDoc(),
-  },
-  {
-    key: 'letter', name: 'Letter', description: 'Heading, a few paragraphs, one button.',
-    build: (accent) => {
-      const [h, t, b] = [newBlockId(), newBlockId(), newBlockId()];
-      return {
-        [ROOT]: { type: 'EmailLayout', data: { backdropColor: '#F5F5F5', canvasColor: '#FFFFFF', textColor: '#242424', fontFamily: 'MODERN_SANS', childrenIds: [h, t, b] } },
-        [h]: { type: 'Heading', data: { props: { text: 'Something worth telling you', level: 'h2' }, style: { padding: pad(28, 24, 8, 24), textAlign: 'left' } } },
-        [t]: { type: 'Text', data: { props: { text: 'Hello,\n\nOpen with the point rather than the preamble — the first line decides whether the rest gets read.\n\nThen the detail.' }, style: { padding: pad(0, 24, 16, 24), fontSize: 16 } } },
-        [b]: { type: 'Button', data: { props: { text: 'Read the full story', url: '', buttonStyle: 'rounded', buttonTextColor: '#FFFFFF', buttonBackgroundColor: accent, size: 'medium' }, style: { padding: pad(0, 24, 28, 24), textAlign: 'left' } } },
-      };
-    },
-  },
-  {
-    key: 'launch', name: 'Launch', description: 'Hero image, headline, body, button.',
-    build: (accent) => {
-      const [i, h, t, b] = [newBlockId(), newBlockId(), newBlockId(), newBlockId()];
-      return {
-        [ROOT]: { type: 'EmailLayout', data: { backdropColor: '#F5F5F5', canvasColor: '#FFFFFF', textColor: '#242424', fontFamily: 'GEOMETRIC_SANS', childrenIds: [i, h, t, b] } },
-        [i]: { type: 'Image', data: { props: { url: '', alt: '', contentAlignment: 'middle' }, style: { padding: pad(0, 0, 0, 0) } } },
-        [h]: { type: 'Heading', data: { props: { text: 'Introducing the thing', level: 'h1' }, style: { padding: pad(28, 24, 8, 24), textAlign: 'left' } } },
-        [t]: { type: 'Text', data: { props: { text: 'What it is, in one paragraph. What changes for the reader, in a second.' }, style: { padding: pad(0, 24, 20, 24), fontSize: 16 } } },
-        [b]: { type: 'Button', data: { props: { text: 'Try it', url: '', buttonStyle: 'rounded', buttonTextColor: '#FFFFFF', buttonBackgroundColor: accent, size: 'large' }, style: { padding: pad(0, 24, 32, 24), textAlign: 'left' } } },
-      };
-    },
-  },
-  {
-    key: 'twoup', name: 'Two up', description: 'Headline, then two columns side by side.',
-    build: (accent) => {
-      const [h, c, l, r, d] = [newBlockId(), newBlockId(), newBlockId(), newBlockId(), newBlockId()];
-      return {
-        [ROOT]: { type: 'EmailLayout', data: { backdropColor: '#F5F5F5', canvasColor: '#FFFFFF', textColor: '#242424', fontFamily: 'MODERN_SANS', childrenIds: [h, c, d] } },
-        [h]: { type: 'Heading', data: { props: { text: 'Two things at once', level: 'h2' }, style: { padding: pad(28, 24, 8, 24), textAlign: 'left' } } },
-        [c]: { type: 'ColumnsContainer', data: { props: { columnsCount: 2, columnsGap: 16, contentAlignment: 'top', columns: [{ childrenIds: [l] }, { childrenIds: [r] }] }, style: { padding: pad(8, 24, 8, 24) } } },
-        [l]: { type: 'Text', data: { props: { text: 'The left one.' }, style: { padding: pad(0, 0, 0, 0), fontSize: 15 } } },
-        [r]: { type: 'Text', data: { props: { text: 'The right one.' }, style: { padding: pad(0, 0, 0, 0), fontSize: 15 } } },
-        [d]: { type: 'Button', data: { props: { text: 'See both', url: '', buttonStyle: 'rounded', buttonTextColor: '#FFFFFF', buttonBackgroundColor: accent, size: 'medium' }, style: { padding: pad(16, 24, 28, 24), textAlign: 'left' } } },
-      };
-    },
-  },
-  {
-    key: 'bold', name: 'Bold', description: 'Dark canvas, big type, one action.',
-    build: (accent) => {
-      const [h, t, b] = [newBlockId(), newBlockId(), newBlockId()];
-      return {
-        [ROOT]: { type: 'EmailLayout', data: { backdropColor: '#0B0B0F', canvasColor: '#141419', textColor: '#F4F4F5', fontFamily: 'HEAVY_SANS', childrenIds: [h, t, b] } },
-        [h]: { type: 'Heading', data: { props: { text: 'One thing, said loudly', level: 'h1' }, style: { padding: pad(40, 24, 12, 24), textAlign: 'center' } } },
-        [t]: { type: 'Text', data: { props: { text: 'A single sentence underneath, and nothing else competing with it.' }, style: { padding: pad(0, 32, 24, 32), fontSize: 16, textAlign: 'center' } } },
-        [b]: { type: 'Button', data: { props: { text: 'Go', url: '', buttonStyle: 'pill', buttonTextColor: '#0B0B0F', buttonBackgroundColor: accent, size: 'large' }, style: { padding: pad(0, 24, 44, 24), textAlign: 'center' } } },
-      };
-    },
   },
 ];
 
@@ -475,11 +584,11 @@ export const DOC_PRESETS: {
  * Render any newsletter, whichever template it uses.
  *
  * EVERY caller goes through this pair — the send cron, the sequence runner and
- * the composer's preview. Two renderers now exist (three fixed layouts here,
- * the visual builder there) and the way that goes wrong is a caller that knows
- * about one of them: the newsletter saves fine, the preview looks right, and
- * the send produces an empty body. Dispatching in one place makes that
- * impossible rather than unlikely.
+ * the composer's preview. Two renderers exist (three fixed layouts in
+ * `newsletter-templates.ts`, the visual builder here) and the way that goes
+ * wrong is a caller that knows about one of them: the newsletter saves fine,
+ * the preview looks right, and the send produces an empty body. Dispatching in
+ * one place makes that impossible rather than unlikely.
  */
 export function renderEmail(template: string, ctx: RenderCtx): string {
   if (template === 'blocks') return renderEmailDoc(ctx.content?.doc, ctx);

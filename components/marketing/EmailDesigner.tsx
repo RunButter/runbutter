@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  Plus, Trash2, Copy, ChevronUp, ChevronDown, X, Palette,
+  Plus, Trash2, Copy, ChevronUp, ChevronDown, X, Palette, ChevronRight,
   Heading1, Type, Image as ImageIcon, MousePointerClick, Columns2,
   CircleUser, Minus, MoveVertical, Code2,
 } from 'lucide-react';
@@ -231,6 +231,29 @@ function summarise(b: { type: string; data?: any }): string {
   }
 }
 
+/**
+ * Styling, folded away.
+ *
+ * A block panel that opens showing eight controls is a form; one that opens
+ * showing the text box is an editor. Almost every edit anybody makes to an
+ * email is to its words, and the presets already set spacing, colour and
+ * alignment to something defensible — so the controls that change those start
+ * closed and the writing starts open.
+ */
+function Style({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="pt-0.5">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
+        className="inline-flex items-center gap-1 h-6 px-1 -ml-1 rounded text-3xs text-tertiary hover:text-primary">
+        <ChevronRight className={`w-3 h-3 transition-transform ${open ? 'rotate-90' : ''}`} />
+        Style
+      </button>
+      {open && <div className="mt-1.5 space-y-2">{children}</div>}
+    </div>
+  );
+}
+
 // ── The properties panel ────────────────────────────────────────────────────
 
 function Props({ doc, id, onChange, disabled }: {
@@ -264,9 +287,11 @@ function Props({ doc, id, onChange, disabled }: {
                 className={chip((p.level || 'h2') === l)}>{l.toUpperCase()}</button>
             ))}
           </Row>
-          {align}
-          <Row label="Colour"><Colour value={st.color} fallback="#242424" onChange={(v) => setS({ color: v })} /></Row>
-          {padding}
+          <Style>
+            {align}
+            <Row label="Colour"><Colour value={st.color} fallback="#242424" onChange={(v) => setS({ color: v })} /></Row>
+            {padding}
+          </Style>
         </>
       );
 
@@ -274,16 +299,18 @@ function Props({ doc, id, onChange, disabled }: {
       return (
         <>
           <textarea value={p.text || ''} disabled={disabled} rows={6} onChange={(e) => setP({ text: e.target.value })}
-            placeholder="Write here. A blank line starts a new paragraph." className={area} />
-          <Row label="Size">
-            {[13, 15, 16, 18].map((n) => (
-              <button key={n} disabled={disabled} onClick={() => setS({ fontSize: n })}
-                className={chip((st.fontSize || 16) === n)}>{n}</button>
-            ))}
-          </Row>
-          {align}
-          <Row label="Colour"><Colour value={st.color} fallback="#242424" onChange={(v) => setS({ color: v })} /></Row>
-          {padding}
+            placeholder={"Write here.\n\nA blank line starts a new paragraph. **bold**, _italic_ and [links](https://example.com) work too."} className={area} />
+          <Style>
+            <Row label="Size">
+              {[13, 15, 16, 18].map((n) => (
+                <button key={n} disabled={disabled} onClick={() => setS({ fontSize: n })}
+                  className={chip((st.fontSize || 16) === n)}>{n}</button>
+              ))}
+            </Row>
+            {align}
+            <Row label="Colour"><Colour value={st.color} fallback="#242424" onChange={(v) => setS({ color: v })} /></Row>
+            {padding}
+          </Style>
         </>
       );
 
@@ -296,7 +323,7 @@ function Props({ doc, id, onChange, disabled }: {
             placeholder="Alt text — shown while images are blocked, which is most first opens" className={inp} />
           <input value={p.linkHref || ''} disabled={disabled} onChange={(e) => setP({ linkHref: e.target.value })}
             placeholder="Link when clicked (optional)" className={`${inp} font-mono`} />
-          {padding}
+          <Style>{padding}</Style>
           <p className="text-3xs text-tertiary leading-relaxed">
             The image must already be on the web — a mail client cannot read a file from your computer.
           </p>
@@ -310,26 +337,28 @@ function Props({ doc, id, onChange, disabled }: {
             placeholder="Button label" className={inp} />
           <input value={p.url || ''} disabled={disabled} onChange={(e) => setP({ url: e.target.value })}
             placeholder="https://…" className={`${inp} font-mono`} />
-          <Row label="Shape">
-            {['rectangle', 'rounded', 'pill'].map((s) => (
-              <button key={s} disabled={disabled} onClick={() => setP({ buttonStyle: s })}
-                className={chip((p.buttonStyle || 'rounded') === s)}>{s[0].toUpperCase() + s.slice(1)}</button>
-            ))}
-          </Row>
-          <Row label="Size">
-            {['small', 'medium', 'large'].map((s) => (
-              <button key={s} disabled={disabled} onClick={() => setP({ size: s })}
-                className={chip((p.size || 'medium') === s)}>{s[0].toUpperCase() + s.slice(1)}</button>
-            ))}
-          </Row>
-          <Row label="Colour">
-            <Colour value={p.buttonBackgroundColor} fallback="#4653CE" onChange={(v) => setP({ buttonBackgroundColor: v })} />
-            <span className="text-3xs text-tertiary">fill</span>
-            <Colour value={p.buttonTextColor} fallback="#FFFFFF" onChange={(v) => setP({ buttonTextColor: v })} />
-            <span className="text-3xs text-tertiary">label</span>
-          </Row>
-          {align}
-          {padding}
+          <Style>
+            <Row label="Shape">
+              {['rectangle', 'rounded', 'pill'].map((s) => (
+                <button key={s} disabled={disabled} onClick={() => setP({ buttonStyle: s })}
+                  className={chip((p.buttonStyle || 'rounded') === s)}>{s[0].toUpperCase() + s.slice(1)}</button>
+              ))}
+            </Row>
+            <Row label="Size">
+              {['small', 'medium', 'large'].map((s) => (
+                <button key={s} disabled={disabled} onClick={() => setP({ size: s })}
+                  className={chip((p.size || 'medium') === s)}>{s[0].toUpperCase() + s.slice(1)}</button>
+              ))}
+            </Row>
+            <Row label="Colour">
+              <Colour value={p.buttonBackgroundColor} fallback="#4653CE" onChange={(v) => setP({ buttonBackgroundColor: v })} />
+              <span className="text-3xs text-tertiary">fill</span>
+              <Colour value={p.buttonTextColor} fallback="#FFFFFF" onChange={(v) => setP({ buttonTextColor: v })} />
+              <span className="text-3xs text-tertiary">label</span>
+            </Row>
+            {align}
+            {padding}
+          </Style>
         </>
       );
 

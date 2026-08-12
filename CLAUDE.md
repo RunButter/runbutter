@@ -660,6 +660,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   - The **Custom HTML block is stripped** (scripts, styles, iframes, handlers, `javascript:`/`data:`).
     Not for the recipient — every serious client sanitises harder — but because it renders in our
     composer and can be read back by an agent. The preview iframe is `sandbox=""` as the other half.
+  - **Text blocks set `markdown: true`.** Without it Waypoint renders the string into one div and
+    every newline collapses to a space — so the editor's own hint ("a blank line starts a new
+    paragraph") was FALSE and every multi-paragraph template arrived as a wall of text. It also buys
+    bold, italic and links, and a markdown link is still click-tracked because the rewrite happens on
+    the rendered HTML rather than on the document. `normalizeDoc` defaults it on for rows written
+    before this, so old drafts fix themselves without a migration; an explicit `false` is honoured.
+  - **The presets carry real copy and real spacing.** The first set shipped "A heading" / "Write
+    something here", which is right for a blank block and wrong for a template: a template's job is
+    to show the SHAPE of an email that works. Nine of them now — letter, announcement, product
+    update, digest, event, two up, bold, welcome, blank — each with 40px top padding and generous
+    gaps, which is the single biggest difference between an email that looks designed and one that
+    looks generated.
+  - **Per-block styling is behind a `Style` disclosure.** A panel that opens with eight controls is a
+    form; one that opens with the text box is an editor, and almost every edit anybody makes to an
+    email is to its words.
   - **`DOC_PRESETS` are also the AI's few-shot examples**, same rule as `lib/workspace/templates.ts`.
     The drafter returns a FLAT list and `blocksToDoc` mints the ids: asking a model to cross-reference
     `childrenIds` produces a document that fails its own schema. It can never return `Html`.
