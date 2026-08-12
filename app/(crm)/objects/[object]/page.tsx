@@ -24,6 +24,7 @@ import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
 import { loadCustomObjects, customObjectMap } from '@/lib/crm/custom';
+import { applySettings, useObjectSettings } from '@/lib/crm/objects';
 import type { ObjectDef } from '@/lib/crm/types';
 
 export default function ObjectPage() {
@@ -38,10 +39,17 @@ export default function ObjectPage() {
   // one. `null` means "not looked up yet", which is what stops a custom object
   // 404ing for the half-second before its definition arrives.
   const [custom, setCustom] = useState<Record<string, ObjectDef> | null>(null);
-  const object = OBJECTS[slug] ?? custom?.[slug];
+  const base = OBJECTS[slug] ?? custom?.[slug];
 
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
+  const [wsId, setWsId] = useState<string | null>(null);
+
+  // This workspace's edits to the built-ins (0097): renamed, reordered and
+  // hidden columns, plus any fields it added. A custom object is unaffected —
+  // its definition already comes from the database.
+  const settings = useObjectSettings(privy, wsId);
+  const object = useMemo(() => (base ? applySettings(base, settings) : undefined), [base, settings]);
   const canEdit = !!object?.form && !!privy;
 
   const [rows, setRows] = useState<any[]>([]);
@@ -58,15 +66,16 @@ export default function ObjectPage() {
   const [filters, setFilters] = useState<FilterState>(() =>
     (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).filters);
   const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
-  const [wsId, setWsId] = useState<string | null>(null);
   const isDoc = slug === 'invoices' || slug === 'offers';
   // Counterparties are the records worth screening; a product or an issue is not.
   const screenable = slug === 'companies' || slug === 'people';
 
+  // Unconditional now: the object's own definition depends on it, not just the
+  // sanctions panel. It was fetched only for `screenable` objects before.
   useEffect(() => {
-    if (!privy || !screenable) return;
+    if (!privy) return;
     getWorkspace(privy).then((w) => setWsId(w?.id ?? null));
-  }, [privy, screenable]);
+  }, [privy]);
 
   const reload = useCallback(() => {
     if (!object) return;

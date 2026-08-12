@@ -1,40 +1,37 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import {
-  Table2, Plus, Trash2, GripVertical, Star, ArrowRight, Loader2, Key, X,
-} from 'lucide-react';
+import { Table2, Plus, Loader2 } from 'lucide-react';
 import { getWorkspace } from '@/lib/crm/data';
-import { OBJECTS } from '@/lib/crm/registry';
-import { OBJECT_ICON_NAMES } from '@/lib/workspace/blueprint';
 import { CUSTOM_OBJECT_GROUPS } from '@/lib/crm/nav';
-import { iconFor } from '@/lib/crm/object-icons';
 import {
-  loadCustomObjects, saveCustomObject, deleteCustomObject,
-  saveCustomField, deleteCustomField,
-  FIELD_TYPES, FIELD_TYPE_LABEL,
-  type CustomObject, type CustomField, type CustomFieldType,
+  loadCustomObjects, saveCustomObject, deleteCustomObject, saveCustomField,
+  type CustomObject,
 } from '@/lib/crm/custom';
+import {
+  loadObjectSettings, EDITABLE_BUILTINS, EMPTY_SETTINGS, type ObjectSettings,
+} from '@/lib/crm/objects';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
 import WorkspaceBuilder from '@/components/crm/WorkspaceBuilder';
+import { Section, IconPicker, BuiltinObjectCard, CustomObjectCard } from '@/components/crm/ObjectCards';
 
 /**
- * Settings → Objects. Where a workspace defines its own record types.
+ * Settings → Objects. Where a workspace shapes its own data model.
  *
- * This is the screen that makes the product general rather than five hardcoded
- * verticals. A transport company adds a Vehicle here; a clinic adds a Patient.
- * Everything downstream — the table, the form, import, export, agents, MCP —
- * picks it up with no further work, because a custom object is turned into the
- * same ObjectDef the built-ins already are.
+ * Two lists, one screen. The built-in objects can be renamed, hidden, re-filed
+ * and extended (0097); the workspace's own can be anything at all (0087). They
+ * look the same because they behave the same everywhere downstream, and the
+ * only real difference — a built-in's shipped columns cannot be deleted,
+ * because real code reads them — is shown rather than explained.
  *
- * Deliberately NOT a modal. Defining an object is a considered act with a lot
- * of small decisions in it, and a dialog you can dismiss by clicking outside is
- * the wrong container for that.
+ * EVERYTHING IS COLLAPSED BY DEFAULT. Twenty objects fully expanded is a page
+ * you scroll past rather than read; the row is the index, and opening one is
+ * how you say which one you meant.
  */
 
 const slugify = (s: string) =>
@@ -57,15 +54,24 @@ export default function ObjectsPage() {
 
   const [ws, setWs] = useState<string | null>(null);
   const [rows, setRows] = useState<CustomObject[]>([]);
+  const [settings, setSettings] = useState<ObjectSettings>(EMPTY_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({ singular: '', plural: '', slug: '', group: 'Workspace', icon: 'Table2' });
   const [busy, setBusy] = useState<string | null>(null);
+  // Exactly one card open at a time. Two half-read editors side by side is how
+  // you edit the wrong object.
+  const [open, setOpen] = useState<string | null>(null);
 
   const reload = useCallback(async (w: string, p: string) => {
-    const { rows, error } = await loadCustomObjects(p, w);
-    setRows(rows); setError(error || ''); setLoading(false);
+    const [custom, setts] = await Promise.all([loadCustomObjects(p, w), loadObjectSettings(p, w)]);
+    setRows(custom.rows);
+    setSettings(setts.settings);
+    // The custom-objects error wins: without 0087 nothing on this screen works,
+    // whereas without 0097 the custom half still does.
+    setError(custom.error || setts.error || '');
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -99,6 +105,7 @@ export default function ObjectsPage() {
     setBusy(null); setCreating(false);
     setDraft({ singular: '', plural: '', slug: '', group: 'Workspace', icon: 'Table2' });
     refresh();
+    if (id) setOpen(`custom:${id}`);
   };
 
   const removeObject = async (o: CustomObject) => {
@@ -117,29 +124,23 @@ export default function ObjectsPage() {
     setBusy(null); refresh();
   };
 
+  const hiddenCount = useMemo(
+    () => Object.values(settings.overrides).filter((o) => o.hidden).length, [settings]);
+
   if (!ready || loading) return <AppLoading />;
 
   return (
     <>
-      <PageHeader title="Objects" subtitle="Your own record types, alongside the built-in ones">
+      <PageHeader title="Objects" subtitle="Every record type in this workspace — the ones that ship, and your own">
         <Button size="sm" variant="primary" onClick={() => setCreating((c) => !c)} disabled={!privy}>
           <Plus className="w-3.5 h-3.5" /> New object
         </Button>
       </PageHeader>
 
       <div className="flex-1 overflow-auto p-5 lg:p-6 2xl:p-8">
-        <div className="max-w-4xl mx-auto space-y-5">
-          <p className="text-sm text-secondary max-w-2xl">
-            Add the things your business actually tracks — vehicles, machines, patients, shipments.
-            They get a table, a form, search, import and export, and your agents can read and write
-            them straight away.
-          </p>
-
+        <div className="max-w-4xl mx-auto space-y-6">
           {error && <div className="rounded-lg bg-warning/10 text-warning px-3 py-2 text-xs">{error}</div>}
 
-          {/* Above the manual builder, because "describe it" is the answer for
-              almost everyone and "add one field at a time" is the answer for
-              the person who already knows exactly what they want. */}
           <WorkspaceBuilder privy={privy} ws={ws} onApplied={refresh} />
 
           {creating && (
@@ -179,29 +180,7 @@ export default function ObjectsPage() {
                     className="input-field w-full font-mono !text-xs" />
                 </label>
               </div>
-              {/* A picker rather than a text box: the icon is stored as a name
-                  and only the names in this vocabulary can be drawn, so typing
-                  one is a way to choose something that silently isn't used. */}
-              <div>
-                <span className="block text-2xs text-tertiary mb-1.5">Icon</span>
-                <div className="flex flex-wrap gap-1">
-                  {OBJECT_ICON_NAMES.map((name) => {
-                    const Icon = iconFor(name);
-                    const on = draft.icon === name;
-                    return (
-                      <button
-                        key={name} type="button" title={name}
-                        aria-label={name} aria-pressed={on}
-                        onClick={() => setDraft((d) => ({ ...d, icon: name }))}
-                        className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
-                          on ? 'bg-inverse text-inverse-fg' : 'text-secondary hover:bg-surface-hover hover:text-primary'}`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <IconPicker value={draft.icon} onChange={(icon) => setDraft((d) => ({ ...d, icon }))} />
               <div className="flex items-center gap-2">
                 <Button variant="primary" onClick={create} disabled={!draft.singular.trim() || busy === 'new'}>
                   {busy === 'new' && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create
@@ -211,212 +190,41 @@ export default function ObjectsPage() {
             </section>
           )}
 
-          {rows.length === 0 && !creating && (
-            <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-12 text-center">
-              <Table2 className="w-9 h-9 text-tertiary mx-auto mb-3" />
-              <p className="text-sm text-secondary mb-1">No custom objects yet.</p>
-              <p className="text-xs text-tertiary max-w-md mx-auto">
-                The built-in ones — {Object.values(OBJECTS).slice(0, 4).map((o) => o.plural).join(', ')} and
-                the rest — are always there. This is for everything else.
-              </p>
-            </div>
-          )}
+          <Section
+            title="Your objects"
+            note="Anything your business tracks. They get a table, a form, search, import, export and agent access straight away."
+          >
+            {rows.length === 0 ? (
+              <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-10 text-center">
+                <Table2 className="w-8 h-8 text-tertiary mx-auto mb-2.5" />
+                <p className="text-sm text-secondary mb-1">Nothing of your own yet.</p>
+                <p className="text-xs text-tertiary max-w-md mx-auto">
+                  Describe your business above, or add one by hand.
+                </p>
+              </div>
+            ) : rows.map((o) => (
+              <CustomObjectCard key={o.id} object={o} privy={privy} ws={ws}
+                expanded={open === `custom:${o.id}`}
+                onToggle={() => setOpen((k) => (k === `custom:${o.id}` ? null : `custom:${o.id}`))}
+                busy={busy === o.id} onChange={refresh} onDelete={() => removeObject(o)}
+                onOpen={() => router.push(`/objects/${o.slug}`)} />
+            ))}
+          </Section>
 
-          {rows.map((o) => (
-            <ObjectEditor key={o.id} object={o} privy={privy} ws={ws}
-              busy={busy === o.id} onChange={refresh} onDelete={() => removeObject(o)}
-              onOpen={() => router.push(`/objects/${o.slug}`)} />
-          ))}
+          <Section
+            title="Built-in objects"
+            note={`Rename them, hide the ones you do not use, move them between sidebar sections and add your own fields.${
+              hiddenCount ? ` ${hiddenCount} hidden.` : ''}`}
+          >
+            {EDITABLE_BUILTINS.map((def) => (
+              <BuiltinObjectCard key={def.slug} def={def} privy={privy} ws={ws} settings={settings}
+                expanded={open === `builtin:${def.slug}`}
+                onToggle={() => setOpen((k) => (k === `builtin:${def.slug}` ? null : `builtin:${def.slug}`))}
+                onChange={refresh} onOpen={() => router.push(`/objects/${def.slug}`)} />
+            ))}
+          </Section>
         </div>
       </div>
     </>
-  );
-}
-
-// ── One object and its fields ───────────────────────────────────────────────
-
-function ObjectIcon({ name }: { name: string }) {
-  const Icon = iconFor(name);
-  return <Icon className="w-4 h-4 text-accent shrink-0" />;
-}
-
-/**
- * Which sidebar section this object lives in — changeable after the fact.
- *
- * It was only ever askable at creation time, and the answer was free text that
- * nothing read. Now it is a real choice with a visible consequence, and it can
- * be moved: people work out where something belongs by using it for a week, not
- * by predicting it in the create form.
- */
-function GroupPicker({ object, privy, ws, onChange }: {
-  object: CustomObject; privy: string | null; ws: string | null; onChange: () => void;
-}) {
-  const { notify } = useDialog();
-  const [saving, setSaving] = useState(false);
-  const current = object.group_key || 'Workspace';
-  // A value saved before this was a picker (free text, any spelling) has to stay
-  // selectable, or opening this screen would silently move someone's object.
-  const groups = CUSTOM_OBJECT_GROUPS.includes(current) ? CUSTOM_OBJECT_GROUPS : [current, ...CUSTOM_OBJECT_GROUPS];
-
-  const move = async (group: string) => {
-    if (!privy || !ws || group === current) return;
-    setSaving(true);
-    const { error } = await saveCustomObject(privy, ws, {
-      id: object.id, slug: object.slug, singular: object.singular, plural: object.plural,
-      icon: object.icon, group_key: group, description: object.description,
-    });
-    setSaving(false);
-    if (error) return notify(error);
-    onChange();
-  };
-
-  return (
-    <label className="shrink-0 inline-flex items-center gap-1.5" title="Sidebar section">
-      {saving && <Loader2 className="w-3 h-3 animate-spin text-tertiary" />}
-      <span className="sr-only">Sidebar section for {object.plural}</span>
-      <select value={current} onChange={(e) => move(e.target.value)} disabled={saving || !privy}
-        className="h-7 rounded-md bg-surface-sunken text-2xs text-secondary px-1.5 border-0 outline-none focus:ring-1 focus:ring-accent disabled:opacity-50">
-        {groups.map((g) => <option key={g} value={g}>{g}</option>)}
-      </select>
-    </label>
-  );
-}
-
-function ObjectEditor({ object, privy, ws, busy, onChange, onDelete, onOpen }: {
-  object: CustomObject; privy: string | null; ws: string | null;
-  busy: boolean; onChange: () => void; onDelete: () => void; onOpen: () => void;
-}) {
-  const { notify, confirm: confirmDialog } = useDialog();
-  const [adding, setAdding] = useState(false);
-  const [f, setF] = useState<{ label: string; type: CustomFieldType; options: string; relation_to: string }>(
-    { label: '', type: 'text', options: '', relation_to: 'companies' });
-  const [saving, setSaving] = useState(false);
-
-  const addField = async () => {
-    if (!privy || !ws || !f.label.trim()) return;
-    setSaving(true);
-    const { error } = await saveCustomField(privy, ws, object.id, {
-      key: slugify(f.label),
-      label: f.label.trim(),
-      type: f.type,
-      options: f.type === 'select' ? f.options.split(',').map((s) => s.trim()).filter(Boolean) : [],
-      relation_to: f.type === 'relation' ? f.relation_to : null,
-    });
-    setSaving(false);
-    if (error) return notify(error);
-    setF({ label: '', type: 'text', options: '', relation_to: 'companies' });
-    setAdding(false); onChange();
-  };
-
-  const setPrimary = async (field: CustomField) => {
-    if (!privy || !ws) return;
-    await saveCustomField(privy, ws, object.id, { ...field, is_primary: true });
-    onChange();
-  };
-
-  const removeField = async (field: CustomField) => {
-    if (!privy || !ws) return;
-    // Said plainly, because it is genuinely reversible and people expect the
-    // opposite: the values stay in the row, so re-adding the field brings them
-    // back. That is worth knowing before deciding.
-    const ok = await confirmDialog({
-      title: `Remove “${field.label}”?`,
-      body: 'It disappears from the table and the form. The values already saved are kept — re-adding a field with the same key brings them back.',
-    });
-    if (!ok) return;
-    await deleteCustomField(privy, ws, field.id);
-    onChange();
-  };
-
-  return (
-    <section className="card-surface overflow-hidden">
-      <div className="flex items-center gap-2 px-4 h-12 border-b border-subtle">
-        <ObjectIcon name={object.icon} />
-        <h3 className="text-sm font-medium text-primary truncate">{object.plural}</h3>
-        <span className="text-2xs font-mono text-tertiary truncate hidden sm:inline">/{object.slug}</span>
-        <span className="text-2xs text-tertiary tabular-nums ml-auto shrink-0 hidden sm:inline">
-          {object.record_count} {object.record_count === 1 ? 'record' : 'records'}
-        </span>
-        <GroupPicker object={object} privy={privy} ws={ws} onChange={onChange} />
-        <button onClick={onOpen} title={`Open ${object.plural}`}
-          className="h-7 px-2 rounded-md text-xs font-semibold text-secondary hover:bg-surface-hover inline-flex items-center gap-1">
-          Open <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={onDelete} disabled={busy} aria-label={`Delete ${object.plural}`}
-          className="h-7 px-2 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40">
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-        </button>
-      </div>
-
-      <div className="p-4 space-y-1.5">
-        {object.fields.length === 0 && (
-          <p className="text-xs text-tertiary">No fields yet — add one below.</p>
-        )}
-        {object.fields.map((field) => (
-          <div key={field.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-hover">
-            <GripVertical className="w-3.5 h-3.5 text-tertiary shrink-0 opacity-0 group-hover:opacity-100" />
-            <span className="text-sm text-primary min-w-0 flex-1 truncate">{field.label}</span>
-            <span className="text-2xs font-mono text-tertiary hidden sm:inline truncate max-w-[10rem]">{field.key}</span>
-            <span className="text-2xs text-tertiary shrink-0">{FIELD_TYPE_LABEL[field.type]}</span>
-            {field.required && <span className="text-3xs text-warning shrink-0">required</span>}
-            {/* The headline field is what a row is CALLED, everywhere — the
-                table's linked column, the detail title, and what an agent gets
-                back as `name`. Worth one obvious control. */}
-            <button onClick={() => setPrimary(field)} disabled={field.is_primary}
-              title={field.is_primary ? 'This is the headline field' : 'Use as the headline field'}
-              className={`p-1 rounded shrink-0 ${field.is_primary ? 'text-accent' : 'text-tertiary opacity-0 group-hover:opacity-100 hover:text-secondary'}`}>
-              <Star className={`w-3.5 h-3.5 ${field.is_primary ? 'fill-current' : ''}`} />
-            </button>
-            <button onClick={() => removeField(field)} aria-label={`Remove ${field.label}`}
-              className="p-1 rounded text-tertiary hover:text-danger opacity-0 group-hover:opacity-100 shrink-0">
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ))}
-
-        {adding ? (
-          <div className="rounded-lg ring-1 ring-subtle bg-surface-sunken p-3 space-y-2 mt-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input autoFocus value={f.label} onChange={(e) => setF((v) => ({ ...v, label: e.target.value }))}
-                placeholder="Field name — e.g. MOT due" className="input-field !h-8 !text-xs flex-1 min-w-0" />
-              <select value={f.type} onChange={(e) => setF((v) => ({ ...v, type: e.target.value as CustomFieldType }))}
-                className="input-field !h-8 !text-xs sm:w-40">
-                {FIELD_TYPES.map((t) => <option key={t} value={t}>{FIELD_TYPE_LABEL[t]}</option>)}
-              </select>
-            </div>
-            {f.type === 'select' && (
-              <input value={f.options} onChange={(e) => setF((v) => ({ ...v, options: e.target.value }))}
-                placeholder="Choices, comma separated — active, in service, sold"
-                className="input-field !h-8 !text-xs w-full" />
-            )}
-            {f.type === 'relation' && (
-              <select value={f.relation_to} onChange={(e) => setF((v) => ({ ...v, relation_to: e.target.value }))}
-                className="input-field !h-8 !text-xs w-full">
-                {Object.values(OBJECTS).map((o) => <option key={o.slug} value={o.slug}>{o.plural}</option>)}
-              </select>
-            )}
-            {f.label.trim() && (
-              <p className="text-3xs text-tertiary inline-flex items-center gap-1">
-                <Key className="w-3 h-3" /> stored as <span className="font-mono">{slugify(f.label)}</span>
-              </p>
-            )}
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="primary" onClick={addField} disabled={!f.label.trim() || saving}>
-                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Add field
-              </Button>
-              <button onClick={() => setAdding(false)} aria-label="Cancel"
-                className="h-7 px-2 rounded-md text-xs text-tertiary hover:text-primary inline-flex items-center gap-1">
-                <X className="w-3.5 h-3.5" /> Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => setAdding(true)}
-            className="mt-1 h-8 px-2 inline-flex items-center gap-1.5 rounded-md text-sm text-tertiary hover:text-primary hover:bg-surface-hover">
-            <Plus className="w-3.5 h-3.5" /> Add field
-          </button>
-        )}
-      </div>
-    </section>
   );
 }

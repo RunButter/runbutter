@@ -147,6 +147,10 @@ const ALLOWED = new Set([
   // they go through list/get/create/update/delete_record, already allowed.
   'get_custom_objects', 'save_custom_object', 'delete_custom_object',
   'save_custom_field', 'delete_custom_field',
+  // Editing the BUILT-IN objects (0097) — same rule, same owner/admin check in
+  // SQL. get_object_settings is a member-level read because the sidebar calls
+  // it on every page; the three writes are not.
+  'get_object_settings', 'save_object_override', 'reset_object_override', 'save_builtin_field',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

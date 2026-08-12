@@ -176,6 +176,48 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **`lib/workspace/templates.ts` = 10 trades**, and they are also the few-shot examples the model is
   shown, so improving a template improves what the AI produces. None recreates a built-in.
 
+## Editing the BUILT-IN objects (0097)
+- 0087 let a workspace define its own objects; the eleven that ship stayed frozen. 0097 gives them
+  the same two things: a per-workspace **presentation** and **fields**.
+- **Two tables, kept apart on purpose.** `object_overrides` is presentation — name, icon, sidebar
+  section, hidden, column order/labels — so resetting it is a DELETE and costs nothing.
+  `custom_fields.builtin_slug` is DATA, reusing 0087's field table verbatim (same eleven types, same
+  `coerce_custom_value`, same fail-closed rules). A second field vocabulary for built-ins would have
+  drifted inside a month and the CSV feed would have to know which kind it was looking at.
+- **Values go in `custom_fields jsonb`, the column that was always there.** It has been on people,
+  organizations, invoices, expenses, assets and pipeline_records since 0001 — declared, written by
+  nothing, read by nothing — and `object_fields` was created in the same migration to describe them
+  and never got an RPC either. 0097 connects that idea and adds the column to the five tables that
+  lacked it. **`object_fields` stays dead**: four object types, a different type vocabulary.
+- **The monolith is extended, not forked.** list/get/create/update_record are redefined IN FULL and
+  each gains exactly ONE call — `builtin_extras_addmany`/`builtin_extras_add` on the way out,
+  `builtin_extras_write`/`builtin_extras_write_scoped` on the way in. That is what makes a field
+  added to Companies real in the table, the form, CSV import (which reuses `create_record`), the
+  Excel sync, `/api/mcp` and every agent tool at once. `delete_record` needs nothing — the extras
+  are a column of the row it already deletes.
+- **`update_record` has no `p_workspace`** (it derives tenancy from `p_privy`), so the extras write
+  must read the workspace off the ROW and then check it against the caller's — trusting it would let
+  any authenticated user write a field into another tenant's record while the named-column update
+  silently matched nothing. That is `builtin_extras_write_scoped`.
+- **Extras merge UNDER the named columns**, and `builtin_reserved_field_key` refuses a colliding key
+  at definition time. A field called `amount` that was stored and then shadowed on the way out is
+  the kind of bug nobody can explain.
+- **Two slug rules, and they are not the same question.** `builtin_object_slug` (fields) folds
+  `offers`→`invoices` because they are one physical column; `builtin_view_slug` (presentation) does
+  not, because Offers is its own screen and renaming it must not rename Invoices. `organizations`
+  folds under both.
+- **Column order: the override's order first, then every shipped column it does not mention.**
+  Anything else silently hides future columns from everyone who ever touched this screen.
+- **A built-in's own columns can be hidden, never deleted** — real code reads `invoices.amount`.
+  Extra fields can be deleted and the values stay, exactly as for a custom object.
+- `create_record`'s `assets` branch passed an explicit NULL for `category`, which is
+  `NOT NULL DEFAULT 'other'` — **an explicit null overrides a default**, so adding an asset without
+  picking a category has raised a constraint violation since 0088 added the branch. Fixed here. The
+  whole class was swept: it was the only one.
+- UI: `components/crm/ObjectCards.tsx` (its own file because a page can only export a default, which
+  makes anything in a page file unrenderable without signing in). Cards are **collapsed by default,
+  one open at a time**.
+
 ## Deals / pipeline records (0092)
 - **`pipeline_records` existed from 0001 with no way to insert one.** The stages were seeded, the
   board read them and `move_pipeline_record` reordered them — and nothing in SQL or in the app

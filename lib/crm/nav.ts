@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { NAV } from './registry';
+import { NAV, OBJECTS } from './registry';
 import { loadCustomObjects, type CustomObject } from './custom';
+import { loadObjectSettings, EMPTY_SETTINGS, viewSlug, type ObjectSettings } from './objects';
 import { getWorkspace } from './data';
 
 /**
@@ -79,6 +80,60 @@ export function navWithCustomObjects(objects: CustomObject[], nav: any[] = NAV):
 }
 
 /**
+ * The built-ins, as this workspace renamed, hid and re-filed them (0097).
+ *
+ * Runs BEFORE the custom objects are folded in, so a renamed built-in and a
+ * custom object land in the same section by the same rule. Only entries that
+ * point at an object are touched: `/finance/overview` is a screen, not a
+ * record type, and nothing in Settings offers to rename it.
+ *
+ * A section that ends up empty is DROPPED. Hiding the only two things in
+ * Projects and leaving a "Projects" heading with nothing under it looks like a
+ * loading failure, and it is the shape people actually produce — you hide a
+ * pillar by hiding its contents.
+ */
+export function navWithOverrides(settings: ObjectSettings, nav: any[] = NAV): NavGroup[] {
+  const ovs = settings.overrides;
+  if (Object.keys(ovs).length === 0) return nav as NavGroup[];
+
+  // slug → its nav entry. Built by matching hrefs rather than by name, because
+  // the nav item's own `slug` and the object's slug agree for most entries and
+  // not all of them (Deals, Overview).
+  const objectOf = (item: NavItem) => {
+    const m = /^\/objects\/([a-z0-9_]+)$/.exec(item.href);
+    return m && OBJECTS[m[1]] ? viewSlug(m[1]) : null;
+  };
+
+  const out: NavGroup[] = [];
+  const moved: { group: string; item: NavItem }[] = [];
+
+  for (const g of nav) {
+    const items: NavItem[] = [];
+    for (const item of g.items as NavItem[]) {
+      const slug = objectOf(item);
+      const ov = slug ? ovs[slug] : null;
+      if (!ov) { items.push(item); continue; }
+      if (ov.hidden) continue;
+      const next: NavItem = { ...item, label: ov.plural?.trim() || item.label, icon: ov.icon?.trim() || item.icon };
+      // An object filed into a section it is not already in moves; one filed
+      // into a section that no longer exists stays where it is rather than
+      // disappearing, the same rule custom objects get below.
+      const target = (ov.group_key || '').trim();
+      if (target && norm(target) !== norm(g.group)) { moved.push({ group: target, item: next }); continue; }
+      items.push(next);
+    }
+    out.push({ ...g, items });
+  }
+
+  for (const { group, item } of moved) {
+    const target = out.find((g) => norm(g.group) === norm(group));
+    (target ?? out[0]).items.push(item);
+  }
+
+  return out.filter((g) => g.items.length > 0);
+}
+
+/**
  * Load this workspace's objects and return the merged nav.
  *
  * `enabled` exists for the command palette, which is mounted on every screen
@@ -87,18 +142,31 @@ export function navWithCustomObjects(objects: CustomObject[], nav: any[] = NAV):
  */
 export function useNav(privy: string | null, enabled = true): NavGroup[] {
   const [objects, setObjects] = useState<CustomObject[]>([]);
+  const [settings, setSettings] = useState<ObjectSettings>(EMPTY_SETTINGS);
 
   useEffect(() => {
     if (!enabled || !privy) return;
     let cancelled = false;
     getWorkspace(privy)
-      .then((w) => (w?.id ? loadCustomObjects(privy, w.id) : null))
-      .then((res) => { if (!cancelled && res?.rows) setObjects(res.rows); })
-      // A workspace that has not run 0087 has no custom objects, which is the
-      // same nav as a workspace with none. Nothing to report.
+      .then(async (w) => {
+        if (!w?.id || cancelled) return;
+        // Both in flight together. Sequentially, the sidebar would show the
+        // shipped names, then the workspace's, and the second reflow is
+        // visible on every page load.
+        const [objs, setts] = await Promise.all([
+          loadCustomObjects(privy, w.id),
+          loadObjectSettings(privy, w.id),
+        ]);
+        if (cancelled) return;
+        if (objs?.rows) setObjects(objs.rows);
+        if (setts?.settings) setSettings(setts.settings);
+      })
+      // A workspace that has not run 0087/0097 has no custom objects and no
+      // overrides, which is the same nav as a workspace with none. Nothing to
+      // report.
       .catch(() => {});
     return () => { cancelled = true; };
   }, [privy, enabled]);
 
-  return navWithCustomObjects(objects);
+  return navWithCustomObjects(objects, navWithOverrides(settings));
 }
