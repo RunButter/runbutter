@@ -29,13 +29,31 @@ async function readForm(req: Request): Promise<Record<string, string>> {
   return {};
 }
 
+/**
+ * `client_id` from HTTP Basic, when a client puts it there instead of the body.
+ *
+ * A public client SHOULD send it in the body (RFC 6749 §2.3.1), and most do —
+ * but plenty send `Authorization: Basic base64(client_id:)` out of habit from
+ * confidential-client code, and reading only the body answers those with
+ * "client_id is required", which is both true and useless. There is no password
+ * to check: these clients have no secret by construction.
+ */
+function basicAuthClientId(req: Request): string {
+  const h = req.headers.get('authorization') || '';
+  if (!h.toLowerCase().startsWith('basic ')) return '';
+  try {
+    const decoded = Buffer.from(h.slice(6).trim(), 'base64').toString('utf8');
+    return decodeURIComponent(decoded.split(':')[0] || '');
+  } catch { return ''; }
+}
+
 export async function POST(req: Request) {
   const rl = rateLimit(`oauthtok:${clientIp(req)}`, 60);
   if (!rl.ok) return tooMany(rl.retryAfterS);
 
   const f = await readForm(req);
   const grant = String(f.grant_type || '');
-  const clientId = String(f.client_id || '');
+  const clientId = String(f.client_id || '') || basicAuthClientId(req);
   if (!clientId) return oauthError('invalid_client', 'client_id is required');
 
   const admin = createAdminClient();

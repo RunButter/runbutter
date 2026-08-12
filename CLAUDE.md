@@ -458,7 +458,14 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   and `oauth_refresh_token` therefore **return `{error}` as a VALUE** rather than raising. Caught by
   the test asserting the first token is dead afterwards; it would never have shown up in review.
 - **Refresh tokens rotate, and reuse burns the family** (OAuth 2.1 §4.14.2) — presenting a rotated
-  token means either a retry or a theft and there is no way to tell which.
+  token means either a retry or a theft. **0100 adds a 30-second grace window, and without it the
+  connector broke on its first dropped response**: a client that never received the replacement
+  retries with the only token it has, 0099 called that theft, and the grant died permanently.
+  Observed against claude.ai — it authorised, listed all 27 tools, then died on the first refresh
+  with "requires re-authorization". Inside the window a retry re-issues and the forked successor is
+  revoked; outside it, the family still burns. A thief must now replay within 30 seconds of a real
+  rotation, and the legitimate client's next refresh lands outside ITS window and burns everything
+  anyway — detection is delayed one cycle, not removed.
 - **PKCE S256 only, and the check lives in SQL** so a route cannot skip it by forgetting to pass the
   verifier. `plain` is legal in RFC 7636 and worth nothing.
 - **Redirect URIs are matched EXACTLY** against the registered list, in SQL. Never a prefix, never a
