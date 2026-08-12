@@ -437,6 +437,43 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
 
+## OAuth for the MCP server (0099)
+- **Why it exists:** `/api/mcp` authenticated only with `Authorization: Bearer hb_…`. That is fine for
+  Claude Code / Desktop / Cursor, which read a config file and can send any header. **claude.ai's
+  connector flow cannot** — you give it a URL, it discovers the authorization server and sends the
+  human through a login, and there is nowhere to paste a key. So the server was reachable by
+  developers and by nobody else. All standards, no invention: RFC 9728 (protected-resource
+  metadata), 8414 (AS metadata), 7591 (dynamic registration), 7636 (PKCE), 7009 (revocation).
+- **`WWW-Authenticate` on the 401 IS the discovery mechanism.** Without it a connector that gets a
+  401 has nowhere to go and the flow dies with nothing to explain it. `/api/mcp` sends it on 401 and
+  on GET.
+- **Registration is OPEN and that is deliberate.** claude.ai has never heard of this deployment and
+  never will; an allowlist would mean every self-hoster filing a request with us. It is safe because
+  a registered client can do NOTHING alone — no secret, no read, no token — until a signed-in human
+  picks a workspace on `/oauth/authorize` and presses a button. **That screen is the security
+  boundary, not decoration.**
+- **`raise exception` ROLLS BACK the revocation you just did.** The first `oauth_redeem_code` revoked
+  the tokens a replayed code had minted and then raised — so it refused the second redemption and
+  left the first one's token live, the exact opposite of replay detection. Both `oauth_redeem_code`
+  and `oauth_refresh_token` therefore **return `{error}` as a VALUE** rather than raising. Caught by
+  the test asserting the first token is dead afterwards; it would never have shown up in review.
+- **Refresh tokens rotate, and reuse burns the family** (OAuth 2.1 §4.14.2) — presenting a rotated
+  token means either a retry or a theft and there is no way to tell which.
+- **PKCE S256 only, and the check lives in SQL** so a route cannot skip it by forgetting to pass the
+  verifier. `plain` is legal in RFC 7636 and worth nothing.
+- **Redirect URIs are matched EXACTLY** against the registered list, in SQL. Never a prefix, never a
+  wildcard — loose comparison is how an authorization code reaches an attacker's host. At
+  registration: https anywhere, plain http only on loopback, private-use schemes must contain a dot
+  in the scheme — **without that dot requirement `http` itself matches `[a-z][a-z0-9+.-]*` and the
+  native-app branch silently re-admits plain http to any host.** Also caught by a test.
+- Tokens resolve to the same shape `resolve_api_key` returns, so nothing in `/api/mcp` below the auth
+  line knows which was used. Chosen by PREFIX (`rbt_`) rather than by trying both tables.
+- `initialize` used to **echo the client's `protocolVersion` back**, so a client claiming
+  `2099-01-01` was told we spoke it. It now answers with a version from `SUPPORTED_PROTOCOLS`.
+- **Not built yet:** the Settings → Integrations panel listing connected apps. `oauth_list_grants` /
+  `oauth_revoke_grant` exist and are in `/api/rpc`'s ALLOWED, but a grant nobody can see is a grant
+  nobody revokes — this is the next thing, not an optional extra.
+
 ## MCP / agent tools (`lib/agents/tools.ts`)
 - ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
   MCP client and an agent take the identical, tenancy-safe path. **26 tools**, not just CRUD:

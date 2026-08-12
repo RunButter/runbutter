@@ -3,12 +3,16 @@ import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { hashToken, wwwAuthenticate } from '@/lib/oauth/server';
 import { TOOLS as WORKSPACE_TOOLS, callTool, type ToolCtx } from '@/lib/agents/tools';
 import { isWriteTool } from '@/lib/agents/catalog';
 
 // MCP advertises the shared workspace tools (JSON-schema shape).
 const TOOLS = WORKSPACE_TOOLS.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
 const READ_ONLY_TOOLS = TOOLS.filter((t) => !isWriteTool(t.name));
+
+/** Newest first. `initialize` agrees to the client's version only if it is here. */
+const SUPPORTED_PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,7 +21,17 @@ export const dynamic = 'force-dynamic';
  * MCP server (Model Context Protocol, Streamable HTTP transport).
  * One endpoint — POST /api/mcp — speaking JSON-RPC 2.0, so Claude (Desktop /
  * Code / API), Cursor, and any MCP client can read + write the workspace.
- * Auth: the same workspace API keys as /api/v1 (Authorization: Bearer hb_...).
+ * Auth: EITHER a workspace API key (Authorization: Bearer hb_…, same as
+ * /api/v1) OR an OAuth 2.1 access token (0099). Both resolve to the same
+ * shape — a workspace, an owner, a scope — so nothing below this line knows
+ * which was used.
+ *
+ * The API key is for clients that read a config file: Claude Code, Claude
+ * Desktop, Cursor. OAuth is for claude.ai's connector flow, which takes a URL
+ * and sends the person through a login and has nowhere to paste a key. A 401
+ * carries `WWW-Authenticate` pointing at the protected-resource metadata,
+ * which is the whole discovery mechanism — without it a connector that gets a
+ * 401 has no idea where to send the user.
  *
  * Dependency-free by design: we answer each POST with a single JSON body,
  * which the spec allows in place of an SSE stream; GET (server-initiated
@@ -35,7 +49,18 @@ async function auth(req: Request): Promise<(ToolCtx & { scope: 'full' | 'read' }
   if (!key) return null;
   const hash = createHash('sha256').update(key).digest('hex');
   const admin = createAdminClient();
-  const { data } = await admin.rpc('resolve_api_key', { p_hash: hash });
+
+  // OAuth first when the prefix says so, API key otherwise. Chosen by PREFIX
+  // rather than by trying both, so a failed lookup is one query and a token
+  // from one system can never be resolved by the other's table.
+  let data: any = null;
+  if (key.startsWith('rbt_')) {
+    const r = await admin.rpc('oauth_resolve_token', { p_hash: hashToken(key) });
+    data = r.data;
+  } else {
+    const r = await admin.rpc('resolve_api_key', { p_hash: hash });
+    data = r.data;
+  }
   if (!data) return null;
   // A key's scope (0078) has to hold here too — otherwise a read-only key that
   // cannot write over /api/v1 could simply write over MCP instead.
@@ -44,8 +69,8 @@ async function auth(req: Request): Promise<(ToolCtx & { scope: 'full' | 'read' }
 }
 
 const rpcResult = (id: any, result: any) => NextResponse.json({ jsonrpc: '2.0', id, result });
-const rpcError = (id: any, code: number, message: string, status = 200) =>
-  NextResponse.json({ jsonrpc: '2.0', id: id ?? null, error: { code, message } }, { status });
+const rpcError = (id: any, code: number, message: string, status = 200, headers?: Record<string, string>) =>
+  NextResponse.json({ jsonrpc: '2.0', id: id ?? null, error: { code, message } }, { status, headers });
 
 export async function POST(req: Request) {
   const rl = rateLimit(`mcp:${clientIp(req)}`, 120);
@@ -60,8 +85,15 @@ export async function POST(req: Request) {
   if (id === undefined || id === null) return new NextResponse(null, { status: 202 });
 
   if (method === 'initialize') {
+    // Return a version WE implement, not whatever the client asked for. Echoing
+    // the request back meant a client sending `2099-01-01` was told we spoke it,
+    // and the negotiation the field exists for never happened. If the client
+    // names a version we support, agree to it; otherwise answer with ours and
+    // let the client decide.
+    const asked = String(params?.protocolVersion || '');
+    const version = SUPPORTED_PROTOCOLS.includes(asked) ? asked : SUPPORTED_PROTOCOLS[0];
     return rpcResult(id, {
-      protocolVersion: params?.protocolVersion || '2025-03-26',
+      protocolVersion: version,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'runbutter', version: '1.0.0' },
       instructions: 'RunButter business workspace. Use list_objects to discover record types, then list/search/get/create/update_record. Auth is per-workspace via the API key.',
@@ -78,7 +110,11 @@ export async function POST(req: Request) {
 
   if (method === 'tools/call') {
     const ctx = await auth(req);
-    if (!ctx) return rpcError(id, -32001, 'Invalid or missing API key (Authorization: Bearer hb_...)', 401);
+    if (!ctx) {
+      return rpcError(id, -32001,
+        'Not authenticated. Use an OAuth access token, or a workspace API key (Authorization: Bearer hb_…).',
+        401, { 'WWW-Authenticate': wwwAuthenticate('invalid_token', 'A valid access token is required') });
+    }
     // The gate sits on the CALL, not on discovery. `tools/list` stays open so a
     // client can still describe the product accurately; refusing to list would
     // read as a broken server rather than an unpaid feature.
@@ -98,7 +134,12 @@ export async function POST(req: Request) {
   return rpcError(id, -32601, `Method not found: ${method}`);
 }
 
-// Server-initiated SSE streams are optional in the spec — decline politely.
+// Server-initiated SSE streams are optional in the spec — decline politely, but
+// still say where to authenticate: some connectors probe with GET first, and a
+// bare 405 tells them nothing about the OAuth server.
 export async function GET() {
-  return new NextResponse('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
+  return new NextResponse('Method Not Allowed', {
+    status: 405,
+    headers: { Allow: 'POST', 'WWW-Authenticate': wwwAuthenticate() },
+  });
 }

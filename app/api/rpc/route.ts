@@ -151,6 +151,11 @@ const ALLOWED = new Set([
   // SQL. get_object_settings is a member-level read because the sidebar calls
   // it on every page; the three writes are not.
   'get_object_settings', 'save_object_override', 'reset_object_override', 'save_builtin_field',
+  // Connected apps (0099). Only the two READ/REVOKE calls are here — register,
+  // authorize, token and revoke are OAuth endpoints under /oauth/* and run
+  // service_role. A browser that could mint a code or resolve a token would be
+  // able to issue itself a workspace-wide credential.
+  'oauth_list_grants', 'oauth_revoke_grant',
   // Scheduled reports (0052)
   'get_report_schedules', 'save_report_schedule', 'delete_report_schedule',
   // E-signatures (0053) — browser reads; create/sign run server-side in /api/sign/*

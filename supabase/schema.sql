@@ -19505,9 +19505,15 @@ begin
     -- https, or http on loopback. A desktop client legitimately redirects to
     -- 127.0.0.1 on a random port; anything else over plain http would put an
     -- authorization code on the wire in clear.
+    -- The third branch is for a private-use scheme (com.example.app:/cb), and
+    -- it REQUIRES A DOT IN THE SCHEME. Without that requirement `http` itself
+    -- matches `[a-z][a-z0-9+.-]*`, and the branch meant to allow native apps
+    -- quietly re-admitted plain http to any host — which the branch above it
+    -- exists to forbid. Caught by the test that asserts a plain-http
+    -- non-loopback redirect is refused.
     if not (u ~* '^https://[^\s]+$'
             or u ~* '^http://(127\.0\.0\.1|\[::1\]|localhost)(:[0-9]+)?(/[^\s]*)?$'
-            or u ~* '^[a-z][a-z0-9+.-]*:/[^\s]*$') then
+            or u ~* '^[a-z][a-z0-9+-]*(\.[a-z0-9+-]+)+:/[^\s]*$') then
       raise exception 'INVALID_REDIRECT_URI: %', u;
     end if;
     if length(u) > 2000 then raise exception 'INVALID_REDIRECT_URI: too long'; end if;
@@ -19602,61 +19608,86 @@ create or replace function oauth_redeem_code(
   p_code_hash text, p_client_id text, p_redirect_uri text, p_challenge_from_verifier text,
   p_token_hash text, p_refresh_hash text, p_ttl_seconds int default 3600
 ) returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_auth oauth_authorizations; v_id uuid;
+declare v_auth oauth_authorizations; v_id uuid; v_ttl int;
 begin
+  v_ttl := greatest(60, least(coalesce(p_ttl_seconds, 3600), 86400));
+
   select * into v_auth from oauth_authorizations where code_hash = p_code_hash;
-  if v_auth.id is null then raise exception 'INVALID_GRANT: unknown code'; end if;
+  if v_auth.id is null then return jsonb_build_object('error', 'unknown code'); end if;
 
   if v_auth.used_at is not null then
-    -- Replayed. Burn everything it minted, then refuse.
+    -- REPLAYED. Burn every token this code produced.
+    --
+    -- This RETURNS an error rather than raising one, and that is the whole
+    -- reason the function has this shape: `raise` aborts the transaction, which
+    -- rolls back the UPDATE immediately above it. The first version did exactly
+    -- that — it refused the second redemption and left the first redemption's
+    -- token live, which is the precise opposite of what replay detection is
+    -- for. Caught by the test that asserts the first token is dead afterwards.
     update oauth_tokens set revoked_at = now()
      where authorization_id = v_auth.id and revoked_at is null;
-    raise exception 'INVALID_GRANT: code already used';
+    return jsonb_build_object('error', 'code already used');
   end if;
-  if v_auth.expires_at < now() then raise exception 'INVALID_GRANT: code expired'; end if;
-  if v_auth.client_id <> p_client_id then raise exception 'INVALID_GRANT: wrong client'; end if;
-  if v_auth.redirect_uri <> p_redirect_uri then raise exception 'INVALID_GRANT: redirect_uri mismatch'; end if;
-  if v_auth.code_challenge <> p_challenge_from_verifier then raise exception 'INVALID_GRANT: PKCE verification failed'; end if;
+  if v_auth.expires_at < now() then return jsonb_build_object('error', 'code expired'); end if;
+  if v_auth.client_id <> p_client_id then return jsonb_build_object('error', 'wrong client'); end if;
+  if v_auth.redirect_uri <> p_redirect_uri then return jsonb_build_object('error', 'redirect_uri mismatch'); end if;
+  if v_auth.code_challenge <> p_challenge_from_verifier then
+    return jsonb_build_object('error', 'PKCE verification failed');
+  end if;
 
+  -- Single-use, claimed atomically: two simultaneous redemptions of one code
+  -- cannot both win, whatever the client does. A stolen code races the real one.
   update oauth_authorizations set used_at = now()
    where id = v_auth.id and used_at is null
   returning id into v_id;
-  if v_id is null then raise exception 'INVALID_GRANT: code already used'; end if;
+  if v_id is null then return jsonb_build_object('error', 'code already used'); end if;
 
   insert into oauth_tokens (token_hash, refresh_hash, client_id, workspace_id, owner_privy,
                             scope, authorization_id, expires_at, refresh_expires_at)
   values (p_token_hash, p_refresh_hash, v_auth.client_id, v_auth.workspace_id, v_auth.owner_privy,
           v_auth.scope, v_auth.id,
-          now() + make_interval(secs => greatest(60, least(p_ttl_seconds, 86400))),
-          now() + interval '90 days');
+          now() + make_interval(secs => v_ttl), now() + interval '90 days');
 
-  return jsonb_build_object('scope', v_auth.scope, 'workspace_id', v_auth.workspace_id,
-                            'expires_in', greatest(60, least(p_ttl_seconds, 86400)));
+  return jsonb_build_object('scope', v_auth.scope, 'workspace_id', v_auth.workspace_id, 'expires_in', v_ttl);
 end $$;
 revoke all on function oauth_redeem_code(text, text, text, text, text, text, int) from public, anon, authenticated;
 grant execute on function oauth_redeem_code(text, text, text, text, text, text, int) to service_role;
 
 /**
- * Refresh, with rotation.
+ * Refresh, with rotation AND reuse detection.
  *
- * The old refresh token is revoked and a new one issued on every use — the
- * same rule the X integration follows (0082), and for the same reason: a
- * refresh token that never changes is a permanent credential sitting in
- * somebody's config file.
+ * The old refresh token is revoked and a new one issued on every use — the same
+ * rule the X integration follows (0082), because a refresh token that never
+ * changes is a permanent credential sitting in somebody's config file.
+ *
+ * Presenting an ALREADY-ROTATED refresh token means one of two things: a client
+ * retried, or a stolen token is being used. There is no way to tell which, so
+ * the whole grant is revoked — OAuth 2.1 §4.14.2 asks for exactly this. Like
+ * the replay case above it RETURNS rather than raises, so the revocation
+ * actually commits.
  */
 create or replace function oauth_refresh_token(
   p_refresh_hash text, p_client_id text, p_token_hash text, p_new_refresh_hash text,
   p_ttl_seconds int default 3600
 ) returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_old oauth_tokens;
+declare v_old oauth_tokens; v_ttl int;
 begin
+  v_ttl := greatest(60, least(coalesce(p_ttl_seconds, 3600), 86400));
+
   select * into v_old from oauth_tokens where refresh_hash = p_refresh_hash;
-  if v_old.id is null then raise exception 'INVALID_GRANT: unknown refresh token'; end if;
-  if v_old.revoked_at is not null then raise exception 'INVALID_GRANT: refresh token revoked'; end if;
-  if v_old.refresh_expires_at is not null and v_old.refresh_expires_at < now() then
-    raise exception 'INVALID_GRANT: refresh token expired';
+  if v_old.id is null then return jsonb_build_object('error', 'unknown refresh token'); end if;
+  if v_old.client_id <> p_client_id then return jsonb_build_object('error', 'wrong client'); end if;
+
+  if v_old.revoked_at is not null then
+    -- Reused. Burn the whole family this authorization produced.
+    update oauth_tokens set revoked_at = now()
+     where authorization_id is not distinct from v_old.authorization_id
+       and client_id = v_old.client_id and revoked_at is null;
+    return jsonb_build_object('error', 'refresh token already used');
   end if;
-  if v_old.client_id <> p_client_id then raise exception 'INVALID_GRANT: wrong client'; end if;
+  if v_old.refresh_expires_at is not null and v_old.refresh_expires_at < now() then
+    return jsonb_build_object('error', 'refresh token expired');
+  end if;
 
   update oauth_tokens set revoked_at = now() where id = v_old.id;
 
@@ -19664,13 +19695,12 @@ begin
                             scope, authorization_id, expires_at, refresh_expires_at)
   values (p_token_hash, p_new_refresh_hash, v_old.client_id, v_old.workspace_id, v_old.owner_privy,
           v_old.scope, v_old.authorization_id,
-          now() + make_interval(secs => greatest(60, least(p_ttl_seconds, 86400))),
-          -- The refresh window does not extend forever with use; it keeps the
-          -- original deadline, so a grant nobody re-consents to does expire.
+          now() + make_interval(secs => v_ttl),
+          -- The window does NOT extend with use; it keeps the original
+          -- deadline, so a grant nobody re-consents to does eventually expire.
           v_old.refresh_expires_at);
 
-  return jsonb_build_object('scope', v_old.scope, 'workspace_id', v_old.workspace_id,
-                            'expires_in', greatest(60, least(p_ttl_seconds, 86400)));
+  return jsonb_build_object('scope', v_old.scope, 'workspace_id', v_old.workspace_id, 'expires_in', v_ttl);
 end $$;
 revoke all on function oauth_refresh_token(text, text, text, text, int) from public, anon, authenticated;
 grant execute on function oauth_refresh_token(text, text, text, text, int) to service_role;
@@ -19890,7 +19920,7 @@ insert into schema_migrations (name, checksum, kind) values
   ('0096_agent_run_usage.sql', '75ffdb746b90', 'migration'),
   ('0097_editable_objects.sql', 'f7bcf8f8e4fd', 'migration'),
   ('0098_email_blocks.sql', '123092335ead', 'migration'),
-  ('0099_oauth_mcp.sql', '906497495f88', 'migration')
+  ('0099_oauth_mcp.sql', '913383ba09a0', 'migration')
 on conflict (name) do update set checksum = excluded.checksum, applied_at = now();
 
 notify pgrst, 'reload schema';
