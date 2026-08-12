@@ -3,16 +3,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Send, Save, Eye, Plus, Trash2, Clock, Sparkles } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Save, Eye, Plus, Trash2, Clock, Sparkles, Monitor, Smartphone } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import {
   getNewsletter, saveNewsletter, queueNewsletter, listNewsletterLists, draftNewsletter,
   type NewsletterFull, type NewsletterList,
 } from '@/lib/crm/newsletters';
 import {
-  renderNewsletter, TEMPLATE_META,
-  type TemplateKey, type NewsletterContent, type DigestItem,
+  renderNewsletter, TEMPLATE_META, BLOCK_PRESETS, normalizeBlocks,
+  type TemplateKey, type NewsletterContent, type DigestItem, type EmailBlock,
 } from '@/lib/marketing/newsletter-templates';
+import BlockEditor from '@/components/marketing/BlockEditor';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
@@ -40,6 +41,10 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [brief, setBrief] = useState('');
+  // Most newsletters are read on a phone. The toggle is a width, not a second
+  // render: the email is one document and a narrow viewport is exactly what a
+  // phone gives it.
+  const [narrow, setNarrow] = useState(false);
   const [drafting, setDrafting] = useState(false);
 
   const load = useCallback(async (w: WorkspaceContext, p: string) => {
@@ -131,6 +136,10 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
   }
 
   const items: DigestItem[] = n.content?.items || [];
+  // Normalised on read, not on write: `content` is free-form jsonb that an
+  // agent, an import or an older client may have written, and the editor must
+  // never show a row the renderer will drop.
+  const blocks: EmailBlock[] = normalizeBlocks(n.content?.blocks);
 
   return (
     <>
@@ -213,10 +222,37 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
               </div>
             </Field>
 
+            {n.template === 'blocks' ? (
+              <Field label="Blocks" hint="Stacked top to bottom. Reorder with the arrows.">
+                <>
+                  {blocks.length > 0 && !locked && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      <span className="text-2xs text-tertiary self-center mr-0.5">Start over:</span>
+                      {BLOCK_PRESETS.map((p) => (
+                        <button key={p.key} title={p.description}
+                          onClick={async () => {
+                            const ok = await confirmDialog({
+                              title: `Replace with “${p.name}”?`,
+                              body: 'The blocks you have now are discarded. Your subject, lists and settings are kept.',
+                            });
+                            if (ok) setContent({ blocks: p.blocks() });
+                          }}
+                          className="h-6 px-2 rounded-md text-3xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <BlockEditor blocks={blocks} disabled={locked}
+                    onChange={(next) => setContent({ blocks: next })} />
+                </>
+              </Field>
+            ) : (
             <Field label="Heading">
               <input value={n.content?.heading || ''} disabled={locked} onChange={(e) => setContent({ heading: e.target.value })}
                 className="input-field" />
             </Field>
+            )}
 
             {n.template === 'announcement' && (
               <Field label="Hero image URL">
@@ -258,14 +294,14 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
                   </div>
                 </Field>
               </>
-            ) : (
+            ) : n.template === 'blocks' ? null : (
               <Field label="Body" hint="Blank lines separate paragraphs.">
                 <textarea value={n.content?.body || ''} disabled={locked} onChange={(e) => setContent({ body: e.target.value })}
                   rows={8} className="input-field !h-auto py-2 resize-y" />
               </Field>
             )}
 
-            {n.template !== 'digest' && (
+            {n.template !== 'digest' && n.template !== 'blocks' && (
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Button label">
                   <input value={n.content?.ctaLabel || ''} disabled={locked} onChange={(e) => setContent({ ctaLabel: e.target.value })}
@@ -324,18 +360,35 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
           {/* ── Preview ──────────────────────────────────────────────────── */}
           {showPreview && (
             <div className="rounded-xl bg-surface shadow-card overflow-hidden lg:sticky lg:top-4">
-              <div className="h-10 flex items-center px-4 border-b border-subtle">
+              <div className="h-10 flex items-center gap-2 px-4 border-b border-subtle">
                 <span className="text-2xs font-medium uppercase tracking-wider text-tertiary">Preview</span>
-                <span className="ml-auto text-2xs text-tertiary">Your logo and colours are applied when it sends</span>
+                <div className="ml-auto flex items-center gap-1">
+                  <button onClick={() => setNarrow(false)} aria-label="Desktop width" aria-pressed={!narrow}
+                    className={`p-1 rounded ${narrow ? 'text-tertiary hover:text-primary' : 'bg-surface-sunken text-primary'}`}>
+                    <Monitor className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setNarrow(true)} aria-label="Phone width" aria-pressed={narrow}
+                    className={`p-1 rounded ${narrow ? 'bg-surface-sunken text-primary' : 'text-tertiary hover:text-primary'}`}>
+                    <Smartphone className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-              <iframe
-                title="Newsletter preview"
-                srcDoc={previewHtml}
-                // Sandboxed with no allow-scripts: the preview is email HTML and
-                // must never be able to run anything in the app's origin.
-                sandbox=""
-                className="w-full h-[70vh] bg-canvas border-0"
-              />
+              <div className={`bg-canvas ${narrow ? 'flex justify-center py-3' : ''}`}>
+                <iframe
+                  title="Newsletter preview"
+                  srcDoc={previewHtml}
+                  // Sandboxed with no allow-scripts: the preview is email HTML and
+                  // must never be able to run anything in the app's origin. That
+                  // matters more since 0098 — a Custom HTML block puts somebody
+                  // else's markup in here, and the stripping in the renderer is
+                  // the other half of the same pair of braces.
+                  sandbox=""
+                  className={`h-[70vh] bg-canvas border-0 ${narrow ? 'w-[390px] max-w-full rounded-lg ring-1 ring-subtle' : 'w-full'}`}
+                />
+              </div>
+              <p className="px-4 py-2 text-2xs text-tertiary border-t border-subtle">
+                Your logo and colours are applied when it sends.
+              </p>
             </div>
           )}
         </div>

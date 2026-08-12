@@ -553,6 +553,30 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   it return true would silently widen a send's audience. The numeric operand is parsed with a strict
   `^\d{1,6}$` match, not by stripping non-digits — a UUID value (used by `on_list`) becomes a
   32-digit number that overflows `int` and crashes the whole evaluation.
+- **The email builder (0098)** is a FOURTH template, `blocks`, not a canvas. 0070's argument against
+  drag-and-drop builders still holds — a canvas produces nested-table HTML nobody can maintain
+  against Outlook — so what is composable is the ORDER and CHOICE of blocks; the HTML each one
+  becomes stays in `newsletter-templates.ts`, inside the same 600px shell with the same preheader,
+  unsubscribe footer and tracking pixel. Stack only, no absolute positioning; `columns` is two fixed
+  halves that stack on mobile, not a grid.
+  - **Adding a block type means a renderer AND a `blockToText` case AND an editor.** A type with only
+    the first ships an email whose plain-text part is missing that content, and a multipart message
+    with a thin text part is a deliverability problem, not a cosmetic one.
+  - **`content` stays free-form jsonb** — no CHECK describing a block list, because it would have to
+    be hand-kept in step with TypeScript and fails at 2am instead of at render. `normalizeBlocks` is
+    the boundary and runs on EVERY read (an agent, an import or a newer client may have written the
+    row) and on the AI reply. Unknown types are dropped, not rendered empty.
+  - **The `html` block is stripped, not passed through** — scripts, styles, iframes, objects, embeds,
+    forms, event handlers and `javascript:`/`data:` URLs. Not for the recipient (every serious client
+    sanitises harder) but for US: that markup renders in the composer preview and can be read back by
+    an agent. The preview iframe is `sandbox=""` as the other half of the pair.
+  - **`BLOCK_PRESETS` are also the AI's few-shot examples**, same rule as `lib/workspace/templates.ts`
+    — improving a preset improves the drafts. The drafter is shown the vocabulary explicitly because
+    a model given a type list invents `subheading`/`paragraph`/`cta`, all of which normalise away and
+    read as the AI producing half an email. It never returns `html`.
+  - 0098 exists mainly because `save_newsletter` **silently rewrites an unknown template to 'plain'**
+    — so without widening the two whitelists a workspace would build a block email, save, and get a
+    plain one back with no error at all.
 - **Newsletters (0070/0071)** are a NATIVE build, not a port. listmonk is **AGPL-3.0** and Mautic
   is **GPL-3.0** — copying either would force this whole product off MIT, so don't "just borrow a
   file" from them. Concepts only.

@@ -4,6 +4,7 @@ import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { openSecret } from '@/lib/crypto/secrets';
 import { PROVIDERS, callAI, type AIProvider } from '@/lib/ai/providers';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { BLOCK_PRESETS, BLOCK_META, normalizeBlocks } from '@/lib/marketing/newsletter-templates';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,33 @@ const SHAPES: Record<string, string> = {
   plain: `{"subject":"","preheader":"","heading":"","body":"","ctaLabel":"","ctaUrl":""}`,
   announcement: `{"subject":"","preheader":"","heading":"","body":"","ctaLabel":"","ctaUrl":""}`,
   digest: `{"subject":"","preheader":"","heading":"","intro":"","items":[{"title":"","blurb":"","url":""}]}`,
+  blocks: `{"subject":"","preheader":"","blocks":[{"type":"heading","text":""},{"type":"text","text":""}]}`,
 };
+
+/**
+ * The block vocabulary, and one real example, both generated from the shipped
+ * presets.
+ *
+ * Written out rather than described, because a model given a type list invents
+ * plausible neighbours — `subheading`, `paragraph`, `cta` — and every one of
+ * them is silently dropped by `normalizeBlocks`, which reads as the AI having
+ * produced half an email. Showing a preset is also what keeps the prompt and
+ * the manual builder from drifting: improving a preset improves the drafts.
+ */
+function blocksPrompt(): string {
+  const vocab = BLOCK_META.map((m) => `  "${m.type}" — ${m.hint}`).join('\n');
+  const example = JSON.stringify(
+    (BLOCK_PRESETS.find((p) => p.key === 'letter')?.blocks() || []).map(({ id, ...rest }) => rest),
+  );
+  return (
+    `\nblocks is an ORDERED list rendered top to bottom. Use ONLY these types:\n${vocab}\n\n` +
+    `Fields per type: heading {text,size:sm|md|lg}, text {text}, image {url,alt}, button {text,url}, ` +
+    `quote {text,attribution}, items {items:[{title,blurb,url}]}, columns {columns:[{text,label,url},{...}]}, ` +
+    `divider {}, spacer {size}. Never use the "html" type.\n` +
+    `Do not invent image URLs or links — leave url empty and a person will fill it in.\n` +
+    `A good email is 3 to 6 blocks. Example:\n${example}\n`
+  );
+}
 
 /**
  * Models wrap JSON in prose or fences no matter how firmly you ask. Rather than
@@ -47,7 +74,7 @@ export async function POST(req: Request) {
   let b: any;
   try { b = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
   const { privyUserId, workspaceId } = b || {};
-  const template = ['plain', 'announcement', 'digest'].includes(b?.template) ? b.template : 'plain';
+  const template = ['plain', 'announcement', 'digest', 'blocks'].includes(b?.template) ? b.template : 'plain';
   const brief = String(b?.brief || '').slice(0, 2000);
   if (!privyUserId || !workspaceId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
   if (!brief.trim()) return NextResponse.json({ error: 'Describe what the newsletter should say.' }, { status: 400 });
@@ -91,6 +118,7 @@ export async function POST(req: Request) {
     `- Subject under 60 characters. No emoji unless the brief asks. Never use "Don't miss", "Act now" or similar — those trip spam filters and read as a mailing list, not a person.\n` +
     `- preheader is one short line that ADDS to the subject rather than repeating it.\n` +
     `- Body: short paragraphs separated by blank lines. Plain text, no HTML, no markdown.\n` +
+    (template === 'blocks' ? blocksPrompt() : '') +
     `- Only include a ctaUrl if the brief supplies one. Never invent a link, a statistic, a date, a price or a customer name — an invented fact in a newsletter goes to every subscriber at once.\n` +
     (samples ? `\nMatch the voice of these previous sends from this company:\n${samples}` : '');
 
@@ -122,5 +150,20 @@ export async function POST(req: Request) {
         : [],
     },
   };
+
+  if (template === 'blocks') {
+    // Through the SAME normaliser the editor uses on every read, so a block the
+    // model invented is dropped here rather than stored and then dropped
+    // silently at render time. `html` is stripped whatever the model returns:
+    // the prompt forbids it, and a model that ignores that must not be the
+    // thing that decides raw markup goes into a send.
+    const blocks = normalizeBlocks(j.blocks).filter((x) => x.type !== 'html');
+    if (blocks.length === 0) {
+      return NextResponse.json(
+        { error: 'The model returned no usable blocks. Try a more specific brief.' }, { status: 502 });
+    }
+    out.content = { blocks };
+  }
+
   return NextResponse.json({ ok: true, draft: out });
 }
