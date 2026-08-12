@@ -4,7 +4,7 @@ import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { openSecret } from '@/lib/crypto/secrets';
 import { PROVIDERS, callAI, type AIProvider } from '@/lib/ai/providers';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { BLOCK_PRESETS, BLOCK_META, normalizeBlocks } from '@/lib/marketing/newsletter-templates';
+import { DOC_PRESETS, DOC_BLOCK_META, normalizeDoc, newBlockId, ROOT } from '@/lib/marketing/email-doc';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,32 +26,77 @@ const SHAPES: Record<string, string> = {
   plain: `{"subject":"","preheader":"","heading":"","body":"","ctaLabel":"","ctaUrl":""}`,
   announcement: `{"subject":"","preheader":"","heading":"","body":"","ctaLabel":"","ctaUrl":""}`,
   digest: `{"subject":"","preheader":"","heading":"","intro":"","items":[{"title":"","blurb":"","url":""}]}`,
-  blocks: `{"subject":"","preheader":"","blocks":[{"type":"heading","text":""},{"type":"text","text":""}]}`,
+  blocks: `{"subject":"","preheader":"","blocks":[{"type":"Heading","text":""},{"type":"Text","text":""}]}`,
 };
 
 /**
- * The block vocabulary, and one real example, both generated from the shipped
+ * The block vocabulary, and one real layout, both generated from the shipped
  * presets.
  *
- * Written out rather than described, because a model given a type list invents
- * plausible neighbours — `subheading`, `paragraph`, `cta` — and every one of
- * them is silently dropped by `normalizeBlocks`, which reads as the AI having
- * produced half an email. Showing a preset is also what keeps the prompt and
- * the manual builder from drifting: improving a preset improves the drafts.
+ * Written out rather than described, because a model given a bare type list
+ * invents plausible neighbours — `subheading`, `paragraph`, `cta` — and every
+ * one of them is dropped, which reads as the AI having produced half an email.
+ * Showing a preset is also what stops the prompt and the manual builder
+ * drifting: improving a preset improves the drafts.
+ *
+ * The model returns a FLAT LIST, not Waypoint's id-keyed document. Asking a
+ * model to mint ids and cross-reference them in `childrenIds` is asking for a
+ * document that fails its own schema; the ids are assembled below, where they
+ * cannot be wrong.
  */
 function blocksPrompt(): string {
-  const vocab = BLOCK_META.map((m) => `  "${m.type}" — ${m.hint}`).join('\n');
+  const vocab = DOC_BLOCK_META.filter((m) => m.type !== 'Html' && m.type !== 'ColumnsContainer')
+    .map((m) => `  "${m.type}" — ${m.hint}`).join('\n');
+  const doc = DOC_PRESETS.find((p) => p.key === 'letter')!.build('#4653CE');
   const example = JSON.stringify(
-    (BLOCK_PRESETS.find((p) => p.key === 'letter')?.blocks() || []).map(({ id, ...rest }) => rest),
+    (doc[ROOT].data.childrenIds as string[]).map((id) => ({
+      type: doc[id].type,
+      ...(doc[id].data?.props?.text !== undefined ? { text: doc[id].data.props.text } : {}),
+      ...(doc[id].data?.props?.level ? { level: doc[id].data.props.level } : {}),
+    })),
   );
   return (
     `\nblocks is an ORDERED list rendered top to bottom. Use ONLY these types:\n${vocab}\n\n` +
-    `Fields per type: heading {text,size:sm|md|lg}, text {text}, image {url,alt}, button {text,url}, ` +
-    `quote {text,attribution}, items {items:[{title,blurb,url}]}, columns {columns:[{text,label,url},{...}]}, ` +
-    `divider {}, spacer {size}. Never use the "html" type.\n` +
+    `Fields: Heading {text, level:h1|h2|h3}, Text {text}, Button {text, url}, ` +
+    `Image {url, alt}, Divider {}, Spacer {}.\n` +
     `Do not invent image URLs or links — leave url empty and a person will fill it in.\n` +
     `A good email is 3 to 6 blocks. Example:\n${example}\n`
   );
+}
+
+/**
+ * The model's flat list → a document the renderer will accept.
+ *
+ * Every id is minted here and every unknown type is dropped, so the worst a
+ * confused model achieves is a shorter email — never a document that throws in
+ * the composer or, worse, in the send cron at 3am.
+ */
+function blocksToDoc(raw: any, accent: string) {
+  const known = new Map(DOC_PRESETS[1].build(accent) ? DOC_BLOCK_META.map((m) => [m.type, m]) : []);
+  const doc: any = { [ROOT]: { type: 'EmailLayout', data: {
+    backdropColor: '#F5F5F5', canvasColor: '#FFFFFF', textColor: '#242424',
+    fontFamily: 'MODERN_SANS', childrenIds: [] as string[] } } };
+  const pad = { top: 8, right: 24, bottom: 8, left: 24 };
+  for (const b of (Array.isArray(raw) ? raw : []).slice(0, 20)) {
+    const type = String(b?.type || '');
+    // Html and columns are excluded from the prompt AND here: a model must not
+    // be the thing that decides raw markup goes into a send.
+    if (!known.has(type as any) || type === 'Html' || type === 'ColumnsContainer') continue;
+    const text = typeof b?.text === 'string' ? b.text.slice(0, 8000) : '';
+    const url = typeof b?.url === 'string' ? b.url.slice(0, 2000) : '';
+    let data: any;
+    if (type === 'Heading') data = { props: { text: text || 'Heading', level: ['h1','h2','h3'].includes(b?.level) ? b.level : 'h2' }, style: { padding: { ...pad, top: 24 }, textAlign: 'left' } };
+    else if (type === 'Text') data = { props: { text }, style: { padding: pad, fontSize: 16 } };
+    else if (type === 'Button') data = { props: { text: text || 'Read more', url, buttonStyle: 'rounded', buttonTextColor: '#FFFFFF', buttonBackgroundColor: accent, size: 'medium' }, style: { padding: { ...pad, bottom: 24 }, textAlign: 'left' } };
+    else if (type === 'Image') data = { props: { url, alt: typeof b?.alt === 'string' ? b.alt.slice(0, 300) : '', contentAlignment: 'middle' }, style: { padding: pad } };
+    else if (type === 'Divider') data = { props: { lineColor: '#E4E4E7' }, style: { padding: pad } };
+    else if (type === 'Spacer') data = { props: { height: 24 } };
+    else continue;
+    const id = newBlockId();
+    doc[id] = { type, data };
+    doc[ROOT].data.childrenIds.push(id);
+  }
+  return doc[ROOT].data.childrenIds.length ? normalizeDoc(doc) : null;
 }
 
 /**
@@ -152,17 +197,12 @@ export async function POST(req: Request) {
   };
 
   if (template === 'blocks') {
-    // Through the SAME normaliser the editor uses on every read, so a block the
-    // model invented is dropped here rather than stored and then dropped
-    // silently at render time. `html` is stripped whatever the model returns:
-    // the prompt forbids it, and a model that ignores that must not be the
-    // thing that decides raw markup goes into a send.
-    const blocks = normalizeBlocks(j.blocks).filter((x) => x.type !== 'html');
-    if (blocks.length === 0) {
+    const doc = blocksToDoc(j.blocks, '#4653CE');
+    if (!doc) {
       return NextResponse.json(
         { error: 'The model returned no usable blocks. Try a more specific brief.' }, { status: 502 });
     }
-    out.content = { blocks };
+    out.content = { doc };
   }
 
   return NextResponse.json({ ok: true, draft: out });

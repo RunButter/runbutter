@@ -41,7 +41,22 @@ const nextConfig = {
     // pdfkit must stay unbundled: it reads its font metrics from node_modules at
     // runtime. @firecrawl/pdf-inspector is a native .node addon, which webpack
     // cannot bundle at all — it has to be required from node_modules.
-    serverComponentsExternalPackages: ['googleapis', 'pdfkit', '@firecrawl/pdf-inspector'],
+    // `@usewaypoint/*` renders React components to email HTML through
+    // react-dom/server. Bundled into a route handler, `react` resolves under the
+    // `react-server` condition — whose export surface has no `createContext` —
+    // and the build dies at page-data collection with
+    // "(0 , o.createContext) is not a function", which names neither the package
+    // nor the cause. Externalised, the send cron requires it through plain Node
+    // resolution and gets the full React build. The browser bundle is
+    // unaffected, so the composer's preview still renders with the same code.
+    serverComponentsExternalPackages: [
+      'googleapis', 'pdfkit', '@firecrawl/pdf-inspector',
+      '@usewaypoint/email-builder', '@usewaypoint/document-core',
+      '@usewaypoint/block-text', '@usewaypoint/block-heading', '@usewaypoint/block-button',
+      '@usewaypoint/block-image', '@usewaypoint/block-avatar', '@usewaypoint/block-divider',
+      '@usewaypoint/block-spacer', '@usewaypoint/block-html', '@usewaypoint/block-container',
+      '@usewaypoint/block-columns-container',
+    ],
     // `output: 'standalone'` traces which node_modules to copy by FOLLOWING
     // imports, and the addon is loaded through a guarded require() inside a
     // try/catch — exactly the shape a static tracer can miss. Naming it here

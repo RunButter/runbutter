@@ -553,30 +553,45 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   it return true would silently widen a send's audience. The numeric operand is parsed with a strict
   `^\d{1,6}$` match, not by stripping non-digits — a UUID value (used by `on_list`) becomes a
   32-digit number that overflows `int` and crashes the whole evaluation.
-- **The email builder (0098)** is a FOURTH template, `blocks`, not a canvas. 0070's argument against
-  drag-and-drop builders still holds — a canvas produces nested-table HTML nobody can maintain
-  against Outlook — so what is composable is the ORDER and CHOICE of blocks; the HTML each one
-  becomes stays in `newsletter-templates.ts`, inside the same 600px shell with the same preheader,
-  unsubscribe footer and tracking pixel. Stack only, no absolute positioning; `columns` is two fixed
-  halves that stack on mobile, not a grid.
-  - **Adding a block type means a renderer AND a `blockToText` case AND an editor.** A type with only
-    the first ships an email whose plain-text part is missing that content, and a multipart message
-    with a thin text part is a deliverability problem, not a cosmetic one.
-  - **`content` stays free-form jsonb** — no CHECK describing a block list, because it would have to
-    be hand-kept in step with TypeScript and fails at 2am instead of at render. `normalizeBlocks` is
-    the boundary and runs on EVERY read (an agent, an import or a newer client may have written the
-    row) and on the AI reply. Unknown types are dropped, not rendered empty.
-  - **The `html` block is stripped, not passed through** — scripts, styles, iframes, objects, embeds,
-    forms, event handlers and `javascript:`/`data:` URLs. Not for the recipient (every serious client
-    sanitises harder) but for US: that markup renders in the composer preview and can be read back by
-    an agent. The preview iframe is `sandbox=""` as the other half of the pair.
-  - **`BLOCK_PRESETS` are also the AI's few-shot examples**, same rule as `lib/workspace/templates.ts`
-    — improving a preset improves the drafts. The drafter is shown the vocabulary explicitly because
-    a model given a type list invents `subheading`/`paragraph`/`cta`, all of which normalise away and
-    read as the AI producing half an email. It never returns `html`.
-  - 0098 exists mainly because `save_newsletter` **silently rewrites an unknown template to 'plain'**
-    — so without widening the two whitelists a workspace would build a block email, save, and get a
-    plain one back with no error at all.
+- **The email builder (0098)** is a fourth template, `blocks`, rendered by
+  **EmailBuilder.js (`@usewaypoint/email-builder`, MIT** — verified against the LICENSE file, not a
+  badge). 0070's argument against drag-and-drop builders was that the fragile half is the HTML; this
+  takes a dependency for exactly that half and keeps the composable half ours. Their editor is
+  Material-UI and is NOT used — only the renderer, which pulls no UI library.
+  - **Unlayer (`react-email-editor`) was rejected.** MIT covers a ~200-line wrapper around a HOSTED
+    editor that loads from unlayer.com and wants an API key: a runtime dependency on somebody else's
+    servers, fatal to self-hosting, and it would route unsent drafts through a third party. Same rule
+    as `/pdf`, `/qr` and the plugin builder.
+  - **`package.json` carries a zod override** and the reason is written there: Waypoint's peer range
+    is `^1 || ^2 || ^3` while this repo already has zod 4 via Privy → walletconnect → abitype. The
+    renderer produces byte-identical output under both — checked before the override was written.
+    Without it the ROOT install ERESOLVEs, which on Render means `npm ci` fails after the push with
+    the old build still serving.
+  - **Every `@usewaypoint/*` package is in `serverComponentsExternalPackages`.** Bundled into a route
+    handler, `react` resolves under the `react-server` condition, whose surface has no
+    `createContext`, and the build dies at page-data collection with
+    *"(0 , o.createContext) is not a function"* — a message naming neither the package nor the cause.
+  - **`renderEmail`/`renderEmailText` in `lib/marketing/email-doc.ts` are the ONE entry point.** Two
+    renderers now exist (three fixed layouts, plus the builder) and the way that breaks is a caller
+    that knows about one: the newsletter saves, the preview looks right, and the send body is empty.
+  - Waypoint renders a whole `<html>` and knows nothing about sending, so four things are grafted on
+    here: preheader, unsubscribe footer, open pixel, and click tracking. **Links are rewritten on the
+    rendered HTML, not by walking the document** — a link can be a Button's `url`, inside a Text
+    block's markdown, or inside a Custom HTML block, and only the first is reachable structurally.
+  - **The preview is client-only.** The renderer emits `<head></head>` in the browser and not under
+    `react-dom/server`, so an SSR'd srcDoc mismatches on every open.
+  - `removeBlock` sweeps a container's children, and `duplicateBlock` re-mints their ids — otherwise
+    deleting a Columns block orphans its contents forever, and duplicating one makes two containers
+    share children so editing either edits both.
+  - The **Custom HTML block is stripped** (scripts, styles, iframes, handlers, `javascript:`/`data:`).
+    Not for the recipient — every serious client sanitises harder — but because it renders in our
+    composer and can be read back by an agent. The preview iframe is `sandbox=""` as the other half.
+  - **`DOC_PRESETS` are also the AI's few-shot examples**, same rule as `lib/workspace/templates.ts`.
+    The drafter returns a FLAT list and `blocksToDoc` mints the ids: asking a model to cross-reference
+    `childrenIds` produces a document that fails its own schema. It can never return `Html`.
+  - 0098 itself is nearly one line, and it is the important one: `save_newsletter` silently rewrites
+    an unknown template to `'plain'`, so without widening both whitelists a workspace would build an
+    email, save, and get a plain one back with no error at all.
 - **Newsletters (0070/0071)** are a NATIVE build, not a port. listmonk is **AGPL-3.0** and Mautic
   is **GPL-3.0** — copying either would force this whole product off MIT, so don't "just borrow a
   file" from them. Concepts only.

@@ -10,10 +10,11 @@ import {
   type NewsletterFull, type NewsletterList,
 } from '@/lib/crm/newsletters';
 import {
-  renderNewsletter, TEMPLATE_META, BLOCK_PRESETS, normalizeBlocks,
-  type TemplateKey, type NewsletterContent, type DigestItem, type EmailBlock,
+  TEMPLATE_META,
+  type TemplateKey, type NewsletterContent, type DigestItem,
 } from '@/lib/marketing/newsletter-templates';
-import BlockEditor from '@/components/marketing/BlockEditor';
+import { renderEmail, normalizeDoc, type EmailDoc } from '@/lib/marketing/email-doc';
+import EmailDesigner from '@/components/marketing/EmailDesigner';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
@@ -45,6 +46,17 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
   // render: the email is one document and a narrow viewport is exactly what a
   // phone gives it.
   const [narrow, setNarrow] = useState(false);
+  /**
+   * The preview is CLIENT-ONLY.
+   *
+   * EmailBuilder.js emits a `<head></head>` in the browser and not under
+   * react-dom/server, so an srcDoc computed during SSR and again after
+   * hydration is two different strings and React logs a mismatch on every
+   * newsletter that is opened. Nothing about a preview needs to be server
+   * rendered, so the honest fix is not to.
+   */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [drafting, setDrafting] = useState(false);
 
   const load = useCallback(async (w: WorkspaceContext, p: string) => {
@@ -112,8 +124,10 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
   // workspace at SEND time, and fetching them here just to decorate a preview
   // would imply they are part of this newsletter rather than of the workspace.
   const previewHtml = useMemo(() => {
-    if (!n) return '';
-    return renderNewsletter((n.template || 'plain') as TemplateKey, {
+    if (!n || !mounted) return '';
+    // The SAME dispatcher the send cron uses, so the preview cannot be a
+    // preview of a different email than the one that goes out.
+    return renderEmail(n.template || 'plain', {
       subject: n.subject || '(no subject)',
       preheader: n.preheader,
       brand: { name: ws?.name || 'Your company', accent: null, address: 'Your registered address', footer: null },
@@ -121,7 +135,7 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
       unsubscribeUrl: '#',
       trackLink: (u) => u,
     });
-  }, [n, ws?.name]);
+  }, [n, ws?.name, mounted]);
 
   if (!ready || loading) {
     return <AppLoading />;
@@ -137,9 +151,9 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
 
   const items: DigestItem[] = n.content?.items || [];
   // Normalised on read, not on write: `content` is free-form jsonb that an
-  // agent, an import or an older client may have written, and the editor must
-  // never show a row the renderer will drop.
-  const blocks: EmailBlock[] = normalizeBlocks(n.content?.blocks);
+  // agent, an import or an older client may have written, and anything without
+  // a usable root becomes an empty document rather than an exception.
+  const doc: EmailDoc = normalizeDoc(n.content?.doc);
 
   return (
     <>
@@ -223,29 +237,9 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
             </Field>
 
             {n.template === 'blocks' ? (
-              <Field label="Blocks" hint="Stacked top to bottom. Reorder with the arrows.">
-                <>
-                  {blocks.length > 0 && !locked && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      <span className="text-2xs text-tertiary self-center mr-0.5">Start over:</span>
-                      {BLOCK_PRESETS.map((p) => (
-                        <button key={p.key} title={p.description}
-                          onClick={async () => {
-                            const ok = await confirmDialog({
-                              title: `Replace with “${p.name}”?`,
-                              body: 'The blocks you have now are discarded. Your subject, lists and settings are kept.',
-                            });
-                            if (ok) setContent({ blocks: p.blocks() });
-                          }}
-                          className="h-6 px-2 rounded-md text-3xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <BlockEditor blocks={blocks} disabled={locked}
-                    onChange={(next) => setContent({ blocks: next })} />
-                </>
+              <Field label="Design">
+                <EmailDesigner doc={doc} disabled={locked}
+                  onChange={(next) => setContent({ doc: next })} />
               </Field>
             ) : (
             <Field label="Heading">

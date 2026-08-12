@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
-import { renderNewsletter, renderText, type TemplateKey, type Brand } from '@/lib/marketing/newsletter-templates';
+import type { TemplateKey, Brand } from '@/lib/marketing/newsletter-templates';
+import { renderEmail, renderEmailText } from '@/lib/marketing/email-doc';
 import { unsubscribeUrl, openPixelUrl, clickUrl } from '@/lib/marketing/newsletter-links';
 
 export const runtime = 'nodejs';
@@ -162,8 +163,8 @@ export async function POST(req: Request) {
           to: r.email,
           reply_to: nl.reply_to || undefined,
           subject: nl.subject || '(no subject)',
-          html: renderNewsletter((nl.template || 'plain') as TemplateKey, ctx),
-          text: renderText((nl.template || 'plain') as TemplateKey, ctx),
+          html: renderEmail(nl.template || 'plain', ctx),
+          text: renderEmailText(nl.template || 'plain', ctx),
           headers: {
             'List-Unsubscribe': `<${unsub}>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

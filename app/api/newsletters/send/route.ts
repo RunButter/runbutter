@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
-import { renderNewsletter, renderText, type TemplateKey, type Brand } from '@/lib/marketing/newsletter-templates';
+import type { TemplateKey, Brand } from '@/lib/marketing/newsletter-templates';
+import { renderEmail, renderEmailText } from '@/lib/marketing/email-doc';
 import { unsubscribeUrl, openPixelUrl, clickUrl } from '@/lib/marketing/newsletter-links';
 
 export const runtime = 'nodejs';
@@ -101,8 +102,8 @@ export async function POST(req: Request) {
             to: d.email,
             reply_to: n.reply_to || undefined,
             subject: n.subject || '(no subject)',
-            html: renderNewsletter((n.template || 'plain') as TemplateKey, ctx),
-            text: renderText((n.template || 'plain') as TemplateKey, ctx),
+            html: renderEmail(n.template || 'plain', ctx),
+            text: renderEmailText(n.template || 'plain', ctx),
             // Gmail and Yahoo require one-click unsubscribe from bulk senders.
             // Without these headers deliverability degrades regardless of how
             // clean the list is — the footer link alone does not satisfy it.
