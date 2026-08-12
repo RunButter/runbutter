@@ -35,12 +35,21 @@ export async function POST(req: Request) {
   const bad = uris.find((u) => !isRegistrableRedirect(u));
   if (bad) return oauthError('invalid_redirect_uri', `Not a usable redirect_uri: ${bad}`);
 
-  // Only `none` is supported, and saying so explicitly is better than accepting
-  // a request that claims a secret and then silently issuing a public client.
-  if (b.token_endpoint_auth_method && b.token_endpoint_auth_method !== 'none') {
-    return oauthError('invalid_client_metadata',
-      'Only public clients are supported (token_endpoint_auth_method: "none"), with PKCE.');
-  }
+  /**
+   * Metadata we do not support is SUBSTITUTED, not refused.
+   *
+   * RFC 7591 §3.2.1 is explicit that the server may replace requested values and
+   * that the registration RESPONSE is authoritative — so a client asking for
+   * `client_secret_post` should be handed a public client and told so, not
+   * turned away. Refusing was wrong and it is the kind of wrong that surfaces as
+   * "Couldn't register with runbutter's sign-in service" with no way for anyone
+   * to see which field caused it.
+   *
+   * Nothing is loosened by this: the client still gets no secret, still cannot
+   * obtain a token without a human on /oauth/authorize, and still has its
+   * redirect_uris checked exactly. Only the redirect_uris are worth refusing
+   * over, because they are the one field that decides where a code can land.
+   */
 
   const admin = createAdminClient();
   const { data, error } = await admin.rpc('oauth_register_client', {
@@ -51,8 +60,13 @@ export async function POST(req: Request) {
   });
   if (error) {
     if (/INVALID_REDIRECT_URI/.test(error.message)) return oauthError('invalid_redirect_uri', error.message);
-    if (/schema cache|does not exist/i.test(error.message)) {
-      return oauthError('server_error', 'OAuth needs migration 0099 — run it in Supabase.', 503);
+    // The single most likely failure on a fresh deployment, and the client shows
+    // only a generic "couldn't register" — so say it in a form somebody curling
+    // this endpoint can act on immediately.
+    if (/schema cache|does not exist|could not find the function/i.test(error.message)) {
+      return oauthError('server_error',
+        'This RunButter deployment has not run database migration 0099, which creates the OAuth tables. '
+        + 'Run `npm run migrate` (or apply supabase/migrations/0099_oauth_mcp.sql) and try again.', 503);
     }
     return oauthError('server_error', error.message, 500);
   }
