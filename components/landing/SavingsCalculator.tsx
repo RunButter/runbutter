@@ -56,6 +56,9 @@ const CATEGORIES: { label: string; note: string; monthly: number; perSeat?: bool
 // exactly why it survives review.
 const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
+/** Stable id per tool name, so the label's htmlFor matches its input. */
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
 export default function SavingsCalculator() {
   const [seats, setSeats] = useState(5);
   const [on, setOn] = useState<string[]>(['CRM', 'Projects', 'Invoicing & books', 'Email marketing', 'E-signatures']);
@@ -104,11 +107,25 @@ export default function SavingsCalculator() {
                 </label>
                 {active && (
                   <div className="mt-2.5 flex items-center gap-2 pl-6">
-                    <span className="text-2xs text-tertiary">$</span>
+                    <span className="text-2xs text-tertiary" aria-hidden="true">$</span>
+                    {/* A real label, not a placeholder or a bare box. Lighthouse
+                        failed this under Accessibility AND under Agentic
+                        Browsing — an agent reading the page cannot tell which
+                        number belongs to which tool from a class name, and the
+                        whole point of this widget is that somebody types their
+                        actual spend into it. */}
+                    <label className="sr-only" htmlFor={`spend-${slug(c.label)}`}>
+                      {`Monthly spend on ${c.label} in dollars${c.perSeat ? ', per seat' : ''}`}
+                    </label>
                     <input type="number" min={0} value={spend[c.label]}
+                      id={`spend-${slug(c.label)}`} name={`spend-${slug(c.label)}`}
+                      inputMode="numeric"
+                      aria-describedby={`spend-unit-${slug(c.label)}`}
                       onChange={(e) => setSpend((s) => ({ ...s, [c.label]: Math.max(0, Number(e.target.value) || 0) }))}
                       className="w-20 h-7 rounded-md bg-surface-sunken ring-1 ring-subtle px-2 text-2xs font-mono text-primary tabular-nums" />
-                    <span className="text-2xs text-tertiary">/mo{c.perSeat ? ' per seat' : ''}</span>
+                    <span className="text-2xs text-tertiary" id={`spend-unit-${slug(c.label)}`}>
+                      /mo{c.perSeat ? ' per seat' : ''}
+                    </span>
                   </div>
                 )}
               </div>

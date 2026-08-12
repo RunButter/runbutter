@@ -19,9 +19,14 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ className = '', iconOnly = false, dark = false, mono = false }) => {
     return (
         <div className={`flex items-center gap-2 ${className}`}>
+            {/* Decorative WHEN the wordmark is beside it: a screen reader
+                announcing "RunButter RunButter" is worse than announcing it
+                once, and Lighthouse flags the duplicate. Alone, it is the only
+                thing naming the brand and needs the text. */}
             <img
                 src="/logo.svg"
-                alt="RunButter"
+                alt={iconOnly ? 'RunButter' : ''}
+                aria-hidden={iconOnly ? undefined : true}
                 width={26}
                 height={26}
                 className={`w-[26px] h-[26px] shrink-0 ${mono ? 'grayscale' : ''}`}

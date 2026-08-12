@@ -289,6 +289,36 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   - `pluginSlug` collapsed `--` and `..` separately, so `.-` survived: "Acme Co. Skills" came out
     `acme-co.-skills`. It now collapses any run of `[-.]` to its FIRST character.
 
+## Landing-page performance (Lighthouse, 2026-08)
+- **Score 70, and 28 of the 30 missing points were TBT (900 ms).** FCP 0.4s, LCP 0.7s and CLS 0 were
+  already green. On this page performance work means main-thread work and nothing else — do not go
+  chasing bytes.
+- **PRIVY WAS MOUNTING ON THE MARKETING SITE**, because `Providers` sits in the root layout and the
+  root layout wraps `/` too. Lighthouse: **679 ms of CPU**, 579 ms of it script evaluation, plus
+  ~370 KB of Privy JS, a 161 KB walletconnect wallet directory and a 99 KB Cloudflare Turnstile
+  challenge — all so somebody could read the pricing table. `isPublicPath()` now skips the mount.
+  - **The list is PUBLIC prefixes, not private ones.** A route missing from it loads Privy and is
+    merely slower; a route wrongly on it cannot sign in. Wrong in the direction that still works.
+  - **The import stays STATIC.** `dynamic(…, { ssr: false })` was tried and reverted: a provider
+    wraps the whole app, so a lazily loaded one renders NOTHING until its chunk arrives — every app
+    page server-renders empty, and a chunk that 404s takes the product down. The fetches that cost
+    the 679 ms happen on MOUNT, not on import, so skipping the mount gets nearly all of it.
+- **`AsciiField` draws one frame immediately and starts its loop after `load` + idle.** TBT is scored
+  over the window between first paint and interactive; a 17,000-cell canvas at 30fps inside that
+  window counts as blocking whether or not anyone perceives it. It also pauses on
+  `visibilitychange` now — the IntersectionObserver only knew about scrolling.
+- Measured locally against a production build, 1×/4× CPU: **TBT 900 ms → ~0 ms desktop, ~6 ms at 4×**;
+  long tasks 28 → 2. Re-run with `Emulation.setCPUThrottlingRate` and a `longtask` PerformanceObserver
+  rather than trusting a score.
+- **Still open, with numbers**: `/flammarion-1400.webp` is 284 KB and Lighthouse wants 120 KB of it
+  back. Canvas re-encoding makes it BIGGER (the original is already well tuned), so it needs `cwebp`
+  or AVIF locally — do not "fix" it through a browser. `chunks/2117-*.js` costs 578 ms of evaluation
+  and is flagged for legacy polyfills; adding a modern `browserslist` did not change its hash, so the
+  polyfills come from a dependency, not from Next's transpile.
+- **Agentic Browsing scored 2/3 and the single failure was unlabelled form inputs** — the savings
+  calculator's number boxes. The same fix scores in Accessibility. An agent cannot tell which number
+  belongs to which tool from a class name, and that widget exists to be typed into.
+
 ## SEO + being readable by machines
 - **`/robots.txt`, `/sitemap.xml` and `/llms.txt` did not exist** and 404'd in production. Metadata
   and OG tags were already good; there was simply nothing telling a crawler the docs existed.

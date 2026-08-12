@@ -92,6 +92,26 @@ const nextConfig = {
     ].join('; ');
     return [
       {
+        /**
+         * Static assets in /public.
+         *
+         * Lighthouse measured these at a FOUR HOUR TTL — 237 KB re-fetched on
+         * every repeat visit, most of it the hero image. Thirty days rather
+         * than the usual year because these filenames are NOT content-hashed:
+         * `immutable` on `/logo.svg` means a logo change takes a year to reach
+         * anyone who has already visited. `stale-while-revalidate` is what
+         * keeps the repeat visit instant anyway while the new copy is fetched
+         * in the background.
+         *
+         * Next's own /_next/static/* output IS hashed and already ships a
+         * year with immutable; nothing here touches that.
+         */
+        source: '/:path*.(svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
