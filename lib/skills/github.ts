@@ -100,3 +100,43 @@ export function parseSkillMd(text: string, path: string) {
   };
 }
 
+
+/**
+ * Skills whose licence is NOT what the repository's LICENSE file says.
+ *
+ * WHY THIS EXISTS. RunButter suggests `anthropics/skills` by name on the import
+ * screen — it is the best public example of the format. Its LICENSE is Apache
+ * 2.0, and four directories are carved out of that in the README as
+ * "source-available (not open source)": docx, pdf, pptx and xlsx. Nothing in
+ * the repository tree says so, so an importer that reads LICENSE and trusts it
+ * pulls restricted text into a workspace of an MIT product and tells the person
+ * it was Apache.
+ *
+ * It does NOT block the import. The preview already exists so a human decides
+ * what to save (nothing is stored until they do), and deciding is exactly what
+ * a licence question needs. What was missing was the fact — so the fact is
+ * shown, on the row it applies to, before the tick.
+ *
+ * HAND-MAINTAINED, AND THAT IS THE HONEST COST. A carve-out written in prose in
+ * a README cannot be detected from the tree, so this is a list somebody has to
+ * keep. It is small, it names its source, and it is better than the silence it
+ * replaces — but if it grows past a handful of repositories, the answer is to
+ * stop suggesting repositories rather than to grow the table.
+ */
+const RESTRICTED: { repo: string; prefixes: string[]; note: string }[] = [
+  {
+    repo: 'anthropics/skills',
+    prefixes: ['skills/docx/', 'skills/pdf/', 'skills/pptx/', 'skills/xlsx/'],
+    note: 'Source-available, not open source — the repository carves these four out of its Apache 2.0 licence. Check the terms before using this commercially.',
+  },
+];
+
+/** The licence caveat for one file, or '' when there is none. */
+export function licenceNote(repo: string, path: string): string {
+  const key = repo.toLowerCase();
+  for (const r of RESTRICTED) {
+    if (r.repo !== key) continue;
+    if (r.prefixes.some((p) => path.toLowerCase().startsWith(p))) return r.note;
+  }
+  return '';
+}

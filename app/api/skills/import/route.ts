@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { parseRepoUrl, parseSkillMd, classifyGithubResponse, waitFor, type GithubFailure } from '@/lib/skills/github';
+import { parseRepoUrl, parseSkillMd, classifyGithubResponse, waitFor, licenceNote, type GithubFailure } from '@/lib/skills/github';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
       const r = await fetch(base + n.path.split('/').map(encodeURIComponent).join('/'), { headers: { 'user-agent': UA['user-agent'] }, signal: ctl.signal });
       if (!r.ok) return null;
       const text = (await r.text()).slice(0, MAX_BYTES);
-      return parseSkillMd(text, n.path);
+      return { ...parseSkillMd(text, n.path), licence: licenceNote(`${ref.owner}/${ref.repo}`, String(n.path)) };
     } catch { return null; } finally { clearTimeout(t); }
   }))).filter(Boolean);
 

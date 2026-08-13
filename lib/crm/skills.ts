@@ -22,6 +22,8 @@ export interface SkillPreview {
   instructions: string;
   suggested_tools: string[];
   path: string;
+  /** A licence caveat on THIS file, when the repo's LICENSE does not cover it. */
+  licence?: string;
 }
 
 export async function listSkills(privy: string, ws: string): Promise<Skill[]> {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles, Upload } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles, Upload, AlertTriangle } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -384,6 +384,14 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
                     <span className="min-w-0 flex-1">
                       <span className="text-xs font-medium text-primary block truncate">{s.name}</span>
                       <span className="text-2xs text-tertiary block truncate">{s.path}</span>
+                      {/* On the row, before the tick. A licence caveat shown
+                          after the import is a caveat about something already
+                          in your workspace. */}
+                      {s.licence && (
+                        <span className="text-2xs text-warning block mt-0.5 flex items-start gap-1">
+                          <AlertTriangle className="w-3 h-3 shrink-0 mt-px" /> {s.licence}
+                        </span>
+                      )}
                     </span>
                     <button onClick={(e) => { e.preventDefault(); setPreview(preview?.path === s.path ? null : s); }}
                       className="text-2xs text-tertiary hover:text-accent shrink-0">
