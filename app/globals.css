@@ -163,6 +163,24 @@
 }
 
 @layer components {
+  /* The reading measure, enforced rather than remembered.
+     ------------------------------------------------------------------------
+     The design system has always said app screens cap at max-w-5xl, and about
+     forty pages wrote `max-w-5xl mx-auto` by hand while eleven forgot. Those
+     eleven stretched to the full window, so the app looked like two different
+     products depending on which tab you were on — content hugging the left
+     edge on Finance and centred on Deals. Nothing enforced the rule, so it
+     only held where somebody happened to type it.
+
+     Applied to the DIRECT CHILDREN of the scroll container rather than to a
+     wrapper, so a page adopts it by adding one word to a class list instead of
+     restructuring its JSX around a new div. Each top-level block caps and
+     centres, and because they share a measure they all line up.
+
+     Genuinely full-bleed screens — Maps, the post board, the roadmap — do NOT
+     take this class. A canvas is not prose and has no reading measure. */
+  .page-body > * { @apply max-w-5xl mx-auto w-full; }
+
   /* Buttons: compact (h-10), flat, medium weight. The primary action is the
      monochrome inverse fill — the same confident near-black/near-white the
      landing uses. A coloured primary on every screen is what made the app read

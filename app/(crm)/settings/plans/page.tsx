@@ -52,7 +52,7 @@ export default function PlansPage() {
         <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
         {loading ? (
           <AppLoading />
         ) : (

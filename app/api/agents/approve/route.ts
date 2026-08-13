@@ -24,12 +24,6 @@ export async function POST(req: Request) {
   const auth = await authorizePrivy(req, privyUserId);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
 
-  // AI agents are a Business feature: the /agents page was gated in the React
-  // tree and this route was not. Checked before the AI key is decrypted — no
-  // reason to touch a secret for a call that is about to be refused.
-  const planDenied = await checkFeature(workspaceId, 'aiAgents');
-  if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
-
   const admin = createAdminClient();
 
   // Confirm membership (raises NOT_A_MEMBER otherwise) before touching the run.
@@ -41,6 +35,24 @@ export async function POST(req: Request) {
   const run = runRow as any;
   if (!run || run.workspace_id !== workspaceId) return NextResponse.json({ error: 'Run not found' }, { status: 404 });
   if (run.status !== 'awaiting_approval') return NextResponse.json({ error: 'This run has nothing awaiting approval' }, { status: 400 });
+
+  /**
+   * The plan gate applies to AGENTS, not to the copilot.
+   *
+   * It used to sit at the top of this route and refuse before the run was even
+   * read — which was right while agents were the only thing that proposed
+   * writes, and became wrong the moment the copilot did too (0102). A copilot
+   * run carries `agent_id = null`, and gating it would mean the copilot could
+   * offer a change on the free plan and then refuse to apply it: the worst
+   * possible place to meet an upgrade wall, one click after saying yes.
+   *
+   * Read from the RUN rather than from the request, so a client cannot claim
+   * its agent run is a copilot run to get round the gate.
+   */
+  if (run.agent_id) {
+    const planDenied = await checkFeature(workspaceId, 'aiAgents');
+    if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
+  }
 
   const proposed = Array.isArray(run.proposed) ? run.proposed : [];
   const ctx = { admin, workspace: workspaceId, privy: privyUserId };

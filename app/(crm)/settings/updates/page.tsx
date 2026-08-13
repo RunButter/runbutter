@@ -67,7 +67,7 @@ export default function UpdatesPage() {
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
         <div className="max-w-3xl space-y-4">
 
           {loading && !info ? (

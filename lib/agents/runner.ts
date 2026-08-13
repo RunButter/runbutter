@@ -79,7 +79,41 @@ function toolSpecs(allowed: string[], allowedObjects: string[]): ToolSpec[] {
   }));
 }
 
-export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvider, apiKey: string, model: string, baseUrl: string | undefined, task: string, skills: SkillDef[] = [], onStep?: StepSink): Promise<RunOutcome> {
+/**
+ * The conversation so far, as the providers will accept it.
+ *
+ * THE COPILOT IS A THREAD AND THE RUNNER WAS SINGLE-SHOT, so prior turns now
+ * seed the loop. Two rules are not optional, and both fail as a 400 from the
+ * provider rather than as anything readable:
+ *
+ *   • Anthropic requires the FIRST message to be `user`. A thread whose oldest
+ *     retained turn is an assistant reply — which is what a window over a long
+ *     conversation eventually produces — would be rejected outright.
+ *   • Anthropic requires roles to ALTERNATE. Two user turns in a row happen
+ *     legitimately: a run that errored writes the person's message with no
+ *     reply after it, and their next message follows it directly.
+ *
+ * So leading assistant turns are dropped and consecutive same-role turns are
+ * merged. Merging rather than discarding, because the second of two user turns
+ * is usually a correction of the first and losing it loses the intent.
+ */
+export interface PriorTurn { role: 'user' | 'assistant'; content: string }
+
+export function normalizeTurns(turns: PriorTurn[]): PriorTurn[] {
+  const out: PriorTurn[] = [];
+  for (const t of turns) {
+    const content = String(t?.content || '').trim();
+    if (!content) continue;
+    const role = t.role === 'assistant' ? 'assistant' : 'user';
+    if (!out.length && role === 'assistant') continue;
+    const last = out[out.length - 1];
+    if (last && last.role === role) { last.content = `${last.content}\n\n${content}`; continue; }
+    out.push({ role, content });
+  }
+  return out;
+}
+
+export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvider, apiKey: string, model: string, baseUrl: string | undefined, task: string, skills: SkillDef[] = [], onStep?: StepSink, priorTurns: PriorTurn[] = []): Promise<RunOutcome> {
   const allowed = agent.allowed_tools?.length ? agent.allowed_tools : ['list_objects', 'list_records', 'search_records', 'get_record'];
   const specs = toolSpecs(allowed, agent.allowed_objects || []);
   const steps: any[] = [];
@@ -123,7 +157,14 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
       : '') +
     skillBlock(skills);
 
-  let history: any[] = [{ role: 'user', content: task }];
+  // The prior turns end with whatever was said last; the new task is appended
+  // and normalised WITH them, so a thread whose last run errored (leaving a
+  // user turn with no reply) merges rather than sending two user turns.
+  let history: any[] = normalizeTurns([...priorTurns, { role: 'user', content: task }]);
+  // Normalising can empty the list only if the task itself was blank, which the
+  // routes reject — but a loop that sends no messages is a provider 400 with a
+  // confusing message, so it is not left to chance.
+  if (!history.length) history = [{ role: 'user', content: task }];
   const maxSteps = Math.max(1, Math.min(40, agent.max_steps || 12));
 
   for (let step = 0; step < maxSteps; step++) {

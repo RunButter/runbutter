@@ -481,6 +481,47 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `oauth_revoke_grant` exist and are in `/api/rpc`'s ALLOWED, but a grant nobody can see is a grant
   nobody revokes — this is the next thing, not an optional extra.
 
+## The Copilot (0102)
+- **It is an ordinary `AgentDef`, not a second runner.** Everything that makes an agent safe —
+  tenancy from `p_privy` in SQL, suggest/auto, propose-and-approve, `alwaysPropose` on schema
+  changes, the run transcript, token accounting — is a property of `runAgent` and `tools.ts`. The
+  only thing missing was MEMORY: `runAgent` took one task string and returned. 0102 adds the
+  conversation and nothing else, so each turn is still an `agent_runs` row and approvals, the
+  transcript and the cost report work here for free.
+- **A thread belongs to a PERSON, not the workspace.** Every other object is workspace-scoped and
+  this one deliberately is not — a thread holds whatever someone typed. `copilot_thread_owned` is
+  the SINGLE predicate; a colleague in the same workspace gets `NOT_FOUND`, not a redacted row.
+- **`append_copilot_message` and `get_copilot_history` are service_role only** and absent from
+  `/api/rpc`'s ALLOWED — same rule as `append_agent_run_step`. A client that could write assistant
+  turns could forge a transcript of work that never happened.
+- **Autonomy comes from the STORED thread, never the request body**, so a crafted request cannot
+  ask for `auto` on a thread its owner left on `suggest`. An unrecognised value falls back to
+  `suggest`, never to `auto`.
+- **History is stored as PLAIN TURNS, not provider history.** A Claude turn is content blocks and
+  an OpenAI turn is a message list; storing either breaks a thread the moment somebody changes
+  model. `normalizeTurns` then enforces the two rules Anthropic rejects outright: the first message
+  must be `user` (a window over a long thread eventually starts on an assistant reply) and roles
+  must ALTERNATE (a run that errored leaves a user turn with no reply, and the next message follows
+  it directly). Consecutive same-role turns MERGE rather than drop — the second is usually a
+  correction of the first.
+- **The copilot is NOT plan-gated; agents are.** `/api/agents/approve` reads `run.agent_id` — null
+  for a copilot run — because gating it would let the copilot offer a change on the free plan and
+  then refuse to apply it, one click after somebody said yes. Read from the RUN, not the request,
+  so a client cannot claim its agent run is a copilot run.
+- **The dock is a SIBLING of `<main>`, not an overlay.** The point of a copilot is that it sees the
+  screen you do; a modal covers the thing being discussed. It also fixes the layout complaint that
+  prompted it — pages cap at `max-w-5xl`, so on a wide screen the content sat left with dead canvas
+  beside it, and the dock is that band. Width and open/closed are remembered.
+- **`.page-body` (globals.css) enforces the reading measure.** The design system always said app
+  screens cap at `max-w-5xl`; forty pages typed it and ELEVEN forgot, so the app looked like two
+  products depending on the tab. Applied to the DIRECT CHILDREN of the scroll container, so a page
+  adopts it with one word rather than a new wrapper div. Genuine canvases (Maps, post board,
+  roadmap) deliberately do not take it.
+- **BorderBeam runs only while a turn is in flight.** A permanent animation beside text you are
+  trying to read costs attention every second; as a busy state it is doing a job. `w-full` on the
+  composer is load-bearing — BorderBeam wraps children in a flex row, so without it the box sized
+  to its content and visibly shrank 375px → 214px every time you sent a message.
+
 ## What AI costs, and the model it picks (0101)
 - **`defaultModel()` read `models[0]`, and every list was ordered best-first.** So the fallback
   model for every AI feature was the most expensive one the provider sells — Opus to rewrite a
@@ -916,9 +957,9 @@ Same rule as the cost rule above: prefer public/government data + local computat
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run migrations 0093–0101.** 0092 is applied. 0093 is rename, 0097 editable built-ins,
-  0098 email blocks, 0099/0100 the MCP OAuth server, **0101 AI usage** — until 0101 runs, the
-  AI usage panel simply hides itself and nothing else changes.
+- **Run migrations 0093–0102.** 0092 is applied. 0093 is rename, 0097 editable built-ins,
+  0098 email blocks, 0099/0100 the MCP OAuth server, 0101 AI usage, **0102 the Copilot** — until each
+  runs, that feature hides itself and nothing else changes.
 - **`npm run publish:oss` once more**, then set **`PUBLIC_REPO_TOKEN`** in
   `CasperCrypto/hirebtr` → Settings → Secrets → Actions, and mirroring becomes automatic
   (`.github/workflows/mirror.yml`, steps in `docs/going-live.md`).

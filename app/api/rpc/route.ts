@@ -94,6 +94,14 @@ const ALLOWED = new Set([
   // Token spend by agent (0096). Aggregated in SQL — the runs list caps at 50,
   // so summing it in the browser would report a month's cost from whatever fit.
   'get_agent_usage', 'get_ai_usage',
+  // Copilot threads (0102). A thread belongs to a PERSON, and every one of
+  // these re-checks that in SQL — a colleague in the same workspace gets
+  // NOT_FOUND, not a redacted row. append_copilot_message and
+  // get_copilot_history are deliberately ABSENT: they are service_role only,
+  // because a client that could write assistant turns could forge a transcript
+  // of work that never happened.
+  'get_copilot_threads', 'get_copilot_thread', 'create_copilot_thread',
+  'set_copilot_thread', 'delete_copilot_thread',
   // Skills (0068) — reusable instruction packs attached to agents.
   'get_skills', 'save_skill', 'delete_skill',
   // Post Studio board (0069) — positions + edges for the content-plan canvas.

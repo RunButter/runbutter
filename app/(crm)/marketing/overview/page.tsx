@@ -58,7 +58,7 @@ export default function MarketingOverview() {
         <DataBadge live={live} />
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
         {loading ? (
           <AppLoading />
         ) : (

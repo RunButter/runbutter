@@ -75,7 +75,7 @@ export default function MembersPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-4 2xl:p-6">
+      <div className="flex-1 overflow-auto p-4 2xl:p-6 page-body">
         {loading ? (
           <AppLoading />
         ) : !privy ? (

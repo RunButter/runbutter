@@ -164,7 +164,7 @@ export default function FilesPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8" {...getRootProps()}>
+      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body" {...getRootProps()}>
         <input {...getInputProps()} />
         <div className="max-w-5xl space-y-4">
           <p className="text-sm text-secondary -mt-1">

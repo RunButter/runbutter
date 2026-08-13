@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Menu } from 'lucide-react';
 import NavRail from '@/components/crm/NavRail';
 import CommandPalette from '@/components/CommandPalette';
+import CopilotPanel from '@/components/crm/CopilotPanel';
 import PlanGate from '@/components/PlanGate';
 import AppLoading from '@/components/ui/AppLoading';
 import { getWorkspace } from '@/lib/crm/data';
@@ -90,6 +91,12 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           ? <AppLoading kind="idle" label="Getting your workspace ready" hint="Restoring your session" />
           : body}
       </main>
+      {/* The dock is a SIBLING of <main>, not an overlay, so the page reflows
+          into what is left instead of being covered by it. Pages cap at
+          max-w-5xl and centre, so on a wide screen this fills the dead canvas
+          that used to sit to their right; on a narrow one the panel hides
+          itself (lg:) and becomes a floating button. */}
+      {!booting && <CopilotPanel />}
       <CommandPalette />
     </div>
   );
