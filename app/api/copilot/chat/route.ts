@@ -81,7 +81,34 @@ export async function POST(req: Request) {
   const provider = (secret as any).provider as AIProvider;
   const model = (secret as any).model || defaultModel(provider, 'balanced');
   const baseUrl = (secret as any).base_url || undefined;
+  /**
+   * Changes it already proposed and cannot itself apply.
+   *
+   * WITHOUT THIS, "go" MEANS "DO IT ALL AGAIN". Observed: the copilot proposed
+   * five tasks, the person typed "go" instead of clicking Apply, and the next
+   * run — which starts with no idea the proposals exist — went and did the work
+   * a second time. It only avoided duplicates because it happened to search
+   * first and find them; a slightly different phrasing creates five duplicate
+   * records and reports success.
+   *
+   * The model cannot apply its own proposals, by design: approval is a person's
+   * click. So it is told they are pending and told to say so, which is the
+   * honest version of what the person is asking for.
+   */
+  const msgs: any[] = Array.isArray((thread as any).messages) ? (thread as any).messages : [];
+  const lastAssistant = [...msgs].reverse().find((m) => m.role === 'assistant');
+  const pending: any[] = lastAssistant?.status === 'awaiting_approval' && Array.isArray(lastAssistant.proposed)
+    ? lastAssistant.proposed : [];
+  const pendingNote = pending.length
+    ? `\n\nIMPORTANT: your previous turn proposed ${pending.length} change(s) that have NOT been applied — ` +
+      `they are waiting on an Apply button only this person can press. Do NOT repeat that work; ` +
+      `doing it again creates duplicates. If they are telling you to go ahead, say the changes are ` +
+      `ready and ask them to press Apply above. Proposed: ` +
+      pending.map((p) => `${p.name}(${JSON.stringify(p.args?.data ?? p.args ?? {}).slice(0, 120)})`).join('; ')
+    : '';
+
   const agent = copilotAgent(model, provider, autonomy, page);
+  agent.instructions += pendingNote;
 
   // The person's message lands FIRST, before the model is called. A run that
   // times out or throws must not lose what they typed — the thread reloading

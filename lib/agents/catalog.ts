@@ -31,7 +31,7 @@ export interface ToolInfo {
   alwaysPropose?: true;
 }
 
-export type ToolGroup = 'Records' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
+export type ToolGroup = 'Records' | 'Docs' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -40,6 +40,13 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'get_record', label: 'Read one record', group: 'Records' },
   { name: 'create_record', label: 'Create a record', group: 'Records', write: true },
   { name: 'update_record', label: 'Update a record', group: 'Records', write: true },
+
+  // Docs (0081/0085/0086). A to-do list, a note and a table are all documents
+  // with markdown in one body column, so four tools cover the whole surface.
+  { name: 'list_docs', label: 'List documents', group: 'Docs' },
+  { name: 'get_doc', label: 'Read a document', group: 'Docs' },
+  { name: 'save_doc', label: 'Write a document', group: 'Docs', write: true },
+  { name: 'toggle_doc_item', label: 'Tick a to-do item', group: 'Docs', write: true },
 
   { name: 'get_finance_summary', label: 'Money in / out', group: 'Finance' },
   { name: 'get_finance_trends', label: 'Monthly trends', group: 'Finance' },

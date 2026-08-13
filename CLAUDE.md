@@ -481,6 +481,32 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `oauth_revoke_grant` exist and are in `/api/rpc`'s ALLOWED, but a grant nobody can see is a grant
   nobody revokes — this is the next thing, not an optional extra.
 
+## Two ways the tool surface lied (found by using the copilot)
+- **DOCS HAD NO TOOLS AT ALL.** Docs are a dedicated subsystem (0081/0085/0086) rather than a CRUD
+  object, so `list_objects` truthfully reported no "documents" type — while the Docs screen sat
+  there full of documents. Asked to "make a to-do list", the copilot's only writable option was
+  `issues`, so that is what it made, and it then correctly told the user there was no Documents
+  object. **The model was right and its hands were tied.** `list_docs` / `get_doc` / `save_doc` /
+  `toggle_doc_item` close it. `save_doc` passes `p_kind: null` when the model does not name a kind —
+  0081 defaulted it to `'doc'` and silently converted tables back into documents, and 0085 fixed the
+  SQL; the client must not reintroduce it. `list_docs` strips the BODY: a workspace's docs are the
+  longest text it owns, and returning all of them spends the context window on a question that
+  needed titles.
+- **The `object` argument was a static `enum` of the eleven built-ins.** `list_objects` has returned
+  custom objects since 0087, so the model was told the workspace has Vehicles and then handed a
+  schema saying `object` must be one of eleven names that excluded it — a model that respects its
+  own tool schema could not touch a single custom object. A static enum cannot be right when the
+  valid set is per workspace; the constraint is enforced where it IS knowable (SQL raises
+  `UNKNOWN_OBJECT`), so the enum bought nothing and cost every custom object.
+- **A pending proposal is now told to the next turn.** The copilot proposed five tasks, the person
+  typed "go" instead of pressing Apply, and the next run — which starts knowing nothing about the
+  proposals — did the work again. It only avoided duplicates because it happened to search first.
+  The model cannot apply its own proposals by design, so it is told they are pending and told to ask
+  for the click.
+- **The lesson generalises: a subsystem with dedicated RPCs gets dedicated TOOLS in the same
+  breath, or it is invisible to every agent and to `/api/mcp`.** Newsletters, sequences, segments
+  and automations are still in that position — check before assuming an agent can reach one.
+
 ## The Copilot (0102)
 - **It is an ordinary `AgentDef`, not a second runner.** Everything that makes an agent safe —
   tenancy from `p_privy` in SQL, suggest/auto, propose-and-approve, `alwaysPropose` on schema
@@ -556,7 +582,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 
 ## MCP / agent tools (`lib/agents/tools.ts`)
 - ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
-  MCP client and an agent take the identical, tenancy-safe path. **27 tools**, not just CRUD:
+  MCP client and an agent take the identical, tenancy-safe path. **31 tools**, not just CRUD:
   finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
   analytics, positions, candidate FTS, pipeline boards, file search, research notes, connections.
   The count lives in `lib/agents/catalog.ts` — read it rather than trusting any number written down,

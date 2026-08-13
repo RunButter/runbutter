@@ -31,6 +31,17 @@ export interface ToolCtx {
   agentId?: string | null; agentName?: string; runId?: string | null;
 }
 
+/**
+ * Doc kinds, inlined rather than imported from `lib/crm/docs.ts`.
+ *
+ * That file is `use client` and pulls in the browser Supabase client, and this
+ * one is imported by a route handler — the same import direction that breaks
+ * the build at page-data collection and reports itself as "join is on the
+ * client". `docs_kind_check` in SQL is the real constraint; this only decides
+ * whether to pass a kind or pass null.
+ */
+const DOC_KINDS = ['doc', 'note', 'todo', 'sheet'];
+
 export const OBJECTS: Record<string, string> = {
   companies: 'CRM organizations (name, domain, industry, employee_count, tax_id, address, country)',
   people: 'Contacts / candidates (first_name, last_name, email, phone, title, source)',
@@ -45,14 +56,46 @@ export const OBJECTS: Record<string, string> = {
   assets: 'Company equipment (name, category laptop|monitor|phone|license|other, serial_number, status available|assigned|repair|retired, assigned_to_person_id)',
 };
 
+/**
+ * The `object` argument, described rather than enumerated.
+ *
+ * IT USED TO BE `enum: Object.keys(OBJECTS)` — a hardcoded list of the eleven
+ * built-ins. `list_objects` has returned custom objects since 0087, so the
+ * model was told the workspace has Vehicles and then handed a schema saying
+ * `object` must be one of eleven names that did not include it. A model that
+ * respects its own tool schema therefore could not touch a single custom
+ * object, which is the exact opposite of the promise that a custom object is
+ * first-class everywhere the five CRUD functions reach.
+ *
+ * A static enum cannot be right here: the valid set is per workspace and is not
+ * known at build time. The constraint is enforced where it IS knowable — SQL
+ * raises UNKNOWN_OBJECT for anything it does not recognise — so an enum here
+ * bought nothing and cost every custom object.
+ */
+const OBJECT_ARG = "The record type. Call list_objects first — the set is per workspace and includes this workspace's own custom objects, so it cannot be listed here.";
+
 // JSON-schema tool defs (shared by MCP tools/list and the agent tool-calling loop).
 export const TOOLS = [
   { name: 'list_objects', description: 'List the record types available in this RunButter workspace and their fields.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'list_records', description: 'List records of an object type (most recent first).', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) } }, required: ['object'] } },
-  { name: 'search_records', description: 'Search records of an object type by a text query (matched across all fields).', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, query: { type: 'string' } }, required: ['object', 'query'] } },
-  { name: 'get_record', description: 'Fetch one record by id.', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, id: { type: 'string' } }, required: ['object', 'id'] } },
-  { name: 'create_record', description: 'Create a record. `data` uses the object\'s fields (see list_objects).', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, data: { type: 'object' } }, required: ['object', 'data'] } },
-  { name: 'update_record', description: 'Update fields on an existing record.', inputSchema: { type: 'object', properties: { object: { type: 'string', enum: Object.keys(OBJECTS) }, id: { type: 'string' }, data: { type: 'object' } }, required: ['object', 'id', 'data'] } },
+  { name: 'list_records', description: 'List records of an object type (most recent first).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG } }, required: ['object'] } },
+  { name: 'search_records', description: 'Search records of an object type by a text query (matched across all fields).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, query: { type: 'string' } }, required: ['object', 'query'] } },
+  { name: 'get_record', description: 'Fetch one record by id.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, id: { type: 'string' } }, required: ['object', 'id'] } },
+  { name: 'create_record', description: 'Create a record. `data` uses the object\'s fields (see list_objects).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, data: { type: 'object' } }, required: ['object', 'data'] } },
+  { name: 'update_record', description: 'Update fields on an existing record.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, id: { type: 'string' }, data: { type: 'object' } }, required: ['object', 'id', 'data'] } },
+
+
+  // ── Docs, notes and to-do lists (0081/0085/0086) ───────────────────────────
+  // MISSING UNTIL NOW, and the gap was invisible from the inside: docs are a
+  // dedicated subsystem with their own RPCs rather than a CRUD object, so
+  // `list_objects` correctly reported no "documents" type and the copilot
+  // correctly told the user there wasn't one — while the Docs screen sat there
+  // full of documents. Asked to "make a to-do list", the only writable thing it
+  // could see was `issues`, so that is what it made. The model was right and
+  // its hands were tied.
+  { name: 'list_docs', description: 'List documents, notes, to-do lists and tables in this workspace (title, kind and tags; not the body).', inputSchema: { type: 'object', properties: {} } },
+  { name: 'get_doc', description: 'Read one document in full, including its markdown body.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'save_doc', description: "Create or update a document. `kind` is doc | note | todo | sheet — every kind stores markdown in the same body, so a to-do list is lines of '- [ ] item' and a table is a markdown table. Omit `id` to create. Omitting `kind` on an update leaves the kind alone.", inputSchema: { type: 'object', properties: { id: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' }, kind: { type: 'string', enum: ['doc', 'note', 'todo', 'sheet'] }, tags: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
+  { name: 'toggle_doc_item', description: 'Tick or untick one checklist item in a to-do document, by its zero-based index among the checkboxes.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, index: { type: 'number' }, done: { type: 'boolean' } }, required: ['id', 'index', 'done'] } },
 
   // ── Beyond CRUD ───────────────────────────────────────────────────────────
   // The six tools above make this a database wrapper. These make it a company:
@@ -164,6 +207,49 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     throw new Error(`Unknown object "${object}". Use one of: ${Object.keys(OBJECTS).join(', ')}`);
   }
   switch (name) {
+    case 'list_docs': {
+      const { data, error } = await ctx.admin.rpc('get_docs', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      // The BODY is stripped. A workspace's docs are the longest text it owns,
+      // and returning all of them would spend the whole context window on a
+      // question that only needed the titles — `get_doc` fetches one in full.
+      return (Array.isArray(data) ? data : []).map((d: any) => ({
+        id: d.id, title: d.title, kind: d.kind, tags: d.tags, updated_at: d.updated_at,
+      }));
+    }
+
+    case 'get_doc': {
+      const { data, error } = await ctx.admin.rpc('get_doc', { p_privy: ctx.privy, p_id: String(args?.id || '') });
+      if (error) throw new Error(error.message);
+      return data ?? { error: 'No document with that id in this workspace.' };
+    }
+
+    case 'save_doc': {
+      const kind = typeof args?.kind === 'string' && DOC_KINDS.includes(args.kind) ? args.kind : null;
+      const { data, error } = await ctx.admin.rpc('save_doc', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_id: args?.id || null,
+        p_title: String(args?.title || '').slice(0, 200),
+        p_body: String(args?.body ?? ''),
+        // NULL means "not saying", which on an update leaves the kind alone.
+        // 0081 gave this a 'doc' default and it silently converted tables back
+        // into documents; 0085 fixed the SQL and this must not reintroduce it.
+        p_kind: kind,
+        p_tags: Array.isArray(args?.tags) ? args.tags.slice(0, 20).map(String) : [],
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, saved: true, kind: kind ?? undefined };
+    }
+
+    case 'toggle_doc_item': {
+      const { error } = await ctx.admin.rpc('toggle_doc_item', {
+        p_privy: ctx.privy, p_id: String(args?.id || ''),
+        p_index: Number(args?.index) || 0, p_done: !!args?.done,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+
     case 'list_objects': {
       const builtIn = Object.entries(OBJECTS).map(([k, v]) => ({ object: k, fields: v }));
       // A workspace's own objects (0087) belong in this list, or an agent would
