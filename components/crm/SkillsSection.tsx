@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles, LayoutTemplate } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -37,7 +37,6 @@ export default function SkillsSection({
   // Sharing the array rather than copying it is the rule this file already
   // follows for the linter and the plugin builder: two lists drift, and the
   // in-app one is the one nobody remembers to update.
-  const [templating, setTemplating] = useState(false);
 
   return (
     <section>
@@ -50,15 +49,12 @@ export default function SkillsSection({
           <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
             <Github className="w-3.5 h-3.5" /> Import
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setTemplating((t) => !t)}>
-            <LayoutTemplate className="w-3.5 h-3.5" /> Templates
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => setEditing({ name: '', description: '', instructions: '', suggested_tools: [] })}>
             <Plus className="w-3.5 h-3.5" /> New skill
           </Button>
         </div>
       </div>
-      {templating && (
+      {!editing && skills.length === 0 && (
         <div className="mb-3 grid sm:grid-cols-3 gap-2">
           {TEMPLATES.map((t) => (
             <button
@@ -73,7 +69,6 @@ export default function SkillsSection({
                 // rather than widened there: `templates.ts` is import-free on purpose
                 // and adding a field for one consumer is how that stops being true.
                 setEditing({ name: t.skill.name, description: t.skill.description, instructions: t.skill.instructions, suggested_tools: [] });
-                setTemplating(false);
               }}
               className="text-left rounded-xl ring-1 ring-subtle bg-surface p-3 hover:bg-surface-hover"
             >
@@ -88,6 +83,20 @@ export default function SkillsSection({
         which categories map where. Attach them to an agent in its editor. A skill never grants an
         agent tools it wasn&apos;t already given.
       </p>
+
+      {editing && (
+        <SkillEditor initial={editing} onClose={() => setEditing(null)}
+          onSave={async (s) => { await saveSkill(privy, ws, s); setEditing(null); onChange(); }} />
+      )}
+      {describing && (
+        <DescribeModal
+          onClose={() => setDescribing(false)}
+          onDraft={(draft) => { setDescribing(false); setEditing(draft); }} />
+      )}
+
+      {importing && (
+        <ImportModal ws={ws} privy={privy} onClose={() => setImporting(false)} onDone={() => { setImporting(false); onChange(); }} />
+      )}
 
       {skills.length === 0 ? (
         <div className="rounded-lg border border-dashed border-subtle p-8 text-center">
@@ -105,7 +114,14 @@ export default function SkillsSection({
               <p className="text-xs text-secondary mt-1.5 line-clamp-2 min-h-[2.75rem]">{s.description || 'No description.'}</p>
               <div className="flex items-center gap-1.5 mt-2">
                 {/* Badge title-cases its content, so these stay single words. */}
-                {s.source === 'github' ? <Badge tone="neutral"><Github className="w-3 h-3 mr-0.5 inline" />imported</Badge> : <Badge tone="neutral">custom</Badge>}
+                {s.source === 'github'
+                  ? <Badge tone="neutral"><Github className="w-3 h-3 mr-0.5 inline" />imported</Badge>
+                  : s.source === 'copilot'
+                    // 0103 added this source and the badge did not know it, so a
+                    // skill the copilot wrote read as one somebody typed — which
+                    // is the whole thing the column exists to distinguish.
+                    ? <Badge tone="neutral"><Sparkles className="w-3 h-3 mr-0.5 inline" />copilot</Badge>
+                    : <Badge tone="neutral">custom</Badge>}
                 <div className="ml-auto flex items-center gap-0.5">
                   <button onClick={() => setEditing(s)} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><Pencil className="w-3.5 h-3.5" /></button>
                   <button
@@ -118,19 +134,6 @@ export default function SkillsSection({
         </div>
       )}
 
-      {editing && (
-        <SkillEditor initial={editing} onClose={() => setEditing(null)}
-          onSave={async (s) => { await saveSkill(privy, ws, s); setEditing(null); onChange(); }} />
-      )}
-      {describing && (
-        <DescribeModal
-          onClose={() => setDescribing(false)}
-          onDraft={(draft) => { setDescribing(false); setEditing(draft); }} />
-      )}
-
-      {importing && (
-        <ImportModal ws={ws} privy={privy} onClose={() => setImporting(false)} onDone={() => { setImporting(false); onChange(); }} />
-      )}
     </section>
   );
 }
@@ -162,9 +165,13 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
   }, [s.name, s.description, s.instructions]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle sticky top-0 bg-surface">
+    // INLINE, not a modal. The public builder at /plugins puts the editor on the
+    // page beside the list, and this one hid the same fields behind an overlay —
+    // so editing a skill meant losing sight of every other skill, and comparing
+    // two meant opening and closing. A dialog is for a decision; this is work.
+    <div className="mb-4">
+      <div className="card-surface overflow-hidden">
+        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary">{initial.id ? 'Edit skill' : 'New skill'}</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
         </div>
@@ -208,7 +215,7 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
             <p className="text-2xs text-tertiary">Imported from <span className="font-mono">{s.source_url}</span></p>
           )}
         </div>
-        <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle sticky bottom-0 bg-surface">
+        <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle bg-surface">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" disabled={saving || !s.name?.trim() || tooLong}
             onClick={async () => { setSaving(true); await onSave(s); setSaving(false); }}>
@@ -260,8 +267,8 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="mb-4">
+      <div className="card-surface overflow-hidden">
         <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle sticky top-0 bg-surface">
           <Github className="w-4 h-4 text-secondary" />
           <h3 className="text-sm font-medium text-primary flex-1">Import skills from GitHub</h3>
@@ -371,8 +378,8 @@ function DescribeModal({ onClose, onDraft }: { onClose: () => void; onDraft: (d:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+    <div className="mb-4">
+      <div className="card-surface overflow-hidden">
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Describe a skill</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>

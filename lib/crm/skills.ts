@@ -9,7 +9,8 @@ export interface Skill {
   description: string;
   instructions: string;
   suggested_tools: string[];
-  source: 'local' | 'github';
+  /** 0103 added `copilot`: a skill the copilot wrote is neither hand-written nor imported. */
+  source: 'local' | 'github' | 'copilot';
   source_url: string;
   updated_at?: string;
 }
