@@ -367,8 +367,13 @@ body{margin:0!important;padding:0!important;background:${backdrop}!important;}
   .rb-row{display:block!important;width:100%!important}
   .rb-col{display:block!important;width:100%!important;max-width:100%!important;padding-left:0!important;padding-right:0!important;box-sizing:border-box!important}
   .rb-pad{padding-left:20px!important;padding-right:20px!important}
-  .rb-h1{font-size:30px!important;line-height:1.15!important}
+  /* 40px display type is right on a 600px canvas and too big on a 390px
+     phone, where it costs four words a line. These are the same ratio, one
+     step down. */
+  .rb-h1{font-size:31px!important;line-height:1.1!important}
   .rb-h2{font-size:24px!important;line-height:1.2!important}
+  .rb-hero{padding:40px 22px!important}
+  .rb-num{font-size:22px!important}
 }
 </style>`;
 
@@ -386,10 +391,40 @@ function makeResponsive(html: string): string {
     .replace(/<td([^>]*?)style="([^"]*?width:50%[^"]*?)"/g, '<td$1class="rb-col" style="$2"')
     .replace(/<td([^>]*?)style="([^"]*?width:33\.33[^"]*?)"/g, '<td$1class="rb-col" style="$2"')
     // …and the row that holds them.
-    .replace(/<tr([^>]*)>(\s*<td[^>]*class="rb-col")/g, '<tr$1 class="rb-row">$2')
-    // Headings, so a 32px h1 does not fill a phone screen with three words.
-    .replace(/<h1 style="/g, '<h1 class="rb-h1" style="')
-    .replace(/<h2 style="/g, '<h2 class="rb-h2" style="');
+    .replace(/<tr([^>]*)>(\s*<td[^>]*class="rb-col")/g, '<tr$1 class="rb-row">$2');
+}
+
+/**
+ * The typography Waypoint has no field for.
+ *
+ * ITS HEADING BLOCK EXPOSES NO FONT SIZE — `level` maps to a fixed 32/24/20px
+ * with no line-height and no letter-spacing — and its TEXT BLOCK EXPOSES NO
+ * LINE-HEIGHT, so body copy renders at the browser default of roughly 1.2.
+ * Those two omissions are the ceiling on how good anything built here can look,
+ * and no amount of work inside the document can lift it: 32px set at default
+ * tracking is a heading, not display type, and 16px prose at 1.2 is a wall.
+ *
+ * So it is done here, on the rendered HTML, for the same reason link tracking
+ * and the stacking classes are: there is no document field to carry it. Later
+ * declarations in one style attribute win at equal specificity, so appending is
+ * enough — and because these are INLINE, they survive the clients that strip
+ * `<style>`, which is exactly where a media-query-only version would fail.
+ *
+ * The body rule fires only where there is a font size and NO line-height. Every
+ * hand-written piece below sets its own, so this reaches Waypoint's own output
+ * and leaves the designed blocks alone — checked by measuring computed styles in
+ * a browser, not by reading the regex.
+ */
+function polishType(html: string): string {
+  return html
+    .replace(/<h1 style="([^"]*)"/g, (_m, s) =>
+      `<h1 class="rb-h1" style="${s};font-size:40px;line-height:1.07;letter-spacing:-0.022em"`)
+    .replace(/<h2 style="([^"]*)"/g, (_m, s) =>
+      `<h2 class="rb-h2" style="${s};font-size:28px;line-height:1.16;letter-spacing:-0.016em"`)
+    .replace(/<h3 style="([^"]*)"/g, (_m, s) =>
+      `<h3 style="${s};font-size:19px;line-height:1.35;letter-spacing:-0.008em"`)
+    .replace(/<div style="([^"]*font-size:[^"]*)"/g, (m, s) =>
+      /line-height/.test(s) ? m : `<div style="${s};line-height:1.6"`);
 }
 
 /**
@@ -473,7 +508,7 @@ export function renderEmailDoc(doc: EmailDoc, ctx: RenderCtx): string {
 
   // Inserted by string position rather than by parsing: the input is this
   // renderer's own output and its <body> is the first one in the document.
-  html = makeResponsive(html);
+  html = polishType(makeResponsive(html));
 
   /**
    * The meta and the stylesheet, into whatever head exists — or a new one.
@@ -516,6 +551,30 @@ export function renderEmailDoc(doc: EmailDoc, ctx: RenderCtx): string {
  * stripping tags from the output, because the document still knows which string
  * was a heading and which was a button's destination.
  */
+/**
+ * Entities → characters, for the plain-text alternative.
+ *
+ * The designed blocks are HTML and use entities a hand-written block never
+ * would — `&ldquo;` around a testimonial, `&check;` in a price list, `&rsaquo;`
+ * on a link row. The old decode knew six names, so those arrived in the text
+ * part as the literal string `&ldquo;`, which is the half of the message the
+ * spam filters read and the half nobody looks at.
+ */
+function unentity(s: string): string {
+  const named: Record<string, string> = {
+    nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+    ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’',
+    hellip: '…', mdash: '—', ndash: '–', middot: '·', times: '×',
+    check: '✓', rsaquo: '›', lsaquo: '‹', bull: '•', deg: '°', euro: '€', pound: '£',
+  };
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+    // `&amp;` last would double-decode `&amp;lt;`; doing every name in one pass
+    // means each entity is read exactly once.
+    .replace(/&([a-z]+);/gi, (m, n) => named[String(n).toLowerCase()] ?? m);
+}
+
 export function docToText(doc: EmailDoc, ctx: RenderCtx): string {
   const d = normalizeDoc(doc);
   const lines: string[] = [];
@@ -532,10 +591,7 @@ export function docToText(doc: EmailDoc, ctx: RenderCtx): string {
         case 'Divider': lines.push('—', ''); break;
         case 'Html':
           lines.push(
-            stripUnsafeHtml(String(p.contents || ''))
-              .replace(/<[^>]+>/g, ' ')
-              .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+            unentity(stripUnsafeHtml(String(p.contents || '')).replace(/<[^>]+>/g, ' '))
               .replace(/[ \t]+/g, ' ').trim(),
             '',
           );
@@ -618,6 +674,27 @@ const SANS = `-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-s
 const html = (contents: string, padding: any) =>
   ({ type: 'Html', data: { props: { contents }, style: { padding } } });
 
+const INK = '#1F2024';
+const LINE = '#E6E6EA';
+
+/**
+ * Mix a colour towards white.
+ *
+ * Section bands are the cheapest way to give an email rhythm, and a band has
+ * to be the workspace's own colour or it reads as a stray grey box. A tint
+ * computed from the accent is the same colour at 6% rather than a second
+ * colour somebody has to choose — and email has no `color-mix()`, so it is
+ * computed here and emitted as a flat hex.
+ */
+function tint(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return '#F5F5F7';
+  const n = parseInt(m[1], 16);
+  const mix = (v: number) => Math.round(v * amount + 255 * (1 - amount));
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+    .map((v) => mix(v).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
 /**
  * A gradient panel.
  *
@@ -627,13 +704,20 @@ const html = (contents: string, padding: any) =>
  * Written the other way round, Outlook gets no background at all and white text
  * lands on white.
  */
-const gradientPanel = (title: string, sub: string, from: string, to: string, flat: string) => html(
+const gradientPanel = (
+  title: string, sub: string, from: string, to: string, flat: string,
+  cta?: string,
+) => html(
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr><td align="center" style="background:${flat};background:linear-gradient(135deg,${from} 0%,${to} 100%);border-radius:18px;padding:56px 28px;">
-    <div style="font-family:${SANS};font-size:26px;line-height:1.25;font-weight:700;color:#FFFFFF;margin:0 0 8px;">${title}</div>
-    <div style="font-family:${SANS};font-size:15px;line-height:1.5;color:rgba(255,255,255,0.82);margin:0;">${sub}</div>
+  <tr><td align="center" class="rb-hero" style="background:${flat};background:linear-gradient(135deg,${from} 0%,${to} 100%);border-radius:20px;padding:58px 32px;">
+    <div style="font-family:${SANS};font-size:27px;line-height:1.2;font-weight:700;letter-spacing:-0.02em;color:#FFFFFF;margin:0 0 10px;">${title}</div>
+    <div style="font-family:${SANS};font-size:15px;line-height:1.55;color:rgba(255,255,255,0.80);margin:0;">${sub}</div>
+    ${cta ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:24px auto 0;"><tr>
+      <td align="center" bgcolor="#FFFFFF" style="border-radius:999px;">
+        <a href="" style="display:inline-block;padding:12px 26px;font-family:${SANS};font-size:14px;font-weight:600;color:${flat};text-decoration:none;border-radius:999px;">${cta}</a>
+      </td></tr></table>` : ''}
   </td></tr></table>`,
-  P(0, 28),
+  P(0, 30),
 );
 
 /**
@@ -644,12 +728,12 @@ const gradientPanel = (title: string, sub: string, from: string, to: string, fla
  * stacking rule off exactly that, so this grid becomes one column on a phone
  * for free rather than needing its own media query.
  */
-const featureGrid = (items: { title: string; body: string }[], line = '#E4E4EA', muted = '#6B6C75') => {
+const featureGrid = (items: { title: string; body: string }[], line = LINE, muted = MUTED) => {
   const cell = (it: { title: string; body: string }) =>
-    `<td width="50%" valign="top" style="width:50%;padding:0 10px 22px;">
-      <div style="border-top:1px solid ${line};padding-top:12px;">
-        <div style="font-family:${SANS};font-size:15px;font-weight:700;color:#1F2024;margin:0 0 4px;">${it.title}</div>
-        <div style="font-family:${SANS};font-size:14px;line-height:1.5;color:${muted};">${it.body}</div>
+    `<td width="50%" valign="top" style="width:50%;padding:0 10px 24px;">
+      <div style="border-top:2px solid ${line};padding-top:14px;">
+        <div style="font-family:${SANS};font-size:15px;font-weight:600;letter-spacing:-0.01em;color:${INK};margin:0 0 5px;">${it.title}</div>
+        <div style="font-family:${SANS};font-size:14px;line-height:1.6;color:${muted};">${it.body}</div>
       </div>
     </td>`;
   const rows: string[] = [];
@@ -663,13 +747,13 @@ const featureGrid = (items: { title: string; body: string }[], line = '#E4E4EA',
 };
 
 /** The quiet card the reference closes on. */
-const signoff = (line: string, sub: string, bg = '#F4F4F6') => html(
+const signoff = (line: string, sub: string, bg = '#F5F5F7') => html(
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr><td align="center" style="background:${bg};border-radius:16px;padding:28px 24px;">
-    <div style="font-family:${SANS};font-size:15px;font-weight:600;color:#1F2024;margin:0 0 4px;">${line}</div>
-    <div style="font-family:${SANS};font-size:13px;line-height:1.5;color:#6B6C75;">${sub}</div>
+  <tr><td align="center" style="background:${bg};border-radius:16px;padding:30px 26px;">
+    <div style="font-family:${SANS};font-size:15px;font-weight:600;letter-spacing:-0.01em;color:${INK};margin:0 0 5px;">${line}</div>
+    <div style="font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTED};">${sub}</div>
   </td></tr></table>`,
-  P(8, 36),
+  P(8, 38),
 );
 
 /** Three numbers in a row — the shape a monthly report wants. */
@@ -682,17 +766,133 @@ const stats = (items: { value: string; label: string }[], accent: string) => htm
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>${items.map((it) => `<td width="33%" align="center" valign="top" style="padding:0 6px;">
       <div style="font-family:${SANS};font-size:28px;line-height:1.1;font-weight:700;color:${accent};margin:0 0 4px;">${it.value}</div>
-      <div style="font-family:${SANS};font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:#6B6C75;">${it.label}</div>
+      <div style="font-family:${SANS};font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:${MUTED};">${it.label}</div>
     </td>`).join('')}</tr></table>`,
   P(8, 28),
 );
 
-/** A bordered card holding one quote. */
-const quoteCard = (quote: string, who: string, accent: string) => html(
+/**
+ * A quote, with the person's initials in a disc.
+ *
+ * The initials matter more than they look like they should: a testimonial with
+ * a face beside it is read as a person and one without is read as copywriting,
+ * and a disc of initials is the only version of a face available to a template
+ * that ships with no images.
+ */
+const quoteCard = (quote: string, who: string, role: string, accent: string) => {
+  const initials = who.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  return html(
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td style="background:${tint(accent, 0.05)};border-radius:16px;padding:28px 26px;">
+    <div style="font-family:${SANS};font-size:19px;line-height:1.5;letter-spacing:-0.01em;color:${INK};margin:0 0 20px;">&ldquo;${quote}&rdquo;</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="38" valign="middle" style="padding-right:12px;">
+        <div style="width:38px;height:38px;line-height:38px;border-radius:19px;background:${accent};color:#FFFFFF;font-family:${SANS};font-size:13px;font-weight:700;text-align:center;">${initials}</div>
+      </td>
+      <td valign="middle">
+        <div style="font-family:${SANS};font-size:14px;font-weight:600;line-height:1.3;color:${INK};">${who}</div>
+        <div style="font-family:${SANS};font-size:13px;line-height:1.3;color:${MUTED};">${role}</div>
+      </td>
+    </tr></table>
+  </td></tr></table>`,
+    P(4, 30),
+  );
+};
+
+/**
+ * A numbered run of points, with the numeral as the design.
+ *
+ * The one pattern every good product email shares and the block vocabulary has
+ * no way to express: a large tinted numeral holding the left column while the
+ * text sits against it. Reads as a sequence rather than a list, which is what
+ * "what happens next" actually is.
+ */
+const numberList = (items: { title: string; body: string }[], accent: string) => html(
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-  <tr><td style="border:1px solid #E4E4EA;border-left:3px solid ${accent};border-radius:12px;padding:22px 24px;">
-    <div style="font-family:${SANS};font-size:17px;line-height:1.5;color:#1F2024;margin:0 0 10px;">&ldquo;${quote}&rdquo;</div>
-    <div style="font-family:${SANS};font-size:13px;color:#6B6C75;">${who}</div>
+  ${items.map((it, i) => `<tr>
+    <td width="54" valign="top" style="padding:0 14px ${i === items.length - 1 ? 0 : 26}px 0;">
+      <div class="rb-num" style="font-family:${SANS};font-size:26px;line-height:1.05;font-weight:700;color:${accent};letter-spacing:-0.02em;">${String(i + 1).padStart(2, '0')}</div>
+    </td>
+    <td valign="top" style="padding:0 0 ${i === items.length - 1 ? 0 : 26}px;">
+      <div style="font-family:${SANS};font-size:16px;font-weight:600;line-height:1.35;letter-spacing:-0.01em;color:${INK};margin:0 0 5px;">${it.title}</div>
+      <div style="font-family:${SANS};font-size:15px;line-height:1.6;color:${MUTED};">${it.body}</div>
+    </td>
+  </tr>`).join('')}
+  </table>`,
+  P(6, 30),
+);
+
+/**
+ * The closing band: a tinted strip, a line, a button.
+ *
+ * Full-bleed — side padding 0, so it runs to the canvas edge instead of
+ * floating as another rounded card. An email that ends on a card ends on the
+ * same note it has been playing; one that ends on a band ends on a different
+ * one, which is the whole job of a last section.
+ */
+const ctaBand = (title: string, sub: string, label: string, accent: string) => html(
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td align="center" class="rb-pad" style="background:${tint(accent, 0.08)};padding:44px 34px;">
+    <div style="font-family:${SANS};font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.016em;color:${INK};margin:0 0 8px;">${title}</div>
+    <div style="font-family:${SANS};font-size:15px;line-height:1.55;color:${MUTED};margin:0 0 22px;">${sub}</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+      <td align="center" bgcolor="${accent}" style="border-radius:999px;">
+        <a href="" style="display:inline-block;padding:13px 30px;font-family:${SANS};font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:999px;">${label}</a>
+      </td></tr></table>
+  </td></tr></table>`,
+  { top: 8, right: 0, bottom: 0, left: 0 },
+);
+
+/** A hairline with a small label sitting in it. A section break that says which section. */
+const ruleLabel = (label: string) => html(
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td valign="middle" style="font-size:0;line-height:0;"><div style="border-top:1px solid ${LINE};font-size:0;line-height:0;">&nbsp;</div></td>
+    <td width="1" valign="middle" style="white-space:nowrap;padding:0 14px;font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${MUTED};">${label}</td>
+    <td valign="middle" style="font-size:0;line-height:0;"><div style="border-top:1px solid ${LINE};font-size:0;line-height:0;">&nbsp;</div></td>
+  </tr></table>`,
+  P(18, 22),
+);
+
+/**
+ * A run of links, each with a chevron.
+ *
+ * What a digest actually is. The old digest used the two-column feature grid,
+ * which is a grid of features — it made five unrelated links look like a
+ * comparison table.
+ */
+const linkRows = (items: { title: string; body: string }[], accent: string) => html(
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  ${items.map((it, i) => `<tr><td style="padding:${i === 0 ? 0 : 16}px 0 16px;${i === items.length - 1 ? '' : `border-bottom:1px solid ${LINE};`}">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="top">
+        <div style="font-family:${SANS};font-size:16px;font-weight:600;line-height:1.35;letter-spacing:-0.01em;color:${INK};margin:0 0 4px;"><a href="" style="color:${INK};text-decoration:none;">${it.title}</a></div>
+        <div style="font-family:${SANS};font-size:14px;line-height:1.55;color:${MUTED};">${it.body}</div>
+      </td>
+      <td width="20" valign="top" align="right" style="font-family:${SANS};font-size:16px;color:${accent};line-height:1.35;">&rsaquo;</td>
+    </tr></table>
+  </td></tr>`).join('')}
+  </table>`,
+  P(4, 26),
+);
+
+/** One plan, priced. For the email that is selling something. */
+const priceCard = (plan: string, price: string, per: string, points: string[], label: string, accent: string) => html(
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td style="border:1px solid ${LINE};border-radius:18px;padding:30px 28px;background:#FFFFFF;">
+    <div style="font-family:${SANS};font-size:12px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${accent};margin:0 0 10px;">${plan}</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="bottom" style="font-family:${SANS};font-size:44px;line-height:1;font-weight:700;letter-spacing:-0.03em;color:${INK};">${price}</td>
+      <td valign="bottom" style="padding:0 0 5px 8px;font-family:${SANS};font-size:14px;color:${MUTED};">${per}</td>
+    </tr></table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0;">
+      ${points.map((p) => `<tr><td width="18" valign="top" style="padding:0 0 9px;font-family:${SANS};font-size:14px;color:${accent};line-height:1.5;">&check;</td>
+        <td valign="top" style="padding:0 0 9px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};">${p}</td></tr>`).join('')}
+    </table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;"><tr>
+      <td align="center" bgcolor="${accent}" style="border-radius:999px;">
+        <a href="" style="display:inline-block;padding:13px 28px;font-family:${SANS};font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:999px;">${label}</a>
+      </td></tr></table>
   </td></tr></table>`,
   P(4, 28),
 );
@@ -720,11 +920,11 @@ export const DOC_PRESETS: {
     key: 'ask', name: 'Ask',
     description: 'Centred hero, one action, a grid of reasons, a warm sign-off.',
     build: (a) => doc(LIGHT, [
-      heading('We would love\nyour feedback', 'h1', P(40, 12), 'center'),
-      text('You are using our product and we want to make sure it is working brilliantly for you. Mind answering a few quick questions?', P(0, 24, 44), { align: 'center', color: MUTED_INK, size: 15 }),
-      button('Take 30 seconds', a, P(0, 32), 'center'),
+      heading('We would love your feedback', 'h1', P(48, 14), 'center'),
+      text('You are using our product and we want to make sure it is working brilliantly for you. Mind answering a few quick questions?', P(0, 26, 48), { align: 'center', color: MUTED_INK, size: 16 }),
+      button('Take 30 seconds', a, P(0, 34), 'center'),
       gradientPanel('★ ★ ★ ★ ★', 'Two minutes, five questions, no sign-up.', '#2B2B7A', a, '#2B2B7A'),
-      heading('You are helping us to:', 'h3', P(0, 8)),
+      ruleLabel('Why we ask'),
       featureGrid([
         { title: 'Focus on what matters.', body: 'Prioritise the features you actually care about.' },
         { title: 'Work smarter together.', body: 'Improve your daily workflow.' },
@@ -736,71 +936,83 @@ export const DOC_PRESETS: {
   },
   {
     key: 'launch', name: 'Launch',
-    description: 'Eyebrow, headline, a gradient panel and one action. For releases.',
+    description: 'Eyebrow, big headline, a gradient hero and a numbered run of what changed.',
     build: (a) => doc(LIGHT, [
-      eyebrow('New', a, P(40, 8, 32)),
-      heading('The thing you have\nbeen waiting for', 'h1', P(0, 14)),
-      text('What it is, in one sentence a stranger would understand. What changes for the reader, in a second.', P(0, 24), { size: 17, color: MUTED_INK }),
-      gradientPanel('Now available', 'Everything you asked for, and one thing you did not.', '#111133', a, '#111133'),
-      featureGrid([
-        { title: 'Faster.', body: 'The part that used to take an afternoon.' },
-        { title: 'Simpler.', body: 'Two screens instead of six.' },
-      ]),
-      button('See what is new', a, P(4, 40)),
+      eyebrow('New', a, P(48, 10, 32)),
+      heading('The thing you have been waiting for', 'h1', P(0, 16)),
+      text('What it is, in one sentence a stranger would understand. What changes for the reader, in a second.', P(0, 28), { size: 17, color: MUTED_INK }),
+      gradientPanel('Now available', 'Everything you asked for, and one thing you did not.', '#111133', a, '#111133', 'See it in action'),
+      ruleLabel('What changed'),
+      numberList([
+        { title: 'It is faster.', body: 'The part that used to take an afternoon now takes a minute, on the same hardware.' },
+        { title: 'It is simpler.', body: 'Two screens instead of six, and the one you needed is the one that opens.' },
+        { title: 'It remembers.', body: 'The thing you set last time is still set. That was the most common complaint.' },
+      ], a),
+      ctaBand('Have a look', 'Everything above is live now — nothing to install.', 'Open it', a),
     ]),
   },
   {
     key: 'letter', name: 'Letter',
     description: 'Just words. The format that lands in the inbox most reliably.',
     build: (a) => doc(LIGHT, [
-      heading('A quick note about\nwhat changed', 'h2', P(40, 14)),
-      text('Hi there,\n\nOpen with the point rather than the preamble — the first line is what decides whether the rest gets read.\n\nThen the detail, in short paragraphs. If somebody skims this and takes away one thing, make sure it is the thing in the first line.\n\nThanks for reading.', P(0, 24)),
-      button('Read the full story', a, P(0, 40), 'left', 'rounded'),
+      heading('A quick note about what changed', 'h2', P(48, 18)),
+      text('Hi there,\n\nOpen with the point rather than the preamble — the first line is what decides whether the rest gets read.\n\nThen the detail, in short paragraphs. If somebody skims this and takes away one thing, make sure it is the thing in the first line.\n\nThanks for reading.', P(0, 28), { size: 16 }),
+      button('Read the full story', a, P(0, 44), 'left', 'rounded'),
     ]),
   },
   {
     key: 'report', name: 'Monthly report',
     description: 'Three numbers, then what they mean. For updates to a list that pays you.',
     build: (a) => doc(LIGHT, [
-      eyebrow('October', a, P(40, 6, 32)),
-      heading('The month in three numbers', 'h2', P(0, 20)),
+      eyebrow('October', a, P(48, 8, 32)),
+      heading('The month in three numbers', 'h2', P(0, 24)),
       stats([
         { value: '1,284', label: 'New sign-ups' },
         { value: '98.4%', label: 'Uptime' },
         { value: '11', label: 'Ships' },
       ], a),
-      text('One paragraph on what those numbers actually mean, including the one that went the wrong way. A report that only reports good months is not read for long.', P(0, 20), { color: MUTED_INK, size: 15 }),
+      text('One paragraph on what those numbers actually mean, including the one that went the wrong way. A report that only reports good months is not read for long.', P(0, 22), { color: MUTED_INK, size: 16 }),
+      ruleLabel('The detail'),
       featureGrid([
         { title: 'What went well.', body: 'The thing you are proud of, in a line.' },
         { title: 'What did not.', body: 'The thing you are fixing, in a line.' },
+        { title: 'What is next.', body: 'The one thing shipping before the next of these.' },
+        { title: 'What we learned.', body: 'The thing you would tell someone starting today.' },
       ]),
-      button('Read the full write-up', a, P(4, 40)),
+      button('Read the full write-up', a, P(6, 44)),
     ]),
   },
   {
     key: 'story', name: 'Customer story',
-    description: 'A quote, the context, and a link. For social proof.',
+    description: 'A quote with a face, the numbers behind it, and a link.',
     build: (a) => doc(LIGHT, [
-      eyebrow('Customer story', a, P(40, 8, 32)),
-      heading('How one team stopped\nspending Fridays on this', 'h2', P(0, 18)),
-      quoteCard('It replaced four tools and a spreadsheet nobody trusted.', 'Ola Nowak, Operations at Nordwind', a),
-      text('Two or three sentences of context: what the problem was, what they tried first, and what changed. Concrete beats superlative every time.', P(0, 24), { color: MUTED_INK, size: 15 }),
-      button('Read the story', a, P(0, 40)),
+      eyebrow('Customer story', a, P(48, 10, 32)),
+      heading('How one team stopped spending Fridays on this', 'h2', P(0, 22)),
+      quoteCard('It replaced four tools and a spreadsheet nobody trusted.', 'Ola Nowak', 'Operations at Nordwind', a),
+      text('Two or three sentences of context: what the problem was, what they tried first, and what changed. Concrete beats superlative every time.', P(0, 20), { color: MUTED_INK, size: 16 }),
+      stats([
+        { value: '6h', label: 'Saved weekly' },
+        { value: '4', label: 'Tools replaced' },
+        { value: '1', label: 'Source of truth' },
+      ], a),
+      button('Read the story', a, P(6, 44)),
     ]),
   },
   {
     key: 'digest', name: 'Digest',
     description: 'An intro and a run of links. For roundups.',
     build: (a) => doc(LIGHT, [
-      eyebrow('This month', a, P(40, 6, 32)),
-      heading('Five things worth your time', 'h2', P(0, 10)),
-      text('A sentence on why this issue earns the two minutes.', P(0, 16), { color: MUTED_INK }),
-      featureGrid([
-        { title: 'The first piece.', body: 'One line on why it matters.' },
-        { title: 'The second piece.', body: 'And its line.' },
-        { title: 'The third piece.', body: 'And its line.' },
-        { title: 'The fourth piece.', body: 'And its line.' },
-      ]),
+      eyebrow('This month', a, P(48, 8, 32)),
+      heading('Five things worth your time', 'h2', P(0, 14)),
+      text('A sentence on why this issue earns the two minutes.', P(0, 6), { color: MUTED_INK, size: 16 }),
+      ruleLabel('Reading'),
+      linkRows([
+        { title: 'The first piece.', body: 'One line on why it matters, written so the link is optional.' },
+        { title: 'The second piece.', body: 'And its line, in the same shape.' },
+        { title: 'The third piece.', body: 'Short enough that five of these still skim.' },
+        { title: 'The fourth piece.', body: 'The one you nearly cut. Cut it next time.' },
+        { title: 'The fifth piece.', body: 'End on the one you would send to a friend.' },
+      ], a),
       signoff('That is everything', 'Reply if you want more of one kind and less of another.'),
     ]),
   },
@@ -808,28 +1020,50 @@ export const DOC_PRESETS: {
     key: 'event', name: 'Event',
     description: 'When, where, and one button that says yes.',
     build: (a) => doc(LIGHT, [
-      eyebrow('You are invited', a, P(40, 10, 32)),
-      heading('An evening about\nthe thing', 'h1', P(0, 14), 'center'),
-      gradientPanel('Thursday 14 May · 18:30', 'Somewhere good, in your city', '#1B2A4A', a, '#1B2A4A'),
-      text('Two sentences on what the evening is and who else will be there. People decide on the room, not the topic.', P(0, 24, 44), { align: 'center', color: MUTED_INK, size: 15 }),
-      button('Save me a seat', a, P(0, 12), 'center'),
-      text('Free, and there will be food.', P(0, 40), { align: 'center', size: 13, color: '#8A8B93' }),
+      eyebrow('You are invited', a, P(48, 12, 32)),
+      heading('An evening about the thing', 'h1', P(0, 16), 'center'),
+      gradientPanel('Thursday 14 May · 18:30', 'Somewhere good, in your city', '#1B2A4A', a, '#1B2A4A', 'Save me a seat'),
+      ruleLabel('The evening'),
+      numberList([
+        { title: '18:30 · Doors.', body: 'Something to drink, and nobody talking at you yet.' },
+        { title: '19:00 · Three short talks.', body: 'Fifteen minutes each. Nobody is selling anything.' },
+        { title: '20:00 · The actual point.', body: 'Food, and the people you came to meet.' },
+      ], a),
+      text('Free, and there will be food. Reply if you want to bring someone.', P(4, 48), { align: 'center', size: 14, color: '#8A8B93' }),
     ]),
   },
   {
     key: 'welcome', name: 'Welcome',
     description: 'The first email somebody gets. Sets expectations.',
     build: (a) => doc(LIGHT, [
-      heading('Welcome aboard', 'h1', P(40, 12)),
-      text('Thanks for signing up. Here is what happens next, so nothing is a surprise.', P(0, 24), { size: 17, color: MUTED_INK }),
+      heading('Welcome aboard', 'h1', P(48, 14)),
+      text('Thanks for signing up. Here is what happens next, so nothing is a surprise.', P(0, 10), { size: 17, color: MUTED_INK }),
+      ruleLabel('What happens next'),
+      numberList([
+        { title: 'One email a month.', body: 'On the first Tuesday. Never more than that, whatever else we launch.' },
+        { title: 'Nothing else, ever.', body: 'No sharing, no partners, no second list you did not join.' },
+        { title: 'Leaving takes one click.', body: 'The link at the bottom works immediately, with no page asking why.' },
+      ], a),
+      ctaBand('Start here', 'The five minutes that make the rest of it make sense.', 'Open the guide', a),
+    ]),
+  },
+  {
+    key: 'offer', name: 'Offer',
+    description: 'One plan, priced, with the reasons underneath. For selling.',
+    build: (a) => doc(LIGHT, [
+      eyebrow('Until Friday', a, P(48, 10, 32)),
+      heading('Everything, for less than a lunch', 'h2', P(0, 22)),
+      priceCard('Team', '$8', '/seat, monthly', [
+        'Unlimited seats and records',
+        'Automations and e-signatures',
+        'Forms, short links and reports',
+        'Cancel in one click, keep your data',
+      ], 'Start the trial', a),
       featureGrid([
-        { title: 'What you will get.', body: 'One email a month, on the first Tuesday.' },
-        { title: 'What you will not.', body: 'Anything else. No sharing, no partners.' },
-        { title: 'How to leave.', body: 'The link at the bottom works immediately.' },
-        { title: 'How to reach us.', body: 'Reply to any of these. A person reads it.' },
+        { title: 'No card to start.', body: 'Fourteen days, everything on.' },
+        { title: 'No lock-in.', body: 'Export the whole workspace as CSV, always.' },
       ]),
-      button('Start here', a, P(4, 36)),
-      signoff('Glad you are here', 'If something looks wrong in this email, tell us — you are the first to see it.'),
+      text('Prices in USD, billed monthly. The offer ends Friday and the price goes back up, which is the only reason this email exists.', P(6, 46), { size: 13, color: '#8A8B93' }),
     ]),
   },
   {
@@ -838,12 +1072,12 @@ export const DOC_PRESETS: {
     build: (a) => doc(
       { backdrop: '#08080B', canvasColor: '#111115', textColor: '#F2F2F4', font: 'HEAVY_SANS' },
       [
-        heading('One thing, said loudly', 'h1', P(56, 16), 'center', '#FFFFFF'),
-        text('A single sentence underneath, with nothing else competing with it.', P(0, 32, 44), { align: 'center', size: 17, color: '#A9AAB4' }),
+        heading('One thing, said loudly', 'h1', P(72, 18), 'center', '#FFFFFF'),
+        text('A single sentence underneath, with nothing else competing with it.', P(0, 38, 48), { align: 'center', size: 17, color: '#A9AAB4' }),
         // Not "Go". A pill's radius is half its height, so a two-character
         // label renders as an egg rather than a button — the shape only reads
         // as a pill once the label is wider than the button is tall.
-        button('See what it is', a, P(0, 56), 'center'),
+        button('See what it is', a, P(0, 72), 'center'),
       ],
     ),
   },
