@@ -17,6 +17,7 @@ import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard, { monthlyMomentum } from '@/components/ui/StatCard';
 import EmptyState from '@/components/ui/EmptyState';
 import SeedDemoData from '@/components/crm/SeedDemoData';
+import HomeExtras from '@/components/crm/HomeExtras';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
 
@@ -120,6 +121,11 @@ export default function WorkspaceHome() {
               />
             ))}
           </div>
+
+          {/* Two questions the dashboard could not answer until the copilot and
+              the usage table existed. Placed above the tables because "what did
+              the AI do" is a today question and the tables are a history. */}
+          <HomeExtras privy={privy} ws={ws?.id ?? null} />
 
           {/* Cashflow + hiring funnel */}
           <div className="grid lg:grid-cols-3 gap-4">
