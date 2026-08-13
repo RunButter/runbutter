@@ -33,6 +33,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Free tools: each is its own reason to visit, from a search that has
     // nothing to do with wanting a CRM.
     ['/plugins', 0.8, 'monthly'],
+    // The agent cost calculator. Higher than the other tools because the search
+    // it answers ('what does an AI agent cost') is one nobody else answers, and
+    // whoever types it is exactly who this product is for.
+    ['/ai-cost', 0.85, 'monthly'],
     ['/pdf', 0.7, 'monthly'],
     ['/contact', 0.4, 'yearly'],
     ['/privacy', 0.3, 'yearly'],
