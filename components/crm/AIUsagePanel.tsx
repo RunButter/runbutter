@@ -43,9 +43,36 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
     return () => { cancelled = true; };
   }, [privy, ws, days]);
 
-  // 0101 not run, or nothing to show. Silent either way: a cost panel that says
-  // "no data" on a workspace that has never used AI is a worry with no cause.
-  if (loading || !usage || usage.totals.calls === 0) return null;
+  // 0101 not run — the function does not exist, so there is nothing to explain
+  // and no way to explain it. Silent is right here.
+  if (loading || !usage) return null;
+
+  /**
+   * Nothing recorded YET is a different thing from nothing to show.
+   *
+   * This used to return null on an empty workspace, on the reasoning that a
+   * panel saying "no data" is a worry with no cause. That was wrong in one
+   * specific way that took a bug report to see: usage only accumulates from
+   * calls made AFTER the recording code shipped, so a workspace that had used
+   * AI for months still saw an empty panel on day one — and an empty panel is
+   * indistinguishable from a feature that was never built. Somebody looking for
+   * a change they were told about should find out why it is not there, not be
+   * shown a blank space.
+   */
+  if (usage.totals.calls === 0) {
+    return (
+      <div className="card-surface p-4">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <Activity className="w-3.5 h-3.5 text-tertiary" />
+          <span className="text-2xs font-medium uppercase tracking-wider text-tertiary">AI usage</span>
+        </div>
+        <p className="text-xs text-secondary leading-relaxed">
+          Nothing recorded in the last {usage.days} days. Tokens and estimated cost appear here after
+          the copilot or an agent runs — counted from what your provider reports, never guessed.
+        </p>
+      </div>
+    );
+  }
 
   const t = usage.totals;
   const rate = cacheRate(t.input, t.cached);

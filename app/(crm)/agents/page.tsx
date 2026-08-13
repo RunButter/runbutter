@@ -458,7 +458,19 @@ const compact = (n: number) =>
  */
 function UsagePanel({ usage }: { usage: AgentUsage }) {
   const t = usage.totals;
-  if (!t.runs) return null;
+  // Same reasoning as the AI usage panel: an empty panel and an unbuilt feature
+  // look identical, and the person checking is the one who was told it exists.
+  if (!t.runs) {
+    return (
+      <section>
+        <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">AI usage</h2>
+        <p className="rounded-lg border border-subtle bg-surface p-4 text-xs text-secondary leading-relaxed">
+          No agent has run in the last {usage.days} days. Tokens, cache savings and estimated cost
+          per agent appear here once one does.
+        </p>
+      </section>
+    );
+  }
   const cachedShare = t.input > 0 ? Math.round((t.cached / t.input) * 100) : 0;
   const top = usage.by_agent.filter((a) => a.input + a.output > 0).slice(0, 6);
   const max = Math.max(1, ...top.map((a) => a.input + a.output));
