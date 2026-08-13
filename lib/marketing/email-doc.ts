@@ -307,17 +307,98 @@ function sanitiseDoc(doc: EmailDoc): EmailDoc {
 const MUTED = '#71717a';
 
 /**
+ * The `<head>` Waypoint does not emit, and the three things that go in it.
+ *
+ * Its output starts `<!DOCTYPE html><html><body>` — no head, no charset, no
+ * viewport. Each omission is a real defect on a phone:
+ *
+ *   • NO VIEWPORT META means a mobile client is free to render the message at
+ *     desktop width and zoom out, which is why a 600px email arrives looking
+ *     like a shrunken page rather than a phone email.
+ *   • NO CHARSET risks mojibake on any client that guesses latin-1, which is
+ *     the same class of bug the QR encoder had.
+ *   • NO STYLE BLOCK means no media query, and Waypoint's columns are plain
+ *     `<td>` cells with no stacking rule — so a two-column layout stays two
+ *     cramped columns on a 390px screen instead of becoming one.
+ *
+ * Gmail's Android app does strip `<style>` for some non-Gmail accounts, so the
+ * media query is treated as an ENHANCEMENT: the un-styled result is the
+ * side-by-side layout that already worked, not a broken one.
+ */
+const headFor = (backdrop: string) => `<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light dark">
+<style>
+/* The BODY takes the backdrop too. Waypoint colours only its own wrapper div,
+   so on a client that adds its own margin — or on any viewport taller than the
+   message — the email sat on a white strip above and below itself, reading as
+   three bands rather than one email. */
+body{margin:0!important;padding:0!important;background:${backdrop}!important;}
+@media only screen and (max-width:600px){
+  /* Waypoint's columns are td cells. Forcing them to blocks is what stacks
+     them; the width reset is what stops the last one keeping a 50% measure. */
+  .rb-col{display:block!important;width:100%!important;max-width:100%!important;padding-left:0!important;padding-right:0!important;box-sizing:border-box!important}
+  .rb-pad{padding-left:20px!important;padding-right:20px!important}
+  .rb-h1{font-size:30px!important;line-height:1.15!important}
+  .rb-h2{font-size:24px!important;line-height:1.2!important}
+}
+</style>
+</head>`;
+
+/**
+ * Tag the pieces the media query needs to reach.
+ *
+ * Done on the rendered HTML, for the same reason link tracking is: the classes
+ * belong to markup Waypoint generates and there is no document field that says
+ * "put a class here". Narrow, anchored replacements rather than a parser —
+ * this is our own renderer's output, not arbitrary input.
+ */
+function makeResponsive(html: string): string {
+  return html
+    // Every column cell in a ColumnsContainer.
+    .replace(/<td([^>]*?)style="([^"]*?width:50%[^"]*?)"/g, '<td$1class="rb-col" style="$2"')
+    .replace(/<td([^>]*?)style="([^"]*?width:33\.33[^"]*?)"/g, '<td$1class="rb-col" style="$2"')
+    // Headings, so a 32px h1 does not fill a phone screen with three words.
+    .replace(/<h1 style="/g, '<h1 class="rb-h1" style="')
+    .replace(/<h2 style="/g, '<h2 class="rb-h2" style="');
+}
+
+/**
+ * The masthead: the workspace's logo, or its name.
+ *
+ * It was MISSING from the builder entirely — the three fixed templates put it
+ * in their shell and this path never had one, so every email built here went
+ * out unbranded and the composer's preview showed an email nobody would
+ * recognise as theirs. That is the first thing anybody notices and the last
+ * thing anybody thinks to check.
+ */
+function masthead(ctx: RenderCtx, backdrop: string): string {
+  const { brand } = ctx;
+  const logo = brand.logoUrl && /^https?:\/\//i.test(brand.logoUrl) ? brand.logoUrl : null;
+  const inner = logo
+    ? `<img src="${esc(logo)}" alt="${esc(brand.name)}" height="28" style="height:28px;width:auto;max-width:180px;display:inline-block;border:0;">`
+    : `<span style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:${esc(brand.accent || '#1F2024')};">${esc(brand.name)}</span>`;
+  // Full-bleed and backdrop-coloured, so the masthead reads as part of the same
+  // sheet of paper as the message rather than as a separate white strip.
+  return `<table width="100%" role="presentation" cellspacing="0" cellpadding="0" border="0" style="background:${esc(backdrop)};">
+  <tr><td align="center" style="padding:28px 24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">${inner}</td></tr>
+</table>`;
+}
+
+/**
  * The footer, matched to the canvas so it reads as part of the email.
  *
  * Not a Waypoint block: it must exist on every send whatever the document says,
  * and a block a person can delete is not that. The unsubscribe link is the one
  * legally load-bearing element in a bulk email.
  */
-function footer(ctx: RenderCtx): string {
+function footer(ctx: RenderCtx, backdrop: string): string {
   const { brand, unsubscribeUrl } = ctx;
-  return `<table align="center" width="100%" role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;max-width:600px;">
-  <tr><td style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-    <p style="margin:0;font-size:12px;line-height:18px;color:${MUTED};">
+  return `<table width="100%" role="presentation" cellspacing="0" cellpadding="0" border="0" style="background:${esc(backdrop)};">
+  <tr><td align="center" style="padding:20px 24px 36px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <p style="margin:0;font-size:12px;line-height:18px;color:${MUTED};text-align:center;max-width:600px;">
       ${brand.footer ? `${esc(brand.footer)}<br>` : ''}
       ${brand.address ? `${esc(brand.address)}<br>` : ''}
       <a href="${esc(unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline;">Unsubscribe</a>
@@ -345,6 +426,11 @@ export function renderEmailDoc(doc: EmailDoc, ctx: RenderCtx): string {
 
   if (ctx.trackLink) html = trackLinks(html, ctx.trackLink);
 
+  // The canvas colour the document chose, so the masthead, the footer and the
+  // body all match the message instead of framing it in white.
+  const backdrop = typeof clean[ROOT]?.data?.backdropColor === 'string'
+    ? clean[ROOT].data.backdropColor : '#F4F4F6';
+
   const pre = ctx.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;height:0;width:0;">${esc(ctx.preheader)}</div>`
     : '';
@@ -354,12 +440,21 @@ export function renderEmailDoc(doc: EmailDoc, ctx: RenderCtx): string {
 
   // Inserted by string position rather than by parsing: the input is this
   // renderer's own output and its <body> is the first one in the document.
+  html = makeResponsive(html);
+
+  // The <head> goes in right after <html>, because Waypoint emits none.
+  const htmlOpen = html.indexOf('>', html.indexOf('<html')) + 1;
+  if (htmlOpen > 0 && !/<head[\s>]/i.test(html)) {
+    html = html.slice(0, htmlOpen) + headFor(backdrop) + html.slice(htmlOpen);
+  }
+
   const bodyOpen = html.indexOf('>', html.indexOf('<body')) + 1;
   const bodyClose = html.lastIndexOf('</body>');
   if (bodyOpen <= 0 || bodyClose < bodyOpen) return html;
 
   return (
-    html.slice(0, bodyOpen) + pre + html.slice(bodyOpen, bodyClose) + footer(ctx) + pixel + html.slice(bodyClose)
+    html.slice(0, bodyOpen) + pre + masthead(ctx, backdrop)
+    + html.slice(bodyOpen, bodyClose) + footer(ctx, backdrop) + pixel + html.slice(bodyClose)
   );
 }
 
@@ -570,6 +665,27 @@ export const DOC_PRESETS: {
       heading('How to leave', 'h3', P(8, 4)),
       text('The unsubscribe link at the bottom of every email works immediately, no questions.', P(0, 24), { size: 15 }),
       button('Start here', a, P(0, 40)),
+    ]),
+  },
+  {
+    key: 'feedback', name: 'Ask',
+    description: 'Centred hero, one action, then a grid of reasons. For surveys and asks.',
+    build: (a) => doc(LIGHT, [
+      heading('We would love\nyour feedback', 'h1', P(36, 12), 'center'),
+      text('You are using our product, and we want to make sure it is working brilliantly for you. Mind answering a few quick questions?', P(0, 20), { align: 'center', color: '#6B6C75', size: 15 }),
+      button('Take 30 seconds', a, P(0, 32), 'center'),
+      image(P(0, 32, 0)),
+      heading('You are helping us to:', 'h3', P(0, 4)),
+      { type: 'ColumnsContainer', data: {
+        props: { columnsCount: 2, columnsGap: 32, contentAlignment: 'top',
+          columns: [{ childrenIds: [] }, { childrenIds: [] }] },
+        style: { padding: P(8, 8) } } },
+      divider(),
+      text('**Focus on what matters.**\nPrioritise the features you actually care about.', P(8, 4), { size: 15 }),
+      divider(),
+      text('**Design with intention.**\nBuild a better experience for everyone.', P(8, 4), { size: 15 }),
+      divider(),
+      text('**Move faster.**\nShape what we build next, sooner.', P(8, 36), { size: 15 }),
     ]),
   },
   {

@@ -660,6 +660,24 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   - The **Custom HTML block is stripped** (scripts, styles, iframes, handlers, `javascript:`/`data:`).
     Not for the recipient — every serious client sanitises harder — but because it renders in our
     composer and can be read back by an agent. The preview iframe is `sandbox=""` as the other half.
+  - **Waypoint emits NO `<head>`** — its output starts `<!DOCTYPE html><html><body>`. Three real
+    defects followed and `renderEmailDoc` now injects one: no **viewport meta** let mobile clients
+    render a 600px email at desktop width and zoom out; no **charset** risks mojibake; and no
+    **`<style>`** meant no media query, so Waypoint's columns (plain `<td>` cells with no stacking
+    rule) stayed two cramped columns on a 390px screen. `makeResponsive` tags the cells and headings
+    on the rendered HTML — same reasoning as link tracking, there is no document field for a class.
+    Gmail's Android app strips `<style>` for some accounts, so the query is an ENHANCEMENT: without
+    it you get the side-by-side layout that already worked, not a broken one.
+  - **The masthead was MISSING from this template entirely.** The three fixed layouts put the logo in
+    their shell; the builder path never had one, so every email built here went out unbranded and the
+    preview showed something nobody would recognise as theirs. Logo, or the workspace name in the
+    accent colour — never a blank strip. Non-http URLs are refused.
+  - **The masthead, footer and `body` all take the document's `backdropColor`.** Waypoint colours only
+    its own wrapper div, so the email arrived as three bands: white strip, coloured message, white
+    strip.
+  - **The composer preview loads REAL branding** (`loadBranding`), not a stand-in. It passed the
+    workspace name and no logo with a comment saying the real values apply at send — true, and it
+    made the preview useless for the only question anybody asks of it.
   - **Text blocks set `markdown: true`.** Without it Waypoint renders the string into one div and
     every newline collapses to a space — so the editor's own hint ("a blank line starts a new
     paragraph") was FALSE and every multi-paragraph template arrived as a wall of text. It also buys

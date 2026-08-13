@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { ArrowLeft, Loader2, Send, Save, Eye, Plus, Trash2, Clock, Sparkles, Monitor, Smartphone } from 'lucide-react';
-import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
+import { getWorkspace, loadBranding, type WorkspaceContext, type WorkspaceBranding } from '@/lib/crm/data';
 import {
   getNewsletter, saveNewsletter, queueNewsletter, listNewsletterLists, draftNewsletter,
   type NewsletterFull, type NewsletterList,
@@ -55,6 +55,16 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
    * newsletter that is opened. Nothing about a preview needs to be server
    * rendered, so the honest fix is not to.
    */
+  /**
+   * The workspace's REAL branding, in the preview.
+   *
+   * It used to pass a stand-in — the workspace name, no logo, no accent — with
+   * a comment saying the real values are applied at send time. That is true and
+   * it made the preview useless for the one question people actually ask of it:
+   * does this look like our email? The logo was not merely un-previewed, it was
+   * missing from this template's output entirely.
+   */
+  const [brand, setBrand] = useState<WorkspaceBranding | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const [drafting, setDrafting] = useState(false);
@@ -130,12 +140,18 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
     return renderEmail(n.template || 'plain', {
       subject: n.subject || '(no subject)',
       preheader: n.preheader,
-      brand: { name: ws?.name || 'Your company', accent: null, address: 'Your registered address', footer: null },
+      brand: {
+        name: brand?.name || ws?.name || 'Your company',
+        logoUrl: brand?.logo_url || null,
+        accent: brand?.accent_color || null,
+        address: brand?.address || 'Your registered address',
+        footer: brand?.email_footer || null,
+      },
       content: n.content || {},
       unsubscribeUrl: '#',
       trackLink: (u) => u,
     });
-  }, [n, ws?.name, mounted]);
+  }, [n, ws?.name, brand, mounted]);
 
   if (!ready || loading) {
     return <AppLoading />;
@@ -381,7 +397,9 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
                 />
               </div>
               <p className="px-4 py-2 text-2xs text-tertiary border-t border-subtle">
-                Your logo and colours are applied when it sends.
+                {brand?.logo_url || brand?.accent_color
+                  ? 'Your logo and colours, as they will send.'
+                  : <>Set a logo and colour in <span className="text-secondary">Settings → Branding</span> and they appear here.</>}
               </p>
             </div>
           )}
