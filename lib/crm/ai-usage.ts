@@ -42,6 +42,24 @@ export const FEATURE_LABEL: Record<string, string> = {
   automation: 'Automations',
 };
 
+/** A workspace's own model prices (0104). Empty when none are set, or when 0104 has not run. */
+export async function getModelPrices(privy: string, ws: string): Promise<Record<string, any>> {
+  const { data, error } = await rpc('get_model_prices', { p_privy: privy, p_workspace: ws });
+  if (error || !data || typeof data !== 'object') return {};
+  return data as Record<string, any>;
+}
+
+export async function saveModelPrice(privy: string, ws: string, model: string, input: number, output: number, cached: number | null, note: string) {
+  return rpc('save_model_price', {
+    p_privy: privy, p_workspace: ws, p_model: model,
+    p_input: input, p_output: output, p_cached: cached, p_note: note,
+  });
+}
+
+export async function deleteModelPrice(privy: string, ws: string, model: string) {
+  return rpc('delete_model_price', { p_privy: privy, p_workspace: ws, p_model: model });
+}
+
 export async function getAIUsage(privy: string, ws: string, days = 30): Promise<AIUsage | null> {
   const { data, error } = await rpc('get_ai_usage', { p_privy: privy, p_workspace: ws, p_days: days });
   // A missing function means 0101 has not been run. The panel hides itself

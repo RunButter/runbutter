@@ -94,6 +94,10 @@ const ALLOWED = new Set([
   // Token spend by agent (0096). Aggregated in SQL — the runs list caps at 50,
   // so summing it in the browser would report a month's cost from whatever fit.
   'get_agent_usage', 'get_ai_usage',
+  // Model prices (0104). A workspace's negotiated rate, its OpenRouter reality,
+  // or zero for a self-hosted model. Writes re-check owner/admin in SQL — a
+  // price changes every cost figure everyone else reads.
+  'get_model_prices', 'save_model_price', 'delete_model_price',
   // Copilot threads (0102). A thread belongs to a PERSON, and every one of
   // these re-checks that in SQL — a colleague in the same workspace gets
   // NOT_FOUND, not a redacted row. append_copilot_message and

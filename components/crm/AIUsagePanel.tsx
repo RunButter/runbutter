@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Activity, AlertCircle } from 'lucide-react';
 import {
-  getAIUsage, fmtTokens, cacheRate, FEATURE_LABEL,
+  getAIUsage, getModelPrices, fmtTokens, cacheRate, FEATURE_LABEL,
   type AIUsage,
 } from '@/lib/crm/ai-usage';
 import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
@@ -26,6 +26,9 @@ import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
 export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: string | null }) {
   const [usage, setUsage] = useState<AIUsage | null>(null);
   const [days, setDays] = useState(30);
+  // The workspace's own prices (0104). Empty is the normal case and means
+  // "use the shipped list prices"; it is never a reason to hide a cost.
+  const [prices, setPrices] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +39,7 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
       if (cancelled) return;
       setUsage(u); setLoading(false);
     });
+    getModelPrices(privy, ws).then((p) => { if (!cancelled) setPrices(p); }).catch(() => {});
     return () => { cancelled = true; };
   }, [privy, ws, days]);
 
@@ -57,7 +61,7 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
    */
   const priced = usage.by_model.reduce(
     (acc, m) => {
-      const s = spendFor(m.model || '', m);
+      const s = spendFor(m.model || '', m, prices);
       if (s.priced) { acc.usd += s.usd; acc.calls += m.calls; }
       else acc.unpriced += m.calls;
       return acc;
@@ -111,7 +115,7 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
         <div className="mt-4 pt-3 border-t border-subtle">
           <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-2">By model</div>
           <Bars rows={usage.by_model.map((m) => {
-            const s = spendFor(m.model || '', m);
+            const s = spendFor(m.model || '', m, prices);
             return {
               key: m.model || 'unknown',
               label: m.model || 'not reported',

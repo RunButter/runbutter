@@ -144,3 +144,53 @@ export function fmtUSD(usd: number): string {
   if (usd < 100) return `$${usd.toFixed(2)}`;
   return `$${Math.round(usd).toLocaleString()}`;
 }
+
+// ── Before the call, not after ──────────────────────────────────────────────
+
+/**
+ * What a call is ABOUT to cost.
+ *
+ * THE HONEST ANSWER IS A RANGE, NOT A NUMBER, and the reason is not solvable:
+ * output length is decided by the model while it generates. Anything quoting a
+ * single figure up front has either guessed the output or ignored it.
+ *
+ * What IS knowable before sending:
+ *   • the input, exactly — it is the prompt, and it is in hand;
+ *   • the output CEILING, exactly — `max_tokens` is a number we set.
+ *
+ * So this returns a floor (input only) and a ceiling (input plus a full-length
+ * reply). The real answer lands between them, and somebody deciding whether to
+ * point an agent at four hundred records wants the ceiling.
+ */
+export interface Forecast { floor: number; ceiling: number; priced: boolean }
+
+export function forecast(
+  model: string,
+  inputTokens: number,
+  maxOutputTokens: number,
+  overrides?: Record<string, ModelPrice>,
+): Forecast {
+  const p = priceFor(model, overrides);
+  if (!p) return { floor: 0, ceiling: 0, priced: false };
+  const inUsd = (Math.max(inputTokens, 0) * p.input) / 1_000_000;
+  const outUsd = (Math.max(maxOutputTokens, 0) * p.output) / 1_000_000;
+  return { floor: inUsd, ceiling: inUsd + outUsd, priced: true };
+}
+
+/**
+ * Tokens from characters, for the moment before a call when nothing better
+ * exists.
+ *
+ * ~3.7 characters per token is a fair average for English prose and is WRONG
+ * for code, JSON and non-Latin scripts — all three of which this product sends
+ * constantly. Rounded UP deliberately: an estimate used to answer "can I afford
+ * this" should err towards the expensive answer, because the failure mode in
+ * the other direction is a bill.
+ *
+ * NEVER use this to report what something COST. Providers return exact counts
+ * on every response and those are what gets stored; this exists only for the
+ * moment before a call, when there is no counted number to have.
+ */
+export function approxTokens(text: string): number {
+  return Math.ceil(String(text || '').length / 3.7);
+}
