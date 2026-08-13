@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import BorderBeam from '@/components/ui/BorderBeam';
 import { getWorkspace } from '@/lib/crm/data';
+import { notifyChanged, changedFromSteps } from '@/lib/crm/live';
 import { useNav } from '@/lib/crm/nav';
 import {
   listThreads, loadThread, newThread, setThread, removeThread, send, approve, pollRun,
@@ -166,6 +167,11 @@ export default function CopilotPanel() {
     setLiveSteps([]);
     await openThread(t.id);
     refreshThreads();
+    // Tell the page behind the dock what moved, so the list the person is
+    // looking at shows the record the copilot just made instead of needing a
+    // reload to admit it exists.
+    const changed = changedFromSteps((res as any).steps || []);
+    if (changed) notifyChanged(changed);
   };
 
   const doApprove = async (runId: string) => {
@@ -175,6 +181,11 @@ export default function CopilotPanel() {
     setBusy(false);
     if (res.error) { setError(res.error); return; }
     await openThread(thread.id);
+    // Approval is the moment a `suggest` proposal becomes real, so it is the
+    // moment the page behind is actually stale. The results carry the same
+    // shape as run steps.
+    const applied = changedFromSteps((res.results || []).map((r: any) => ({ type: 'tool', name: r.name, args: r.args, result: r.result })));
+    if (applied) notifyChanged(applied);
   };
 
   const flipAutonomy = async () => {

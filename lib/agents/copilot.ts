@@ -13,6 +13,7 @@
 
 import { TOOL_CATALOG } from '@/lib/agents/catalog';
 import type { AgentDef } from '@/lib/agents/runner';
+import { surfaceMap, SURFACE_RULE } from '@/lib/agents/surfaces';
 
 /**
  * Every tool, because a copilot that cannot reach half the product is a chat
@@ -72,12 +73,21 @@ const INSTRUCTIONS =
   `- Never invent a record, a total, a date or a person. If a lookup returns nothing, say it returned nothing.\n` +
   `- You can hand back a link to a filtered view: paths look like /objects/<type>?q=…&f.<field>=…`;
 
+/**
+ * The product map, assembled once at module load.
+ *
+ * It is ~40 lines of stable text sent on every turn, which is exactly the shape
+ * a prompt cache is for — `callAI` and `agentTurn` both mark the system prompt
+ * cacheable, so the second turn of a conversation pays almost nothing for it.
+ */
+const MAP = `\n\n---\n${SURFACE_RULE}\n\n${surfaceMap()}\n---`;
+
 export function copilotAgent(model: string, provider: string, autonomy: 'suggest' | 'auto', page: PageContext): AgentDef {
   return {
     id: 'copilot',
     name: 'Copilot',
     role: 'workspace copilot',
-    instructions: INSTRUCTIONS + pageContextBlock(page),
+    instructions: INSTRUCTIONS + MAP + pageContextBlock(page),
     provider, model,
     allowed_tools: COPILOT_TOOLS,
     allowed_objects: [],

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useLiveRefresh } from '@/lib/crm/live';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, FileText } from 'lucide-react';
@@ -82,6 +83,10 @@ export default function ObjectPage() {
     setLoading(true);
     loadRecords(privy, slug).then((res) => { setRows(res.rows); setLive(res.live); setLoading(false); });
   }, [object, privy, slug]);
+
+  // The copilot writes through the same RPCs this page reads, so a record it
+  // creates should appear in this table without the person reloading to find out.
+  useLiveRefresh([slug], reload);
 
   useEffect(() => { if (object && ready) reload(); }, [object, ready, reload]);
 

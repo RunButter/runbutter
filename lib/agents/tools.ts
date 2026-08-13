@@ -84,6 +84,30 @@ export const TOOLS = [
   { name: 'update_record', description: 'Update fields on an existing record.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, id: { type: 'string' }, data: { type: 'object' } }, required: ['object', 'id', 'data'] } },
 
 
+
+
+  // ── Agents and skills (0043 / 0068) ───────────────────────────────────────
+  // Reading both, and writing SKILLS but not AGENTS. A skill is instructions —
+  // `suggested_tools` on it is a hint the builder uses to pre-tick boxes and is
+  // never a grant, so the worst a bad one does is give an agent poor advice. An
+  // AGENT is an actor: it carries a tool list, an autonomy setting and possibly
+  // a schedule, so a copilot that could create one could create something that
+  // runs unattended with permissions nobody chose. That is the same line
+  // `propose_object` draws — changing what the workspace IS stays with a person.
+  { name: 'list_agents', description: 'List this workspace\'s AI agents — name, role, autonomy, schedule and which tools each may use.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'list_skills', description: 'List the reusable instruction packs (skills) in this workspace.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_skill', description: 'Create or update a skill: a named, reusable instruction pack that agents can be given. Write `instructions` as markdown describing how this company does the thing. Omit `id` to create.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' }, instructions: { type: 'string' } }, required: ['name', 'instructions'] } },
+
+  // ── Newsletters (0070/0071, designs 0098) ─────────────────────────────────
+  // The surface that made the gap obvious: asked for "a nice newsletter in
+  // HTML" the copilot wrote a DOCUMENT full of HTML, because a document was the
+  // nearest thing it could write. It is not asked to author email HTML — email
+  // HTML is tables and inline styles and Outlook, and a model writing it by
+  // hand produces something that breaks in half the clients. It fills a
+  // TEMPLATE instead, and the renderer does the part that has to be right.
+  { name: 'list_newsletters', description: 'List this workspace\'s newsletters (subject, status, template) and the subscriber lists available to send to.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_newsletter', description: "Create or update a newsletter DRAFT. Never sends — a person sends it from Marketing → Newsletters. Choose `template`: 'plain' is a letter (heading, body, one button) and has the best deliverability; 'announcement' adds a hero image; 'digest' is a run of linked items. Write `body` as plain text with a blank line between paragraphs — not HTML, the template renders it and applies the workspace's branding.", inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'Omit to create a new draft.' }, subject: { type: 'string' }, preheader: { type: 'string', description: 'The grey line shown after the subject in the inbox.' }, template: { type: 'string', enum: ['plain', 'announcement', 'digest'] }, heading: { type: 'string' }, body: { type: 'string' }, ctaLabel: { type: 'string' }, ctaUrl: { type: 'string' }, items: { type: 'array', description: 'digest only', items: { type: 'object', properties: { title: { type: 'string' }, blurb: { type: 'string' }, url: { type: 'string' } } } } }, required: ['subject', 'template'] } },
+
   // ── Docs, notes and to-do lists (0081/0085/0086) ───────────────────────────
   // MISSING UNTIL NOW, and the gap was invisible from the inside: docs are a
   // dedicated subsystem with their own RPCs rather than a CRUD object, so
@@ -207,6 +231,94 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     throw new Error(`Unknown object "${object}". Use one of: ${Object.keys(OBJECTS).join(', ')}`);
   }
   switch (name) {
+    case 'list_agents': {
+      const { data, error } = await ctx.admin.rpc('get_agents', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      return (Array.isArray(data) ? data : []).map((a: any) => ({
+        id: a.id, name: a.name, role: a.role, autonomy: a.autonomy, enabled: a.enabled,
+        schedule: a.schedule, tools: a.allowed_tools,
+      }));
+    }
+
+    case 'list_skills': {
+      const { data, error } = await ctx.admin.rpc('get_skills', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      // Instructions are the long part and are usually a page each; the id and
+      // the description are what a model needs to decide which one to open.
+      return (Array.isArray(data) ? data : []).map((s: any) => ({
+        id: s.id, name: s.name, description: s.description, source: s.source,
+      }));
+    }
+
+    case 'save_skill': {
+      const { data, error } = await ctx.admin.rpc('save_skill', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_id: args?.id || null,
+        p_name: String(args?.name || '').slice(0, 120),
+        p_description: String(args?.description || '').slice(0, 500),
+        p_instructions: String(args?.instructions || '').slice(0, 40000),
+        p_suggested_tools: [],
+        // Attributed to the copilot rather than left blank. `source` is how
+        // anyone later tells a skill somebody wrote from one a model produced,
+        // and the same reasoning as record_notes.source: a claim you cannot
+        // trace is a claim you cannot check.
+        p_source: 'copilot', p_source_url: null,
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, saved: true };
+    }
+
+    case 'list_newsletters': {
+      const [nl, lists] = await Promise.all([
+        ctx.admin.rpc('get_newsletters', { p_privy: ctx.privy, p_workspace: ctx.workspace }),
+        ctx.admin.rpc('get_newsletter_lists', { p_privy: ctx.privy, p_workspace: ctx.workspace }),
+      ]);
+      if (nl.error) throw new Error(nl.error.message);
+      return {
+        newsletters: (Array.isArray(nl.data) ? nl.data : []).map((n: any) => ({
+          id: n.id, subject: n.subject, status: n.status, template: n.template, sent_at: n.sent_at,
+        })),
+        lists: (Array.isArray(lists.data) ? lists.data : []).map((l: any) => ({ id: l.id, name: l.name, subscribers: l.subscriber_count })),
+      };
+    }
+
+    case 'save_newsletter': {
+      const template = ['plain', 'announcement', 'digest'].includes(args?.template) ? args.template : 'plain';
+      // Only the fields that template actually renders. A digest's `items` on a
+      // plain letter is dead weight in the row and reappears as a surprise if
+      // somebody switches the template later in the editor.
+      const content: any = {};
+      if (args?.heading) content.heading = String(args.heading).slice(0, 300);
+      if (args?.body) content.body = String(args.body).slice(0, 20000);
+      if (args?.ctaLabel) content.ctaLabel = String(args.ctaLabel).slice(0, 80);
+      if (args?.ctaUrl) content.ctaUrl = String(args.ctaUrl).slice(0, 500);
+      if (template === 'digest' && Array.isArray(args?.items)) {
+        content.items = args.items.slice(0, 25).map((i: any) => ({
+          title: String(i?.title || '').slice(0, 200),
+          blurb: i?.blurb ? String(i.blurb).slice(0, 500) : undefined,
+          url: i?.url ? String(i.url).slice(0, 500) : undefined,
+        }));
+      }
+      const { data, error } = await ctx.admin.rpc('save_newsletter', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_id: args?.id || null,
+        p_subject: String(args?.subject || '').slice(0, 300),
+        p_preheader: String(args?.preheader || '').slice(0, 300),
+        p_template: template,
+        p_content: content,
+        p_from_name: null, p_reply_to: null,
+        // NO LISTS, EVER, from a tool. Attaching an audience is the step that
+        // turns a draft into something one click from every subscriber's inbox,
+        // and it is a person's decision made on the send screen.
+        p_list_ids: [],
+      });
+      if (error) throw new Error(error.message);
+      return {
+        id: data, saved: true, template, status: 'draft',
+        note: 'Saved as a DRAFT. Nobody has been emailed. Open Marketing → Newsletters to choose a list and send.',
+      };
+    }
+
     case 'list_docs': {
       const { data, error } = await ctx.admin.rpc('get_docs', { p_privy: ctx.privy, p_workspace: ctx.workspace });
       if (error) throw new Error(error.message);

@@ -41,6 +41,17 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'create_record', label: 'Create a record', group: 'Records', write: true },
   { name: 'update_record', label: 'Update a record', group: 'Records', write: true },
 
+  // Agents and skills (0043/0068). Skills are writable, agents are not — an
+  // agent is an actor with permissions, a skill is only instructions.
+  { name: 'list_agents', label: 'List agents', group: 'Workspace' },
+  { name: 'list_skills', label: 'List skills', group: 'Workspace' },
+  { name: 'save_skill', label: 'Write a skill', group: 'Workspace', write: true },
+
+  // Newsletters (0070/0071). `save_newsletter` never sends and never attaches a
+  // list — a draft with an audience on it is one click from everyone's inbox.
+  { name: 'list_newsletters', label: 'List newsletters', group: 'Marketing' },
+  { name: 'save_newsletter', label: 'Draft a newsletter', group: 'Marketing', write: true },
+
   // Docs (0081/0085/0086). A to-do list, a note and a table are all documents
   // with markdown in one body column, so four tools cover the whole surface.
   { name: 'list_docs', label: 'List documents', group: 'Docs' },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useLiveRefresh } from '@/lib/crm/live';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
@@ -38,6 +39,10 @@ export default function DocsPage() {
     setLoading(true);
     loadDocs(privy).then((r) => { setRows(r.rows); setLive(r.live); setLoading(false); });
   }, [privy]);
+
+  // A to-do list the copilot just wrote belongs on this screen immediately —
+  // not seeing it is the exact complaint that started all of this.
+  useLiveRefresh(['docs'], reload);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
 
   const create = async (kind: DocKind) => {
