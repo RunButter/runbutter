@@ -86,6 +86,23 @@ export const TOOLS = [
 
 
 
+
+  // ── Everything else a person can do ───────────────────────────────────────
+  // The agentic gap, closed. Each of these screens had working RPCs and no way
+  // for an agent to reach them, so the copilot could describe the Deals board
+  // and not put a deal on it. A tool per real action rather than one generic
+  // escape hatch: the argument names are the documentation, and a model made to
+  // guess a payload shape guesses wrong in ways SQL cannot catch.
+  { name: 'create_deal', description: 'Add a deal to the sales pipeline. Omit `stage` and it goes to the first column.', inputSchema: { type: 'object', properties: { title: { type: 'string' }, amount: { type: 'number' }, stage: { type: 'string', description: 'Stage id from get_pipeline_board.' }, companyId: { type: 'string' }, personId: { type: 'string' } }, required: ['title'] } },
+  { name: 'update_deal', description: "Change a deal's title, amount, company or person. To move it between stages use move_deal.", inputSchema: { type: 'object', properties: { id: { type: 'string' }, title: { type: 'string' }, amount: { type: 'number' }, companyId: { type: 'string' }, personId: { type: 'string' } }, required: ['id'] } },
+  { name: 'move_deal', description: 'Move a deal to another stage of its pipeline (e.g. mark it won).', inputSchema: { type: 'object', properties: { id: { type: 'string' }, stage: { type: 'string' }, position: { type: 'number' } }, required: ['id', 'stage'] } },
+  { name: 'save_post', description: 'Create or update a social post DRAFT for the content calendar. Never publishes — a person sends it from Marketing -> Posts.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, body: { type: 'string' }, status: { type: 'string', enum: ['idea', 'draft', 'scheduled'] }, scheduledFor: { type: 'string' } }, required: ['body'] } },
+  { name: 'add_subscriber', description: 'Add or update a newsletter subscriber. Never re-enables someone who unsubscribed.', inputSchema: { type: 'object', properties: { email: { type: 'string' }, name: { type: 'string' }, listId: { type: 'string' } }, required: ['email'] } },
+  { name: 'list_channels', description: 'List the team chat channels you may post to.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'post_message', description: 'Post a message to a team chat channel, as the person who asked you to.', inputSchema: { type: 'object', properties: { channelId: { type: 'string' }, body: { type: 'string' } }, required: ['channelId', 'body'] } },
+  { name: 'list_automations', description: "List this workspace's automations — trigger, actions and whether each is enabled.", inputSchema: { type: 'object', properties: {} } },
+  { name: 'create_candidate', description: 'Add a candidate to the hiring pipeline.', inputSchema: { type: 'object', properties: { fullName: { type: 'string' }, email: { type: 'string' }, phone: { type: 'string' }, linkedin: { type: 'string' }, positionId: { type: 'string' } }, required: ['fullName', 'email'] } },
+
   // ── Agents and skills (0043 / 0068) ───────────────────────────────────────
   // Reading both, and writing SKILLS but not AGENTS. A skill is instructions —
   // `suggested_tools` on it is a hint the builder uses to pre-tick boxes and is
@@ -231,6 +248,118 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     throw new Error(`Unknown object "${object}". Use one of: ${Object.keys(OBJECTS).join(', ')}`);
   }
   switch (name) {
+    case 'create_deal': {
+      // The pipeline is resolved here rather than asked of the model: there is
+      // one sales pipeline per workspace, so making the model name it is a
+      // round trip whose only answers are "right" and "an id SQL refuses".
+      const { data: pipe } = await ctx.admin.rpc('get_pipeline_by_kind', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_kind: 'sales',
+      });
+      const pipelineId = (pipe as any)?.id;
+      if (!pipelineId) return { error: 'This workspace has no sales pipeline yet. Open Sales > Deals once to create it.' };
+      const { data, error } = await ctx.admin.rpc('create_pipeline_record', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_pipeline: pipelineId,
+        p_stage: args?.stage || null,
+        p_title: String(args?.title || '').slice(0, 300),
+        p_amount: typeof args?.amount === 'number' ? args.amount : null,
+        p_company: args?.companyId || null, p_person: args?.personId || null,
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, created: true };
+    }
+
+    case 'update_deal': {
+      const { error } = await ctx.admin.rpc('update_pipeline_record', {
+        p_privy: ctx.privy, p_record: String(args?.id || ''),
+        // NULL means "leave it alone" — the same reading update_record gives an
+        // absent key (0088). Sending '' would blank the title of a deal the
+        // model only meant to reprice.
+        p_title: args?.title ?? null,
+        p_amount: typeof args?.amount === 'number' ? args.amount : null,
+        p_company: args?.companyId ?? null, p_person: args?.personId ?? null,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+
+    case 'move_deal': {
+      const { error } = await ctx.admin.rpc('move_pipeline_record', {
+        p_privy: ctx.privy, p_record: String(args?.id || ''),
+        p_stage: String(args?.stage || ''),
+        p_position: typeof args?.position === 'number' ? args.position : 0,
+      });
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+
+    case 'save_post': {
+      const status = ['idea', 'draft', 'scheduled'].includes(args?.status) ? args.status : 'draft';
+      const { data, error } = await ctx.admin.rpc('save_post', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: args?.id || null,
+        p_data: { body: String(args?.body || '').slice(0, 5000), status, scheduled_for: args?.scheduledFor || null },
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, saved: true, status, note: 'Saved to the content calendar. Nothing has been published.' };
+    }
+
+    case 'add_subscriber': {
+      const { data, error } = await ctx.admin.rpc('upsert_newsletter_subscriber', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_email: String(args?.email || '').slice(0, 320),
+        p_name: String(args?.name || '').slice(0, 200),
+        p_list: args?.listId || null,
+        // Recorded as the copilot rather than left blank. 0071 will not
+        // re-enable an unsubscribed address whatever this says, and an address
+        // that appeared with no explanation is the one nobody can account for
+        // when somebody asks why they were emailed.
+        p_source: 'copilot', p_ip: null, p_status: null,
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, saved: true };
+    }
+
+    case 'list_channels': {
+      const { data, error } = await ctx.admin.rpc('get_channels', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      return (Array.isArray(data) ? data : []).map((c: any) => ({ id: c.id, name: c.name, is_private: c.is_private }));
+    }
+
+    case 'post_message': {
+      // `post_message`, not `post_agent_message`. The copilot is acting FOR the
+      // person who asked, in their name — a note that arrives from a bot when a
+      // colleague asked for it to be sent is a different message. Either way
+      // `can_read_channel` decides membership in SQL, so a private channel is
+      // not reachable by asking nicely.
+      const { data, error } = await ctx.admin.rpc('post_message', {
+        p_privy: ctx.privy, p_channel: String(args?.channelId || ''),
+        p_body: String(args?.body || '').slice(0, 8000),
+        p_author_name: null, p_attachments: [],
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, posted: true };
+    }
+
+    case 'list_automations': {
+      const { data, error } = await ctx.admin.rpc('get_automations', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      return (Array.isArray(data) ? data : []).map((a: any) => ({
+        id: a.id, name: a.name, enabled: a.enabled, trigger: a.trigger_type, actions: (a.actions || []).length,
+      }));
+    }
+
+    case 'create_candidate': {
+      const { data, error } = await ctx.admin.rpc('hr_create_candidate', {
+        p_privy: ctx.privy,
+        p_full_name: String(args?.fullName || '').slice(0, 200),
+        p_email: String(args?.email || '').slice(0, 320),
+        p_phone: String(args?.phone || '').slice(0, 60),
+        p_linkedin: String(args?.linkedin || '').slice(0, 300),
+        p_position_id: args?.positionId || null,
+      });
+      if (error) throw new Error(error.message);
+      return { id: data, created: true };
+    }
+
     case 'list_agents': {
       const { data, error } = await ctx.admin.rpc('get_agents', { p_privy: ctx.privy, p_workspace: ctx.workspace });
       if (error) throw new Error(error.message);

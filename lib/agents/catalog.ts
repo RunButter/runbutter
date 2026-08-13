@@ -31,7 +31,7 @@ export interface ToolInfo {
   alwaysPropose?: true;
 }
 
-export type ToolGroup = 'Records' | 'Docs' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
+export type ToolGroup = 'Records' | 'Docs' | 'Sales' | 'Team' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -40,6 +40,17 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'get_record', label: 'Read one record', group: 'Records' },
   { name: 'create_record', label: 'Create a record', group: 'Records', write: true },
   { name: 'update_record', label: 'Update a record', group: 'Records', write: true },
+
+  // The rest of the product, so the copilot can do what a person can.
+  { name: 'create_deal', label: 'Add a deal', group: 'Sales', write: true },
+  { name: 'update_deal', label: 'Change a deal', group: 'Sales', write: true },
+  { name: 'move_deal', label: 'Move a deal between stages', group: 'Sales', write: true },
+  { name: 'save_post', label: 'Draft a social post', group: 'Marketing', write: true },
+  { name: 'add_subscriber', label: 'Add a subscriber', group: 'Marketing', write: true },
+  { name: 'list_channels', label: 'List chat channels', group: 'Team' },
+  { name: 'post_message', label: 'Post to a channel', group: 'Team', write: true },
+  { name: 'list_automations', label: 'List automations', group: 'Workspace' },
+  { name: 'create_candidate', label: 'Add a candidate', group: 'Hiring', write: true },
 
   // Agents and skills (0043/0068). Skills are writable, agents are not — an
   // agent is an actor with permissions, a skill is only instructions.

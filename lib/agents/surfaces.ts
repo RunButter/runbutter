@@ -39,7 +39,7 @@ interface SurfaceNote {
 const NOTES: Record<string, SurfaceNote> = {
   docs: { what: 'documents, notes, to-do lists and simple tables', tool: 'save_doc' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },
-  deals: { what: 'the sales pipeline board', tool: null },
+  deals: { what: 'the sales pipeline board', tool: 'create_deal / update_deal / move_deal' },
   companies: { what: 'client and supplier organisations', tool: 'create_record(companies)' },
   people: { what: 'contacts and candidates', tool: 'create_record(people)' },
   products: { what: 'products and services with prices', tool: 'create_record(products)' },
@@ -50,17 +50,20 @@ const NOTES: Record<string, SurfaceNote> = {
   finance: { what: 'money in and out, summarised', tool: null },
   campaigns: { what: 'marketing campaigns', tool: 'create_record(campaigns)' },
   newsletters: { what: 'email newsletters — the subject, the design and the send', tool: 'save_newsletter' },
-  posts: { what: 'social posts and the content calendar', tool: null },
+  posts: { what: 'social posts and the content calendar', tool: 'save_post' },
   forms: { what: 'public forms that collect submissions', tool: null },
   links: { what: 'short links with click tracking', tool: null },
   projects: { what: 'projects', tool: 'create_record(projects)' },
   issues: { what: 'tasks and issues inside a project', tool: 'create_record(issues)' },
   assets: { what: 'company equipment and licences', tool: 'create_record(assets)' },
-  candidates: { what: 'job applicants and their assessments', tool: null },
+  candidates: { what: 'job applicants and their assessments', tool: 'create_candidate' },
   positions: { what: 'open roles', tool: null },
-  agents: { what: 'the workspace\'s AI agents', tool: null },
+  agents: { what: "the workspace's AI agents — you can read them, but creating one stays with a person", tool: null },
   objects: { what: 'the record types themselves — adding a new kind of thing', tool: 'propose_object' },
-  chat: { what: 'team chat channels', tool: null },
+  skills: { what: 'reusable instruction packs any agent can carry', tool: 'save_skill' },
+  automations: { what: 'rules that run on a trigger — you can read them, not write them', tool: null },
+  'my-team': { what: 'the people who work here', tool: null },
+  chat: { what: 'team chat channels', tool: 'post_message' },
 };
 
 /**
