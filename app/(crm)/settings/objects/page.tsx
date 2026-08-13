@@ -17,8 +17,8 @@ import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
-import WorkspaceBuilder from '@/components/crm/WorkspaceBuilder';
 import { Section, IconPicker, BuiltinObjectCard, CustomObjectCard } from '@/components/crm/ObjectCards';
+import WorkspaceBuilder from '@/components/crm/WorkspaceBuilder';
 
 /**
  * Settings → Objects. Where a workspace shapes its own data model.

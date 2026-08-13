@@ -32,7 +32,6 @@ export default function SkillsSection({
   // app, generate, download a zip, and paste it back in by hand. It lands in
   // the editor rather than being saved, because a generated skill becomes part
   // of an agent's system prompt and a person should read it first.
-  const [describing, setDescribing] = useState(false);
   const [dropNote, setDropNote] = useState('');
   const [dropping, setDropping] = useState(false);
 
@@ -101,9 +100,6 @@ export default function SkillsSection({
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary">Skills</h2>
         <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="ghost" onClick={() => setDescribing(true)}>
-            <Sparkles className="w-3.5 h-3.5" /> Describe it
-          </Button>
           <label className="inline-flex">
             <input
               type="file" multiple accept=".zip,.md,.json" className="sr-only"
@@ -160,11 +156,6 @@ export default function SkillsSection({
       {editing && (
         <SkillEditor initial={editing} onClose={() => setEditing(null)}
           onSave={async (s) => { await saveSkill(privy, ws, s); setEditing(null); onChange(); }} />
-      )}
-      {describing && (
-        <DescribeModal
-          onClose={() => setDescribing(false)}
-          onDraft={(draft) => { setDescribing(false); setEditing(draft); }} />
       )}
 
       {importing && (
@@ -433,50 +424,3 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
  * part of a system prompt agents follow, which is exactly the kind of thing a
  * person should read once before it is real.
  */
-function DescribeModal({ onClose, onDraft }: { onClose: () => void; onDraft: (d: Partial<Skill>) => void }) {
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-
-  const go = async () => {
-    if (!text.trim() || busy) return;
-    setBusy(true); setErr('');
-    try {
-      const r = await generateSkill(text.trim());
-      if (r.error || !r.skill) { setErr(r.error || 'Could not write that skill.'); return; }
-      onDraft(r.skill);
-    } catch (e: any) {
-      setErr(e?.message || 'Could not reach the server.');
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <div className="mb-4">
-      <div className="card-surface overflow-hidden">
-        <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
-          <h3 className="text-sm font-medium text-primary flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Describe a skill</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
-        </div>
-        <div className="p-4 space-y-3">
-          <p className="text-2xs text-tertiary leading-relaxed">
-            Say what it should do in your own words. It gets written, checked against every rule
-            in the quality panel, and rewritten until they pass — then opens in the editor for you
-            to read before it is saved.
-          </p>
-          <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} rows={4} disabled={busy}
-            onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') go(); }}
-            className="input-field !h-auto py-2 resize-y text-2xs"
-            placeholder="How we handle a refund request: when to approve on the spot, when it goes to a manager, and what to say either way." />
-          {err && <p className="text-2xs text-danger leading-relaxed">{err}</p>}
-          <p className="text-2xs text-tertiary">Runs on your workspace AI key — set one in Account → AI keys.</p>
-        </div>
-        <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={busy || !text.trim()} onClick={go}>
-            {busy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Writing and checking…</> : <><Sparkles className="w-3.5 h-3.5" /> Write it</>}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}

@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import { getAccessToken } from '@privy-io/react-auth';
-import { Sparkles, Wand2, Check, AlertTriangle, ArrowRight, Table2 } from 'lucide-react';
+import { Sparkles, Check, AlertTriangle, ArrowRight, Table2 } from 'lucide-react';
 import { saveCustomObject, saveCustomField } from '@/lib/crm/custom';
 import { describeField, type Blueprint } from '@/lib/workspace/blueprint';
 import { WORKSPACE_TEMPLATES } from '@/lib/workspace/templates';
 import { iconFor } from '@/lib/crm/object-icons';
 import Button from '@/components/ui/Button';
-import { ThinkingLine } from '@/components/ui/Thinking';
 
 /**
  * Describe a business, get a workspace.
@@ -32,31 +31,11 @@ import { ThinkingLine } from '@/components/ui/Thinking';
 export default function WorkspaceBuilder({ privy, ws, onApplied }: {
   privy: string | null; ws: string | null; onApplied: () => void;
 }) {
-  const [description, setDescription] = useState('');
-  const [thinking, setThinking] = useState(false);
   const [plan, setPlan] = useState<Blueprint | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [applying, setApplying] = useState(false);
   const [progress, setProgress] = useState('');
-
-  const ask = async () => {
-    if (!privy || !ws || !description.trim()) return;
-    setThinking(true); setError(''); setPlan(null); setWarnings([]);
-    try {
-      const token = await getAccessToken().catch(() => null);
-      const res = await fetch('/api/workspace/build', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
-        body: JSON.stringify({ privyUserId: privy, workspaceId: ws, description: description.trim() }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(body?.error || 'Could not build a plan.'); setWarnings(body?.warnings || []); return; }
-      setPlan(body.blueprint); setWarnings(body.warnings || []);
-    } catch (e: any) {
-      setError(e?.message || 'Could not reach the server.');
-    } finally { setThinking(false); }
-  };
 
   const apply = async () => {
     if (!privy || !ws || !plan) return;
@@ -99,32 +78,27 @@ export default function WorkspaceBuilder({ privy, ws, onApplied }: {
     <section className="card-surface overflow-hidden">
       <div className="px-4 py-3 border-b border-subtle flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-accent shrink-0" />
-        <h3 className="text-sm font-medium text-primary">Build it for me</h3>
+        <h3 className="text-sm font-medium text-primary">Start from a trade</h3>
       </div>
 
       <div className="p-4 space-y-3">
+        {/* THE AI INPUT WAS REMOVED, NOT THE FEATURE UNDER IT.
+            "Describe your business, get a plan" is the copilot's job now — it
+            has propose_object, it can ask a follow-up, and it already knows
+            which objects exist, which this box never did. One AI box per
+            product beats one per screen: five of them is five prompts to keep
+            current and five places to look when an answer is wrong.
+
+            What stays is everything the TEMPLATES need, and that is not a
+            courtesy — a template sets exactly the same `plan` state the AI used
+            to, so deleting the preview and its Apply button would have silently
+            broken all ten while leaving the buttons on screen. Removing an AI
+            field is not the same as removing the machinery behind it. */}
         <p className="text-xs text-secondary">
-          Describe what your company does. You get a plan to read before anything is created —
-          nothing is added until you say so.
+          Ten ready-made shapes for common trades. Pick one to see what it would add — nothing is
+          created until you say so. For anything else, ask the copilot.
         </p>
 
-        <textarea
-          value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
-          placeholder="We run a small haulage firm — twelve trucks, a dozen drivers, and loads booked by regular customers."
-          className="input-field !h-auto py-2 resize-none w-full text-sm" />
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="primary" onClick={ask} disabled={!privy || thinking || !description.trim()}>
-            <Wand2 className="w-3.5 h-3.5" /> Draft a plan
-          </Button>
-          <span className="text-2xs text-tertiary">Uses your own AI key.</span>
-        </div>
-
-        {thinking && (
-          <ThinkingLine kind="composing" size="avatar" label="Working out what you track"
-            hint="Reading your description against what RunButter already has"
-            className="rounded-lg border border-subtle bg-surface-sunken py-6" />
-        )}
 
         {error && (
           <div className="rounded-lg bg-danger/10 text-danger px-3 py-2 text-xs whitespace-pre-wrap">{error}</div>
