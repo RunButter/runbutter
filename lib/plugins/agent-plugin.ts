@@ -59,6 +59,16 @@ export interface SkillResource {
 
 export interface SkillSource {
   name: string;
+  /**
+   * The readable name, when `name` has already been reduced to a slug.
+   *
+   * `buildPlugin` calls `skillMd({ ...s, name: slug })` — it MUST, because the
+   * directory decides the frontmatter name and a deduped skill gets a `-2`
+   * suffix that only it knows about. That overwrite is also what silently
+   * destroyed the human title: by the time skillMd saw the skill, the readable
+   * name was gone and there was nothing left to write.
+   */
+  title?: string;
   description: string;
   instructions: string;
   /** A UI hint on our side, never a grant — rendered as prose, not frontmatter. */
@@ -209,6 +219,15 @@ export function skillMd(skill: SkillSource): string {
   const front = [
     '---',
     `name: ${yamlString(name)}`,
+    // THE HUMAN NAME, WHICH `name` CANNOT CARRY. The spec requires frontmatter
+    // `name` to equal the directory name, so "Invoice reminder tone" is written
+    // as `invoice-reminder-tone` and the readable title existed nowhere in the
+    // file. Export a skill, import it back, and it had silently renamed itself
+    // to its own slug — a round trip that loses data, in both this builder and
+    // the public one. An extra frontmatter key is legal YAML and conforming
+    // clients ignore what they do not know, so this costs nothing and is only
+    // written when it actually differs from the slug.
+    (skill.title || skill.name) && (skill.title || skill.name) !== name ? `title: ${yamlString(skill.title || skill.name)}` : '',
     `description: ${yamlString(description)}`,
     // Optional keys are OMITTED when empty rather than written blank. A present
     // key with an empty value is a value, and a client reading `allowed-tools:`
@@ -296,7 +315,7 @@ export function buildPlugin(opts: {
       slug = `${slug}-${n}`;
     }
     used.add(slug);
-    files.push({ path: `skills/${slug}/SKILL.md`, content: skillMd({ ...s, name: slug }) });
+    files.push({ path: `skills/${slug}/SKILL.md`, content: skillMd({ ...s, name: slug, title: s.title || s.name }) });
 
     // Supporting files land beside SKILL.md in the same directory. Paths are
     // sanitised (see resourcePath) and de-duplicated: two entries writing the

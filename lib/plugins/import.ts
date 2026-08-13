@@ -76,15 +76,22 @@ function jsonOr<T>(text: string, fallback: T): T {
  * reasoning applies here, so these are two more narrow scalar reads rather than
  * a dependency.
  */
-function extraFrontmatter(text: string): { whenToUse: string; allowedTools: string } {
-  const out = { whenToUse: '', allowedTools: '' };
+function extraFrontmatter(text: string): { whenToUse: string; allowedTools: string; title: string } {
+  const out = { whenToUse: '', allowedTools: '', title: '' };
   const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!fm) return out;
   for (const line of fm[1].split(/\r?\n/)) {
-    const m = line.match(/^(when_to_use|allowed-tools|allowed_tools)\s*:\s*(.*)$/i);
+    const m = line.match(/^(title|when_to_use|allowed-tools|allowed_tools)\s*:\s*(.*)$/i);
     if (!m) continue;
     const v = m[2].trim().replace(/^["']|["']$/g, '');
-    if (m[1].toLowerCase() === 'when_to_use') out.whenToUse = v;
+    // A switch, not an if/else chain. The chain here read
+    // `if (when_to_use) … else out.allowedTools = v`, so EVERY key that was not
+    // `when_to_use` was filed as allowed-tools — which was harmless while the
+    // regex matched only those two names and became a bug the moment a third
+    // was added. The shape was the trap, so the shape is what changed.
+    const key = m[1].toLowerCase();
+    if (key === 'title') out.title = v;
+    else if (key === 'when_to_use') out.whenToUse = v;
     else out.allowedTools = v;
   }
   return out;
@@ -136,7 +143,15 @@ export function importPlugin(files: { path: string; content: string }[]): Import
       // The DIRECTORY name wins over the frontmatter name when they disagree,
       // because the directory is what a client actually keys on — and a
       // mismatch is the single most common defect in a hand-written skill.
-      name: dir ? dir.split('/').pop()! : skillSlug(parsed.name),
+      // `title` first, then the DIRECTORY, then the frontmatter name.
+      //
+      // The directory beats frontmatter `name` because the directory is what a
+      // client actually keys on, and a mismatch is the commonest defect in a
+      // hand-written skill. But both of those are SLUGS — the spec requires
+      // them to match each other — so a skill exported as "Invoice reminder
+      // tone" came back named `invoice-reminder-tone`. `title` is the optional
+      // key that carries the readable name, and it is preferred when present.
+      name: extra.title || (dir ? dir.split('/').pop()! : skillSlug(parsed.name)),
       description: parsed.description,
       instructions: stripGeneratedSections(parsed.instructions),
       whenToUse: extra.whenToUse,

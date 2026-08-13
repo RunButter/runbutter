@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles, Upload } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -12,6 +12,8 @@ import { scoreProject } from '@/lib/plugins/quality';
 import { buildPlugin, skillSlug } from '@/lib/plugins/agent-plugin';
 import Thinking from '@/components/ui/Thinking';
 import { TEMPLATES } from '@/lib/plugins/templates';
+import { unzip } from '@/lib/plugins/unzip';
+import { importPlugin } from '@/lib/plugins/import';
 
 /**
  * Skills manager. A skill is a reusable instruction pack — "how this company
@@ -31,6 +33,62 @@ export default function SkillsSection({
   // the editor rather than being saved, because a generated skill becomes part
   // of an agent's system prompt and a person should read it first.
   const [describing, setDescribing] = useState(false);
+  const [dropNote, setDropNote] = useState('');
+  const [dropping, setDropping] = useState(false);
+
+  /**
+   * Take a plugin zip (or a folder of SKILL.md files) and SAVE the skills.
+   *
+   * The public builder at /plugins reads the same file with the same two
+   * functions and then holds the result in React, because it has nowhere to put
+   * it — nobody is signed in. That is the difference worth having here: signed
+   * in, an import lands in the workspace and every agent can carry it
+   * immediately. Same parser, one more step.
+   */
+  const takeFiles = async (list: FileList | null) => {
+    const picked = Array.from(list || []);
+    if (!picked.length) return;
+    setDropping(true); setDropNote('Reading…');
+    try {
+      const entries: { path: string; content: string }[] = [];
+      for (const f of picked) {
+        if (/\.zip$/i.test(f.name)) {
+          entries.push(...(await unzip(await f.arrayBuffer())));
+        } else {
+          // webkitRelativePath is set when a whole FOLDER is chosen, and it is
+          // the only way to learn the directory a SKILL.md sat in — which IS
+          // the skill's name. Without it every file looks top-level and every
+          // skill imports as "Untitled".
+          const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath;
+          entries.push({ path: rel || f.name, content: await f.text() });
+        }
+      }
+      if (!entries.length) { setDropNote('Nothing readable in that.'); return; }
+      const plugin = importPlugin(entries);
+      if (!plugin.skills.length) { setDropNote('No SKILL.md found. A skill is a directory containing one.'); return; }
+
+      let saved = 0;
+      for (const sk of plugin.skills) {
+        // `source: 'local'` — this came off somebody's disk, not from GitHub and
+        // not from the copilot. Guessing 'github' from a plugin that merely
+        // mentions a URL would put a source on a row that cannot be checked.
+        const { error } = await saveSkill(privy, ws, {
+          name: sk.name, description: sk.description, instructions: sk.instructions,
+          suggested_tools: [], source: 'local',
+        });
+        if (!error) saved++;
+      }
+      setDropNote(saved === plugin.skills.length
+        ? `Imported ${saved} skill${saved === 1 ? '' : 's'}.`
+        : `Imported ${saved} of ${plugin.skills.length}. The rest were refused — check their names.`);
+      onChange();
+    } catch (e: any) {
+      setDropNote(e?.message || 'Could not read that file.');
+    } finally {
+      setDropping(false);
+    }
+  };
+
   // Starting points, from the SAME `TEMPLATES` the public builder at /plugins
   // uses. The in-app screen had none, so "New skill" opened an empty box — and
   // an empty box is the hardest possible version of "write a system prompt".
@@ -46,6 +104,15 @@ export default function SkillsSection({
           <Button size="sm" variant="ghost" onClick={() => setDescribing(true)}>
             <Sparkles className="w-3.5 h-3.5" /> Describe it
           </Button>
+          <label className="inline-flex">
+            <input
+              type="file" multiple accept=".zip,.md,.json" className="sr-only"
+              onChange={(e) => { takeFiles(e.target.files); e.currentTarget.value = ''; }}
+            />
+            <span className="btn btn-ghost h-8 px-2.5 !text-xs cursor-pointer">
+              {dropping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} Upload
+            </span>
+          </label>
           <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
             <Github className="w-3.5 h-3.5" /> Import
           </Button>
@@ -83,6 +150,12 @@ export default function SkillsSection({
         which categories map where. Attach them to an agent in its editor. A skill never grants an
         agent tools it wasn&apos;t already given.
       </p>
+
+      {dropNote && (
+        <p className="text-xs text-secondary mb-3 flex items-center gap-1.5">
+          <Check className="w-3.5 h-3.5 text-success" /> {dropNote}
+        </p>
+      )}
 
       {editing && (
         <SkillEditor initial={editing} onClose={() => setEditing(null)}
