@@ -6,6 +6,7 @@ import {
   getAIUsage, fmtTokens, cacheRate, FEATURE_LABEL,
   type AIUsage,
 } from '@/lib/crm/ai-usage';
+import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
 
 /**
  * What AI has cost this workspace (0101).
@@ -45,6 +46,25 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
   const t = usage.totals;
   const rate = cacheRate(t.input, t.cached);
 
+  /**
+   * Cost is summed PER MODEL, never from the totals.
+   *
+   * The totals row has no model on it, and the whole point of the number is
+   * that a month on Haiku and a month on Opus are not the same money. Summing
+   * `by_model` is the only arithmetic that can be right — and it is also what
+   * makes the unpriced share visible, because a model this build has no price
+   * for contributes tokens to the total and nothing to the cost.
+   */
+  const priced = usage.by_model.reduce(
+    (acc, m) => {
+      const s = spendFor(m.model || '', m);
+      if (s.priced) { acc.usd += s.usd; acc.calls += m.calls; }
+      else acc.unpriced += m.calls;
+      return acc;
+    },
+    { usd: 0, calls: 0, unpriced: 0 },
+  );
+
   return (
     <div className="card-surface p-4">
       <div className="flex items-center justify-between gap-3 mb-3">
@@ -63,10 +83,19 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
         </select>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-4 gap-3 mb-4">
         <Stat label="Sent in" value={fmtTokens(t.input)} sub={rate !== null ? `${rate}% cached` : undefined} />
         <Stat label="Came back" value={fmtTokens(t.output)} />
         <Stat label="Calls" value={String(t.calls)} sub={t.failed ? `${t.failed} failed` : undefined} />
+        {/* An estimate, and labelled as one. It is arithmetic over a price list
+            in this build, not a figure from anybody's billing page — so it is
+            dated, and it says how many calls it could not price rather than
+            quietly leaving them out of a confident number. */}
+        <Stat
+          label="Est. cost"
+          value={priced.calls ? fmtUSD(priced.usd) : '—'}
+          sub={priced.unpriced ? `${priced.unpriced} unpriced` : `list prices, ${AS_OF}`}
+        />
       </div>
 
       {/* The share bar. Proportions of the total, so "which feature is the
@@ -81,13 +110,19 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
       {usage.by_model.length > 1 && (
         <div className="mt-4 pt-3 border-t border-subtle">
           <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-2">By model</div>
-          <Bars rows={usage.by_model.map((m) => ({
-            key: m.model || 'unknown',
-            label: m.model || 'not reported',
-            value: m.input + m.output,
-            note: `${m.calls} call${m.calls === 1 ? '' : 's'}`,
-            mono: true,
-          }))} />
+          <Bars rows={usage.by_model.map((m) => {
+            const s = spendFor(m.model || '', m);
+            return {
+              key: m.model || 'unknown',
+              label: m.model || 'not reported',
+              value: m.input + m.output,
+              // The cost of THIS model, or a dash. A dash is a real answer here
+              // — it says "we do not know what this one costs", which is the
+              // thing somebody needs in order to go and look it up.
+              note: s.priced ? fmtUSD(s.usd) : '—',
+              mono: true,
+            };
+          })} />
         </div>
       )}
 

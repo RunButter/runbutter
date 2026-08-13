@@ -17,6 +17,7 @@ import {
 import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import { loadCustomObjects } from '@/lib/crm/custom';
+import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
 import SkillsSection from '@/components/crm/SkillsSection';
 import { ThinkingLine } from '@/components/ui/Thinking';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -461,6 +462,18 @@ function UsagePanel({ usage }: { usage: AgentUsage }) {
   const cachedShare = t.input > 0 ? Math.round((t.cached / t.input) * 100) : 0;
   const top = usage.by_agent.filter((a) => a.input + a.output > 0).slice(0, 6);
   const max = Math.max(1, ...top.map((a) => a.input + a.output));
+  // Per agent, because each carries its own model — `by_agent` reports the
+  // model that ran it, and summing the workspace total against one price would
+  // charge a Haiku agent at Opus rates or the reverse.
+  const spend = usage.by_agent.reduce(
+    (acc, a) => {
+      const s = spendFor(a.model || '', a);
+      if (s.priced) acc.usd += s.usd; else acc.unpriced += 1;
+      return acc;
+    },
+    { usd: 0, unpriced: 0 },
+  );
+  const anyPriced = usage.by_agent.some((a) => spendFor(a.model || '', a).priced);
 
   return (
     <section>
@@ -483,6 +496,15 @@ function UsagePanel({ usage }: { usage: AgentUsage }) {
             </div>
             <div className="text-2xs text-tertiary">of input served from cache</div>
           </div>
+          {anyPriced && (
+            <div>
+              <div className="text-md font-medium text-primary tabular-nums">{fmtUSD(spend.usd)}</div>
+              <div className="text-2xs text-tertiary">
+                estimated · list prices, {AS_OF}
+                {spend.unpriced > 0 && <> · {spend.unpriced} model{spend.unpriced === 1 ? '' : 's'} unpriced</>}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* The one actionable line. Said only when it is true. */}
@@ -509,8 +531,12 @@ function UsagePanel({ usage }: { usage: AgentUsage }) {
                 <span className="flex-1 h-1 rounded-full bg-surface-sunken overflow-hidden">
                   <span className="block h-full rounded-full bg-accent" style={{ width: `${((a.input + a.output) / max) * 100}%` }} />
                 </span>
-                <span className="text-2xs font-mono text-tertiary w-24 text-right shrink-0 tabular-nums">
-                  {compact(a.input + a.output)} · {a.runs} run{a.runs === 1 ? '' : 's'}
+                <span className="text-2xs font-mono text-tertiary w-28 text-right shrink-0 tabular-nums">
+                  {(() => { const s = spendFor(a.model || '', a);
+                    // The money first — it is the reason anybody opened this
+                    // list. Tokens stay as the second number because they are
+                    // the part that is COUNTED rather than estimated.
+                    return <>{s.priced ? fmtUSD(s.usd) : '—'} · {compact(a.input + a.output)}</>; })()}
                 </span>
               </div>
             ))}
