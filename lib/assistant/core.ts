@@ -4,7 +4,7 @@
 // returns a plain-text reply to send back. Server-only.
 
 import { openSecret } from '@/lib/crypto/secrets';
-import { PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { defaultModel, type AIProvider } from '@/lib/ai/providers';
 import { runAgent, type AgentDef } from '@/lib/agents/runner';
 
 export interface AssistantChannel {
@@ -13,7 +13,6 @@ export interface AssistantChannel {
   acting_privy: string | null; enabled: boolean;
 }
 
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 // A sender is authorised if their id (or @username) is on the channel allowlist.
 // Empty allowlist = nobody (fail closed) — the owner must add ids explicitly.
@@ -41,7 +40,8 @@ export async function runAssistant(admin: any, channel: AssistantChannel, messag
   catch { return 'I couldn’t read this workspace’s AI key. Re-add it in Settings → AI keys.'; }
 
   const provider = (secret as any).provider as AIProvider;
-  const model = (secret as any).model || defaultModel(provider);
+  // BALANCED: the assistant runs the same tool loop as an agent.
+  const model = (secret as any).model || defaultModel(provider, 'balanced');
   const baseUrl = (secret as any).base_url || undefined;
 
   const agent: AgentDef = {

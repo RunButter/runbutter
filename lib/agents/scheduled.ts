@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { openSecret } from '@/lib/crypto/secrets';
-import { PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { defaultModel, type AIProvider } from '@/lib/ai/providers';
 import { runAgent, type AgentDef, type SkillDef } from '@/lib/agents/runner';
 
 /**
@@ -24,7 +24,6 @@ import { runAgent, type AgentDef, type SkillDef } from '@/lib/agents/runner';
  * reading another's data.
  */
 
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 interface DueAgent { id: string; workspace_id: string; name: string; task: string }
 
@@ -64,7 +63,9 @@ export async function runScheduledAgents(admin: SupabaseClient, limit = 5): Prom
       if (agent.enabled === false) { stats.skipped++; continue; }
 
       const provider = (secret as any).provider as AIProvider;
-      const model = agent.model || (secret as any).model || defaultModel(provider);
+  // BALANCED. Unattended, on a cron, up to 40 turns — the single worst place
+  // for the old `models[0]` accident to have survived.
+      const model = agent.model || (secret as any).model || defaultModel(provider, 'balanced');
       const baseUrl = (secret as any).base_url || undefined;
 
       const { data: runId } = await admin.rpc('create_agent_run', {

@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase';
 import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { openSecret } from '@/lib/crypto/secrets';
-import { PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { defaultModel, type AIProvider } from '@/lib/ai/providers';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { runAgent, type AgentDef, type SkillDef } from '@/lib/agents/runner';
 
@@ -13,7 +13,6 @@ export const dynamic = 'force-dynamic';
 // POST /api/agents/run { privyUserId, workspaceId, agentId, task }
 // Runs the agent's tool-use loop on the workspace's BYO AI key. Verified by the
 // Privy token; the key + agent are read with the service role.
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 export async function POST(req: Request) {
   const rl = rateLimit(`agents:${clientIp(req)}`, 20);
@@ -53,7 +52,10 @@ export async function POST(req: Request) {
   if (agent.enabled === false) return NextResponse.json({ error: 'This agent is disabled' }, { status: 400 });
 
   const provider = (secret as any).provider as AIProvider;
-  const model = agent.model || (secret as any).model || defaultModel(provider);
+  // BALANCED: an agent drives a tool loop of up to 40 turns, so this is the
+  // most expensive fallback in the product — and the one the compiler could not
+  // flag, because agents call `agentTurn` rather than `callAI`.
+  const model = agent.model || (secret as any).model || defaultModel(provider, 'balanced');
   const baseUrl = (secret as any).base_url || undefined;
 
   // The browser mints the run id so it can poll from the first second — this
