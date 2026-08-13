@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { openSecret } from '@/lib/crypto/secrets';
-import { callAI, PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { callAI, defaultModel, type AIProvider } from '@/lib/ai/providers';
+import { recordAIUsage } from '@/lib/ai/usage';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 // FIELD_TYPES and the icon vocabulary come from blueprint.ts, not from
@@ -71,7 +72,6 @@ function examples(): string {
     `Business: ${t.audience}\n${JSON.stringify(t.blueprint)}`).join('\n\n');
 }
 
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 const BUILD_MAX_TOKENS = 4096;
 
@@ -120,9 +120,10 @@ export async function POST(req: Request) {
   const provider = (secret as any).provider as AIProvider;
   const model = (secret as any).model || defaultModel(provider);
 
+  const usageRow = { workspace: workspaceId, privy: privyUserId, feature: 'workspace' as const, provider, model };
   let reply: string;
   try {
-    reply = await callAI(
+    const out = await callAI(
       provider, apiKey, model, SYSTEM,
       `${examples()}\n\nBusiness: ${text}\n`,
       (secret as any).base_url || undefined,
@@ -132,7 +133,10 @@ export async function POST(req: Request) {
       // model did not return a plan", which blamed the description.
       BUILD_MAX_TOKENS,
     );
+    reply = out.text;
+    await recordAIUsage(admin, { ...usageRow, usage: out.usage });
   } catch (e: any) {
+    await recordAIUsage(admin, { ...usageRow, usage: { input: 0, output: 0, cached: 0 }, ok: false });
     // A truncated reply explains itself and is the user's to act on (pick a
     // different model, ask for less) — not a 502, which reads as our outage.
     const truncated = e?.name === 'TruncatedReply';

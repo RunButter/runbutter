@@ -5,19 +5,79 @@ import { isAllowedAiHost, aiAllowlistIsEmpty } from '@/lib/security/http';
 
 export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
-export interface ProviderDef { id: AIProvider; label: string; help: string; models: string[] }
+/**
+ * How hard a task is, which is a different question from how good a model is.
+ *
+ * `fast` is for work that is short and fully specified — rewrite this
+ * paragraph, summarise this record, fill this field. `balanced` is for work
+ * that needs judgement and returns structure: a workspace blueprint, a skill, a
+ * newsletter, an agent driving a tool loop.
+ */
+export type ModelTier = 'fast' | 'balanced';
 
-// Model lists are suggestions only — the field is free text, so users can type any
-// model their key supports without us shipping a stale hardcoded list. The
-// "custom" provider takes a base URL and covers every OpenAI-compatible API.
+export interface ProviderDef {
+  id: AIProvider; label: string; help: string;
+  /** Suggestions for the datalist. Order is presentation ONLY — see `fast`/`balanced`. */
+  models: string[];
+  fast: string;
+  balanced: string;
+}
+
+/**
+ * Model lists are suggestions only — the field is free text, so users can type
+ * any model their key supports without us shipping a stale hardcoded list. The
+ * "custom" provider takes a base URL and covers every OpenAI-compatible API.
+ *
+ * THE DEFAULT IS A NAMED FIELD, NOT `models[0]`, AND THAT IS THE WHOLE POINT.
+ * It used to be positional, and every list here happened to be ordered
+ * best-first — so the fallback model for every AI feature in the product was
+ * the most expensive one the provider sells. Opus to rewrite a paragraph;
+ * gpt-4o where gpt-4o-mini is indistinguishable; Gemini Pro for a one-line
+ * summary. Nobody chose that and nothing said it was happening — it was an
+ * ordering accident with a bill attached, and positional meaning is exactly the
+ * kind of thing that gets re-broken by someone tidying a list.
+ */
 export const PROVIDERS: ProviderDef[] = [
-  { id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys', models: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001'] },
-  { id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1'] },
-  { id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys', models: ['gemini-2.5-pro', 'gemini-2.5-flash'] },
-  { id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model; ids ending in :free cost nothing)', models: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5'] },
-  { id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, LiteLLM… or your own Ollama/vLLM when self-hosting (see AI_ALLOWED_HOSTS)', models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'] },
+  {
+    id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys',
+    models: ['claude-sonnet-5', 'claude-opus-5', 'claude-haiku-4-5-20251001'],
+    fast: 'claude-haiku-4-5-20251001', balanced: 'claude-sonnet-5',
+  },
+  {
+    id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys',
+    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1'],
+    fast: 'gpt-4o-mini', balanced: 'gpt-4o',
+  },
+  {
+    id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys',
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+    fast: 'gemini-2.5-flash', balanced: 'gemini-2.5-pro',
+  },
+  {
+    id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model; ids ending in :free cost nothing)',
+    models: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5'],
+    fast: 'meta-llama/llama-3.3-70b-instruct:free', balanced: 'meta-llama/llama-3.3-70b-instruct:free',
+  },
+  {
+    id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, LiteLLM… or your own Ollama/vLLM when self-hosting (see AI_ALLOWED_HOSTS)',
+    models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'],
+    fast: 'llama-3.3-70b-versatile', balanced: 'llama-3.3-70b-versatile',
+  },
 ];
 export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
+
+/**
+ * The model to use when the workspace has not named one.
+ *
+ * A model saved on the key always wins — this is only the fallback, which is
+ * why choosing "let RunButter pick" is now a real option on the settings screen
+ * rather than a blank that silently stored the top of a list.
+ */
+export function defaultModel(provider: string, tier: ModelTier = 'balanced'): string {
+  const def = PROVIDERS.find((x) => x.id === provider);
+  if (!def) return '';
+  return (tier === 'fast' ? def.fast : def.balanced) || def.models[0] || '';
+}
 
 /**
  * Why a private base URL was refused, and what to do about it.
@@ -34,6 +94,64 @@ function privateHostMessage(base: string): string {
     ? `This deployment will not call ${host}: it is a private address. If you are self-hosting and this is your own model server, add it to AI_ALLOWED_HOSTS (e.g. AI_ALLOWED_HOSTS=${host}) and restart. On runbutter.app, expose the model over a public https URL instead — our servers cannot reach your network.`
     : `${host} is a private address and is not in AI_ALLOWED_HOSTS. Add it there and restart. Cloud metadata addresses stay blocked whatever the list says.`;
 }
+
+// ── What a call cost ────────────────────────────────────────────────────────
+
+/**
+ * What a turn cost, as the provider itself reported it.
+ *
+ * COUNTED, NEVER ESTIMATED. Every provider returns this on every response and
+ * RunButter threw it away, so nobody could answer "what did that agent cost" —
+ * the one question a BYO-key customer actually has. `cached` is the part of
+ * `input` that was served from a prompt cache; it is a subset, not an addition,
+ * which is why the UI must never add the two together.
+ *
+ * All zeros is a legitimate answer: a gateway that omits `usage` is common, and
+ * reporting zero is honest where inventing a number from character counts is
+ * not. The UI says "not reported" rather than "0" for exactly that reason.
+ */
+export interface Usage { input: number; output: number; cached: number }
+
+export const noUsage = (): Usage => ({ input: 0, output: 0, cached: 0 });
+export const addUsage = (a: Usage, b: Usage): Usage => ({
+  input: a.input + b.input, output: a.output + b.output, cached: a.cached + b.cached,
+});
+
+const num = (v: any) => (typeof v === 'number' && isFinite(v) && v > 0 ? Math.round(v) : 0);
+
+/** Anthropic: cache reads are reported OUTSIDE input_tokens, so they are added
+ *  back to make `input` mean "everything that went in" on every provider. */
+const anthropicUsage = (u: any): Usage => ({
+  input: num(u?.input_tokens) + num(u?.cache_read_input_tokens) + num(u?.cache_creation_input_tokens),
+  output: num(u?.output_tokens),
+  cached: num(u?.cache_read_input_tokens),
+});
+
+/** OpenAI-compatible: prompt_tokens already INCLUDES the cached part. */
+const openaiUsage = (u: any): Usage => ({
+  input: num(u?.prompt_tokens),
+  output: num(u?.completion_tokens),
+  cached: num(u?.prompt_tokens_details?.cached_tokens),
+});
+
+const geminiUsage = (u: any): Usage => ({
+  input: num(u?.promptTokenCount),
+  output: num(u?.candidatesTokenCount),
+  cached: num(u?.cachedContentTokenCount),
+});
+
+/**
+ * OpenRouter reports usage only when asked.
+ *
+ * It proxies dozens of upstreams and normalises the `usage` block for you, but
+ * only if the request opts in — otherwise a request that really did cost money
+ * comes back with no counts at all and lands in the "not reported" bucket. Sent
+ * to OpenRouter alone: an unknown key in the body is a 400 on some strict
+ * OpenAI-compatible gateways, and `custom` is by definition a server we have
+ * never seen.
+ */
+const openrouterUsage = (provider: AIProvider) =>
+  (provider === 'openrouter' ? { usage: { include: true } } : {});
 
 // Explicit output ceiling on EVERY provider. Without it, OpenAI-compatible
 // gateways assume the model max (e.g. 16k) and pre-check affordability against
@@ -90,18 +208,31 @@ function stripThinking(text: string): string {
  * arrives as invalid JSON with no clue attached. Callers that need more say so;
  * the default stays low for the affordability reason above.
  */
-export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string, maxTokens: number = MAX_OUTPUT_TOKENS): Promise<string> {
+export interface AIReply { text: string; usage: Usage }
+
+export async function callAI(provider: AIProvider, apiKey: string, model: string, system: string, prompt: string, baseUrl?: string, maxTokens: number = MAX_OUTPUT_TOKENS): Promise<AIReply> {
   if (provider === 'claude') {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({
+        model, max_tokens: maxTokens,
+        // Cached for the same reason the agent loop caches: these system
+        // prompts are large (the workspace builder ships two whole templates as
+        // few-shot examples) and byte-identical across calls, and
+        // `/api/plugins/generate` sends the same one up to three times in one
+        // request. A hint, not a contract — under the model's minimum cacheable
+        // length it is ignored and the call behaves exactly as before, so there
+        // is no fallback path to maintain.
+        system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: prompt }],
+      }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
     const text = stripThinking((d.content || []).map((b: any) => b.text || '').join(''));
     if (d.stop_reason === 'max_tokens') throw new TruncatedReply(maxTokens, !text);
-    return text;
+    return { text, usage: anthropicUsage(d.usage) };
   }
 
   if (provider === 'gemini') {
@@ -114,7 +245,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
     const c = d.candidates?.[0];
     const text = stripThinking((c?.content?.parts || []).map((p: any) => p.text || '').join(''));
     if (c?.finishReason === 'MAX_TOKENS') throw new TruncatedReply(maxTokens, !text);
-    return text;
+    return { text, usage: geminiUsage(d.usageMetadata) };
   }
 
   // openai, openrouter, and custom endpoints all speak the OpenAI chat format
@@ -127,7 +258,11 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   const r = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: maxTokens, messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }] }),
+    body: JSON.stringify({
+      model, max_tokens: maxTokens,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+      ...openrouterUsage(provider),
+    }),
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);
@@ -139,7 +274,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   // A model that returned only `reasoning` and no content did the same thing
   // without admitting it — some gateways report `stop` regardless.
   if (!text && choice?.message?.reasoning) throw new TruncatedReply(maxTokens, true);
-  return text;
+  return { text, usage: openaiUsage(d.usage) };
 }
 
 // ── Tool-calling (agent runner) ──────────────────────────────────────────────
@@ -154,48 +289,6 @@ export interface AgentTurn { text: string; toolCalls: AgentToolCall[] }
 // `history` is an opaque provider-shaped message list the runner threads back in.
 export interface AgentTurnResult extends AgentTurn { history: any[]; usage: Usage }
 
-/**
- * What a turn cost, as the provider itself reported it.
- *
- * COUNTED, NEVER ESTIMATED. Every provider returns this on every response and
- * RunButter threw it away, so nobody could answer "what did that agent cost" —
- * the one question a BYO-key customer actually has. `cached` is the part of
- * `input` that was served from a prompt cache; it is a subset, not an addition,
- * which is why the UI must never add the two together.
- *
- * All zeros is a legitimate answer: a gateway that omits `usage` is common, and
- * reporting zero is honest where inventing a number from character counts is
- * not. The UI says "not reported" rather than "0" for exactly that reason.
- */
-export interface Usage { input: number; output: number; cached: number }
-
-export const noUsage = (): Usage => ({ input: 0, output: 0, cached: 0 });
-export const addUsage = (a: Usage, b: Usage): Usage => ({
-  input: a.input + b.input, output: a.output + b.output, cached: a.cached + b.cached,
-});
-
-const num = (v: any) => (typeof v === 'number' && isFinite(v) && v > 0 ? Math.round(v) : 0);
-
-/** Anthropic: cache reads are reported OUTSIDE input_tokens, so they are added
- *  back to make `input` mean "everything that went in" on every provider. */
-const anthropicUsage = (u: any): Usage => ({
-  input: num(u?.input_tokens) + num(u?.cache_read_input_tokens) + num(u?.cache_creation_input_tokens),
-  output: num(u?.output_tokens),
-  cached: num(u?.cache_read_input_tokens),
-});
-
-/** OpenAI-compatible: prompt_tokens already INCLUDES the cached part. */
-const openaiUsage = (u: any): Usage => ({
-  input: num(u?.prompt_tokens),
-  output: num(u?.completion_tokens),
-  cached: num(u?.prompt_tokens_details?.cached_tokens),
-});
-
-const geminiUsage = (u: any): Usage => ({
-  input: num(u?.promptTokenCount),
-  output: num(u?.candidatesTokenCount),
-  cached: num(u?.cachedContentTokenCount),
-});
 
 const AGENT_MAX_TOKENS = 2048;
 
@@ -258,6 +351,7 @@ export async function agentTurn(
       model, max_tokens: AGENT_MAX_TOKENS, messages,
       tools: tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
       tool_choice: 'auto',
+      ...openrouterUsage(provider),
     }),
   });
   const d = await r.json();

@@ -481,15 +481,49 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `oauth_revoke_grant` exist and are in `/api/rpc`'s ALLOWED, but a grant nobody can see is a grant
   nobody revokes — this is the next thing, not an optional extra.
 
+## What AI costs, and the model it picks (0101)
+- **`defaultModel()` read `models[0]`, and every list was ordered best-first.** So the fallback
+  model for every AI feature was the most expensive one the provider sells — Opus to rewrite a
+  paragraph, gpt-4o where gpt-4o-mini is indistinguishable, Gemini Pro for a one-line summary.
+  Nobody chose it and nothing said it was happening: an ordering accident with a bill attached.
+  The default is now a **named field** (`fast` / `balanced`) so tidying the suggestion list can
+  never move anyone's bill again, and each caller asks for the tier the work needs — the writing
+  assistant and the automation step take `fast`, the builders and agents take `balanced`.
+- **A blank model on the settings screen used to STORE `models[0]`.** It now stays blank and means
+  "let RunButter pick", which is what it always looked like it meant, and is what makes the tiers
+  reachable at all. A model typed there still wins for everything.
+- **`callAI` returned a bare string, so usage was discarded at the source.** 0096 tracked agent
+  runs and nothing else, which left the writing assistant, the newsletter drafter, the workspace
+  builder, the skill generator and the AI step inside automations invisible — one of them running
+  unattended on a cron. It now returns `{ text, usage }`, so the compiler makes every caller look
+  at it; `lib/ai/usage.ts` is the ONE recorder.
+- **`get_ai_usage` unions `ai_usage` with `agent_runs` IN SQL.** A screen that reads one of them is
+  the same bug one level up, so the join lives where a caller cannot forget it.
+- **A failed call is recorded too.** A model that spends its whole budget thinking and returns
+  nothing is billed in full, and recording only successes makes the report cheapest for the
+  workspace with the worst problem. Unknown counts land in `unreported`, never as zero.
+- **Prompt caching is on BOTH paths now.** `agentTurn` already cached; `callAI` does too, which is
+  what the workspace builder (two whole templates as few-shot examples) and the skill generator
+  (same system prompt up to three times per request) were paying full price for. It is a hint —
+  under the model's minimum cacheable length it is ignored, so there is no fallback path.
+- **OpenRouter reports usage only when asked** (`usage: {include: true}`), and it is sent to
+  OpenRouter alone: an unknown body key is a 400 on some strict gateways, and `custom` is by
+  definition a server we have never seen.
+- **Tokens, never money.** A per-model price table is wrong the week after it is written, and a
+  `custom` gateway could be a local Ollama costing nothing. A confident dollar figure from a stale
+  table is the same lie as a fabricated sparkline.
+
 ## MCP / agent tools (`lib/agents/tools.ts`)
 - ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
-  MCP client and an agent take the identical, tenancy-safe path. **26 tools**, not just CRUD:
+  MCP client and an agent take the identical, tenancy-safe path. **27 tools**, not just CRUD:
   finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
   analytics, positions, candidate FTS, pipeline boards, file search, research notes, connections.
   The count lives in `lib/agents/catalog.ts` — read it rather than trusting any number written down,
   including this one.
 - **Every tool was exercised against a real database** (2026-08): each RPC exists, accepts the
-  arguments the executor passes, and returns without raising. Re-do that after touching a signature;
+  arguments the executor passes, and returns without raising. Re-verified 2026-08 after 0101 — all
+  117 migrations apply from empty, catalogue and executor agree at 27, and **194 `rpc()` callsites
+  across the repo match `pg_proc` by name AND argument name**. Re-do that after touching a signature;
   the executor is thin, so "does the tool work" is almost entirely "does its RPC accept this".
 - **Tenancy looks inconsistent and isn't.** `list_records`/`create_record` take `p_workspace`;
   `get_record`/`update_record` derive the caller's workspaces from `p_privy` in SQL
@@ -882,7 +916,9 @@ Same rule as the cost rule above: prefer public/government data + local computat
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run migration 0093** (rename). 0092 is applied.
+- **Run migrations 0093–0101.** 0092 is applied. 0093 is rename, 0097 editable built-ins,
+  0098 email blocks, 0099/0100 the MCP OAuth server, **0101 AI usage** — until 0101 runs, the
+  AI usage panel simply hides itself and nothing else changes.
 - **`npm run publish:oss` once more**, then set **`PUBLIC_REPO_TOKEN`** in
   `CasperCrypto/hirebtr` → Settings → Secrets → Actions, and mirroring becomes automatic
   (`.github/workflows/mirror.yml`, steps in `docs/going-live.md`).

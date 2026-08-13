@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { openSecret } from '@/lib/crypto/secrets';
-import { PROVIDERS, callAI, type AIProvider } from '@/lib/ai/providers';
+import { callAI, defaultModel, type AIProvider } from '@/lib/ai/providers';
+import { recordAIUsage } from '@/lib/ai/usage';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { DOC_PRESETS, DOC_BLOCK_META, normalizeDoc, newBlockId, ROOT } from '@/lib/marketing/email-doc';
 
@@ -20,7 +21,6 @@ export const dynamic = 'force-dynamic';
  * rather than making them. Nothing here touches the newsletters table.
  */
 
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 const SHAPES: Record<string, string> = {
   plain: `{"subject":"","preheader":"","heading":"","body":"","ctaLabel":"","ctaUrl":""}`,
@@ -167,10 +167,14 @@ export async function POST(req: Request) {
     `- Only include a ctaUrl if the brief supplies one. Never invent a link, a statistic, a date, a price or a customer name — an invented fact in a newsletter goes to every subscriber at once.\n` +
     (samples ? `\nMatch the voice of these previous sends from this company:\n${samples}` : '');
 
+  const usageRow = { workspace: workspaceId, privy: privyUserId, feature: 'newsletter' as const, provider, model };
   let raw: string;
   try {
-    raw = await callAI(provider, apiKey, model, system, `Brief:\n${brief}`, (secret as any).base_url || undefined);
+    const out = await callAI(provider, apiKey, model, system, `Brief:\n${brief}`, (secret as any).base_url || undefined);
+    raw = out.text;
+    await recordAIUsage(admin, { ...usageRow, usage: out.usage });
   } catch (e: any) {
+    await recordAIUsage(admin, { ...usageRow, usage: { input: 0, output: 0, cached: 0 }, ok: false });
     return NextResponse.json({ error: e?.message || 'The AI provider call failed.' }, { status: 502 });
   }
 

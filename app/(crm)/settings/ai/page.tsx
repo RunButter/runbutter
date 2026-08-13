@@ -8,6 +8,8 @@ import { PROVIDERS, providerLabel } from '@/lib/ai/providers';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
+import AIUsagePanel from '@/components/crm/AIUsagePanel';
+import { getWorkspace } from '@/lib/crm/data';
 
 export default function AiKeysPage() {
   const { confirm: confirmDialog } = useDialog();
@@ -24,12 +26,17 @@ export default function AiKeysPage() {
   const [baseUrl, setBaseUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [ws, setWs] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     setLoading(true);
     loadAiProviders(privy).then((r) => { setRows(r.rows); setLive(r.live); setLoading(false); });
   }, [privy]);
   useEffect(() => { if (ready) reload(); }, [ready, reload]);
+  // Separate from `reload`: the key list and the spend answer different
+  // questions, and a usage panel that reloads every time somebody toggles a key
+  // is a round trip for nothing.
+  useEffect(() => { if (privy) getWorkspace(privy).then((w) => setWs(w?.id ?? null)); }, [privy]);
 
   const def = PROVIDERS.find((p) => p.id === provider);
 
@@ -38,7 +45,13 @@ export default function AiKeysPage() {
     if (!key.trim()) { setError('Paste your API key.'); return; }
     if (provider === 'custom' && !/^https?:\/\/.+/i.test(baseUrl.trim())) { setError('Enter the base URL of your OpenAI-compatible API, e.g. https://api.groq.com/openai/v1'); return; }
     setSaving(true); setError('');
-    const res = await saveAiKey(privy, provider, model || (def?.models[0] || ''), key.trim(), provider === 'custom' ? baseUrl.trim() : undefined);
+    // Blank stays BLANK. It used to store `models[0]`, which pinned every
+    // workspace that skipped this field to whatever happened to be first in a
+    // hardcoded list — and that list was ordered best-first, so the answer was
+    // the most expensive model the provider sells. An empty model now means
+    // "let RunButter pick", which is what it looked like it meant, and lets
+    // each feature ask for the tier it actually needs.
+    const res = await saveAiKey(privy, provider, model.trim(), key.trim(), provider === 'custom' ? baseUrl.trim() : undefined);
     setSaving(false);
     if (res.error) { setError(res.error); return; }
     setKey(''); setModel(''); setBaseUrl(''); reload();
@@ -63,6 +76,8 @@ export default function AiKeysPage() {
             <p>Bring your <b>own</b> AI key — you pay your provider directly, RunButter adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>
           </div>
 
+          <AIUsagePanel privy={privy} ws={ws} />
+
           {/* Add */}
           <div className="card-surface p-4">
             <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-3">Add a provider key</div>
@@ -71,9 +86,15 @@ export default function AiKeysPage() {
                 <select value={provider} onChange={(e) => { setProvider(e.target.value); setModel(''); }} className={inputCls}>{PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
                 {def && <span className="text-2xs text-tertiary mt-1 block">{def.help}</span>}
               </label>
-              <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Model</span>
-                <input list="ai-models" value={model} onChange={(e) => setModel(e.target.value)} placeholder={def?.models[0] || 'model id'} className={inputCls} />
+              <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Model <span className="font-normal text-tertiary">— optional</span></span>
+                <input list="ai-models" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Let RunButter choose" className={inputCls} />
                 <datalist id="ai-models">{def?.models.map((m) => <option key={m} value={m} />)}</datalist>
+                {def && (
+                  <span className="text-2xs text-tertiary mt-1 block">
+                    Left blank, quick jobs use <span className="font-mono">{def.fast}</span> and
+                    {' '}bigger ones use <span className="font-mono">{def.balanced}</span>. Naming a model here uses it for everything.
+                  </span>
+                )}
               </label>
               {provider === 'custom' && (
                 <label className="block sm:col-span-2"><span className="block text-xs font-semibold text-secondary mb-1">Base URL</span>
@@ -96,7 +117,10 @@ export default function AiKeysPage() {
                   <Sparkles className="w-4 h-4 text-tertiary shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-primary flex items-center gap-1.5">{providerLabel(r.provider)}{r.is_default && <span className="inline-flex items-center gap-0.5 text-3xs font-semibold text-warning bg-warning/10 rounded px-1 py-0.5"><Star className="w-2.5 h-2.5" /> Default</span>}</div>
-                    <div className="text-2xs text-tertiary font-mono truncate">{r.model || '—'} · key {r.key_hint}{r.base_url ? ` · ${r.base_url}` : ''}</div>
+                    <div className="text-2xs text-tertiary truncate">
+                      <span className="font-mono">{r.model || 'automatic model'}</span>
+                      <span className="font-mono"> · key {r.key_hint}{r.base_url ? ` · ${r.base_url}` : ''}</span>
+                    </div>
                   </div>
                   {!r.is_default && <button onClick={() => makeDefault(r)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Make default</button>}
                   <button onClick={() => toggle(r)} disabled={!canEdit} className="h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">{r.enabled ? 'Disable' : 'Enable'}</button>

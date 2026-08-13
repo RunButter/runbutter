@@ -1,7 +1,8 @@
 import { createHmac } from 'crypto';
 import { isSafeOutboundUrl } from '@/lib/security/http';
 import { openSecret } from '@/lib/crypto/secrets';
-import { callAI, type AIProvider } from '@/lib/ai/providers';
+import { callAI, defaultModel, type AIProvider } from '@/lib/ai/providers';
+import { recordAIUsage } from '@/lib/ai/usage';
 
 // Server-side dispatcher core, shared by:
 //   /api/automations/dispatch  (cron, secret-authed, the reliable path)
@@ -145,11 +146,21 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       catch { return { ok: false, detail: 'Could not decrypt the stored AI key' }; }
       const system = 'You are an automation step inside RunButter, a business workspace. Follow the instruction using the JSON record provided. Return only the result text, no preamble.';
       const prompt = `${tmpl(cfg.prompt || 'Summarize this record in two sentences.', ev.payload)}\n\nRecord (JSON):\n${JSON.stringify(ev.payload || {}).slice(0, 6000)}`;
+      const provider = (secret as any).provider as AIProvider;
+      // `|| ''` used to be the fallback, which sends an EMPTY model id to the
+      // provider and fails the step for anyone who never typed one into
+      // Settings. FAST tier: an automation step summarises or classifies one
+      // record, and it runs unattended on a cron — the worst place to have a
+      // frontier model as the accident.
+      const model = (secret as any).model || defaultModel(provider, 'fast');
+      const usageRow = { workspace: ev.workspace_id, privy: rule.owner_privy, feature: 'automation' as const, provider, model };
       try {
-        const out = await callAI((secret as any).provider as AIProvider, apiKey, (secret as any).model || '', system, prompt, (secret as any).base_url || undefined);
-        ev.payload = { ...(ev.payload || {}), ai_output: out };
-        return { ok: true, detail: `AI → ${out.slice(0, 80).replace(/\s+/g, ' ')}` };
+        const out = await callAI(provider, apiKey, model, system, prompt, (secret as any).base_url || undefined);
+        await recordAIUsage(admin, { ...usageRow, usage: out.usage });
+        ev.payload = { ...(ev.payload || {}), ai_output: out.text };
+        return { ok: true, detail: `AI → ${out.text.slice(0, 80).replace(/\s+/g, ' ')}` };
       } catch (e: any) {
+        await recordAIUsage(admin, { ...usageRow, usage: { input: 0, output: 0, cached: 0 }, ok: false });
         return { ok: false, detail: `AI failed: ${e?.message || 'request error'}` };
       }
     }

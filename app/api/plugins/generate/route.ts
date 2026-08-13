@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { openSecret } from '@/lib/crypto/secrets';
-import { callAI, PROVIDERS, type AIProvider } from '@/lib/ai/providers';
+import { callAI, defaultModel, noUsage, addUsage, type AIProvider } from '@/lib/ai/providers';
+import { recordAIUsage } from '@/lib/ai/usage';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { SYSTEM, fewShot, extractJson, normalizeGenerated, repairPrompt, draftWeight } from '@/lib/plugins/generate';
@@ -48,7 +49,6 @@ export const dynamic = 'force-dynamic';
 const MAX_ATTEMPTS = 3;          // one write + up to two repairs
 const GENERATE_MAX_TOKENS = 4096;
 
-const defaultModel = (p: string) => PROVIDERS.find((x) => x.id === p)?.models[0] || '';
 
 export async function POST(req: Request) {
   // Tighter than the workspace builder's 10: this one makes up to three model
@@ -99,17 +99,28 @@ export async function POST(req: Request) {
   let bestFindings: ReturnType<typeof lintProject>['findings'] = [];
   let attempts = 0;
   let lastReply = '';
+  // Accumulated across the repair loop and recorded ONCE. The person asked for
+  // one skill; that it took three model calls to get there is this route's
+  // business, and splitting it into three rows would make the repair loop look
+  // like three times the demand rather than the cost it actually is.
+  let usage = noUsage();
 
   while (attempts < MAX_ATTEMPTS) {
     attempts++;
     let reply: string;
     try {
-      reply = await callAI(provider, apiKey, model, SYSTEM, prompt, baseUrl, GENERATE_MAX_TOKENS);
+      const out = await callAI(provider, apiKey, model, SYSTEM, prompt, baseUrl, GENERATE_MAX_TOKENS);
+      reply = out.text;
+      usage = addUsage(usage, out.usage);
     } catch (e: any) {
       // A failure on a REPAIR is not a failure of the request — we already have
       // a draft, and handing back a worse experience than "here is your skill,
       // three things left to fix" would be silly.
       if (best) break;
+      await recordAIUsage(admin, {
+        workspace: workspaceId, privy: privyUserId, feature: 'skill',
+        provider, model, usage, ok: false,
+      });
       const truncated = e?.name === 'TruncatedReply';
       return NextResponse.json(
         { error: e?.message || 'The AI request failed.' },
@@ -156,6 +167,15 @@ export async function POST(req: Request) {
     if (attempts >= MAX_ATTEMPTS) break;
     prompt = `${prompt}\n\nYou replied:\n${JSON.stringify(draft)}\n\n${next}`;
   }
+
+  // Recorded on BOTH exits, and on the early-return failure above. A loop that
+  // burned three attempts and produced nothing is the most expensive outcome
+  // this route has; leaving it out would make the cost report cheapest for the
+  // request that went worst.
+  await recordAIUsage(admin, {
+    workspace: workspaceId, privy: privyUserId, feature: 'skill',
+    provider, model, usage, ok: !!best,
+  });
 
   if (!best) {
     return NextResponse.json({
