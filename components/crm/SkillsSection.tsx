@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Pencil, X, Loader2, Check, Sparkles, LayoutTemplate } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -11,6 +11,7 @@ import { lintProject } from '@/lib/plugins/lint';
 import { scoreProject } from '@/lib/plugins/quality';
 import { buildPlugin, skillSlug } from '@/lib/plugins/agent-plugin';
 import Thinking from '@/components/ui/Thinking';
+import { TEMPLATES } from '@/lib/plugins/templates';
 
 /**
  * Skills manager. A skill is a reusable instruction pack — "how this company
@@ -30,6 +31,13 @@ export default function SkillsSection({
   // the editor rather than being saved, because a generated skill becomes part
   // of an agent's system prompt and a person should read it first.
   const [describing, setDescribing] = useState(false);
+  // Starting points, from the SAME `TEMPLATES` the public builder at /plugins
+  // uses. The in-app screen had none, so "New skill" opened an empty box — and
+  // an empty box is the hardest possible version of "write a system prompt".
+  // Sharing the array rather than copying it is the rule this file already
+  // follows for the linter and the plugin builder: two lists drift, and the
+  // in-app one is the one nobody remembers to update.
+  const [templating, setTemplating] = useState(false);
 
   return (
     <section>
@@ -42,11 +50,39 @@ export default function SkillsSection({
           <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
             <Github className="w-3.5 h-3.5" /> Import
           </Button>
+          <Button size="sm" variant="ghost" onClick={() => setTemplating((t) => !t)}>
+            <LayoutTemplate className="w-3.5 h-3.5" /> Templates
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => setEditing({ name: '', description: '', instructions: '', suggested_tools: [] })}>
             <Plus className="w-3.5 h-3.5" /> New skill
           </Button>
         </div>
       </div>
+      {templating && (
+        <div className="mb-3 grid sm:grid-cols-3 gap-2">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.label}
+              onClick={() => {
+                // Opens the EDITOR pre-filled rather than saving. A template is
+                // a starting point somebody edits, and one that saved itself
+                // would put three identical skills in every workspace that
+                // clicked around.
+                // `TemplateSkill` has no suggested_tools — a template is instructions, and
+                // the tool hints belong to the agent that carries it. Defaulted here
+                // rather than widened there: `templates.ts` is import-free on purpose
+                // and adding a field for one consumer is how that stops being true.
+                setEditing({ name: t.skill.name, description: t.skill.description, instructions: t.skill.instructions, suggested_tools: [] });
+                setTemplating(false);
+              }}
+              className="text-left rounded-xl ring-1 ring-subtle bg-surface p-3 hover:bg-surface-hover"
+            >
+              <div className="text-xs font-semibold text-primary mb-0.5">{t.label}</div>
+              <div className="text-2xs text-tertiary line-clamp-2">{t.skill.description}</div>
+            </button>
+          ))}
+        </div>
+      )}
       <p className="text-xs text-secondary mb-3 max-w-2xl">
         Reusable instructions any agent can carry — how you number invoices, the tone of a reminder,
         which categories map where. Attach them to an agent in its editor. A skill never grants an

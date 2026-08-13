@@ -1,7 +1,8 @@
 import { createAdminClient } from '@/lib/supabase';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { buildPlugin, pluginSlug, type SkillSource } from '@/lib/plugins/agent-plugin';
+import { pluginSlug, type SkillSource } from '@/lib/plugins/agent-plugin';
+import { PLATFORMS, platformById } from '@/lib/plugins/platforms';
 import { zipSync } from '@/lib/plugins/zip';
 
 export const runtime = 'nodejs';
@@ -39,6 +40,14 @@ export async function POST(req: Request) {
   try { b = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
   const { privyUserId, workspaceId, skillIds, includeMcp = true } = b || {};
+  // The target layout. The in-app export always built the portable Agent Plugin
+  // while the public builder at /plugins offered four; same skills, same
+  // builder, different directory shape — so there was no reason for the one
+  // inside the product to be the limited one. An unknown id falls back to the
+  // portable format rather than failing: a bad value should not cost somebody
+  // their export.
+  const requested = String(b?.platform || 'agent-plugin');
+  const platform = platformById(PLATFORMS.find((p) => p.id === requested)?.id ?? 'agent-plugin');
   if (!privyUserId || !workspaceId) return json({ error: 'Not signed in' }, 401);
 
   const auth = await authorizePrivy(req, privyUserId);
@@ -81,7 +90,7 @@ export async function POST(req: Request) {
   const site = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '').replace(/\/+$/, '');
   const origin = site || new URL(req.url).origin;
 
-  const files = buildPlugin({
+  const files = platform.build({
     manifest: {
       name,
       version: '0.1.0',
@@ -92,8 +101,13 @@ export async function POST(req: Request) {
     },
     skills: sources,
     mcpUrl: includeMcp ? `${origin}/api/mcp` : undefined,
-    extraFiles: [{ path: 'README.md', content: readme(name, origin, sources.length, includeMcp) }],
   });
+  // Appended rather than passed in: `BuildInput` is deliberately narrower than
+  // `buildPlugin`'s options, because a platform decides its own layout and an
+  // `extraFiles` escape hatch is how a caller starts putting files where a
+  // layout did not intend them. A README at the archive root is safe in all
+  // four, so it is added here where that judgement is visible.
+  files.push({ path: 'README.md', content: readme(name, origin, sources.length, includeMcp) });
 
   const zip = zipSync(files);
   // A Uint8Array view can be a window onto a larger buffer; slicing to its own

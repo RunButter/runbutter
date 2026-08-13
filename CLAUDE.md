@@ -275,6 +275,16 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **`lib/plugins/zip.ts` is a hand-written store-only ZIP writer**, no dependency — same call as
   `lib/markdown.ts`. Fixed 1980 timestamps make exports byte-reproducible. It is deliberately not
   Zip64/DEFLATE/encryption capable; if that changes, take a dependency rather than growing it.
+- **The in-app `/skills` screen and the public `/plugins` builder share their pieces.** The in-app
+  one had no templates (New skill opened an empty box — the hardest version of "write a system
+  prompt") and its export was hardcoded to the portable layout while the public builder offered
+  four. Both now read `TEMPLATES` and `PLATFORMS`, and the export shows `losses()` — what the chosen
+  format cannot carry — BEFORE the download rather than after. Two lists drift, and the in-app one
+  is the one nobody remembers to update.
+- **`BuildInput` is deliberately narrower than `buildPlugin`'s options.** A platform decides its own
+  layout, and an `extraFiles` escape hatch is how a caller starts putting files where a layout did
+  not intend them; the export route appends its README after the build, where that judgement is
+  visible.
 - **The free builder is at `/plugins`, NOT `/skills`** — `app/(crm)/skills` already owns that path,
   the same collision that pushed the agents marketing page to `/ai-agents`. It lives outside the
   `(crm)` group so it gets marketing chrome and no Privy shell, and it is **entirely client-side**:
@@ -507,6 +517,38 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   breath, or it is invisible to every agent and to `/api/mcp`.** Newsletters, sequences, segments
   and automations are still in that position — check before assuming an agent can reach one.
 
+## Teaching the copilot the product (`lib/agents/surfaces.ts`)
+- **A model that does not know the shape of the product does the nearest thing it CAN do.** Asked
+  for "a newsletter in HTML" it wrote a DOCUMENT full of HTML — it knew the record types and the doc
+  tools, and nothing told it Newsletters are a place, where they live, or which tool writes one.
+- **The map is GENERATED from `NAV`.** Labels and paths already exist in the registry; a hand-written
+  second copy is how a map ends up describing a screen renamed a year ago. The one hand-kept column
+  is "what lives here, and which tool writes it".
+- **It says NO honestly.** A surface with no tool is listed WITH that fact, because the failure being
+  fixed is substituting a writable surface for the one asked for. A document containing what somebody
+  asked for is worse than an honest no, because it looks like success.
+- **The model never authors email HTML.** It fills a template; the renderer does the part that must
+  be right. `save_newsletter` never sends and never attaches a list — an audience is one click from
+  every subscriber's inbox and is a person's decision on the send screen.
+- **Skills are writable by the copilot, agents are not.** A skill is instructions (`suggested_tools`
+  is a hint, never a grant). An agent is an ACTOR with a tool list, an autonomy setting and maybe a
+  schedule. Same line `propose_object` draws.
+- **0103: `skills.source` accepts `copilot`.** It was `local | github`, so `save_skill` silently
+  mapped `'copilot'` back to `'local'` through its own `case` — the code carried a comment explaining
+  an attribution the database was discarding. `source` is deliberately NOT updatable: editing a
+  copilot-written skill does not make it hand-written.
+
+## Live updates without Realtime (`lib/crm/live.ts`)
+- **Realtime is not an option here and that is deliberate.** It needs anon-key RLS policies on every
+  watched table, and every read goes through the `/api/rpc` proxy precisely so the browser holds no
+  capability of its own. Team chat made the same call and polls (0075).
+- Nothing needs a server push anyway: the only writer the page cares about is the copilot in the
+  **same tab**. What changed is derived from the run's **steps**, not from what the model said it
+  did, and **failed calls and proposals are skipped** — reloading right after being told about five
+  pending changes shows an unchanged page at the most confusing possible moment.
+- It does NOT push another person's edits into your screen. That needs a server and is a different
+  feature; pretending otherwise leaves someone trusting a list that went stale.
+
 ## The Copilot (0102)
 - **It is an ordinary `AgentDef`, not a second runner.** Everything that makes an agent safe —
   tenancy from `p_privy` in SQL, suggest/auto, propose-and-approve, `alwaysPropose` on schema
@@ -582,7 +624,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 
 ## MCP / agent tools (`lib/agents/tools.ts`)
 - ONE tool executor is shared by `/api/mcp` and the in-app agent runner, so an external
-  MCP client and an agent take the identical, tenancy-safe path. **31 tools**, not just CRUD:
+  MCP client and an agent take the identical, tenancy-safe path. **36 tools**, not just CRUD:
   finance summary/trends/ledger, sanctions screening, IBAN validation, invoice-text parsing,
   analytics, positions, candidate FTS, pipeline boards, file search, research notes, connections.
   The count lives in `lib/agents/catalog.ts` — read it rather than trusting any number written down,

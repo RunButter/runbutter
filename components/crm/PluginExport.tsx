@@ -6,6 +6,7 @@ import { Package, Download, Loader2, Check, ChevronRight } from 'lucide-react';
 import type { Skill } from '@/lib/crm/skills';
 import { skillSlug } from '@/lib/plugins/agent-plugin';
 import Button from '@/components/ui/Button';
+import { PLATFORMS, losses, type PlatformId } from '@/lib/plugins/platforms';
 
 /**
  * Export the workspace's skills as an Agent Plugin.
@@ -28,6 +29,8 @@ export default function PluginExport({ privy, ws, skills }: {
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [includeMcp, setIncludeMcp] = useState(true);
+  // Same four targets the public builder offers, from the same PLATFORMS array.
+  const [platform, setPlatform] = useState<PlatformId>('agent-plugin');
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
   const chosen = picked.size ? skills.filter((s) => picked.has(s.id)) : skills;
@@ -44,7 +47,7 @@ export default function PluginExport({ privy, ws, skills }: {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
         body: JSON.stringify({
-          privyUserId: privy, workspaceId: ws, includeMcp,
+          privyUserId: privy, workspaceId: ws, includeMcp, platform,
           skillIds: picked.size ? [...picked] : undefined,
         }),
       });
@@ -115,6 +118,35 @@ export default function PluginExport({ privy, ws, skills }: {
                 clear selection — export all
               </button>
             )}
+          </div>
+
+          <div>
+            <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-1.5">Format</div>
+            <div className="grid sm:grid-cols-2 gap-1.5">
+              {PLATFORMS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPlatform(p.id)}
+                  className={`text-left rounded-lg px-2.5 py-2 ring-1 ${
+                    platform === p.id ? 'ring-accent bg-accent-soft' : 'ring-subtle hover:bg-surface-hover'}`}
+                >
+                  <div className="text-xs font-semibold text-primary">{p.label}</div>
+                  <div className="text-2xs text-tertiary">{p.blurb}</div>
+                </button>
+              ))}
+            </div>
+            {/* What this format CANNOT carry, said before the download rather
+                than discovered afterwards. `losses` is the same function the
+                public builder uses, so the two surfaces cannot disagree about
+                what a layout drops. */}
+            {(() => {
+              const drops = losses(platform, { manifest: { name: 'x', version: '0.1.0' }, skills: [], mcpUrl: includeMcp ? 'x' : undefined });
+              return drops.length ? (
+                <ul className="mt-1.5 space-y-0.5">
+                  {drops.map((d) => <li key={d} className="text-2xs text-warning">· {d}</li>)}
+                </ul>
+              ) : null;
+            })()}
           </div>
 
           <label className="flex items-start gap-2.5 cursor-pointer">
