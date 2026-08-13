@@ -4,6 +4,13 @@ RunButter is an open-source **company OS**: sales, finance, marketing, projects
 and hiring on one relational Postgres core, with AI agents that work on the same
 records your team does. MIT licensed, self-hostable, no per-token AI bill.
 
+## The Copilot
+
+A panel docked beside every screen that reads and writes your workspace on your
+own AI key. It knows which screen you are on, it proposes changes rather than
+making them, and every step it took is on the record. See
+[Agents & the Copilot](./agents.md).
+
 ## Start here
 
 | I want to… | Read |

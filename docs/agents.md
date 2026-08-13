@@ -3,6 +3,36 @@
 An agent is a role, a set of tools, and how much rope you give it. There is no
 graph to draw and no framework to learn.
 
+## The Copilot
+
+The copilot is the same machinery you meet first: a panel docked to the right of
+every screen that can read and write the workspace while you work.
+
+It knows **which screen you are on**, so "chase these" resolves to the invoices
+in front of you rather than asking which ones you mean. It reaches the whole
+product — deals, records, documents and to-do lists, newsletters, social posts,
+team chat, the hiring pipeline — through the same functions the screens
+themselves call, so it can never reach further than your own account can.
+
+**Changes wait for you.** A conversation starts in *Suggest*: writes are recorded
+as proposals and applied when you press Apply. Switch that conversation to *Auto*
+and they execute as it goes. The switch is per conversation, because "draft me a
+plan" and "tidy these invoices" want different answers.
+
+Two things it deliberately cannot do, whatever mode it is in:
+
+- **Create an agent or an automation.** Both are actors that run unattended with
+  permissions somebody chose. Making one is a decision, not a convenience.
+- **Add a new record type without asking.** `propose_object` returns a plan for a
+  person to approve even in Auto — a wrong record is one row, a wrong object is a
+  table, a page, a nav entry and an agent tool target.
+
+Conversations belong to **you**, not the workspace. A colleague cannot read
+yours, even sharing a workspace: a thread holds whatever you typed into it.
+
+Each turn is an ordinary agent run, so the transcript, the approval flow and the
+token accounting are the same ones described below.
+
 ## Making one
 
 **Agents → New agent.**
@@ -72,6 +102,16 @@ choices:
 - **People write notes through the same call.** Research a human cannot correct
   is research nobody trusts, and a parallel human-notes table would split the
   record in half.
+
+## Where the copilot ends and an agent begins
+
+They share every mechanism and differ in one way that matters: **who starts it.**
+You start the copilot and watch it. A schedule starts an agent and nobody
+watches. That is why an agent has a narrow tool list and a fixed job, and why
+the copilot cannot create one.
+
+If you want something to happen at 3am, it is an agent. If you want an answer
+now, it is the copilot.
 
 ## Working unattended
 

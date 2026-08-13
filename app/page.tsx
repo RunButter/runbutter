@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
@@ -20,6 +20,7 @@ import CopyCommand from '@/components/landing/CopyCommand';
 import ObjectMarquee from '@/components/landing/ObjectMarquee';
 import StructuredData from '@/components/landing/StructuredData';
 import BorderBeam from '@/components/ui/BorderBeam';
+import CopilotDemo from '@/components/landing/CopilotDemo';
 import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing/MarketingChrome';
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
@@ -357,6 +358,49 @@ export default function HomePage() {
           page from a tile, and a screenshot cannot help, because the part worth
           seeing is the ORDER: the question, the tools it picked, and a write
           that stops for approval. So it plays. */}
+      {/* The Copilot gets its own section, above agents, because it is the
+          thing somebody meets first. Agents are the same machinery running
+          unattended, so they read as the follow-on rather than the headline. */}
+      <section id="copilot" className="border-t border-subtle cv-auto">
+        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <Reveal>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-accent-text">
+                  <Sparkles className="w-3.5 h-3.5" /> Copilot
+                </span>
+                <h2 className="text-2xl md:text-4xl font-medium tracking-tight mt-3">
+                  It works the way you do, on the screen you are already on
+                </h2>
+                <p className="text-secondary mt-4 leading-relaxed">
+                  Docked beside your work, so &ldquo;chase these&rdquo; means the invoices you are
+                  looking at. It reads and writes across the whole workspace &mdash; deals, invoices,
+                  documents, the hiring pipeline, team chat &mdash; through the same functions the
+                  screens use, so it can never reach further than you can.
+                </p>
+                <ul className="mt-6 space-y-2.5 text-sm text-secondary">
+                  <li className="flex gap-2.5">
+                    <Check className="w-4 h-4 text-accent-text shrink-0 mt-0.5" />
+                    <span><b className="text-primary font-medium">Changes wait for you.</b> It proposes; you press Apply. Switch a conversation to Auto when you trust it.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <Check className="w-4 h-4 text-accent-text shrink-0 mt-0.5" />
+                    <span><b className="text-primary font-medium">Every step is on the record.</b> Which tools it called, what came back, what it cost in tokens.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <Check className="w-4 h-4 text-accent-text shrink-0 mt-0.5" />
+                    <span><b className="text-primary font-medium">Your key, your model.</b> Claude, GPT, Gemini, or a local model when you self-host. We add nothing per token.</span>
+                  </li>
+                </ul>
+              </div>
+            </Reveal>
+            <Reveal>
+              <CopilotDemo />
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
       <section id="agents" className="border-t border-subtle cv-auto">
         <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
           <Reveal>

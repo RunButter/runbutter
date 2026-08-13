@@ -15,7 +15,8 @@ maps), HR (the full ATS: positions, pipeline, Big-5 and work-style assessments,
 interviews, onboarding), Docs & Files (four doc kinds, browser-side export,
 text extraction and full-text search), Chat, Automations.
 
-**Agentic** — 26 tools behind one executor shared by in-app agents and MCP,
+**Agentic** — a copilot docked beside every screen, and 45 tools behind one
+executor shared by it, by scheduled agents and by MCP,
 reusable skills, notes written back onto records, scheduled unattended runs, and
 a gallery of eight prebuilt agents.
 
