@@ -1,6 +1,7 @@
 'use client';
 
 import type { FilterState } from '@/components/crm/FilterBar';
+import { isViewKind, type ViewKind } from '@/lib/crm/views';
 
 /**
  * List state in the URL.
@@ -22,9 +23,15 @@ import type { FilterState } from '@/components/crm/FilterBar';
 
 const FACET_PREFIX = 'f.';
 
-export interface ListState { query: string; filters: FilterState }
+/**
+ * `view` and `group` ride here for the same reason the filters do: a board is a
+ * way of looking at a list, so "the invoices board grouped by status" has to be
+ * a link somebody can send — and a link an agent can hand back. Keeping them
+ * out would mean every shared URL silently reopened as a table.
+ */
+export interface ListState { query: string; filters: FilterState; view: ViewKind; group: string }
 
-export const EMPTY_LIST_STATE: ListState = { query: '', filters: { facets: {}, from: '', to: '' } };
+export const EMPTY_LIST_STATE: ListState = { query: '', filters: { facets: {}, from: '', to: '' }, view: 'table', group: '' };
 
 /** Read list state out of a query string. Unknown params pass through untouched. */
 export function readListState(search: string): ListState {
@@ -33,9 +40,14 @@ export function readListState(search: string): ListState {
   p.forEach((v, k) => {
     if (k.startsWith(FACET_PREFIX) && v) facets[k.slice(FACET_PREFIX.length)] = v;
   });
+  const rawView = p.get('view') || '';
   return {
     query: p.get('q') || '',
     filters: { facets, from: p.get('from') || '', to: p.get('to') || '' },
+    // An unrecognised view falls back to the table rather than rendering
+    // nothing — a hand-edited or truncated URL should degrade, not break.
+    view: isViewKind(rawView) ? rawView : 'table',
+    group: p.get('group') || '',
   };
 }
 
@@ -55,6 +67,10 @@ export function writeListState(search: string, s: ListState): string {
   set('q', s.query.trim());
   set('from', s.filters.from);
   set('to', s.filters.to);
+  // `table` is the default, so writing it would put ?view=table on every list
+  // in the product and make two identical views look like different links.
+  set('view', s.view === 'table' ? '' : s.view);
+  set('group', s.view === 'board' ? s.group : '');
   for (const [k, v] of Object.entries(s.filters.facets)) if (v) p.set(FACET_PREFIX + k, v);
 
   const out = p.toString();

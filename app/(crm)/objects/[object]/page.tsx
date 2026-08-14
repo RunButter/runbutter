@@ -4,11 +4,14 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLiveRefresh } from '@/lib/crm/live';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Download, FileText } from 'lucide-react';
+import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
+import RecordBoard from '@/components/crm/RecordBoard';
+import RecordCalendar from '@/components/crm/RecordCalendar';
+import { boardFields, calendarField, type ViewKind } from '@/lib/crm/views';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
 import SanctionsPanel from '@/components/crm/SanctionsPanel';
@@ -66,6 +69,10 @@ export default function ObjectPage() {
   const [importing, setImporting] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() =>
     (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).filters);
+  const [view, setView] = useState<ViewKind>(() =>
+    (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).view);
+  const [group, setGroup] = useState<string>(() =>
+    (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).group);
   const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
   const isDoc = slug === 'invoices' || slug === 'offers';
   // Counterparties are the records worth screening; a product or an issue is not.
@@ -107,7 +114,7 @@ export default function ObjectPage() {
   // navigating straight to a filtered link still lands filtered.
   useEffect(() => {
     const next = typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search);
-    setFilters(next.filters); setQuery(next.query);
+    setFilters(next.filters); setQuery(next.query); setView(next.view); setGroup(next.group);
   }, [slug]);
 
   /**
@@ -121,11 +128,11 @@ export default function ObjectPage() {
    */
   useEffect(() => {
     const current = readListState(window.location.search);
-    const next = { query, filters };
+    const next = { query, filters, view, group };
     if (sameListState(current, next)) return;
     const qs = writeListState(window.location.search, next);
     window.history.replaceState({}, '', window.location.pathname + qs);
-  }, [query, filters]);
+  }, [query, filters, view, group]);
 
   const dateKey = useMemo(() => object?.fields.find((f) => f.type === 'date')?.key, [object]);
 
@@ -157,6 +164,29 @@ export default function ObjectPage() {
     }
     return out;
   }, [rows, object]);
+
+  /**
+   * Which views this object can actually offer.
+   *
+   * Computed from the object's own fields, so the eleven built-ins and every
+   * workspace-defined object are treated identically — a custom object with a
+   * select field gets a board the moment it is created, with nothing to
+   * register. A view that cannot work is NOT offered: a board needs a column of
+   * states to be columns, a calendar needs a date. Showing a disabled tab, or
+   * worse an empty board, would be a promise the data cannot keep.
+   */
+  const groupable = useMemo(() => (object ? boardFields(object, rows) : []), [object, rows]);
+  const calField = useMemo(() => (object ? calendarField(object) : undefined), [object]);
+  // Only the fields still present can be the grouping column: a URL carrying
+  // ?group=status opened against an object without one must not blank the board.
+  const groupKey = useMemo(
+    () => (groupable.find((f) => f.key === group) ? group : groupable[0]?.key || ''),
+    [groupable, group],
+  );
+  // The view actually rendered. Falling back rather than trusting `view` is what
+  // makes a stale or hand-edited link degrade into a table instead of nothing.
+  const activeView: ViewKind =
+    view === 'board' && groupKey ? 'board' : view === 'calendar' && calField ? 'calendar' : 'table';
 
   // Still resolving, or signed out and therefore unable to resolve: a custom
   // object must not 404 before its definition has had a chance to arrive.
@@ -208,6 +238,30 @@ export default function ObjectPage() {
         count={filtered.length}
         badge={<DataBadge live={live} />}
       >
+        {/* A compact inline control, so it stays flat per the elevation rule. */}
+        {(groupable.length > 0 || calField) && (
+          <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-surface-sunken">
+            {([
+              { k: 'table' as const, icon: Table2, label: 'Table', on: true },
+              { k: 'board' as const, icon: Columns3, label: 'Board', on: groupable.length > 0 },
+              { k: 'calendar' as const, icon: CalendarDays, label: 'Calendar', on: !!calField },
+            ]).filter((v) => v.on).map((v) => (
+              <button key={v.k} onClick={() => setView(v.k)} title={v.label} aria-label={v.label}
+                aria-pressed={activeView === v.k}
+                className={`h-6 px-2 inline-flex items-center gap-1 rounded text-2xs font-semibold transition-colors ${
+                  activeView === v.k ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
+                <v.icon className="w-3.5 h-3.5" /> {v.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Only worth showing when there is a choice to make. */}
+        {activeView === 'board' && groupable.length > 1 && (
+          <select value={groupKey} onChange={(e) => setGroup(e.target.value)} aria-label="Group by"
+            className="h-7 px-2 text-xs rounded-md bg-surface ring-1 ring-subtle text-secondary outline-none focus:ring-2 focus:ring-accent/30">
+            {groupable.map((f) => <option key={f.key} value={f.key}>Group: {f.label}</option>)}
+          </select>
+        )}
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
@@ -224,6 +278,18 @@ export default function ObjectPage() {
       <div className="flex-1 min-h-0 p-4">
         {loading ? (
           <AppLoading />
+        ) : activeView === 'board' ? (
+          // `live` is not passed through: unlike the deal board, these rows come
+          // from list_records and are real whenever anyone is signed in. The
+          // sample-data case is covered by `privy` being null, which makes the
+          // board read-only rather than writing to ids that do not exist.
+          <RecordBoard object={object} rows={filtered} groupKey={groupKey} privy={live ? privy : null}
+            onOpen={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}
+            onChanged={reload} />
+        ) : activeView === 'calendar' && calField ? (
+          <RecordCalendar object={object} rows={filtered} dateField={calField} privy={live ? privy : null}
+            onOpen={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}
+            onChanged={reload} />
         ) : (
           <RecordTable object={object} rows={filtered}
             onRowClick={(r) => (slug === 'projects' ? router.push(`/projects/${r.id}`) : setDetail(r))}
