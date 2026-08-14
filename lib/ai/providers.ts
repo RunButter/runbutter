@@ -3,7 +3,13 @@
 // plain REST — to keep deploys light. Non-streaming (simple + robust) for v1.
 import { isAllowedAiHost, aiAllowlistIsEmpty } from '@/lib/security/http';
 
-export type AIProvider = 'claude' | 'openai' | 'gemini' | 'openrouter' | 'custom';
+export type AIProvider =
+  | 'claude' | 'openai' | 'gemini' | 'openrouter'
+  // OpenAI-compatible and KNOWN — see `baseUrl` below. These were all reachable
+  // before as `custom`; what they lacked was a name and a URL nobody has to
+  // look up.
+  | 'groq' | 'deepseek' | 'mistral' | 'xai'
+  | 'custom';
 
 /**
  * How hard a task is, which is a different question from how good a model is.
@@ -21,6 +27,19 @@ export interface ProviderDef {
   models: string[];
   fast: string;
   balanced: string;
+  /**
+   * A known OpenAI-compatible endpoint.
+   *
+   * Groq, DeepSeek, Mistral and xAI speak the OpenAI chat format exactly. The
+   * only thing that made them `custom` was that a person had to know their base
+   * URL, go and find it, and type it without a typo — which is four support
+   * questions standing in for four menu entries. Naming them changes the menu
+   * and nothing about the transport.
+   *
+   * Absent on `custom` deliberately: that provider is user-supplied by
+   * definition, and a default there would be a URL nobody chose.
+   */
+  baseUrl?: string;
 }
 
 /**
@@ -40,28 +59,61 @@ export interface ProviderDef {
 export const PROVIDERS: ProviderDef[] = [
   {
     id: 'claude', label: 'Claude (Anthropic)', help: 'console.anthropic.com → API keys',
-    models: ['claude-sonnet-5', 'claude-opus-5', 'claude-haiku-4-5-20251001'],
+    models: [
+      'claude-sonnet-5', 'claude-opus-5', 'claude-haiku-4-5-20251001',
+      'claude-opus-4-1', 'claude-sonnet-4-5', 'claude-3-7-sonnet-latest', 'claude-3-5-haiku-latest',
+    ],
     fast: 'claude-haiku-4-5-20251001', balanced: 'claude-sonnet-5',
   },
   {
     id: 'openai', label: 'ChatGPT (OpenAI)', help: 'platform.openai.com → API keys',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1'],
+    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o4-mini', 'o3'],
     fast: 'gpt-4o-mini', balanced: 'gpt-4o',
   },
   {
     id: 'gemini', label: 'Gemini (Google)', help: 'aistudio.google.com → API keys',
-    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'],
     fast: 'gemini-2.5-flash', balanced: 'gemini-2.5-pro',
   },
   {
-    id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys (any model; ids ending in :free cost nothing)',
-    models: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5'],
+    id: 'openrouter', label: 'OpenRouter', help: 'openrouter.ai → Keys · any model, ids ending in :free cost nothing',
+    models: [
+      'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-chat-v3:free',
+      'openai/gpt-4o-mini', 'anthropic/claude-sonnet-5', 'deepseek/deepseek-r1',
+      'qwen/qwen-2.5-72b-instruct', 'mistralai/mistral-large',
+    ],
     fast: 'meta-llama/llama-3.3-70b-instruct:free', balanced: 'meta-llama/llama-3.3-70b-instruct:free',
   },
   {
-    id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any OpenAI-compatible API: Groq, Mistral, DeepSeek, Together, xAI, LiteLLM… or your own Ollama/vLLM when self-hosting (see AI_ALLOWED_HOSTS)',
-    models: ['llama-3.3-70b-versatile', 'mistral-large-latest', 'deepseek-chat'],
-    fast: 'llama-3.3-70b-versatile', balanced: 'llama-3.3-70b-versatile',
+    id: 'groq', label: 'Groq', help: 'console.groq.com → API keys · very fast, generous free tier',
+    models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'],
+    fast: 'llama-3.1-8b-instant', balanced: 'llama-3.3-70b-versatile',
+    baseUrl: 'https://api.groq.com/openai/v1',
+  },
+  {
+    id: 'deepseek', label: 'DeepSeek', help: 'platform.deepseek.com → API keys · cheapest capable models',
+    models: ['deepseek-chat', 'deepseek-reasoner'],
+    fast: 'deepseek-chat', balanced: 'deepseek-chat',
+    baseUrl: 'https://api.deepseek.com',
+  },
+  {
+    id: 'mistral', label: 'Mistral', help: 'console.mistral.ai → API keys · EU-hosted',
+    models: ['mistral-small-latest', 'mistral-large-latest', 'open-mistral-nemo'],
+    fast: 'mistral-small-latest', balanced: 'mistral-large-latest',
+    baseUrl: 'https://api.mistral.ai/v1',
+  },
+  {
+    id: 'xai', label: 'xAI (Grok)', help: 'console.x.ai → API keys',
+    models: ['grok-4', 'grok-3-mini', 'grok-3'],
+    fast: 'grok-3-mini', balanced: 'grok-4',
+    baseUrl: 'https://api.x.ai/v1',
+  },
+  {
+    id: 'custom', label: 'Custom (OpenAI-compatible)', help: 'Any other OpenAI-compatible API, or your own Ollama/vLLM when self-hosting (see AI_ALLOWED_HOSTS)',
+    models: ['llama-3.3-70b-versatile', 'qwen2.5-coder:32b', 'llama3.2'],
+    // No default: `custom` is whatever somebody pointed it at, and guessing a
+    // model for an endpoint we have never seen is a 404 with our name on it.
+    fast: '', balanced: '',
   },
 ];
 export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.label || p;
@@ -76,7 +128,13 @@ export const providerLabel = (p: string) => PROVIDERS.find((x) => x.id === p)?.l
 export function defaultModel(provider: string, tier: ModelTier = 'balanced'): string {
   const def = PROVIDERS.find((x) => x.id === provider);
   if (!def) return '';
-  return (tier === 'fast' ? def.fast : def.balanced) || def.models[0] || '';
+  // An EMPTY tier means "there is no sensible default", and is returned as
+  // empty rather than falling through to `models[0]`. That fallback was the
+  // right safety net while every provider was one we host a list for, and it is
+  // wrong for `custom`: guessing a model for an endpoint we have never seen
+  // sends `llama-3.3-70b-versatile` to somebody's Ollama running qwen, which is
+  // a 404 with our name on it. The caller surfaces "choose a model" instead.
+  return tier === 'fast' ? def.fast : def.balanced;
 }
 
 /**
@@ -152,6 +210,20 @@ const geminiUsage = (u: any): Usage => ({
  */
 const openrouterUsage = (provider: AIProvider) =>
   (provider === 'openrouter' ? { usage: { include: true } } : {});
+
+/**
+ * Where an OpenAI-format request goes.
+ *
+ * One function rather than a ternary repeated in `callAI` and `agentTurn` —
+ * they had the same expression twice already, and adding four providers to a
+ * duplicated ternary is how one of them ends up pointing at OpenAI.
+ */
+function resolveBase(provider: AIProvider, baseUrl?: string): string {
+  if (provider === 'custom') return (baseUrl || '').replace(/\/+$/, '');
+  if (provider === 'openrouter') return 'https://openrouter.ai/api/v1';
+  const known = PROVIDERS.find((p) => p.id === provider)?.baseUrl;
+  return known || 'https://api.openai.com/v1';
+}
 
 // Explicit output ceiling on EVERY provider. Without it, OpenAI-compatible
 // gateways assume the model max (e.g. 16k) and pre-check affordability against
@@ -249,9 +321,7 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   }
 
   // openai, openrouter, and custom endpoints all speak the OpenAI chat format
-  const base = provider === 'custom'
-    ? (baseUrl || '').replace(/\/+$/, '')
-    : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+  const base = resolveBase(provider, baseUrl);
   if (!base) throw new Error('Custom provider needs a base URL (e.g. https://api.groq.com/openai/v1)');
   // Re-check stored URLs at call time too (SSRF guard; rows may predate 0038 validation).
   if (provider === 'custom' && !isAllowedAiHost(base)) throw new Error(privateHostMessage(base));
@@ -338,9 +408,7 @@ export async function agentTurn(
   }
 
   // OpenAI chat format (openai / openrouter / custom)
-  const base = provider === 'custom'
-    ? (baseUrl || '').replace(/\/+$/, '')
-    : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+  const base = resolveBase(provider, baseUrl);
   if (!base) throw new Error('Custom provider needs a base URL');
   if (provider === 'custom' && !isAllowedAiHost(base)) throw new Error(privateHostMessage(base));
   const messages = [{ role: 'system', content: system }, ...history];
