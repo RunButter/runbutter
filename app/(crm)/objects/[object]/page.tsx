@@ -15,6 +15,7 @@ import { boardFields, calendarField, type ViewKind } from '@/lib/crm/views';
 import RecordForm from '@/components/crm/RecordForm';
 import RecordDetail from '@/components/crm/RecordDetail';
 import SanctionsPanel from '@/components/crm/SanctionsPanel';
+import ClientPortalPanel from '@/components/crm/ClientPortalPanel';
 import RecordNotes from '@/components/crm/RecordNotes';
 import { readListState, writeListState, sameListState, EMPTY_LIST_STATE } from '@/lib/crm/list-url';
 import ImportModal from '@/components/crm/ImportModal';
@@ -314,6 +315,11 @@ export default function ObjectPage() {
                 className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-accent hover:bg-accent/10"><FileText className="w-3.5 h-3.5" /> Document</button>
             </>
           ) : undefined}>
+          {/* Companies only: a portal is scoped to an organisation, and people
+              are not billed. */}
+          {slug === 'companies' && wsId && (
+            <ClientPortalPanel privy={privy} workspaceId={wsId} organizationId={detail.id} name={String(detail.name || 'this client')} />
+          )}
           {screenable && detail.name && (
             <SanctionsPanel privyUserId={privy} workspaceId={wsId} name={String(detail.name)}
               object={slug} recordId={detail.id} />

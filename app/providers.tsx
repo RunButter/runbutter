@@ -37,7 +37,7 @@ const PUBLIC_PREFIXES = [
   // TRAILING SLASH IS LOAD-BEARING. isPublicPath ends with a bare startsWith(p),
   // so '/i' would also match '/insights' — the signed-in screen — and stop Privy
   // mounting on it. '/l/' carries one for the same reason.
-  '/i/', '/r/',
+  '/i/', '/r/', '/c/',
 ];
 
 /** Public pages render without the auth SDK; everything else gets it. */

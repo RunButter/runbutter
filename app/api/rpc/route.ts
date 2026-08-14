@@ -105,6 +105,8 @@ const ALLOWED = new Set([
   // Data rooms (0110). The two PUBLIC readers are deliberately absent: they
   // serve people with no Privy session and have their own routes.
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
+  // Client portals (0111). The two public readers have their own routes.
+  'create_client_portal', 'get_client_portals', 'revoke_client_portal',
   // Copilot threads (0102). A thread belongs to a PERSON, and every one of
   // these re-checks that in SQL — a colleague in the same workspace gets
   // NOT_FOUND, not a redacted row. append_copilot_message and
