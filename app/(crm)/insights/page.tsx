@@ -63,7 +63,12 @@ export default function InsightsPage() {
 
   const [wsId, setWsId] = useState<string | null>(null);
   const [custom, setCustom] = useState<Record<string, ObjectDef>>({});
-  const [question, setQuestion] = useState('');
+  // Seeded from ?q= so the copilot — and any agent, and a colleague pasting a
+  // link — can hand somebody a question rather than describing one. Lazy
+  // initialiser, so the box is never briefly empty before filling in.
+  const [question, setQuestion] = useState(() =>
+    (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') || ''));
+  const [autoAsked, setAutoAsked] = useState(false);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
   const [spec, setSpec] = useState<InsightSpec | null>(null);
@@ -131,6 +136,20 @@ export default function InsightsPage() {
       setAsking(false);
     }
   }, [privy, wsId, schemas]);
+
+  /**
+   * A ?q= link asks itself, once.
+   *
+   * The point of the deep link is that somebody clicks it and sees the answer;
+   * making them press Ask again would waste the handoff. Guarded by `autoAsked`
+   * rather than by the question being non-empty, or editing the box would
+   * re-fire it on every keystroke.
+   */
+  useEffect(() => {
+    if (autoAsked || !question.trim() || !privy || !wsId || !schemas.length) return;
+    setAutoAsked(true);
+    ask(question);
+  }, [autoAsked, question, privy, wsId, schemas.length, ask]);
 
   const result = useMemo(() => (spec ? runSpec(spec, rows) : null), [spec, rows]);
 

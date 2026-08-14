@@ -48,6 +48,20 @@ const NOTES: Record<string, SurfaceNote> = {
   expenses: { what: 'expenses', tool: 'create_record(expenses)' },
   transactions: { what: 'the bank ledger', tool: 'create_record(transactions)' },
   finance: { what: 'money in and out, summarised', tool: null },
+  // No tool, and the note says what to do INSTEAD — which is the whole point of
+  // this table. Asked for a chart, the copilot would otherwise answer in prose,
+  // because prose is the only thing it can produce; a link hands over a real
+  // chart the person can then publish.
+  insights: {
+    what: 'charts. Any question answered as a chart over real records, e.g. "unpaid invoices by client". '
+        + 'You CANNOT draw one — link the person to /insights?q=<their question, url-encoded> and they get it in one click. '
+        + 'Prefer that to describing numbers in prose whenever the answer is a comparison, a total by category, or a trend',
+    tool: null,
+  },
+  'investor-update': {
+    what: 'the monthly investor update, drafted from real figures. You CANNOT write it — link to /investor-update',
+    tool: null,
+  },
   campaigns: { what: 'marketing campaigns', tool: 'create_record(campaigns)' },
   newsletters: { what: 'email newsletters — the subject, the design and the send', tool: 'save_newsletter' },
   posts: { what: 'social posts and the content calendar', tool: 'save_post' },
