@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Sparkles, ListChecks, ArrowRight } from 'lucide-react';
 import { getAIUsage, fmtTokens, cacheRate, FEATURE_LABEL, type AIUsage } from '@/lib/crm/ai-usage';
 import { loadDocs, type DocMeta } from '@/lib/crm/docs';
+import RunwayCard from '@/components/crm/RunwayCard';
 
 /**
  * The two things the dashboard had no way to show.
@@ -41,13 +42,18 @@ export default function HomeExtras({ privy, ws }: { privy: string | null; ws: st
   }, [privy, ws]);
 
   const hasUsage = !!usage && usage.totals.calls > 0;
-  if (!hasUsage && todos.length === 0) return null;
+  // Runway decides for itself whether it has anything to say, so the row can no
+  // longer short-circuit on the other two — it would hide a card that had data
+  // because two unrelated ones did not.
+  const runwayCard = <RunwayCard privy={privy} />;
+  if (!hasUsage && todos.length === 0) return <div className="grid lg:grid-cols-2 gap-4">{runwayCard}</div>;
 
   const top = usage?.by_feature?.[0];
   const rate = usage ? cacheRate(usage.totals.input, usage.totals.cached) : null;
 
   return (
     <div className="grid lg:grid-cols-2 gap-4">
+      {runwayCard}
       {hasUsage && usage && (
         <section className="card-surface p-5">
           <div className="flex items-center justify-between mb-3">
