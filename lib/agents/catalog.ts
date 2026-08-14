@@ -37,6 +37,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
   { name: 'list_records', label: 'List records', group: 'Records' },
   { name: 'search_records', label: 'Search records', group: 'Records' },
+  { name: 'chart_records', label: 'Draw a chart', group: 'Records' },
   { name: 'get_record', label: 'Read one record', group: 'Records' },
   { name: 'create_record', label: 'Create a record', group: 'Records', write: true },
   { name: 'update_record', label: 'Update a record', group: 'Records', write: true },

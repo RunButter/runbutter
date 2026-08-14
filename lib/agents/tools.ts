@@ -10,6 +10,8 @@
 // (`where ... workspace_id = any(my)`). Both are scoped — just at different
 // layers — so don't "fix" the ones without p_workspace by inventing an argument.
 import { runDispatcher, signWebhook } from '@/lib/automations/dispatcher';
+// run.ts imports nothing but its own types, so it is safe in a server module.
+import { runSpec } from '@/lib/insights/run';
 import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
 import { isSafeOutboundUrl } from '@/lib/security/http';
@@ -79,6 +81,7 @@ export const TOOLS = [
   { name: 'list_objects', description: 'List the record types available in this RunButter workspace and their fields.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_records', description: 'List records of an object type (most recent first).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG } }, required: ['object'] } },
   { name: 'search_records', description: 'Search records of an object type by a text query (matched across all fields).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, query: { type: 'string' } }, required: ['object', 'query'] } },
+  { name: 'chart_records', description: 'Answer a question as a CHART rather than prose. Counts or sums records of an object, grouped by one of its columns. Prefer this whenever the answer is a comparison, a total by category, or a trend — a chart is read at a glance and can be published as a link, which a paragraph of numbers cannot. Returns the finished buckets.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, group_by: { type: 'string', description: 'Column to group by, e.g. status or category. Omit for a single total.' }, aggregate: { type: 'string', enum: ['count', 'sum', 'avg', 'min', 'max'], description: 'Default count.' }, aggregate_field: { type: 'string', description: 'Numeric column to sum/average. Required unless aggregate is count.' }, chart: { type: 'string', enum: ['bar', 'line', 'pie', 'number'], description: 'Default bar, or number when not grouping.' }, title: { type: 'string' } }, required: ['object'] } },
   { name: 'get_record', description: 'Fetch one record by id.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, id: { type: 'string' } }, required: ['object', 'id'] } },
   { name: 'create_record', description: 'Create a record. `data` uses the object\'s fields (see list_objects).', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, data: { type: 'object' } }, required: ['object', 'data'] } },
   { name: 'update_record', description: 'Update fields on an existing record.', inputSchema: { type: 'object', properties: { object: { type: 'string', description: OBJECT_ARG }, id: { type: 'string' }, data: { type: 'object' } }, required: ['object', 'id', 'data'] } },
@@ -516,6 +519,55 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     case 'search_records': {
       const q = String(args?.query || '').toLowerCase();
       return (await listRows(ctx, object)).filter((r) => Object.values(r).some((v) => String(v ?? '').toLowerCase().includes(q))).slice(0, 50);
+    }
+    /**
+     * A chart, computed here rather than described.
+     *
+     * The rows never reach the model — listRows is the same tenancy-safe read
+     * every other tool uses, the arithmetic happens in runSpec, and what comes
+     * back is a handful of buckets. So this is cheaper in tokens than dumping
+     * a hundred rows into the context AND it cannot be got wrong by a model
+     * doing mental arithmetic over them, which is what it was doing before.
+     *
+     * Validated against the columns actually present in the data rather than a
+     * declared schema, so a workspace's own objects work with no registration —
+     * and a hallucinated column name is refused rather than silently grouping
+     * everything into "No value".
+     */
+    case 'chart_records': {
+      const rows = await listRows(ctx, object);
+      const present = new Set<string>();
+      for (const r of rows.slice(0, 50)) for (const k of Object.keys(r || {})) present.add(k);
+
+      const groupBy = args?.group_by ? String(args.group_by) : null;
+      if (groupBy && !present.has(groupBy)) {
+        throw new Error(`No column "${groupBy}" on ${object}. Available: ${[...present].join(', ')}`);
+      }
+      const fn = ['count', 'sum', 'avg', 'min', 'max'].includes(String(args?.aggregate)) ? String(args.aggregate) : 'count';
+      const field = args?.aggregate_field ? String(args.aggregate_field) : null;
+      if (fn !== 'count' && (!field || !present.has(field))) {
+        throw new Error(`"${fn}" needs a numeric column on ${object}. Available: ${[...present].join(', ')}`);
+      }
+
+      const spec = {
+        object, filters: [], groupBy,
+        metric: { fn, field: fn === 'count' ? null : field },
+        chart: ['bar', 'line', 'pie', 'number'].includes(String(args?.chart)) ? String(args.chart) : (groupBy ? 'bar' : 'number'),
+        sort: 'value_desc', limit: 12,
+        title: String(args?.title || '').slice(0, 120) || object,
+      } as any;
+
+      const out = runSpec(spec, rows);
+      return {
+        title: spec.title,
+        chart: spec.chart,
+        grouped_by: groupBy,
+        measure: fn === 'count' ? 'count' : `${fn} of ${field}`,
+        total: out.total,
+        buckets: out.buckets,
+        matched: out.rows.length,
+        truncated: out.truncated,
+      };
     }
     case 'get_record': {
       const { data, error } = await ctx.admin.rpc('get_record', { p_privy: ctx.privy, p_object: rpcObject(object), p_id: args.id });

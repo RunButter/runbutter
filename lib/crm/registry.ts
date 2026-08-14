@@ -227,11 +227,6 @@ export const OBJECTS: Record<string, ObjectDef> = {
 export const NAV = [
   { group: 'Workspace', pinned: true, items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
-    // Directly under Home, and above Docs, because it reads ACROSS the whole
-    // workspace rather than belonging to any one pillar — a question about
-    // money owed by clients whose deals are open spans Finance and Sales, and
-    // filing it under either would be wrong.
-    { slug: 'insights', label: 'Ask', icon: 'Sparkles', href: '/insights' },
     { slug: 'docs', label: 'Docs', icon: 'FileText', href: '/docs' },
     // Files sits beside Docs, not under Settings: it is a place to work, and
     // its whole value is that uploaded documents become searchable rows in the
