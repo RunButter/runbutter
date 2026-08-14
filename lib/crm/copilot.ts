@@ -75,9 +75,19 @@ export async function removeThread(privy: string, id: string): Promise<void> {
   await rpc('delete_copilot_thread', { p_privy: privy, p_thread: id });
 }
 
-/** The live run, polled while a turn is in flight (0095). */
-export async function pollRun(privy: string, ws: string, runId: string): Promise<{ status: string; steps: CopilotStep[] } | null> {
-  const { data, error } = await rpc('get_agent_run', { p_privy: privy, p_workspace: ws, p_id: runId });
+/**
+ * The live run, polled while a turn is in flight (0095).
+ *
+ * NO p_workspace. get_agent_run derives the caller's workspaces from p_privy in
+ * SQL, and PostgREST resolves functions by argument NAME — so passing a third
+ * argument did not widen the query, it failed to match any function at all.
+ * Every poll returned PGRST202, pollRun returned null on the error, and the
+ * live step list never moved: the panel sat on "working…" until the turn
+ * finished and the whole run arrived at once. Failing closed is why it looked
+ * like latency rather than a bug.
+ */
+export async function pollRun(privy: string, runId: string): Promise<{ status: string; steps: CopilotStep[] } | null> {
+  const { data, error } = await rpc('get_agent_run', { p_privy: privy, p_id: runId });
   if (error || !data) return null;
   const d = data as any;
   return { status: d.status, steps: Array.isArray(d.steps) ? d.steps : [] };

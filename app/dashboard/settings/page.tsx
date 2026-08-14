@@ -89,9 +89,12 @@ export default function SettingsPage() {
             const { data: connected } = await rpc('hr_google_connected', { p_privy: privyUserId });
             setIsGoogleConnected(connected === true);
 
-            // Load the company's webhook integrations
-            const { data: hooks } = await rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });
-            setWebhooks(Array.isArray(hooks) ? hooks : []);
+            // Load the company's webhook integrations. Same rule as
+            // refreshWebhooks: an unchecked rpc() shows an empty list for a
+            // failed read, which is indistinguishable from having none.
+            const { data: hooks, error: hooksError } = await rpc('get_webhook_endpoints', { p_privy_user_id: privyUserId });
+            if (hooksError) setHookMsg(hooksError.message || 'Could not load integrations.');
+            else setWebhooks(Array.isArray(hooks) ? hooks : []);
 
         } catch (err: any) {
             console.error('Error loading settings:', err);
@@ -204,7 +207,17 @@ export default function SettingsPage() {
 
     const refreshWebhooks = async () => {
         if (!user) return;
-        const { data } = await rpc('get_webhook_endpoints', { p_privy_user_id: user.id });
+        // rpc() resolves on failure — it never throws — so an unchecked call
+        // renders "no integrations" for a load that actually failed. This panel
+        // spent its whole life doing that: get_webhook_endpoints was missing
+        // from the database entirely (0106) and the screen said the list was
+        // empty rather than that it could not be read.
+        const { data, error } = await rpc('get_webhook_endpoints', { p_privy_user_id: user.id });
+        if (error) {
+            setHookMsg(error.message || 'Could not load integrations.');
+            return;
+        }
+        setHookMsg('');
         setWebhooks(Array.isArray(data) ? data : []);
     };
 

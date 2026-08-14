@@ -154,7 +154,7 @@ export default function CopilotPanel() {
       while (!stop) {
         await new Promise((r) => setTimeout(r, 900));
         if (stop) break;
-        const live = await pollRun(privy, ws, runId);
+        const live = await pollRun(privy, runId);
         if (live?.steps?.length) setLiveSteps(live.steps);
       }
     };

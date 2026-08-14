@@ -24,9 +24,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state: 0001–0092 reported applied by the owner; 0093 is NEW and pending.** 0093 is what
-  lets a workspace be renamed — until it runs, Settings → Branding answers *"Renaming needs
-  migration 0093"* and the sidebar keeps whatever name signup wrote, forever. Do not take that on trust when
+- **Schema state: 0001–0104 verified applied against production (2026-08-14, through the Supabase
+  connector — read from `pg_proc`, not taken on trust). 0105 and 0106 are NEW and pending, and
+  0105 is a SECURITY fix — see Owner actions.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -45,6 +45,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
     silently converted tables back into docs; 0085 fixed it.
   - Clients should fall back to the older signature when a migration has not run, so the feature
     degrades instead of the screen breaking.
+  - **A new SECURITY DEFINER function needs a REVOKE, and `grant … to service_role` alone is not
+    it.** Postgres grants EXECUTE to PUBLIC on every function it creates and `anon` inherits through
+    PUBLIC, so a function that grants nobody anything is still callable with the public browser key
+    — which bypasses RLS and routes around `/api/rpc`, the only thing that verifies a Privy token.
+    Always the pair:
+    ```sql
+    revoke all on function <name>(<args>) from public, anon, authenticated;
+    grant execute on function <name>(<args>) to service_role;
+    ```
+    0046 established this and then **every migration from 0047 to 0104 undid it**, because the house
+    style became `grant execute … to authenticated, anon`. By 2026-08 that was **69 DEFINER functions
+    anon-callable on production**, including the whole CRUD monolith, `create_api_key`,
+    `rename_workspace`, and three `builtin_extras_*` helpers that take no `p_privy` and authorise
+    nothing at all. 0105 sweeps them; **`npm run check:grants` is a CI gate** so it cannot happen a
+    third time. It caught 0106 on its first run — which is exactly the point.
 - **Ops each feature needs** (nothing mails, sends or fires without them) — the full table is in
   `docs/install.md`: crons for automations, newsletters, sequences, posts and agents authenticate
   with `x-cron-secret: <service-role key>`; finance reminders and the Excel sweep use `CRON_SECRET`.
@@ -1014,6 +1029,15 @@ Same rule as the cost rule above: prefer public/government data + local computat
   two report sections passing an argument their function does not take, a browser call missing from the
   `/api/rpc` allowlist, and a whole route that did not exist. All four failed *closed*, so nothing ever
   reported them. Worth re-running after any migration that changes a signature.
+  - **Re-run 2026-08-14 against PRODUCTION through the Supabase connector** (which works from a cloud
+    session even though the sandbox cannot reach `supabase.co` over the network — the connector is not
+    the sandbox's network). 321 distinct callsites, four more defects, all failing closed: the anon
+    grants, the missing webhooks feature, `pollRun`'s extra argument. **Do it in SQL, not in JS** — emit
+    the callsites as a `VALUES` list and let Postgres do the `<@` diff against `pg_proc`. Pulling the
+    whole catalogue back to compare locally costs far more context and risks transcription errors.
+  - **`npm run check:grants`** is the other half and is a CI gate: no SECURITY DEFINER function may be
+    anon/authenticated-callable unless it is on the `keep_public` allowlist, which the script **parses
+    out of the newest revoke migration** rather than keeping a second copy of.
 - **CI runs the migrations from empty on every push**, twice (idempotency), and fails on a stale
   `supabase/schema.sql`. A green CI means the schema applies to a stranger's database, which is the
   thing nobody tests by hand twice.
@@ -1023,6 +1047,25 @@ Same rule as the cost rule above: prefer public/government data + local computat
   `useThemeSync()` and returns mixed readings.
 
 ## Where this left off (read this first)
+**Latest session (2026-08-14) had a WORKING SUPABASE CONNECTOR and used it to run the audit this
+file recommends — every `rpc()` callsite in the repo checked against production's `pg_proc` by name
+AND argument name, 321 distinct callsites. Four defects, all failing closed, none of them visible:**
+1. **69 SECURITY DEFINER functions were anon-callable on production** — 0046's hole, re-opened by
+   every migration after it. **0105 sweeps it and `npm run check:grants` is now a CI gate.** Three of
+   the 69 (`builtin_extras_write/add/addmany`) take no `p_privy` and authorise nothing, so they were
+   cross-tenant read/write primitives gated only by uuid unguessability. See the grant convention
+   under Migration conventions.
+2. **The webhooks feature never existed on production.** `webhook_endpoints` and its three RPCs live
+   only in `supabase/legacy/`, which `migrate.mjs` runs **only on an empty database** — and
+   production never was. Settings → Integrations discarded the error and rendered an empty list, so
+   it read as "no integrations" rather than "this is broken". **0106** adds them, using
+   `hr_company_id()` instead of the legacy file's unordered `LIMIT 1`.
+3. **The Copilot's live step polling never worked.** `pollRun` passed `p_workspace` to
+   `get_agent_run`, which does not take it; PostgREST matches by argument NAME, so every poll was a
+   `PGRST202` and the panel sat blank until the whole turn finished. Fixed.
+4. `0103` and `0104` were **already applied** — the previous handoff was wrong about that, which is
+   why the rule is to probe `pg_proc` rather than believe a note.
+
 Last session shipped the Copilot and the whole cost layer. What is DONE and needs nothing:
 Copilot (0102) with per-person threads, suggest/auto per conversation, inline approvals and live
 steps · **45 agent tools** (was 26 — docs, deals, chat, posts, candidates, subscribers, newsletters
@@ -1050,10 +1093,15 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run migrations 0103 and 0104.** 0093–0102 are confirmed applied by the owner. **0104 is the one
-  blocking shipped UI**: the "Set price" button on the AI usage panel calls `save_model_price`, which
-  does not exist until it runs, so an unpriced model stays unpriced with no way to fix it. 0103 lets
-  `skills.source` hold `copilot`.
+- **Run migrations 0105 and 0106. 0105 IS A SECURITY FIX AND SHOULD GO FIRST.** It revokes `anon`
+  EXECUTE from 69 SECURITY DEFINER functions that the public browser key could call directly against
+  PostgREST, bypassing RLS and `/api/rpc` — the CRUD monolith, `create_api_key`, `rename_workspace`,
+  and three helpers that authorise nothing at all. ⚠️ **Before running it, confirm
+  `SUPABASE_SERVICE_ROLE_KEY` is set in Render** — `/api/rpc` falls back to the anon key without it,
+  and after 0105 that key can no longer execute these functions. (0046 already shipped under the same
+  condition, so this is true today; confirm rather than assume.) 0106 adds the missing
+  `webhook_endpoints` table and RPCs.
+  ~~Run migrations 0103 and 0104~~ — **already applied**; verified against `pg_proc`, not reported.
 - **Re-authorize the MCP connector.** The token expired mid-session, so the 45 agent tools have been
   verified against SQL — every RPC exists and accepts its arguments — and **never against a real
   conversation on a real workspace**. That is the largest remaining unknown in the copilot, and it
