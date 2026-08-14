@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Menu, Loader2 } from 'lucide-react';
 import { getWorkspace } from '@/lib/crm/data';
 import NavRail from '@/components/crm/NavRail';
+import LoadErrorBanner from '@/components/crm/LoadErrorBanner';
 import PlanGate from '@/components/PlanGate';
 import { type PlanFeature } from '@/lib/plans';
 
@@ -82,6 +83,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
+        {/* The HR half needs this as much as the CRM half — the panel that made
+            the case for it (Settings → Integrations, rendering "no integrations"
+            for a read that was failing) lives on this side. */}
+        <LoadErrorBanner />
         <div className="flex-1 overflow-y-auto bg-canvas">
           {requiredFeature
             ? <PlanGate plan={plan} feature={requiredFeature}>{children}</PlanGate>

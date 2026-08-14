@@ -7,6 +7,7 @@ import { Menu } from 'lucide-react';
 import NavRail from '@/components/crm/NavRail';
 import CommandPalette from '@/components/CommandPalette';
 import CopilotPanel from '@/components/crm/CopilotPanel';
+import LoadErrorBanner from '@/components/crm/LoadErrorBanner';
 import PlanGate from '@/components/PlanGate';
 import AppLoading from '@/components/ui/AppLoading';
 import { getWorkspace } from '@/lib/crm/data';
@@ -87,6 +88,10 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
           </button>
           <span className="text-sm font-medium text-primary">RunButter</span>
         </header>
+        {/* Above the page, below the header: a read that failed has to be
+            visible over whatever empty state the page drew, or "this is broken"
+            and "you have none of these" look identical. */}
+        {!booting && <LoadErrorBanner />}
         {booting
           ? <AppLoading kind="idle" label="Getting your workspace ready" hint="Restoring your session" />
           : body}

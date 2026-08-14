@@ -49,6 +49,45 @@ async function cachedToken(): Promise<string | null> {
   return value;
 }
 
+/**
+ * A FAILED READ MUST NOT LOOK LIKE AN EMPTY ONE.
+ *
+ * `rpc()` resolves on failure and never throws, so `const { data } = await
+ * rpc(…)` compiles, runs, and renders an empty list for a load that broke.
+ * Thirty-four call sites in this repo do exactly that, and it is not a
+ * hypothetical: Settings → Integrations rendered "no integrations" for months
+ * while the three functions behind it did not exist in the database at all. The
+ * screen was not empty, it was broken, and nothing on it said so.
+ *
+ * Fixing thirty-four return types would touch every caller of every loader. This
+ * is the systemic half instead: any READ that fails announces itself, so the
+ * shell can say "this did not load" over the top of whatever empty state the
+ * page drew. It costs nothing at the call sites and it covers code nobody has
+ * written yet, which is the part a one-time sweep cannot do.
+ *
+ * READS ONLY. A write already has an owner — the caller that awaited it and
+ * shows `notify(error)` — and announcing those too would produce two messages
+ * for one failure.
+ *
+ * SESSION ERRORS ARE SKIPPED. Signed out, every read fails, and that case is
+ * already answered honestly by the amber "Sample" badge; a red banner behind it
+ * would be alarming and redundant. What is left is what this is for: a missing
+ * function, a bad argument, a 500, a dropped network.
+ */
+export const RPC_READ_FAILED = 'rb:rpc-read-failed';
+export interface RpcReadFailure { fn: string; message: string }
+
+const isSessionError = (m: string) => /session|sign in|unauthor|401|403/i.test(m);
+
+function announceReadFailure(fn: string, error: any) {
+  if (typeof window === 'undefined') return;
+  const message = String(error?.message || 'Request failed');
+  if (isSessionError(message)) return;
+  // console too: the banner is for the person, this is for whoever is debugging.
+  console.error(`rpc read failed: ${fn}`, error);
+  window.dispatchEvent(new CustomEvent<RpcReadFailure>(RPC_READ_FAILED, { detail: { fn, message } }));
+}
+
 async function call(fn: string, args: Record<string, any>): Promise<Result> {
   try {
     const token = await cachedToken();
@@ -92,6 +131,7 @@ export async function rpc(fn: string, args?: Record<string, any>): Promise<Resul
     // Only successful reads are cached — an error must not stick around and
     // keep a screen broken for the rest of the TTL.
     if (!out.error) cache.set(key, { at: Date.now(), value: out });
+    else announceReadFailure(fn, out.error);
     return out;
   })();
 
