@@ -98,6 +98,10 @@ const ALLOWED = new Set([
   // or zero for a self-hosted model. Writes re-check owner/admin in SQL — a
   // price changes every cost figure everyone else reads.
   'get_model_prices', 'save_model_price', 'delete_model_price',
+  // Shared insight snapshots (0109). get_insight_public is deliberately ABSENT:
+  // it serves readers with no Privy session, and this proxy rejects a tokenless
+  // request, so it has its own route holding the service-role client.
+  'publish_insight', 'get_insight_snapshots', 'revoke_insight',
   // Copilot threads (0102). A thread belongs to a PERSON, and every one of
   // these re-checks that in SQL — a colleague in the same workspace gets
   // NOT_FOUND, not a redacted row. append_copilot_message and

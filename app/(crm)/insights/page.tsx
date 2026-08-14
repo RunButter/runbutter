@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy, getAccessToken } from '@privy-io/react-auth';
-import { Sparkles, Loader2, CornerDownLeft } from 'lucide-react';
+import { Sparkles, Loader2, CornerDownLeft, Share2, Check, Copy } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
 import InsightChart from '@/components/crm/InsightChart';
@@ -11,6 +11,7 @@ import { OBJECTS } from '@/lib/crm/registry';
 import { loadCustomObjects, customObjectMap } from '@/lib/crm/custom';
 import { loadRecords, getWorkspace } from '@/lib/crm/data';
 import { runSpec } from '@/lib/insights/run';
+import { publishInsight } from '@/lib/insights/publish';
 import {
   describeSpec, isNumeric, CHART_KINDS, METRIC_FNS,
   type InsightSpec, type SchemaObject, type ChartKind, type MetricFn,
@@ -68,6 +69,9 @@ export default function InsightsPage() {
   const [spec, setSpec] = useState<InsightSpec | null>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!privy) return;
@@ -118,6 +122,9 @@ export default function InsightsPage() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setError(j?.error || `Request failed (${res.status})`); return; }
       setSpec(j.spec as InsightSpec);
+      // The old link described the old question. Keeping it on screen after the
+      // chart changes is how somebody sends the wrong one.
+      setShareUrl(''); setCopied(false);
     } catch (e: any) {
       setError(e?.message || 'Could not reach the server.');
     } finally {
@@ -198,10 +205,46 @@ export default function InsightsPage() {
                 )}
               </div>
 
-              <p className="mt-3 text-2xs text-tertiary">
-                {result.rows.length} of {rows.length} {schema.plural.toLowerCase()} matched
-                {result.truncated && ` · showing the top ${spec.limit}`}
-              </p>
+              <div className="mt-3 flex items-center gap-3 flex-wrap">
+                <p className="text-2xs text-tertiary">
+                  {result.rows.length} of {rows.length} {schema.plural.toLowerCase()} matched
+                  {result.truncated && ` · showing the top ${spec.limit}`}
+                </p>
+                <button
+                  onClick={async () => {
+                    if (!privy || !wsId) return;
+                    setSharing(true);
+                    const res = await publishInsight(privy, wsId, {
+                      title: spec.title, result, chart: spec.chart, currency,
+                      query: describeSpec(spec, schema),
+                    });
+                    setSharing(false);
+                    if (res.token) setShareUrl(`${window.location.origin}/i/${res.token}`);
+                    else setError(res.error || 'Could not publish.');
+                  }}
+                  disabled={sharing || !privy}
+                  className="ml-auto h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-2xs font-semibold text-secondary hover:text-primary hover:bg-surface-sunken disabled:opacity-40">
+                  {sharing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+                  Publish link
+                </button>
+              </div>
+              {shareUrl && (
+                <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-surface-sunken">
+                  <input readOnly value={shareUrl} onFocus={(e) => e.currentTarget.select()}
+                    className="flex-1 min-w-0 bg-transparent text-2xs text-secondary outline-none" />
+                  <button
+                    onClick={() => { navigator.clipboard?.writeText(shareUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                    className="h-6 px-2 inline-flex items-center gap-1 rounded text-2xs font-semibold text-accent hover:bg-accent/10">
+                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              )}
+              {shareUrl && (
+                <p className="mt-1.5 text-2xs text-tertiary">
+                  Anyone with the link sees these numbers frozen as they are now — not live data, and no
+                  underlying records.
+                </p>
+              )}
             </div>
           )}
 
