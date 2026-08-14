@@ -290,6 +290,78 @@ export function marketplaceJson(input: ManifestInput & { ownerName?: string }): 
 }
 
 /** The whole package, as files, ready for a zip or a filesystem write. */
+/**
+ * `.cursor-plugin/plugin.json` — Cursor's own marketplace layout.
+ *
+ * WHY THIS EXISTS WHEN platforms.ts ARGUES IT SHOULD NOT. That file says
+ * "export for Cursor and export for Copilot are the SAME export", because
+ * Cursor sits on the Agent Plugins steering committee. That was true when it
+ * was written and is no longer the whole story: github.com/cursor/plugins ships
+ * a marketplace whose packages are NOT bare Agent Plugins — the manifest lives
+ * under `.cursor-plugin/`, and the registry entry beside it is what makes a
+ * plugin appear in their catalogue at all.
+ *
+ * READ FROM THE PRIMARY SOURCE, not inferred — schemas/plugin.schema.json in
+ * that repository. Which matters, because platforms.ts's own rule is that a
+ * guessed manifest is worse than no target: the user finds out at install time,
+ * in someone else's tool, with no way to tell whose fault it is.
+ *
+ * From the schema: `name` is the ONLY required field, kebab-case matching
+ * ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ — the same shape pluginSlug already
+ * produces. `category` has no enum, so it is an open string.
+ *
+ * The MCP server is inlined as an OBJECT rather than written to mcp.json and
+ * referenced by path. The schema accepts either, but a path means guessing
+ * whether the file holds the servers map or the `{ mcpServers: … }` wrapper —
+ * and that is exactly the class of guess this file refuses to make.
+ */
+export function cursorManifestJson(
+  input: ManifestInput & { displayName?: string; category?: string; mcpUrl?: string },
+): string {
+  const name = pluginSlug(input.name);
+  const server = input.mcpUrl
+    ? { mcpServers: { runbutter: { type: 'streamable-http', url: input.mcpUrl } } }
+    : {};
+  return JSON.stringify({
+    name,
+    displayName: input.displayName || input.name,
+    ...(input.description ? { description: input.description } : {}),
+    ...(input.version ? { version: input.version } : {}),
+    ...(input.author?.name ? { author: { name: input.author.name } } : {}),
+    ...(input.homepage ? { homepage: input.homepage } : {}),
+    ...(input.repository ? { repository: input.repository } : {}),
+    ...(input.license ? { license: input.license } : {}),
+    ...(input.keywords?.length ? { keywords: input.keywords } : {}),
+    category: input.category || 'productivity',
+    // A glob at the package root, which is where skillFilesAt puts them.
+    skills: './skills/',
+    ...server,
+  }, null, 2) + '\n';
+}
+
+/**
+ * `.cursor-plugin/marketplace.json` — the registry entry.
+ *
+ * Shape taken from the repository's own root manifest: `name`, `owner`,
+ * `metadata`, and `plugins[]` whose entries carry `name`, `source` and
+ * `description`. `source: './'` points at the package root, so a single-plugin
+ * repository is its own marketplace — the same trick the Claude marketplace
+ * manifest uses, for the same reason.
+ */
+export function cursorMarketplaceJson(input: ManifestInput & { ownerName?: string }): string {
+  const name = pluginSlug(input.name);
+  return JSON.stringify({
+    name: `${name}-marketplace`,
+    owner: { name: input.ownerName || input.author?.name || name },
+    ...(input.description ? { metadata: { description: input.description } } : {}),
+    plugins: [{
+      name,
+      source: './',
+      ...(input.description ? { description: input.description } : {}),
+    }],
+  }, null, 2) + '\n';
+}
+
 export function buildPlugin(opts: {
   manifest: ManifestInput;
   skills?: SkillSource[];

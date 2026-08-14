@@ -27,9 +27,10 @@
  */
 
 import { buildPlugin, manifestJson, mcpJson, skillMd, skillSlug, resourcePath,
+         cursorManifestJson, cursorMarketplaceJson,
          type ManifestInput, type PluginFile, type SkillSource } from '@/lib/plugins/agent-plugin';
 
-export type PlatformId = 'agent-plugin' | 'claude-project' | 'claude-marketplace' | 'mcp-only';
+export type PlatformId = 'agent-plugin' | 'claude-project' | 'claude-marketplace' | 'cursor-plugin' | 'mcp-only';
 
 export interface BuildInput {
   manifest: ManifestInput;
@@ -99,6 +100,18 @@ export const PLATFORMS: Platform[] = [
     build: ({ skills }) => skillFilesAt('.claude/skills', skills),
   },
   {
+    id: 'cursor-plugin',
+    label: 'Cursor plugin',
+    blurb: 'The layout Cursor’s own marketplace uses.',
+    notes: 'Cursor helps steer Agent Plugins, so the portable export already works there — this is the packaging github.com/cursor/plugins itself ships, with the manifest under .cursor-plugin/ and a registry entry beside it. Pick it if you want to publish into that catalogue.',
+    install: 'Push to a public repo, then add it as a marketplace in Cursor.',
+    build: ({ manifest, skills, mcpUrl }) => [
+      { path: '.cursor-plugin/plugin.json', content: cursorManifestJson({ ...manifest, mcpUrl }) },
+      { path: '.cursor-plugin/marketplace.json', content: cursorMarketplaceJson(manifest) },
+      ...skillFilesAt('skills', skills),
+    ],
+  },
+  {
     id: 'mcp-only',
     label: 'MCP config',
     blurb: 'Tools without the instructions.',
@@ -131,6 +144,13 @@ export function losses(id: PlatformId, input: BuildInput): string[] {
   }
   if (id === 'agent-plugin') {
     out.push('Installs by folder rather than by name. Choose Claude Code plugin for a one-command install.');
+  }
+  if (id === 'cursor-plugin') {
+    // Not a loss of content — every skill and the server all travel. It is a
+    // loss of PORTABILITY, which is the thing somebody picking this target is
+    // trading away and would otherwise only discover in another client.
+    out.push('Cursor-specific packaging. Clients that read the portable Agent Plugin layout will not find the manifest under .cursor-plugin/ — export that format as well if you want both.');
+    if (input.manifest.author?.url) out.push('Author URL is dropped; this manifest carries an author name only.');
   }
   return out;
 }
