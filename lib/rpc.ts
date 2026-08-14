@@ -109,8 +109,28 @@ async function call(fn: string, args: Record<string, any>): Promise<Result> {
   }
 }
 
-export async function rpc(fn: string, args?: Record<string, any>): Promise<Result> {
+export interface RpcOptions {
+  /**
+   * Don't announce a failure to the shell.
+   *
+   * For reads whose absence is genuinely harmless AND invisible — a badge
+   * count, a preflight, anything whose caller already degrades on purpose.
+   * `loadNavActivity` is the case that proved this necessary: it catches its
+   * own error and returns {} "so the nav never breaks", so a red banner about
+   * it is disproportionate to a missing number nobody was promised.
+   *
+   * USE IT SPARINGLY. The banner exists because thirty-four call sites made a
+   * failed read look like an empty one, and an option to silence it is an
+   * option to recreate exactly that. The test is not "would a banner be
+   * annoying" — it is "if this never succeeds, will the screen still tell the
+   * truth?" A list of records fails that test. A badge count passes it.
+   */
+  quiet?: boolean;
+}
+
+export async function rpc(fn: string, args?: Record<string, any>, opts?: RpcOptions): Promise<Result> {
   const a = args ?? {};
+  const quiet = opts?.quiet === true;
 
   // Writes are never cached, and they invalidate everything that was.
   if (!isRead(fn)) {
@@ -131,7 +151,7 @@ export async function rpc(fn: string, args?: Record<string, any>): Promise<Resul
     // Only successful reads are cached — an error must not stick around and
     // keep a screen broken for the rest of the TTL.
     if (!out.error) cache.set(key, { at: Date.now(), value: out });
-    else announceReadFailure(fn, out.error);
+    else if (!quiet) announceReadFailure(fn, out.error);
     return out;
   })();
 

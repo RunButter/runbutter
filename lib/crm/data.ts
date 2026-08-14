@@ -27,7 +27,12 @@ export interface WorkspaceContext { id: string; name: string; role: string; plan
 export async function loadNavActivity(privyUserId: string | null, since: Record<string, string>): Promise<Record<string, number>> {
   if (!privyUserId) return {};
   try {
-    const { data, error } = await rpc('get_nav_activity', { p_privy: privyUserId, p_since: since });
+    // quiet: this one already degrades on purpose (see the {} returns below),
+    // and its whole output is a "new since you last looked" badge. A failure
+    // costs a number nobody was promised, so it must not raise the shell's
+    // load-failure banner — that banner is for a screen that is lying about
+    // being empty, and crying wolf here would teach people to dismiss it.
+    const { data, error } = await rpc('get_nav_activity', { p_privy: privyUserId, p_since: since }, { quiet: true });
     if (error || !data || typeof data !== 'object') return {};
     const out: Record<string, number> = {};
     for (const [k, v] of Object.entries(data as any)) out[k] = +(v as any) || 0;
