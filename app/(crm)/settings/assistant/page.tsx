@@ -7,6 +7,7 @@ import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { rpc } from '@/lib/rpc';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
+import PushToggle from '@/components/crm/PushToggle';
 
 interface Channel { id: string; platform: string; webhook_token: string; has_token: boolean; allowed_senders: string[]; autonomy: 'suggest' | 'auto'; enabled: boolean }
 
@@ -56,6 +57,10 @@ export default function AssistantPage() {
           <p className="text-sm text-secondary -mt-1">
             Chat with your workspace from Telegram — ask questions and create offers, invoices or people right from a DM. Runs on your workspace AI key; only people you allow can use it.
           </p>
+
+          {/* Per-device and personal, which is why it sits under Account rather
+              than with the workspace-wide settings. */}
+          <PushToggle privy={privy} workspaceId={ws?.id ?? null} />
 
           {loading ? (
             <AppLoading />

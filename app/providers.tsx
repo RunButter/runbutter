@@ -40,6 +40,25 @@ const PUBLIC_PREFIXES = [
   '/i/', '/r/', '/c/',
 ];
 
+/**
+ * Register the service worker, once, on app pages only.
+ *
+ * It exists for installability and push (public/sw.js deliberately does no
+ * caching), so registering it on the marketing site would buy nothing and add a
+ * request to the page whose whole performance budget is main-thread work.
+ *
+ * Failure is silent by design: a browser without service workers, or a page
+ * served over plain http in development, simply does not get notifications —
+ * that is not something to shout about on a dashboard.
+ */
+function useServiceWorker(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* unsupported or insecure origin */ });
+  }, [enabled]);
+}
+
 /** Public pages render without the auth SDK; everything else gets it. */
 function isPublicPath(path: string | null): boolean {
   if (!path) return false;
@@ -80,6 +99,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   // DialogProvider wraps everything (incl. public pages) so useDialog() works
   // anywhere without falling back to browser confirm/alert. TooltipProvider sits
   // alongside it so any <Tooltip> works app-wide without a local provider.
+  // Hooks run before the early returns below, so this must be called
+  // unconditionally and decide internally — the public-page check is a value,
+  // not a branch around the hook.
+  useServiceWorker(!isPublicPath(pathname));
+
   const tree = (
     <TooltipProvider delayDuration={300} skipDelayDuration={200}>
       <DialogProvider>{children}</DialogProvider>
