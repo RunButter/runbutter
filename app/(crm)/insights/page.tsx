@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy, getAccessToken } from '@privy-io/react-auth';
-import { Sparkles, Loader2, CornerDownLeft, Share2, Check, Copy } from 'lucide-react';
+import { Loader2, Share2, Check, Copy } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
 import InsightChart from '@/components/crm/InsightChart';
@@ -19,7 +19,13 @@ import {
 import type { ObjectDef } from '@/lib/crm/types';
 
 /**
- * Ask a question about the business, get a chart.
+ * Charts over your real records.
+ *
+ * THERE IS NO QUESTION BOX HERE, AND THAT IS THE DESIGN. This product has one
+ * AI — the copilot — and a second "ask a question" input meant two things to
+ * learn, two places to try, and two answers to reconcile for one question. The
+ * copilot links here with ?q= and the chart builds itself; from this screen the
+ * query is a row of dropdowns, which needs no AI key at all.
  *
  * THE POINT OF THIS SCREEN is the thing no competitor can do. Notion, ClickUp
  * and Monday all have databases and all have AI; none of them has invoices, a
@@ -42,13 +48,6 @@ import type { ObjectDef } from '@/lib/crm/types';
  * always have built by hand.
  */
 
-const EXAMPLES = [
-  'How much do clients owe us, by company?',
-  'How many invoices are overdue?',
-  'Deals by stage',
-  'Expenses this quarter by category',
-];
-
 function toSchema(o: ObjectDef): SchemaObject {
   return {
     slug: o.slug,
@@ -66,7 +65,7 @@ export default function InsightsPage() {
   // Seeded from ?q= so the copilot — and any agent, and a colleague pasting a
   // link — can hand somebody a question rather than describing one. Lazy
   // initialiser, so the box is never briefly empty before filling in.
-  const [question, setQuestion] = useState(() =>
+  const [question] = useState(() =>
     (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') || ''));
   const [autoAsked, setAutoAsked] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -162,39 +161,43 @@ export default function InsightsPage() {
 
   return (
     <>
-      <PageHeader title="Ask" />
+      <PageHeader title="Charts" />
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="page-body p-6 2xl:p-8 flex flex-col gap-5">
 
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" />
-                <input
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !asking) ask(question); }}
-                  placeholder="Ask about your business — “how much do clients owe us, by company?”"
-                  disabled={!privy}
-                  className="w-full h-11 pl-9 pr-9 text-sm bg-surface rounded-xl ring-1 ring-subtle shadow-sm text-primary placeholder:text-tertiary outline-none transition-shadow focus:ring-2 focus:ring-accent/30" />
-                <CornerDownLeft className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
-              </div>
-              <button onClick={() => ask(question)} disabled={asking || !question.trim() || !privy}
-                className="h-11 px-4 rounded-xl bg-inverse text-inverse-fg text-sm font-semibold shadow-sm disabled:opacity-40 inline-flex items-center gap-2">
-                {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Ask
-              </button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {EXAMPLES.map((x) => (
-                <button key={x} onClick={() => { setQuestion(x); ask(x); }} disabled={asking || !privy}
-                  className="h-6 px-2 rounded-md text-2xs text-secondary bg-surface-sunken hover:text-primary disabled:opacity-40">
-                  {x}
-                </button>
-              ))}
-            </div>
-            {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+          {/* NO QUESTION BOX HERE, DELIBERATELY.
+              There is one AI in this product and it is the copilot. A second
+              "ask a question" input meant two things to learn, two places to
+              try, and two answers to reconcile for one question. The copilot
+              links here with ?q= and the chart builds itself; from this screen
+              you pick the query by hand, which needs no AI key at all. */}
+          <div className="rounded-2xl bg-surface ring-1 ring-subtle shadow-card p-4 flex flex-wrap items-center gap-2">
+            <span className="text-2xs text-tertiary">Chart</span>
+            <select
+              value={spec?.object || ''}
+              onChange={(e) => {
+                const o = allObjects.find((x) => x.slug === e.target.value);
+                if (!o) { setSpec(null); return; }
+                // A sensible starting question: how many, grouped by the first
+                // thing worth grouping by. Everything else is a dropdown away.
+                const group = o.fields.find((f) => f.type === 'tags')?.key || null;
+                setSpec({
+                  object: o.slug, filters: [], groupBy: group,
+                  metric: { fn: 'count', field: null },
+                  chart: group ? 'bar' : 'number', sort: 'value_desc', limit: 12,
+                  title: group ? `${o.plural} by ${o.fields.find((f) => f.key === group)?.label}` : o.plural,
+                });
+                setShareUrl(''); setCopied(false);
+              }}
+              className="h-8 px-2 text-xs rounded-lg bg-surface-sunken text-secondary outline-none focus:ring-2 focus:ring-accent/30">
+              <option value="">Choose records…</option>
+              {allObjects.map((o) => <option key={o.slug} value={o.slug}>{o.plural}</option>)}
+            </select>
+            {asking && <span className="text-2xs text-tertiary inline-flex items-center gap-1"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Reading your question…</span>}
+            <span className="ml-auto text-2xs text-tertiary">Ask the copilot for a chart and it will open here.</span>
           </div>
+          {error && <p className="text-xs text-danger">{error}</p>}
 
           {spec && schema && result && (
             <div className="rounded-2xl bg-surface ring-1 ring-subtle shadow-card p-5">
@@ -276,10 +279,10 @@ export default function InsightsPage() {
 
           {!spec && !asking && (
             <div className="rounded-2xl bg-surface ring-1 ring-subtle p-8 text-center">
-              <p className="text-sm text-secondary">Ask a question to see a chart.</p>
+              <p className="text-sm text-secondary">Pick some records above, or ask the copilot for a chart.</p>
               <p className="mt-1 text-2xs text-tertiary">
-                Your records are never sent to the model — only the column names. The query it writes is
-                shown, and you can change any part of it.
+                Every part of the query is a dropdown, so this works with no AI key at all. When the copilot
+                does write one, your records are never sent to it — only the column names.
               </p>
             </div>
           )}
