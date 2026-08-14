@@ -96,6 +96,14 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
+      # The pricing page and the enforcement must agree. Two copies of a
+      # number a human maintains is how the plan matrix in CLAUDE.md ended up a
+      # whole business model behind reality; this makes disagreement unmergeable.
+      - name: Plan limits match lib/plans.ts
+        run: npm run check:plans
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
       # supabase/schema.sql is generated. A stale one is an install path that
       # quietly ships yesterday's schema, which is worse than not having it.
       - name: supabase/schema.sql is up to date

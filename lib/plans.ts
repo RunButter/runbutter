@@ -186,3 +186,24 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
     auditLog: 'Audit log',
     hrisExport: 'HRIS export',
 };
+
+/**
+ * Turn a raised plan ceiling into something a person can act on.
+ *
+ * 0108 raises `PLAN_LIMIT_RECORDS: the free plan includes 500 records and this
+ * workspace has 500. Upgrade to add more.` — already written for a human,
+ * because a limit somebody hits at 11pm is not the moment to make them decode a
+ * Postgres error. This strips the machine prefix and nothing else: rewriting the
+ * sentence here would put the numbers in a THIRD place, and this file and the
+ * plan_limits table are already the two that `npm run check:plans` exists to
+ * keep honest.
+ *
+ * It lives in lib/plans.ts rather than lib/crm/data.ts because the REST route
+ * and the MCP server need it too, and data.ts reaches lib/rpc.ts, which is
+ * `use client` and pulls the browser Supabase client into any route handler
+ * that imports it — the breakage lib/workspace/blueprint.ts documents.
+ */
+export function planLimitMessage(raw: string | undefined | null): string | null {
+    const m = /PLAN_LIMIT_[A-Z_]+:\s*(.+)$/.exec(String(raw || ''));
+    return m ? m[1].trim() : null;
+}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { checkFeature, planDeniedBody } from '@/lib/plans-server';
+import { planLimitMessage } from '@/lib/plans';
 import { runDispatcher } from '@/lib/automations/dispatcher';
 import { readJsonCapped, rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
@@ -138,7 +139,15 @@ export async function POST(req: Request) {
   const payload = object === 'offers' ? { ...(body.data || {}), kind: 'offer' } : (body.data || {});
   const rpcObject = object === 'offers' ? 'invoices' : object;
   const { data, error } = await ctx.admin.rpc('create_record', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: rpcObject, p_data: payload });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    // A plan ceiling is 402, not 400: the request was well-formed and the
+    // caller is who they say they are — they have run out of allowance. A
+    // script hitting this needs to tell them apart, because one is a bug in the
+    // payload and the other is a billing decision.
+    const limit = planLimitMessage(error.message);
+    if (limit) return NextResponse.json({ error: limit, code: 'plan_limit' }, { status: 402 });
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
   // fire-and-forget: let any matching automations run promptly (Render keeps
   // the process alive; the tick/cron is the safety net either way)
   runDispatcher(ctx.admin, 10).catch(() => {});

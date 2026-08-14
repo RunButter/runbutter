@@ -6,6 +6,7 @@
 import { supabase } from '@/lib/supabase';
 import { MOCK_OBJECT_ROWS, mockBoard, MOCK_FINANCE, mockFinanceAnalytics, mockRoadmap, mockInvoiceDocument, mockSiteStats, MOCK_POSTS, mockPostDetail, MOCK_PROJECTS, MOCK_ISSUES, mockBankAccounts, mockLedger } from './mock';
 import type { PipelineKind, PipelineStage, PipelineRecord } from './types';
+import { planLimitMessage } from '@/lib/plans';
 import { rpc } from '@/lib/rpc';
 
 export interface RecordsResult { rows: any[]; live: boolean }
@@ -209,7 +210,7 @@ export async function createRecord(privyUserId: string, object: string, values: 
   if (!ws) return { error: 'No workspace found for your account.' };
   const payload = object === 'offers' ? { ...values, kind: 'offer' } : values;
   const { data, error } = await rpc('create_record', { p_privy: privyUserId, p_workspace: ws, p_object: rpcObject(object), p_data: payload });
-  if (error) return { error: error.message };
+  if (error) return { error: planLimitMessage(error.message) ?? error.message };
   pingAutomations();
   return { id: data as string };
 }
