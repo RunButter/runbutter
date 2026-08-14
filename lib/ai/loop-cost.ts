@@ -40,9 +40,14 @@ export interface LoopCost {
 /**
  * The models worth putting side by side.
  *
- * Deliberately short. A comparison table of forty rows is a table nobody reads
- * and a maintenance burden that goes stale invisibly; these are the ones the
- * product actually offers, which is also the set whose prices we keep current.
+ * Wide enough to be worth reading, short enough to keep current. The first
+ * version listed only what the product itself defaults to, which made the page
+ * a product brochure rather than a tool — somebody comparing DeepSeek against
+ * Sonnet is exactly who the page is for, and they will not trust a table that
+ * omits the cheap options.
+ *
+ * Every entry must have a price in `PRICES` or the table silently drops the
+ * row, which is asserted in the tests rather than left to review.
  */
 export const MODELS_FOR_COMPARISON: { id: string; vendor: string }[] = [
   { id: 'claude-opus-5', vendor: 'Anthropic' },
@@ -51,8 +56,22 @@ export const MODELS_FOR_COMPARISON: { id: string; vendor: string }[] = [
   { id: 'gpt-4.1', vendor: 'OpenAI' },
   { id: 'gpt-4o', vendor: 'OpenAI' },
   { id: 'gpt-4o-mini', vendor: 'OpenAI' },
+  { id: 'gpt-4.1-mini', vendor: 'OpenAI' },
+  { id: 'o4-mini', vendor: 'OpenAI' },
   { id: 'gemini-2.5-pro', vendor: 'Google' },
   { id: 'gemini-2.5-flash', vendor: 'Google' },
+  { id: 'gemini-2.5-flash-lite', vendor: 'Google' },
+  { id: 'deepseek-chat', vendor: 'DeepSeek' },
+  { id: 'deepseek-reasoner', vendor: 'DeepSeek' },
+  { id: 'kimi-k2', vendor: 'Moonshot' },
+  { id: 'mistral-large', vendor: 'Mistral' },
+  { id: 'mistral-small', vendor: 'Mistral' },
+  { id: 'llama-3.3-70b', vendor: 'Meta (hosted)' },
+  { id: 'llama-3.1-8b', vendor: 'Meta (hosted)' },
+  { id: 'qwen3-32b', vendor: 'Qwen' },
+  { id: 'grok-4', vendor: 'xAI' },
+  { id: 'grok-3-mini', vendor: 'xAI' },
+  { id: 'gpt-oss-120b', vendor: 'Open weight' },
 ];
 
 /**

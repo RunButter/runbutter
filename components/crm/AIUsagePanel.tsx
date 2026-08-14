@@ -7,6 +7,7 @@ import {
   type AIUsage,
 } from '@/lib/crm/ai-usage';
 import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
+import { saveModelPrice } from '@/lib/crm/ai-usage';
 
 /**
  * What AI has cost this workspace (0101).
@@ -29,6 +30,10 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
   // The workspace's own prices (0104). Empty is the normal case and means
   // "use the shipped list prices"; it is never a reason to hide a cost.
   const [prices, setPrices] = useState<Record<string, any>>({});
+  // Which unpriced model is being given a price. One at a time: this is a
+  // correction, not a spreadsheet.
+  const [pricing, setPricing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ input: '', output: '', cached: '' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -141,6 +146,63 @@ export default function AIUsagePanel({ privy, ws }: { privy: string | null; ws: 
       {usage.by_model.length > 1 && (
         <div className="mt-4 pt-3 border-t border-subtle">
           <div className="text-2xs font-medium uppercase tracking-wider text-tertiary mb-2">By model</div>
+          {/* AN UNPRICED MODEL IS THE ONE STATE THE USER CAN FIX, so it says so
+              rather than showing a dash and stopping. This is what 0104 was for
+              and it had no way in: a workspace running a model newer than our
+              price table saw "20 unpriced" and no button. New models ship
+              faster than we can date a table — that is the normal case, not the
+              edge one. */}
+          {usage.by_model.filter((m) => m.model && !spendFor(m.model, m, prices).priced).map((m) => (
+            <div key={`fix-${m.model}`} className="mb-2 rounded-lg ring-1 ring-subtle bg-surface-sunken p-2.5">
+              {pricing === m.model ? (
+                <div className="space-y-2">
+                  <div className="text-2xs text-secondary">
+                    USD per <b>million</b> tokens for <span className="font-mono text-primary">{m.model}</span> —
+                    from your provider&apos;s pricing page. Leave the cache rate blank if it is billed as input.
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['input', 'output', 'cached'] as const).map((k) => (
+                      <input
+                        key={k} inputMode="decimal" placeholder={k === 'cached' ? 'cache (opt.)' : k}
+                        value={(draft as any)[k]}
+                        onChange={(e) => setDraft((d) => ({ ...d, [k]: e.target.value }))}
+                        className="h-8 px-2 rounded-md ring-1 ring-subtle bg-surface text-xs text-primary tabular-nums outline-none focus:ring-accent"
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={async () => {
+                        if (!privy || !ws) return;
+                        const inp = Number(draft.input), out = Number(draft.output);
+                        // Refused rather than coerced: a blank or a typo stored
+                        // as 0 would quietly report this model as free forever.
+                        if (!isFinite(inp) || !isFinite(out) || inp < 0 || out < 0) return;
+                        const cch = draft.cached.trim() === '' ? null : Number(draft.cached);
+                        await saveModelPrice(privy, ws, m.model!, inp, out, cch, '');
+                        setPricing(null); setDraft({ input: '', output: '', cached: '' });
+                        setPrices(await import('@/lib/crm/ai-usage').then((x) => x.getModelPrices(privy, ws)));
+                      }}
+                      className="h-7 px-2.5 rounded-md text-xs font-semibold bg-inverse text-inverse-fg"
+                    >Save price</button>
+                    <button onClick={() => setPricing(null)} className="h-7 px-2.5 rounded-md text-xs text-secondary">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-tertiary shrink-0" />
+                  <span className="text-2xs text-secondary flex-1 min-w-0 truncate">
+                    No price for <span className="font-mono text-primary">{m.model}</span> — newer than our list.
+                  </span>
+                  <button
+                    onClick={() => { setPricing(m.model!); setDraft({ input: '', output: '', cached: '' }); }}
+                    className="h-7 px-2.5 shrink-0 rounded-md text-2xs font-semibold ring-1 ring-subtle text-secondary hover:bg-surface-hover"
+                  >Set it</button>
+                </div>
+              )}
+            </div>
+          ))}
+
           <Bars rows={usage.by_model.map((m) => {
             const s = spendFor(m.model || '', m, prices);
             return {

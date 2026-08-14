@@ -52,17 +52,56 @@ export interface ModelPrice {
  * string would report "no price" for the id the product actually sends.
  */
 const PRICES: Record<string, ModelPrice> = {
-  // Anthropic
+  // ── Anthropic ──
   'claude-opus-5': { input: 15, output: 75, cached: 1.5 },
   'claude-sonnet-5': { input: 3, output: 15, cached: 0.3 },
   'claude-haiku-4-5': { input: 1, output: 5, cached: 0.1 },
-  // OpenAI
+  'claude-opus-4': { input: 15, output: 75, cached: 1.5 },
+  'claude-sonnet-4': { input: 3, output: 15, cached: 0.3 },
+  'claude-3-7-sonnet': { input: 3, output: 15, cached: 0.3 },
+  'claude-3-5-haiku': { input: 0.8, output: 4, cached: 0.08 },
+  // ── OpenAI ──
   'gpt-4o-mini': { input: 0.15, output: 0.6, cached: 0.075 },
   'gpt-4o': { input: 2.5, output: 10, cached: 1.25 },
   'gpt-4.1': { input: 2, output: 8, cached: 0.5 },
-  // Google
+  'gpt-4.1-mini': { input: 0.4, output: 1.6, cached: 0.1 },
+  'gpt-4.1-nano': { input: 0.1, output: 0.4, cached: 0.025 },
+  'o4-mini': { input: 1.1, output: 4.4, cached: 0.275 },
+  'o3': { input: 2, output: 8, cached: 0.5 },
+  // ── Google ──
   'gemini-2.5-flash': { input: 0.3, output: 2.5 },
+  'gemini-2.5-flash-lite': { input: 0.1, output: 0.4 },
   'gemini-2.5-pro': { input: 1.25, output: 10 },
+  'gemini-2.0-flash': { input: 0.1, output: 0.4 },
+  // ── DeepSeek ── (cache hits are billed separately and are the cheapest going)
+  'deepseek-chat': { input: 0.27, output: 1.1, cached: 0.07 },
+  'deepseek-reasoner': { input: 0.55, output: 2.19, cached: 0.14 },
+  'deepseek-v3': { input: 0.27, output: 1.1, cached: 0.07 },
+  'deepseek-r1': { input: 0.55, output: 2.19, cached: 0.14 },
+  // ── Moonshot / Kimi ──
+  'kimi-k2': { input: 0.6, output: 2.5, cached: 0.15 },
+  'moonshot-v1-128k': { input: 2, output: 5 },
+  // ── Mistral ──
+  'mistral-large': { input: 2, output: 6 },
+  'mistral-small': { input: 0.1, output: 0.3 },
+  'open-mistral-nemo': { input: 0.15, output: 0.15 },
+  'codestral': { input: 0.3, output: 0.9 },
+  // ── Meta Llama (typical hosted rates) ──
+  'llama-3.3-70b': { input: 0.6, output: 0.7 },
+  'llama-3.1-8b': { input: 0.05, output: 0.08 },
+  'llama-3.1-70b': { input: 0.6, output: 0.7 },
+  'llama-3.1-405b': { input: 3, output: 3 },
+  // ── Qwen ──
+  'qwen3-32b': { input: 0.3, output: 0.5 },
+  'qwen-2.5-72b': { input: 0.35, output: 0.4 },
+  'qwen2.5-coder': { input: 0.18, output: 0.18 },
+  // ── xAI ──
+  'grok-4': { input: 3, output: 15, cached: 0.75 },
+  'grok-3': { input: 3, output: 15, cached: 0.75 },
+  'grok-3-mini': { input: 0.3, output: 0.5, cached: 0.075 },
+  // ── Open-weight, commonly hosted ──
+  'gpt-oss-120b': { input: 0.15, output: 0.6 },
+  'gpt-oss-20b': { input: 0.05, output: 0.2 },
 };
 
 /**
@@ -76,7 +115,13 @@ const PRICES: Record<string, ModelPrice> = {
 const FREE_SUFFIX = ':free';
 
 export function priceFor(model: string, overrides?: Record<string, ModelPrice>): ModelPrice | null {
-  const id = String(model || '').trim().toLowerCase();
+  // Leading punctuation is stripped. A real workspace was storing
+  // `~deepseek/deepseek-v4-flash-latest` — gateways and routers prefix ids with
+  // `~`, `@` or a slash to mark a variant or a floating alias, and every one of
+  // those made an otherwise-known model report "no price". The symptom was a
+  // usage panel reading "20 unpriced" on a workspace whose only model was one
+  // this table knows perfectly well.
+  const id = String(model || '').trim().toLowerCase().replace(/^[^a-z0-9]+/, '');
   if (!id) return null;
   if (id.endsWith(FREE_SUFFIX)) return { input: 0, output: 0, cached: 0 };
 
@@ -91,7 +136,13 @@ export function priceFor(model: string, overrides?: Record<string, ModelPrice>):
   // An OpenRouter id is `vendor/model`, sometimes with a `:tag`. The bare model
   // is what our table knows, so the vendor prefix and any tag come off before
   // the prefix match — otherwise every OpenRouter row reports "no price".
-  const bare = id.split('/').pop()!.split(':')[0];
+  // `vendor/model:tag` -> `model`. Trailing version words are also dropped for
+  // the prefix pass below: `-latest`, `-preview` and a date suffix are floating
+  // aliases for a model that IS in the table, and refusing to price them
+  // punishes anyone who followed the provider's own recommendation to use one.
+  const bare = id.split('/').pop()!.split(':')[0]
+    .replace(/-(latest|preview|exp|instruct|versatile|instant)$/g, '')
+    .replace(/-\d{8}$/, '');
   if (PRICES[bare]) return PRICES[bare];
 
   // Longest prefix wins: `gpt-4.1` must not match a hypothetical `gpt-4` entry
