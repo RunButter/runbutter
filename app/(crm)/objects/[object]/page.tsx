@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLiveRefresh } from '@/lib/crm/live';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays } from 'lucide-react';
+import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays, Sparkles } from 'lucide-react';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
@@ -18,6 +18,7 @@ import SanctionsPanel from '@/components/crm/SanctionsPanel';
 import RecordNotes from '@/components/crm/RecordNotes';
 import { readListState, writeListState, sameListState, EMPTY_LIST_STATE } from '@/lib/crm/list-url';
 import ImportModal from '@/components/crm/ImportModal';
+import ExtractModal from '@/components/crm/ExtractModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
 import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
 import PageHeader from '@/components/dashboard/PageHeader';
@@ -67,6 +68,7 @@ export default function ObjectPage() {
   const [form, setForm] = useState<{ id: string | null; initial: any } | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [importing, setImporting] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() =>
     (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).filters);
   const [view, setView] = useState<ViewKind>(() =>
@@ -269,6 +271,11 @@ export default function ObjectPage() {
         </div>
         <Button size="sm" onClick={exportCsv} disabled={filtered.length === 0}><Download className="w-3.5 h-3.5" /> Export</Button>
         <Button size="sm" onClick={() => setImporting(true)} disabled={!canEdit}><Upload className="w-3.5 h-3.5" /> Import</Button>
+        {/* Beside Import because it is the same intent at a different scale:
+            Import is many rows from a spreadsheet, this is one row from a
+            document somebody was sent. */}
+        <Button size="sm" onClick={() => setExtracting(true)} disabled={!canEdit}
+          title="Fill a form from a pasted document"><Sparkles className="w-3.5 h-3.5" /> Paste</Button>
         <Button size="sm" variant="primary" onClick={newRecord} disabled={!canEdit}
           title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</Button>
       </PageHeader>
@@ -321,6 +328,11 @@ export default function ObjectPage() {
       {form && (
         <RecordForm object={object} privyUserId={privy} recordId={form.id} initial={form.initial} suggestions={suggestions}
           onClose={() => setForm(null)} onSaved={(newId) => { setForm(null); reload(); if (newId && isDoc) setItemsFor(newId); }} />
+      )}
+      {extracting && (
+        <ExtractModal object={object} privy={privy} workspaceId={wsId}
+          onClose={() => setExtracting(false)}
+          onExtracted={(values) => { setExtracting(false); setForm({ id: null, initial: values }); }} />
       )}
       {importing && (
         <ImportModal object={object} privyUserId={privy} onClose={() => setImporting(false)} onImported={() => { setImporting(false); reload(); }} />

@@ -23,7 +23,8 @@ export type AIFeature =
   | 'workspace'      // the workspace blueprint builder
   | 'skill'          // the skill / plugin generator
   | 'automation'     // an AI step inside an automation, run unattended
-  | 'insights';      // a question turned into a chart spec (/api/insights/ask)
+  | 'insights'       // a question turned into a chart spec (/api/insights/ask)
+  | 'extract';       // a pasted document turned into form values (/api/records/extract)
 
 export interface UsageRecord {
   workspace: string | null | undefined;
