@@ -6,7 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import {
   FolderOpen, Search, Upload, Trash2, ExternalLink, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, File as FileIcon, X, AlertCircle,
-  LayoutGrid, List as ListIcon,
+  LayoutGrid, List as ListIcon, Share2,
 } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
@@ -20,6 +20,7 @@ import {
 import Thinking, { ThinkingLine } from '@/components/ui/Thinking';
 import FileGrid from '@/components/crm/FileGrid';
 import FilePreview from '@/components/crm/FilePreview';
+import DataRoomModal from '@/components/crm/DataRoomModal';
 
 /**
  * Company files — storage that becomes DATA.
@@ -61,6 +62,7 @@ export default function FilesPage() {
   // suits you depends on whether you are browsing or auditing.
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [preview, setPreview] = useState<FileRow | null>(null);
+  const [sharing, setSharing] = useState(false);
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? window.localStorage.getItem('rb-files-layout') : null;
     if (saved === 'list' || saved === 'grid') setLayout(saved);
@@ -176,6 +178,12 @@ export default function FilesPage() {
             </button>
           ))}
         </div>
+        {privy && ws && rows.length > 0 && (
+          <button onClick={() => setSharing(true)}
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary hover:text-primary hover:bg-surface-sunken">
+            <Share2 className="w-3.5 h-3.5" /> Share
+          </button>
+        )}
         {privy && ws && (
           <button
             onClick={open}
@@ -384,6 +392,7 @@ export default function FilesPage() {
         </div>
       </div>
       {preview && <FilePreview row={preview} privy={privy} onClose={() => setPreview(null)} />}
+      {sharing && <DataRoomModal files={rows} privy={privy} workspaceId={ws?.id ?? null} onClose={() => setSharing(false)} />}
     </>
   );
 }
