@@ -1022,12 +1022,42 @@ Same rule as the cost rule above: prefer public/government data + local computat
 - **To test a theme, set `localStorage['hb-theme']` and reload** — toggling the `.dark` class live races
   `useThemeSync()` and returns mixed readings.
 
+## Where this left off (read this first)
+Last session shipped the Copilot and the whole cost layer. What is DONE and needs nothing:
+Copilot (0102) with per-person threads, suggest/auto per conversation, inline approvals and live
+steps · **45 agent tools** (was 26 — docs, deals, chat, posts, candidates, subscribers, newsletters
+and skills are all writable; agents and automations deliberately are not) · AI usage across every
+feature (0101) with per-agent and per-model dollars · 40 models priced · nine providers · the flat
+skills builder with zip import · `/ai-cost`, a public free tool · runway on the dashboard.
+
+**The three things to pick up, in order:**
+1. **Investor update.** A newsletter template that pulls runway, revenue trend and pipeline movement,
+   drafted by the copilot from real numbers rather than a blank page, reviewed before it sends. It is
+   the monthly chore every founder hates and the one feature people tell each other about. The
+   primitives all exist — this is assembly, not new machinery.
+2. **Plan enforcement.** `maxRecords`, `maxSeats`, `maxAutomations` and `maxESignPerMonth` are
+   DISPLAYED AND NOT ENFORCED, and `audit_log` is sold on Enterprise with no table behind it. This is
+   revenue sitting in code that is already written; no new feature converts as well as making the
+   paywall real.
+3. **Shareable dashboards** (the Dune-style ask). The architecture decision is settled and is the
+   whole feature: **publish a frozen SNAPSHOT, never a live query.** A link that runs a query means
+   any bug in that path is a tenant-wide breach; a link that serves a stored JSON blob computed at
+   publish time has a blast radius of exactly what was published. Plus: 128-bit unguessable token,
+   revocable, no drill-down or re-query on the public view, `noindex`, and a full preview of every
+   row and number BEFORE publishing — most leaks are somebody not realising "revenue by client"
+   names the clients.
+
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run migrations 0093–0102.** 0092 is applied. 0093 is rename, 0097 editable built-ins,
-  0098 email blocks, 0099/0100 the MCP OAuth server, 0101 AI usage, **0102 the Copilot** — until each
-  runs, that feature hides itself and nothing else changes.
+- **Run migrations 0103 and 0104.** 0093–0102 are confirmed applied by the owner. **0104 is the one
+  blocking shipped UI**: the "Set price" button on the AI usage panel calls `save_model_price`, which
+  does not exist until it runs, so an unpriced model stays unpriced with no way to fix it. 0103 lets
+  `skills.source` hold `copilot`.
+- **Re-authorize the MCP connector.** The token expired mid-session, so the 45 agent tools have been
+  verified against SQL — every RPC exists and accepts its arguments — and **never against a real
+  conversation on a real workspace**. That is the largest remaining unknown in the copilot, and it
+  cannot be closed from a sandbox that cannot reach supabase.co.
 - **`npm run publish:oss` once more**, then set **`PUBLIC_REPO_TOKEN`** in
   `CasperCrypto/hirebtr` → Settings → Secrets → Actions, and mirroring becomes automatic
   (`.github/workflows/mirror.yml`, steps in `docs/going-live.md`).
