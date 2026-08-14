@@ -6,6 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import {
   FolderOpen, Search, Upload, Trash2, ExternalLink, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, File as FileIcon, X, AlertCircle,
+  LayoutGrid, List as ListIcon,
 } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
@@ -17,6 +18,8 @@ import {
   type FileRow, type FileHit, type ExtractStatus,
 } from '@/lib/files/client';
 import Thinking, { ThinkingLine } from '@/components/ui/Thinking';
+import FileGrid from '@/components/crm/FileGrid';
+import FilePreview from '@/components/crm/FilePreview';
 
 /**
  * Company files — storage that becomes DATA.
@@ -53,6 +56,16 @@ export default function FilesPage() {
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<FileHit[] | null>(null);
   const [searching, setSearching] = useState(false);
+  // Grid by default: the complaint this screen had was that a list of names
+  // tells you nothing about what is in a file. Remembered, because which view
+  // suits you depends on whether you are browsing or auditing.
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+  const [preview, setPreview] = useState<FileRow | null>(null);
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem('rb-files-layout') : null;
+    if (saved === 'list' || saved === 'grid') setLayout(saved);
+  }, []);
+  useEffect(() => { try { window.localStorage.setItem('rb-files-layout', layout); } catch { /* private mode */ } }, [layout]);
 
   // Per-file spinner keys, so one row re-indexing doesn't freeze the others.
   const [busy, setBusy] = useState<Set<string>>(new Set());
@@ -154,10 +167,19 @@ export default function FilesPage() {
       <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
         <h1 className="text-md font-medium text-primary">Files</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+        <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-md bg-surface-sunken">
+          {([['grid', LayoutGrid, 'Grid'], ['list', ListIcon, 'List']] as const).map(([k, Icon, label]) => (
+            <button key={k} onClick={() => setLayout(k)} title={label} aria-label={label} aria-pressed={layout === k}
+              className={`h-6 w-7 inline-flex items-center justify-center rounded transition-colors ${
+                layout === k ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
+              <Icon className="w-3.5 h-3.5" />
+            </button>
+          ))}
+        </div>
         {privy && ws && (
           <button
             onClick={open}
-            className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"
           >
             <Upload className="w-3.5 h-3.5" /> Upload
           </button>
@@ -266,6 +288,27 @@ export default function FilesPage() {
                 </button>
               }
             />
+          ) : layout === 'grid' ? (
+            <FileGrid
+              rows={rows} privy={privy} busy={busy}
+              onOpen={(row) => setPreview(row)}
+              actions={(row) => (
+                <>
+                  <button onClick={() => open_(row.id)} title="Open" aria-label={`Open ${row.name}`}
+                    className="h-6 w-6 inline-flex items-center justify-center rounded text-tertiary hover:text-primary hover:bg-surface-sunken">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => reindex(row)} title="Re-index" aria-label={`Re-index ${row.name}`}
+                    className="h-6 w-6 inline-flex items-center justify-center rounded text-tertiary hover:text-primary hover:bg-surface-sunken">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => remove(row)} aria-label={`Delete ${row.name}`}
+                    className="h-6 w-6 inline-flex items-center justify-center rounded text-tertiary hover:text-danger hover:bg-danger/10">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            />
           ) : (
             <div className="card-surface divide-y divide-subtle">
               {rows.map((row) => {
@@ -340,6 +383,7 @@ export default function FilesPage() {
           )}
         </div>
       </div>
+      {preview && <FilePreview row={preview} privy={privy} onClose={() => setPreview(null)} />}
     </>
   );
 }
