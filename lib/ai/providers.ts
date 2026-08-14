@@ -5,6 +5,7 @@ import { isAllowedAiHost, aiAllowlistIsEmpty } from '@/lib/security/http';
 
 export type AIProvider =
   | 'claude' | 'openai' | 'gemini' | 'openrouter'
+  | 'nous'
   // OpenAI-compatible and KNOWN — see `baseUrl` below. These were all reachable
   // before as `custom`; what they lacked was a name and a URL nobody has to
   // look up.
@@ -89,6 +90,15 @@ export const PROVIDERS: ProviderDef[] = [
     models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'],
     fast: 'llama-3.1-8b-instant', balanced: 'llama-3.3-70b-versatile',
     baseUrl: 'https://api.groq.com/openai/v1',
+  },
+  {
+    // Hermes models, open-weight and steerable. Nous Portal is OpenAI-compatible,
+    // so this is a name and a URL rather than a code path — which is the whole
+    // point of the block this sits in.
+    id: 'nous', label: 'Nous Research (Hermes)', help: 'portal.nousresearch.com → API keys · open-weight Hermes models',
+    models: ['Hermes-4-405B', 'Hermes-4-70B', 'Hermes-3-Llama-3.1-70B'],
+    fast: 'Hermes-4-70B', balanced: 'Hermes-4-405B',
+    baseUrl: 'https://inference-api.nousresearch.com/v1',
   },
   {
     id: 'deepseek', label: 'DeepSeek', help: 'platform.deepseek.com → API keys · cheapest capable models',
