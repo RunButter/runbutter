@@ -258,6 +258,9 @@ export const NAV = [
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
     { slug: 'sign', label: 'Signatures', icon: 'PenLine', href: '/finance/sign' },
+    // Under Finance because that is where its figures come from, and last
+    // because it is the monthly act rather than a daily one.
+    { slug: 'investor-update', label: 'Investor update', icon: 'Mail', href: '/investor-update' },
   ]},
   { group: 'Marketing', items: [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
