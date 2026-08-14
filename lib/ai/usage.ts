@@ -22,7 +22,8 @@ export type AIFeature =
   | 'newsletter'     // the newsletter drafter
   | 'workspace'      // the workspace blueprint builder
   | 'skill'          // the skill / plugin generator
-  | 'automation';    // an AI step inside an automation, run unattended
+  | 'automation'     // an AI step inside an automation, run unattended
+  | 'insights';      // a question turned into a chart spec (/api/insights/ask)
 
 export interface UsageRecord {
   workspace: string | null | undefined;
