@@ -85,6 +85,17 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
+      # SECURITY DEFINER bypasses RLS and the anon key ships in the browser
+      # bundle, so an anon-callable DEFINER function is reachable straight
+      # against PostgREST — around /api/rpc, the only thing that verifies a
+      # Privy token. 0046 revoked those grants; every migration after it added
+      # them back one at a time until 69 functions were exposed. This is the
+      # gate that stops the third time.
+      - name: No SECURITY DEFINER function is reachable by anon
+        run: npm run check:grants
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
       # supabase/schema.sql is generated. A stale one is an install path that
       # quietly ships yesterday's schema, which is worse than not having it.
       - name: supabase/schema.sql is up to date

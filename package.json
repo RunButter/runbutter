@@ -14,7 +14,8 @@
     "bundle:sql": "node scripts/bundle-sql.mjs",
     "publish:oss": "node scripts/publish-oss.mjs",
     "check:plugin": "node scripts/check-plugin.mjs plugin --strict",
-    "check:docker": "node scripts/check-docker-copy.mjs"
+    "check:docker": "node scripts/check-docker-copy.mjs",
+    "check:grants": "node scripts/check-grants.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
