@@ -1073,6 +1073,28 @@ and skills are all writable; agents and automations deliberately are not) · AI 
 feature (0101) with per-agent and per-model dollars · 40 models priced · nine providers · the flat
 skills builder with zip import · `/ai-cost`, a public free tool · runway on the dashboard.
 
+**Shipped after that audit, same session — all on main, CI green, mirrored:**
+- **Board + calendar for EVERY object** (`lib/crm/views.ts`, `RecordBoard`, `RecordCalendar`). The
+  kanban, calendar and timeline that existed were welded to `pipeline_records`, social posts and the
+  projects roadmap; nothing else in the product had a second view. Built on `ObjectDef`, so custom
+  objects get both free. Board columns are declared options ∪ present values ∪ "No value" — **no
+  record may ever be hidden**, which is what makes it trustworthy. Dragging is a one-key partial
+  update, safe only because of 0088.
+- **`/insights` — ask a question, get a chart** (`lib/insights/*`, `InsightChart`). The model NEVER
+  sees a record: it gets column NAMES and returns a validated SPEC, and the arithmetic happens in
+  the browser over `list_records`. Same shape as `/api/workspace/build`, same reason. The query is
+  always shown and every part of it is a dropdown, so the screen works with **no AI key at all**.
+- **A failed read no longer looks like an empty one.** 34 call sites did `const { data } = await
+  rpc(…)`; instead of 20 files of churn, a failed READ announces itself and the shell says so
+  (`LoadErrorBanner`, both shells). `{ quiet: true }` opts out for reads that already degrade on
+  purpose — use it sparingly, the test is "if this never succeeds, does the screen still tell the
+  truth?"
+- **It earned itself within a day**: the banner exposed `get_nav_activity` raising `column
+  "created_at" does not exist` since **0039** — `candidates` has `applied_at`, never `created_at`,
+  on a fresh install as much as on production. Two layers of politeness hid it (plpgsql does not plan
+  a body at creation, and `loadNavActivity` swallows its own error), so the symptom was an ABSENCE:
+  the nav badge counts had never once appeared. **0107** fixes it.
+
 **The three things to pick up, in order:**
 1. **Investor update.** A newsletter template that pulls runway, revenue trend and pipeline movement,
    drafted by the copilot from real numbers rather than a blank page, reviewed before it sends. It is
@@ -1093,15 +1115,18 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run migrations 0105 and 0106. 0105 IS A SECURITY FIX AND SHOULD GO FIRST.** It revokes `anon`
-  EXECUTE from 69 SECURITY DEFINER functions that the public browser key could call directly against
-  PostgREST, bypassing RLS and `/api/rpc` — the CRUD monolith, `create_api_key`, `rename_workspace`,
-  and three helpers that authorise nothing at all. ⚠️ **Before running it, confirm
-  `SUPABASE_SERVICE_ROLE_KEY` is set in Render** — `/api/rpc` falls back to the anon key without it,
-  and after 0105 that key can no longer execute these functions. (0046 already shipped under the same
-  condition, so this is true today; confirm rather than assume.) 0106 adds the missing
-  `webhook_endpoints` table and RPCs.
-  ~~Run migrations 0103 and 0104~~ — **already applied**; verified against `pg_proc`, not reported.
+- ~~Run migrations 0103–0107~~ — **ALL APPLIED AND VERIFIED against production (2026-08-14)**, by
+  probing `pg_proc` rather than believing a report: 0 anon-callable DEFINER functions (was 69),
+  `service_role` still holds the CRUD monolith so `/api/rpc` is unaffected, `builtin_extras_write`
+  closed, `webhook_endpoints` + its three RPCs present, `get_nav_activity` on `applied_at` and
+  returning a row.
+- ~~Set `PUBLIC_REPO_TOKEN`~~ — **already set.** The mirror ran on the 2026-08-14 push and really
+  pushed (`0d24c32..3bd28a8` to `RunButter/runbutter`); the workflow log was read rather than the
+  green tick trusted, because it reports success when it SKIPS too.
+  ⚠️ Noticed while reading it: the public repo has a "changes must be made through a pull request"
+  rule and the mirror token **bypasses it on every push** (`remote: Bypassed rule violations`). That
+  protection is decorative while the mirror exists — decide deliberately whether to drop the rule or
+  scope the token.
 - **Re-authorize the MCP connector.** The token expired mid-session, so the 45 agent tools have been
   verified against SQL — every RPC exists and accepts its arguments — and **never against a real
   conversation on a real workspace**. That is the largest remaining unknown in the copilot, and it
