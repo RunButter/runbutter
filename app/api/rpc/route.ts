@@ -107,6 +107,10 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // The company calendar (0119). One read that unions six tables; every branch
+  // is workspace-scoped in SQL, and the HR half is joined through
+  // candidates.company_id because `interviews` has no workspace column.
+  'get_calendar',
   // Team vault (0118). Every one of these moves OPAQUE blobs — the server has
   // no key and no title column, so allow-listing them exposes ciphertext and
   // nothing else. reset_vault re-checks owner/admin in SQL.
