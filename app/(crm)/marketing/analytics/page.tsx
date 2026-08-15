@@ -6,6 +6,7 @@ import { Globe, Users, Eye, Activity, Copy, Check, Plus, Loader2, Code2, Refresh
 import { loadSites, createSite, deleteSite, loadSiteStats, linkSiteToUmami, type Site, type SiteStats } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 import StatCard from '@/components/ui/StatCard';
+import SiteEngagement from '@/components/crm/SiteEngagement';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
 
@@ -215,7 +216,9 @@ export default function WebAnalytics() {
                       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Code2 className="w-3.5 h-3.5" />} Collect with Umami
                     </button>
                     <span className="text-2xs text-tertiary">
-                      Sessions, bounce rate, countries and browsers. Swaps the snippet above — re-paste it after connecting.
+                      Optional. The built-in pipeline now does visits, bounce rate, duration, goals and funnels
+                      itself — Umami adds its own retention and query tooling, and costs a second service and a
+                      second database. Swaps the snippet above — re-paste it after connecting.
                     </span>
                   </div>
                 )}
@@ -254,6 +257,11 @@ export default function WebAnalytics() {
                   ) : undefined} />
               ))}
             </div>
+
+            {/* Visits, bounce rate, duration, goals and funnels (0120). Its own
+                component: this page already owns site creation, the snippet, the
+                KPI row and the geo tables. */}
+            <SiteEngagement privy={privy} siteId={siteId} days={days} />
 
             {/* Daily traffic */}
             <div className="card-surface p-5">

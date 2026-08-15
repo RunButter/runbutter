@@ -107,6 +107,12 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // Web analytics: sessions, goals and funnels on the built-in pipeline (0120).
+  // Every one re-checks site membership through site_readable in SQL, so a site
+  // id from another workspace raises NOT_ALLOWED rather than returning a shape.
+  'get_site_sessions', 'get_site_realtime', 'get_site_goals', 'get_site_funnel',
+  'get_site_config', 'save_site_goal', 'delete_site_goal',
+  'save_site_funnel', 'delete_site_funnel',
   // The company calendar (0119). One read that unions six tables; every branch
   // is workspace-scoped in SQL, and the HR half is joined through
   // candidates.company_id because `interviews` has no workspace column.
