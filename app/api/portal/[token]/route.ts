@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { sendPush } from '@/lib/push/send';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,22 @@ export async function GET(req: Request, { params }: { params: { token: string } 
   const token = String(params.token || '');
   if (!/^[a-f0-9]{32}$/.test(token)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { data, error } = await createAdminClient().rpc('get_client_portal', { p_token: token });
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc('get_client_portal', { p_token: token });
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // Throttled to one an hour in SQL (0114). The client's NAME is the point —
+  // "somebody opened a portal" is not worth a buzz; "Acme opened theirs" is.
+  try {
+    const { data: notice } = await admin.rpc('client_portal_open_notice', { p_token: token });
+    if (notice) {
+      await sendPush((notice as any).workspace_id, {
+        title: `${(notice as any).client} opened their account page`,
+        body: 'They can see their invoices and documents.',
+        url: '/objects/companies', tag: `portal-${token.slice(0, 8)}`,
+      }, (notice as any).privy);
+    }
+  } catch { /* never cost the client their invoices */ }
+
   return NextResponse.json(data, { headers: { 'cache-control': 'no-store' } });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { sendPush } from '@/lib/push/send';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,28 @@ export async function GET(req: Request, { params }: { params: { token: string } 
   const token = String(params.token || '');
   if (!/^[a-f0-9]{32}$/.test(token)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { data, error } = await createAdminClient().rpc('get_data_room_public', { p_token: token });
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc('get_data_room_public', { p_token: token });
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // "They opened it" — the notification that makes a shared link worth sending.
+  // Throttling lives in SQL (0114): this fires on the first open in an hour and
+  // returns null for the refreshes, so the route cannot get the policy wrong.
+  //
+  // Awaited rather than fire-and-forget: this runs on a serverless request that
+  // may be frozen the moment the response is written, and a promise left
+  // dangling there is one that sometimes never resolves. sendPush never throws
+  // and does not touch the response, so the cost is a few milliseconds.
+  try {
+    const { data: notice } = await admin.rpc('data_room_open_notice', { p_token: token });
+    if (notice) {
+      await sendPush((notice as any).workspace_id, {
+        title: 'Someone opened your documents',
+        body: (notice as any).title || 'Data room',
+        url: '/files', tag: `room-${token.slice(0, 8)}`,
+      }, (notice as any).privy);
+    }
+  } catch { /* a notification must never cost the reader their documents */ }
+
   return NextResponse.json(data, { headers: { 'cache-control': 'no-store' } });
 }
