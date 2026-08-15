@@ -30,10 +30,15 @@ export default function InsightChart({ buckets, kind, currency = false, total }:
   buckets: Bucket[]; kind: ChartKind; currency?: boolean; total: number;
 }) {
   if (kind === 'number' || buckets.length <= 1) {
+    const n = buckets[0]?.n;
     return (
       <div className="flex flex-col items-center justify-center py-10">
         <div className="text-4xl font-medium text-primary tabular-nums">{fmt(total, currency)}</div>
-        <div className="mt-1 text-2xs text-tertiary">{buckets[0]?.n ?? 0} record{(buckets[0]?.n ?? 0) === 1 ? '' : 's'}</div>
+        {/* Only when the producer counted rows. A bucket aggregated in SQL has no
+            row count, and printing "0 records" beside a real number is a lie. */}
+        {n !== undefined && (
+          <div className="mt-1 text-2xs text-tertiary">{n} record{n === 1 ? '' : 's'}</div>
+        )}
       </div>
     );
   }

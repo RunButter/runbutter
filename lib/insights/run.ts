@@ -21,7 +21,14 @@
 
 import type { InsightSpec, InsightFilter } from './spec';
 
-export interface Bucket { label: string; value: number; n: number }
+/**
+ * `n` is how many rows are behind the value, and it is OPTIONAL because not
+ * every producer knows. `runSpec` counts the rows it grouped; a bucket that came
+ * back already aggregated from SQL (the finance KPIs) has a value and no row
+ * count. Missing means unknown, and the chart says nothing rather than "0
+ * records" — the same rule as a null DSO.
+ */
+export interface Bucket { label: string; value: number; n?: number }
 export interface InsightResult {
   buckets: Bucket[];
   /** Rows that survived the filters — what the chart is actually made of. */
