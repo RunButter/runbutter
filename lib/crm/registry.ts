@@ -313,6 +313,9 @@ export const NAV = [
     { slug: 'chat', label: 'Chat', icon: 'MessageCircle', href: '/chat' },
     { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
+    // Shared credentials are a team thing, not a setting: the registrar login
+    // belongs to whoever needs it today, the same way an asset does.
+    { slug: 'vault', label: 'Vault', icon: 'KeyRound', href: '/vault' },
   ]},
   // Settings splits by WHO a change affects: everything here changes the
   // workspace for everyone in it…

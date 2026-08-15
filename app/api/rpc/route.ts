@@ -107,6 +107,11 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // Team vault (0118). Every one of these moves OPAQUE blobs — the server has
+  // no key and no title column, so allow-listing them exposes ciphertext and
+  // nothing else. reset_vault re-checks owner/admin in SQL.
+  'get_vault_meta', 'init_vault', 'list_vault_items', 'save_vault_item',
+  'delete_vault_item', 'rotate_vault', 'reset_vault',
   // @-mentions (0113).
   'resolve_record_labels', 'search_mentionable',
   // Finance KPIs (0115) and the cash-forecast facts (0116). Reads only —

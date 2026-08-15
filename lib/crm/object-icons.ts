@@ -4,7 +4,7 @@ import {
   FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
-  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap,
+  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound,
   // The custom-object vocabulary — see OBJECT_ICON_NAMES in lib/workspace/blueprint.ts.
   Truck, IdCard, Stethoscope, HeartPulse, CalendarClock, Factory, Cog, Layers, Repeat, Timer,
   Building, Home, FileSignature, Wrench, HardHat, ShoppingCart, Undo2, GraduationCap,
@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { OBJECT_ICON_NAMES } from '@/lib/workspace/blueprint';
+import { NAV } from '@/lib/crm/registry';
 
 /**
  * THE icon registry — one map, for the nav rail, the command palette and every
@@ -36,7 +37,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
-  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap,
+  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound,
   Truck, IdCard, Stethoscope, HeartPulse, CalendarClock, Factory, Cog, Layers, Repeat, Timer,
   Building, Home, FileSignature, Wrench, HardHat, ShoppingCart, Undo2, GraduationCap,
   HeartHandshake, Gift, ClipboardList, Boxes, Ticket, Utensils, Hammer, Ship, Beaker, Scale,
@@ -52,9 +53,21 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
  * that would have fallen back, so it is impossible to add one name without the
  * other.
  */
-const missing = OBJECT_ICON_NAMES.filter((n) => !ICON_REGISTRY[n]);
+const missing = [
+  ...OBJECT_ICON_NAMES,
+  /*
+   * THE NAV WAS NOT COVERED BY THIS CHECK AND SHOULD ALWAYS HAVE BEEN.
+   *
+   * `iconFor` falls back to Table2 for a name it does not know, so three nav
+   * entries added later (Gauge, LineChart, KeyRound) rendered a spreadsheet
+   * glyph in the rail and in ⌘K, and nothing anywhere said so — precisely the
+   * silent downgrade this guard exists to stop, one list over. registry.ts
+   * imports only a type, so reading NAV here creates no cycle.
+   */
+  ...NAV.flatMap((g) => g.items.map((i) => i.icon)),
+].filter((n) => !ICON_REGISTRY[n]);
 if (missing.length) {
-  throw new Error(`object-icons: no component for ${missing.join(', ')} — import it here or drop it from OBJECT_ICON_NAMES.`);
+  throw new Error(`object-icons: no component for ${[...new Set(missing)].join(', ')} — import it here, or drop it from OBJECT_ICON_NAMES / NAV.`);
 }
 
 /** Resolve a stored icon name. `fallback` is what an unknown name becomes. */
