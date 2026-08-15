@@ -15,14 +15,30 @@ maps), HR (the full ATS: positions, pipeline, Big-5 and work-style assessments,
 interviews, onboarding), Docs & Files (four doc kinds, browser-side export,
 text extraction and full-text search), Chat, Automations.
 
-**Agentic** — a copilot docked beside every screen, and 45 tools behind one
-executor shared by it, by scheduled agents and by MCP,
-reusable skills, notes written back onto records, scheduled unattended runs, and
-a gallery of eight prebuilt agents.
+**Agentic** — a copilot docked beside every screen, and one tool executor shared
+by it, by scheduled agents and by MCP, reusable skills, notes written back onto
+records, scheduled unattended runs, and a gallery of prebuilt agents. The tool
+list is generated from `lib/agents/catalog.ts` and published at
+[`/llms.txt`](https://runbutter.app/llms.txt) and `/.well-known/mcp.json` — read
+one of those rather than a number typed into prose, which is how this line said
+45 while the catalogue held 46.
 
 **A general tool, not five verticals** — custom objects (JSONB, no DDL), the
 workspace builder that turns a description of a business into a reviewable plan,
 and ten trade templates.
+
+**One calendar over everything** — invoices, bills, issue deadlines, scheduled
+posts and newsletters, campaign windows, interviews and Cal.com bookings on one
+grid, from one query.
+
+**Finance that answers questions** — collections KPIs (DSO, AR ageing, revenue
+concentration, cost per lead) and a cash forecast with scenario controls, both
+computed from the ledger with nothing approximated into a number that looks like
+a fact.
+
+**A team vault** — shared logins encrypted in the browser, with no title column
+and no key on the server, plus a password generator that is also a free public
+tool. See [The team vault](./vault.md).
 
 **Self-hosting** — `npm run migrate`, a one-file `supabase/schema.sql`,
 `docker compose up`, generated keys.
@@ -37,6 +53,9 @@ and ten trade templates.
   and someone in the trade always improves them — see
   [Contributing](./contributing.md).
 - **Reporting.** Scheduled PDF reports exist; a builder for them does not.
+- **Connected apps.** OAuth grants for the MCP server can be issued and cannot
+  yet be listed or revoked from Settings. A grant nobody can see is a grant
+  nobody revokes.
 - **Mobile.** Everything is responsive; nothing is designed phone-first yet.
 
 ## Considered and declined

@@ -94,6 +94,13 @@ added in the app under Account → AI keys, encrypted at rest, and spent by the
 workspace that owns them. A platform-wide key would mean a platform-wide bill
 and a platform-wide blast radius.
 
+## Team vault — no configuration
+
+Deliberately nothing to set. The vault's encryption key is derived in the
+browser from a workspace passphrase and never reaches the server, so there is no
+variable to configure and `SECRETS_MASTER_KEY` is not involved. Apply migration
+`0118` and it works. See [The team vault](./vault.md).
+
 ## Cron jobs
 
 See the table in [Install](./install.md#e-cron-jobs-only-for-the-features-you-use).

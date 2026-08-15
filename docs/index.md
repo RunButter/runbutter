@@ -23,9 +23,40 @@ making them, and every step it took is on the record. See
 | Give an AI agent access to my workspace | [Agents](./agents.md) |
 | Call it from my own code | [REST API & MCP](./api.md) |
 | Track something the built-ins don't cover | [Custom objects](./custom-objects.md) |
+| Keep the team's shared logins somewhere safe | [The team vault](./vault.md) |
 | Report a bug, or a security issue | [Support](./support.md) |
 | Send a pull request | [Contributing](./contributing.md) |
 | See what's next | [Roadmap](./roadmap.md) |
+
+## One calendar, because it is one database
+
+Invoices due, bills to pay, issue deadlines, scheduled posts and newsletters,
+campaign start and end dates, interviews and Cal.com bookings all appear on the
+same grid — not because they were synced from five apps, but because they are
+rows in one Postgres database and the calendar is a single query over them.
+Money coming in and money going out are different colours, deliberately: "they
+owe us this Friday" and "we owe this Friday" are opposite facts.
+
+It reads only. An interview is still created in Hiring, where it also books
+Google Meet and emails the candidate; a post is still scheduled in Marketing. A
+second write path would be a second place for those rules to drift.
+
+## Money you can ask questions of
+
+**Finance → KPIs** answers what a founder actually gets asked: what is owed and
+how late (ageing measured from the due date), how long clients take to pay, how
+concentrated the revenue is, and what a lead costs. It deliberately does not
+report MRR, ARR, churn, LTV, CAC or marketing ROI — this product holds no
+subscription model and nothing links a campaign to an invoice, so each would be
+an approximation that reads as a fact.
+
+**Finance → Forecast** projects cash forward and lets you push on it: hire two
+people from March, lose your biggest client, get paid three weeks sooner. The
+server returns facts — cash, monthly history, open invoices by date, inferred run
+rates — and the arithmetic runs in your browser, so every assumption stays
+visible and editable rather than arriving as an authority. There is no
+confidence interval attached, because a probability computed from a few months
+of one company's history is decoration on a guess.
 
 ## The shape of it in one paragraph
 
