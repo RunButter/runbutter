@@ -250,6 +250,7 @@ export const NAV = [
   { group: 'Finance', items: [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
     { slug: 'kpis', label: 'KPIs', icon: 'Gauge', href: '/finance/kpis' },
+    { slug: 'forecast', label: 'Forecast', icon: 'LineChart', href: '/finance/forecast' },
     { slug: 'transactions', label: 'Transactions', icon: 'ArrowLeftRight', href: '/finance/transactions' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },

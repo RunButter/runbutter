@@ -109,8 +109,9 @@ const ALLOWED = new Set([
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
   // @-mentions (0113).
   'resolve_record_labels', 'search_mentionable',
-  // Finance KPIs (0115). One read, tenancy checked in SQL.
-  'get_finance_kpis',
+  // Finance KPIs (0115) and the cash-forecast facts (0116). Reads only —
+  // the forecast arithmetic happens in the browser, so nothing here writes.
+  'get_finance_kpis', 'get_cash_forecast_basis',
   // Copilot threads (0102). A thread belongs to a PERSON, and every one of
   // these re-checks that in SQL — a colleague in the same workspace gets
   // NOT_FOUND, not a redacted row. append_copilot_message and
