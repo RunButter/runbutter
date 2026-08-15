@@ -41,6 +41,10 @@ duration, entry and exit pages, custom events, goals, funnels and live visitors,
 computed in Postgres from the events already collected. Umami is now optional
 rather than the only way to get session metrics.
 
+**Multi-currency finance** — every figure converted into the workspace's
+reporting currency at the rate on the transaction's date, from the ECB's own
+keyless feed, with unconvertible amounts named rather than folded in.
+
 **A team vault** — shared logins encrypted in the browser, with no title column
 and no key on the server, plus a password generator that is also a free public
 tool. See [The team vault](./vault.md).

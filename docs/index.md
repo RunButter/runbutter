@@ -81,6 +81,24 @@ that the chart is wrong.
 Umami is still supported and is now genuinely optional — see
 [Umami analytics](./umami-analytics.md) for why you probably no longer want it.
 
+## Money in more than one currency
+
+`currency` has been a column on invoices, expenses, transactions and bank
+accounts since the first schema — and until 0121 nothing converted, so a €1,000
+invoice and a $1,000 invoice were added together and reported as 2,000. Every
+workspace picks a reporting currency, and every finance figure is converted into
+it at the rate **on the transaction's own date**, never today's, so last
+quarter's revenue does not quietly change every morning.
+
+Rates come from the European Central Bank's daily reference feed: public,
+keyless, unmetered, and published by the institution that sets them. Same rule
+as OFAC for sanctions and VIES for VAT.
+
+**An unknown rate is never treated as 1:1.** That would turn 5,000 JPY into
+5,000 USD and report it with total confidence. Unconvertible amounts are summed
+separately, named on screen with their currencies, and excluded from the totals
+— a smaller, honest number with the gap stated beside it.
+
 ## The shape of it in one paragraph
 
 Everything is one Postgres database. A company, a person, a deal, an invoice, a

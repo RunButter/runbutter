@@ -23,9 +23,30 @@ import { rpc } from '@/lib/rpc';
  *
  * A metric with nothing behind it shows "—" and says why, rather than 0.
  */
-const money = (n: any) => (n === null || n === undefined ? '—' : `$${Math.round(Number(n)).toLocaleString()}`);
+/**
+ * Money in the workspace's reporting currency (0121).
+ *
+ * The symbol used to be a hardcoded `$`, which was correct for exactly one
+ * workspace and quietly wrong for every other — and it was the visible half of
+ * a deeper bug: nothing converted, so a EUR invoice and a USD invoice were
+ * added together and the sum was labelled dollars.
+ */
+const fmtMoney = (n: any, cur: string) => {
+  if (n === null || n === undefined) return '—';
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency', currency: cur, maximumFractionDigits: 0,
+    }).format(Number(n));
+  } catch {
+    // An unknown code must not blank the number. Intl throws on anything that
+    // is not ISO 4217, and a workspace can set its own.
+    return `${Math.round(Number(n)).toLocaleString()} ${cur}`;
+  }
+};
 
 interface Kpis {
+  currency: string;
+  unconverted: number;
   cash: number; receivable: number; payable: number; working_capital: number;
   revenue: number; costs: number; margin_pct: number | null;
   dso_days: number | null; dso_based_on: number;
@@ -39,6 +60,7 @@ export default function FinanceKpisPage() {
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
   const [k, setK] = useState<Kpis | null>(null);
+  const [fx, setFx] = useState<{ base: string; latest_day: string | null; missing: string[] } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,14 +68,23 @@ export default function FinanceKpisPage() {
     let cancelled = false;
     getWorkspace(privy).then(async (w) => {
       if (!w || cancelled) { setLoading(false); return; }
-      const { data } = await rpc('get_finance_kpis', { p_privy: privy, p_workspace: w.id, p_months: 12 });
-      if (!cancelled) { setK((data as Kpis) ?? null); setLoading(false); }
+      const [kp, st] = await Promise.all([
+        rpc('get_finance_kpis', { p_privy: privy, p_workspace: w.id, p_months: 12 }),
+        rpc('get_fx_status', { p_privy: privy, p_workspace: w.id }, { quiet: true }),
+      ]);
+      if (!cancelled) {
+        setK((kp.data as Kpis) ?? null);
+        setFx((st.data as any) ?? null);
+        setLoading(false);
+      }
     });
     return () => { cancelled = true; };
   }, [privy]);
 
   if (!ready || loading) return <AppLoading label="Reading your ledger…" />;
 
+  const cur = k?.currency || fx?.base || 'USD';
+  const M = (n: any) => fmtMoney(n, cur);
   const total = (rows: { value: number }[]) => rows.reduce((a, r) => a + Number(r.value || 0), 0);
   // Concentration is the number an investor or a lender asks for first, and it
   // is a share of the top client rather than a chart nobody reads as a ratio.
@@ -67,13 +98,33 @@ export default function FinanceKpisPage() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="page-body p-6 2xl:p-8 flex flex-col gap-5">
 
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-2xs text-tertiary">
+              Reported in <span className="text-secondary font-semibold">{cur}</span>
+              {fx?.latest_day ? ` · rates from the ECB, latest ${fx.latest_day}` : ''}
+            </p>
+          </div>
+
+          {/* An unconvertible amount is NAMED rather than folded in or dropped.
+              A smaller, confident, wrong total is the failure this avoids. */}
+          {(k?.unconverted ?? 0) > 0 && (
+            <div className="rounded-xl bg-warning/10 ring-1 ring-warning/30 px-4 py-3">
+              <p className="text-2xs text-secondary">
+                <span className="font-semibold text-primary">{M(k!.unconverted)}</span> is not included above:
+                there is no exchange rate for {fx?.missing?.length ? fx.missing.join(', ') : 'some currencies'} on
+                the relevant dates. Run <code className="text-secondary">/api/fx/refresh?days=90</code> to load
+                the last quarter of rates from the ECB.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <Stat label="Cash" value={money(k?.cash)} />
-            <Stat label="Owed to us" value={money(k?.receivable)} sub="unpaid invoices" />
-            <Stat label="We owe" value={money(k?.payable)} sub="unpaid bills" />
-            <Stat label="Working capital" value={money(k?.working_capital)} sub="cash + owed − owe" />
-            <Stat label="Revenue (12m)" value={money(k?.revenue)} />
-            <Stat label="Costs (12m)" value={money(k?.costs)} />
+            <Stat label="Cash" value={M(k?.cash)} />
+            <Stat label="Owed to us" value={M(k?.receivable)} sub="unpaid invoices" />
+            <Stat label="We owe" value={M(k?.payable)} sub="unpaid bills" />
+            <Stat label="Working capital" value={M(k?.working_capital)} sub="cash + owed − owe" />
+            <Stat label="Revenue (12m)" value={M(k?.revenue)} />
+            <Stat label="Costs (12m)" value={M(k?.costs)} />
             <Stat label="Margin" value={k?.margin_pct != null ? `${k.margin_pct}%` : '—'} />
             <Stat
               label="Days to get paid"
@@ -112,10 +163,10 @@ export default function FinanceKpisPage() {
                 {k!.campaigns.map((c) => (
                   <div key={c.label} className="flex items-center gap-3 py-2">
                     <span className="text-xs text-primary flex-1 min-w-0 truncate">{c.label}</span>
-                    <span className="text-2xs text-tertiary tabular-nums">{money(c.spend)} spent</span>
+                    <span className="text-2xs text-tertiary tabular-nums">{M(c.spend)} spent</span>
                     <span className="text-2xs text-tertiary tabular-nums">{c.leads || 0} leads</span>
                     <span className="text-xs font-semibold text-primary tabular-nums w-24 text-right">
-                      {c.cost_per_lead != null ? `${money(c.cost_per_lead)}/lead` : '—'}
+                      {c.cost_per_lead != null ? `${M(c.cost_per_lead)}/lead` : '—'}
                     </span>
                   </div>
                 ))}

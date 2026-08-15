@@ -94,6 +94,24 @@ added in the app under Account → AI keys, encrypted at rest, and spent by the
 workspace that owns them. A platform-wide key would mean a platform-wide bill
 and a platform-wide blast radius.
 
+## Exchange rates — no key
+
+Multi-currency reporting pulls the European Central Bank's own daily reference
+feed. No key, no meter, no vendor. Authenticate the refresh with `CRON_SECRET`
+(the same one the finance reminders and the Excel sweep use — **not** the
+service-role `x-cron-secret`).
+
+Run it once with the 90-day feed so historical invoices are convertible, then
+daily:
+
+```
+GET /api/fx/refresh?days=90   # backfill, run this first
+GET /api/fx/refresh           # daily
+```
+
+Without it nothing breaks and nothing lies: amounts in a currency with no rate
+are reported as **unconverted**, named on screen, and never folded into a total.
+
 ## Team vault — no configuration
 
 Deliberately nothing to set. The vault's encryption key is derived in the

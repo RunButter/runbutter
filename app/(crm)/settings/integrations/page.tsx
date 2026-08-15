@@ -8,6 +8,7 @@ import {
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
 import ExcelConnect from '@/components/crm/ExcelConnect';
+import { apisByGroup, type PublicApi } from '@/lib/crm/api-directory';
 import ExcelSync from '@/components/crm/ExcelSync';
 import SocialAccounts from '@/components/crm/SocialAccounts';
 import { rpc } from '@/lib/rpc';
@@ -26,6 +27,7 @@ export default function IntegrationsPage() {
   const canEdit = !!privy;
 
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [browsing, setBrowsing] = useState(false);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
   const [live, setLive] = useState(false);
@@ -93,6 +95,21 @@ export default function IntegrationsPage() {
     if (res.error) { notify(res.error); return; }
     setEditConn(null); reload();
   };
+  /**
+   * Add a directory entry as an ordinary connection.
+   *
+   * It goes through the SAME saveConnection every hand-typed webhook uses —
+   * there is no second write path and no special kind. All this removes is the
+   * step where somebody types a URL from memory and gets it slightly wrong.
+   */
+  const addFromDirectory = async (a: PublicApi) => {
+    if (!privy) return;
+    const res = await saveConnection(privy, null, { label: a.name, kind: 'generic', url: a.url, is_active: true });
+    if (res.error) { notify(res.error); return; }
+    setBrowsing(false);
+    reload();
+  };
+
   const delConn = async (c: Connection) => { if (!privy || !await confirmDialog('Delete this connection?')) return; await deleteConnection(privy, c.id); reload(); };
 
   // Fire a signed sample payload — what Zapier/Make/n8n wait for during setup.
@@ -185,11 +202,48 @@ export default function IntegrationsPage() {
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-base font-medium text-primary">Outgoing webhooks</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
-              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
+              <button onClick={() => setBrowsing((b) => !b)} disabled={!canEdit}
+                className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
+                Public APIs
+              </button>
+              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
             </div>
+            {browsing && (
+              <div className="card-surface p-4 mb-3">
+                <h3 className="text-sm font-medium text-primary">Public APIs that need no key</h3>
+                <p className="mt-0.5 text-2xs text-tertiary">
+                  A short vetted list, not a mirror of the 1,400-entry public-apis directory: no signup,
+                  https only, useful to a business, and run by somebody who will still exist next year.
+                  Adding one creates an ordinary connection — your agents call it by id, never by URL.
+                </p>
+                <div className="mt-3 flex flex-col gap-3">
+                  {apisByGroup().map((g) => (
+                    <div key={g.group}>
+                      <p className="text-3xs font-semibold uppercase tracking-wide text-tertiary">{g.group}</p>
+                      <div className="mt-1 grid sm:grid-cols-2 gap-1.5">
+                        {g.items.map((a) => (
+                          <div key={a.id} className="rounded-lg bg-surface-sunken ring-1 ring-subtle p-2.5 flex items-start gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-primary">{a.name}</p>
+                              <p className="text-3xs text-tertiary">{a.blurb}</p>
+                              <p className="text-3xs text-tertiary/80 mt-0.5">{a.operator}</p>
+                            </div>
+                            <button onClick={() => addFromDirectory(a)} disabled={!canEdit}
+                              className="h-6 px-2 shrink-0 rounded-md text-3xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
+                              Add
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="card-surface overflow-hidden">
               {loading ? <AppLoading />
-                : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL.</div>
+                : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL, or browse the public APIs above.</div>
                 : connections.map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0">
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-3xs font-semibold ring-1 capitalize ${c.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>

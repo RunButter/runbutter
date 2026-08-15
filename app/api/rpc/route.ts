@@ -107,6 +107,11 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // Multi-currency (0121). get_fx_status is a read; set_base_currency re-checks
+  // owner/admin in SQL because a reporting currency changes every figure the
+  // whole workspace sees. save_fx_rates is deliberately ABSENT — it is
+  // service_role only and belongs to /api/fx/refresh, like claim_excel_links.
+  'get_fx_status', 'set_base_currency',
   // Web analytics: sessions, goals and funnels on the built-in pipeline (0120).
   // Every one re-checks site membership through site_readable in SQL, so a site
   // id from another workspace raises NOT_ALLOWED rather than returning a shape.
