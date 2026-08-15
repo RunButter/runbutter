@@ -60,8 +60,18 @@ export default function VaultPage() {
     getWorkspace(privy).then(async (w) => {
       if (!w || dead) { setLoading(false); return; }
       setWsId(w.id);
-      const { data } = await rpc('get_vault_meta', { p_privy: privy, p_workspace: w.id });
-      if (!dead) { setMeta(data ?? { exists: false }); setLoading(false); }
+      const { data, error } = await rpc('get_vault_meta', { p_privy: privy, p_workspace: w.id });
+      if (dead) return;
+      // The function is missing until 0118 is applied. Say that, rather than
+      // showing the setup form and failing on the button — the rule the
+      // migration conventions already state: degrade with an explanation
+      // instead of breaking the screen. The generator above still works.
+      if (error?.code === 'PGRST202' || /get_vault_meta/.test(error?.message || '')) {
+        setMeta({ unavailable: true });
+      } else {
+        setMeta(data ?? { exists: false });
+      }
+      setLoading(false);
     });
     return () => { dead = true; };
   }, [privy]);
@@ -184,12 +194,16 @@ export default function VaultPage() {
   return (
     <>
       <PageHeader title="Vault">
+        {/* Generate is available whether or not there is a vault, and whether or
+            not it is unlocked. Making a strong password is the commonest reason
+            to open this screen and has nothing to do with storing one — behind
+            the setup flow it was effectively hidden. */}
+        <button onClick={() => setGenOpen(true)}
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+          <KeyRound className="w-3.5 h-3.5" /> Generate
+        </button>
         {key && (
           <>
-            <button onClick={() => setGenOpen(true)}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-              <KeyRound className="w-3.5 h-3.5" /> Generate
-            </button>
             <button onClick={() => setEditing({ id: null, item: { title: '' } })}
               className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
               <Plus className="w-3.5 h-3.5" /> New login
@@ -203,12 +217,17 @@ export default function VaultPage() {
 
           {!privy && <EmptyState title="Sign in to open the vault" description="A vault belongs to a workspace." />}
 
-          {privy && !meta?.exists && (
+          {privy && meta?.unavailable && (
+            <EmptyState title="The vault is not enabled on this server yet"
+              description="Its database migration has not been applied. The password generator above works regardless — it runs entirely in your browser and needs nothing from the server." />
+          )}
+
+          {privy && !meta?.unavailable && !meta?.exists && (
             <SetUp pass={pass} pass2={pass2} setPass={setPass} setPass2={setPass2}
               onCreate={create} busy={busy} err={err} />
           )}
 
-          {privy && meta?.exists && !key && (
+          {privy && !meta?.unavailable && meta?.exists && !key && (
             <Unlock pass={pass} setPass={setPass} onUnlock={unlock} busy={busy} err={err}
               onReset={async () => {
                 if (!wsId) return;

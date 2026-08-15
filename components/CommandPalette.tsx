@@ -6,7 +6,8 @@
 // was already stubbed in NavRail but did nothing.
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, KeyRound } from 'lucide-react';
+import PasswordGenerator from '@/components/crm/PasswordGenerator';
 import { iconFor } from '@/lib/crm/object-icons';
 import { usePrivy } from '@privy-io/react-auth';
 import { useNav } from '@/lib/crm/nav';
@@ -24,6 +25,11 @@ export default function CommandPalette() {
   // Loaded the first time the palette is opened, not on every page — the
   // palette is mounted on every screen and most of them never open it.
   const nav = useNav(ready && authenticated && user ? user.id : null, open);
+  // ACTIONS, not just destinations. The palette only ever jumped to a page,
+  // which meant the generator was reachable only from inside the vault — and
+  // you have to create a vault before you can see it. Generating a password is
+  // the most common reason to want one and has nothing to do with storing it.
+  const [genOpen, setGenOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -47,10 +53,19 @@ export default function CommandPalette() {
   }, [router]);
 
   return (
+    <>
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder="Jump to…  (type a page name)" />
       <CommandList>
         <CommandEmpty>No matches.</CommandEmpty>
+        <CommandGroup heading="Actions">
+          <CommandItem value="Generate a password passphrase random secure"
+            onSelect={() => { setOpen(false); setGenOpen(true); }}>
+            <KeyRound className="h-4 w-4 shrink-0 text-tertiary" />
+            <span className="truncate">Generate a password</span>
+            <span className="ml-auto text-2xs text-tertiary/70">Actions</span>
+          </CommandItem>
+        </CommandGroup>
         {nav.map((group: any) => (
           <CommandGroup key={group.group} heading={group.group}>
             {group.items.map((it: any) => {
@@ -77,5 +92,7 @@ export default function CommandPalette() {
         <CommandShortcut className="ml-auto">⌘K</CommandShortcut>
       </div>
     </CommandDialog>
+    {genOpen && <PasswordGenerator onClose={() => setGenOpen(false)} />}
+    </>
   );
 }
