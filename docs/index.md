@@ -58,6 +58,29 @@ visible and editable rather than arriving as an authority. There is no
 confidence interval attached, because a probability computed from a few months
 of one company's history is decoration on a guess.
 
+## Web analytics, without a second product
+
+Cookieless and first-party from 0027, and since 0120 it answers the questions
+that used to need a separate analytics app: **visits, bounce rate, visit
+duration, entry and exit pages, custom events, goals, funnels and who is on the
+site right now** — beside countries, cities, browsers, OS and UTM.
+
+Visits are derived from the pageviews already stored rather than stamped at
+collection, so applying the migration fills in a site's whole history rather
+than starting from zero. One honest limitation, stated because it is real: the
+visitor id rotates daily to keep the pipeline cookieless, so a visit cannot span
+midnight UTC.
+
+A goal is a page (`/thanks`, `/blog/*`) or a custom event the snippet sends with
+`runbutter('Signup')`. Goals count **visitors**, not events — a form submitted
+three times is one conversion. A funnel counts each step only for visitors who
+reached it *after* the previous one, so the numbers can only fall; counting
+steps independently produces funnels that widen, which tells you nothing except
+that the chart is wrong.
+
+Umami is still supported and is now genuinely optional — see
+[Umami analytics](./umami-analytics.md) for why you probably no longer want it.
+
 ## The shape of it in one paragraph
 
 Everything is one Postgres database. A company, a person, a deal, an invoice, a

@@ -36,6 +36,11 @@ concentration, cost per lead) and a cash forecast with scenario controls, both
 computed from the ledger with nothing approximated into a number that looks like
 a fact.
 
+**Web analytics that need no second product** — visits, bounce rate, visit
+duration, entry and exit pages, custom events, goals, funnels and live visitors,
+computed in Postgres from the events already collected. Umami is now optional
+rather than the only way to get session metrics.
+
 **A team vault** — shared logins encrypted in the browser, with no title column
 and no key on the server, plus a password generator that is also a free public
 tool. See [The team vault](./vault.md).

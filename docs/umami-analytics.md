@@ -3,6 +3,16 @@
 RunButter's web analytics can be served by a self-hosted [Umami](https://github.com/umami-software/umami)
 instead of the built-in `site_events` pipeline (migrations 0027/0029/0030).
 
+## Why not Plausible
+
+Plausible CE is **AGPL-3.0**, which is a wall rather than a preference: shipping
+or modifying it inside an MIT product forces the whole product to AGPL. It was
+read as a feature spec instead — the questions its dashboard answers — and 0120
+answers them in Postgres, written from scratch. The conventions it made standard
+(a 30-minute session gap, a bounce as a one-pageview visit) are conventions, not
+code, and matching them is what makes a number comparable to one somebody
+already knows from another tool.
+
 ## Why Umami and not Plausible
 
 | | Umami | Plausible CE |
@@ -22,13 +32,25 @@ without a `umami_website_id`, and its history stays queryable through
 `get_site_stats` forever. The swap is per-site and reversible — clear the
 column and that site reads from Postgres again.
 
-What Umami adds that the built-in pipeline never had: sessions (bounce rate,
-average visit duration), countries, and browser/OS breakdowns.
+**This page's original reason no longer applies.** Umami was added because the
+built-in pipeline could not compute session metrics — bounce rate, visit
+duration, funnels — and countries and browsers came later in 0062. Migration
+**0120 computes all of it locally**: visits, bounce rate, visit duration, entry
+and exit pages, custom events, goals, funnels and a live visitor count. And
+because visits are derived from the events already stored rather than stamped at
+ingest, they appear for a site's whole history the day you apply it.
+
+So the honest position today: **you almost certainly do not need this.** Umami
+is still supported, still per-site, still reversible, and worth deploying only
+if you want its own retention controls and query tooling, or you are already
+running it. Otherwise it is a second application and a second database for
+questions Postgres is already answering.
 
 What you give up by moving a site to Umami: analytics events no longer live in
 the same database as `leads`, `campaigns` and `deals`, so you cannot SQL-join a
-pageview to a deal. That join is the built-in pipeline's one structural
-advantage — worth knowing before switching every site over.
+pageview to a deal — and goals and funnels are the built-in ones or Umami's, not
+both. That join is the built-in pipeline's structural advantage, and it is a
+larger one now than when this page was written.
 
 ## Deploying Umami
 
