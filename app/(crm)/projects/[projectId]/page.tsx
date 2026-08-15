@@ -10,6 +10,8 @@ import PipelineBoard from '@/components/crm/PipelineBoard';
 import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
+import RecordForm from '@/components/crm/RecordForm';
+import { OBJECTS } from '@/lib/crm/registry';
 
 const STATUS_TONE: Record<string, string> = {
   active: 'bg-success/10 text-success ring-success/30',
@@ -27,6 +29,19 @@ export default function ProjectDashboard() {
   const [board, setBoard] = useState<{ stages: PipelineStage[]; records: PipelineRecord[] }>({ stages: [], records: [] });
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Same defect as the issues board: a New button with no handler. Here it also
+  // pre-fills the project, because an issue created from inside a project that
+  // did not belong to it is the kind of thing nobody notices until the board is
+  // wrong.
+  const [creating, setCreating] = useState(false);
+  const privy = authenticated && user ? user.id : null;
+
+  const load = () => {
+    setLoading(true);
+    return loadProject(privy, projectId).then((res) => {
+      setProject(res.project); setBoard({ stages: res.stages, records: res.records }); setLive(res.live); setLoading(false);
+    });
+  };
 
   useEffect(() => {
     if (!ready) return;
@@ -60,7 +75,8 @@ export default function ProjectDashboard() {
           {project?.identifier && <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5">{project.identifier}</span>}
           {project?.status && <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[project.status] || STATUS_TONE.active}`}>{project.status}</span>}
           <DataBadge live={live} />
-          <button className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm"><Plus className="w-3.5 h-3.5" /> New issue</button>
+          <button onClick={() => setCreating(true)} disabled={!privy}
+            className="ml-auto h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> New issue</button>
         </div>
       </header>
 
@@ -84,6 +100,11 @@ export default function ProjectDashboard() {
           </>
         )}
       </div>
+      {creating && privy && (
+        <RecordForm object={OBJECTS.issues} privyUserId={privy} recordId={null}
+          initial={{ project_id: projectId }}
+          onClose={() => setCreating(false)} onSaved={() => { setCreating(false); load(); }} />
+      )}
     </>
   );
 }

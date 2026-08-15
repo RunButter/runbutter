@@ -19,6 +19,10 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'email', label: 'Email', input: 'text' },
       { key: 'phone', label: 'Phone', input: 'text' },
       { key: 'title', label: 'Title', input: 'text' },
+      // The relation the CRM is FOR. It was absent from this form and dropped
+      // by create_record (0117), so a person was never attached to a company by
+      // any path a human could take.
+      { key: 'primary_company_id', label: 'Company', input: 'relation', optionsObject: 'companies' },
       { key: 'source', label: 'Source', input: 'text' },
     ],
   },
@@ -175,6 +179,10 @@ export const OBJECTS: Record<string, ObjectDef> = {
     ],
     form: [
       { key: 'title', label: 'Title', input: 'text', required: true },
+      // Same story as people.primary_company_id: editable in SQL since 0088,
+      // never creatable, never on the form. An issue with no project is missing
+      // from the board, the project page and the roadmap.
+      { key: 'project_id', label: 'Project', input: 'relation', optionsObject: 'projects' },
       { key: 'status', label: 'Status', input: 'select', options: ['backlog', 'todo', 'in_progress', 'done', 'cancelled'] },
       { key: 'priority', label: 'Priority', input: 'select', options: ['none', 'low', 'medium', 'high', 'urgent'] },
       { key: 'due_date', label: 'Due date', input: 'date' },

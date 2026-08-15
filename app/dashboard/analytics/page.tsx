@@ -9,6 +9,7 @@ import { BarChart, TrendingUp, Users, PieChart, Loader2, Download, CheckCircle2,
 import Paywall from '@/components/Paywall';
 import PageHeader from '@/components/dashboard/PageHeader';
 import StatCard from '@/components/ui/StatCard';
+import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import AppLoading from '@/components/ui/AppLoading';
 import dynamic from 'next/dynamic';
 
@@ -146,6 +147,33 @@ export default function AnalyticsPage() {
         return <div className="h-full flex items-center justify-center"><Loader2 className="w-8 h-8 text-tertiary animate-spin" /></div>;
     }
 
+    /**
+     * Export had no handler at all — the button has been decorative since the
+     * screen shipped. It writes what is on the page: the four headline numbers,
+     * then a row per source and per position, so a spreadsheet gets the same
+     * figures the charts are drawn from rather than a screenshot of them.
+     *
+     * Built in the browser through lib/crm/csv, like every other export here —
+     * a hiring report never needs to leave the machine to become a file.
+     */
+    const exportCsv = () => {
+        const rows: (string | number)[][] = [
+            ['Metric', 'Value'],
+            ['Total candidates', metrics.totalCandidates],
+            ['Total hires', metrics.hiredCandidates],
+            ['Hire rate %', metrics.offerRate],
+            ['Active positions', metrics.totalPositions],
+            [],
+            ['Source', 'Candidates'],
+            ...Object.entries(metrics.sources || {}).map(([k, v]) => [k, Number(v)]),
+            [],
+            ['Position', 'Applications'],
+            ...Object.entries(metrics.positionsVolume || {}).map(([k, v]) => [k, Number(v)]),
+        ];
+        downloadCSV(`hiring-analytics-${new Date().toISOString().slice(0, 10)}.csv`,
+            toCSV(rows[0].map(String), rows.slice(1)));
+    };
+
     const kpis = [
         { label: 'Total candidates', value: metrics.totalCandidates, icon: Users, tone: 'text-accent' },
         { label: 'Total hires', value: metrics.hiredCandidates, icon: CheckCircle2, tone: 'text-success' },
@@ -156,7 +184,8 @@ export default function AnalyticsPage() {
     return (
         <>
             <PageHeader title="Analytics" badge={<span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
-                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+                <button onClick={exportCsv}
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>
             </PageHeader>
