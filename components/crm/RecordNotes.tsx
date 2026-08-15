@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Bot, User, ExternalLink, Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
 import { loadRecordNotes, addRecordNote, deleteRecordNote, type RecordNote } from '@/lib/crm/notes';
+import MentionText from '@/components/crm/MentionText';
+import MentionInput from '@/components/crm/MentionInput';
 
 /**
  * What has been found out about this record — the "Agent" view.
@@ -72,8 +74,9 @@ export default function RecordNotes({ privy, workspaceId, object, recordId }: {
       <div className="p-4 space-y-3">
         {adding && (
           <div className="rounded-lg ring-1 ring-subtle bg-surface-sunken p-3 space-y-2">
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2}
-              placeholder="One thing you found out."
+            <MentionInput value={body} onChange={setBody} rows={2}
+              privy={privy} workspaceId={workspaceId}
+              placeholder="One thing you found out. @ to link a record."
               className="input-field !h-auto py-2 resize-none w-full text-xs" />
             {/* Required, and labelled as such rather than validated after the
                 fact — the whole point of these notes is that every claim can be
@@ -121,7 +124,7 @@ export default function RecordNotes({ privy, workspaceId, object, recordId }: {
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
-                <p className="mt-1.5 text-xs text-secondary leading-snug whitespace-pre-wrap">{n.body}</p>
+                <p className="mt-1.5 text-xs text-secondary leading-snug whitespace-pre-wrap"><MentionText text={n.body} privy={privy} /></p>
                 {/* As prominent as the claim. An unsourced fact and a sourced
                     one look different at a glance, which is the point. */}
                 <div className="mt-1.5 text-3xs text-tertiary inline-flex items-center gap-1 min-w-0 max-w-full">

@@ -16,6 +16,8 @@ import ChatAttachments from '@/components/crm/ChatAttachments';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
 import { formatBytes } from '@/lib/files/client';
 import AppLoading from '@/components/ui/AppLoading';
+import MentionText from '@/components/crm/MentionText';
+import MentionInput from '@/components/crm/MentionInput';
 
 /**
  * Team chat. The point is not chat — it is chat attached to records: a channel
@@ -257,7 +259,7 @@ export default function ChatPage() {
                         <div key={m.id} className="group flex items-start gap-2">
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm whitespace-pre-wrap break-words ${m.deleted ? 'text-tertiary italic' : 'text-secondary'}`}>
-                              {m.deleted ? 'Message deleted' : m.body}
+                              {m.deleted ? 'Message deleted' : <MentionText text={m.body} privy={privy} />}
                               {m.edited_at && !m.deleted && <span className="text-3xs text-tertiary ml-1">(edited)</span>}
                             </p>
                             {!m.deleted && <ChatAttachments items={m.attachments} embeds={embeds} />}
@@ -312,19 +314,21 @@ export default function ChatPage() {
                     className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-lg text-tertiary hover:text-primary hover:bg-surface-hover disabled:opacity-40">
                     {attaching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                   </button>
-                  <textarea
-                    value={body} onChange={(e) => setBody(e.target.value)} rows={1}
-                    // Pasting a screenshot is how most images get shared, so it
-                    // is wired alongside the picker rather than instead of it.
-                    onPaste={(e) => { if (e.clipboardData?.files?.length) { e.preventDefault(); attach(e.clipboardData.files); } }}
-                    onDrop={(e) => { if (e.dataTransfer?.files?.length) { e.preventDefault(); attach(e.dataTransfer.files); } }}
-                    onKeyDown={(e) => {
-                      // Enter sends, Shift+Enter breaks the line — the convention
-                      // every chat app shares, so anything else feels broken.
-                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-                    }}
-                    className="input-field !h-auto py-2 resize-none flex-1 min-w-0 max-h-32"
-                    placeholder={`Message #${channel.name}`} />
+                  {/* Enter sends and Shift+Enter breaks the line, as every chat
+                      app does — except while the @ picker is open, where Enter
+                      unambiguously means "pick this one". MentionInput owns that
+                      precedence so it cannot be got wrong here. Pasting a
+                      screenshot still attaches it. */}
+                  <div className="flex-1 min-w-0">
+                    <MentionInput
+                      value={body} onChange={setBody} rows={1}
+                      privy={privy} workspaceId={ws?.id ?? null}
+                      onSubmit={send}
+                      onPaste={(e) => { if (e.clipboardData?.files?.length) { e.preventDefault(); attach(e.clipboardData.files); } }}
+                      onDrop={(e) => { if (e.dataTransfer?.files?.length) { e.preventDefault(); attach(e.dataTransfer.files); } }}
+                      className="input-field !h-auto py-2 resize-none w-full max-h-32"
+                      placeholder={`Message #${channel.name} — @ to link a record`} />
+                  </div>
                   <Button variant="primary" onClick={send} disabled={sending || (!body.trim() && pending.length === 0)}>
                     {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   </Button>

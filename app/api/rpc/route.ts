@@ -107,6 +107,8 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // @-mentions (0113).
+  'resolve_record_labels', 'search_mentionable',
   // Copilot threads (0102). A thread belongs to a PERSON, and every one of
   // these re-checks that in SQL — a colleague in the same workspace gets
   // NOT_FOUND, not a redacted row. append_copilot_message and
