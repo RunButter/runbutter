@@ -4,7 +4,7 @@ import {
   FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
-  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound, CalendarDays, PieChart,
+  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound, CalendarDays, PieChart, Cable,
   // The custom-object vocabulary — see OBJECT_ICON_NAMES in lib/workspace/blueprint.ts.
   Truck, IdCard, Stethoscope, HeartPulse, CalendarClock, Factory, Cog, Layers, Repeat, Timer,
   Building, Home, FileSignature, Wrench, HardHat, ShoppingCart, Undo2, GraduationCap,
@@ -37,7 +37,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   FileBarChart, FileInput, FileStack, FileText, FolderKanban, FolderOpen, GanttChartSquare, QrCode,
   Globe, Globe2, Heart, Laptop, LayoutDashboard, Link2, ListTodo, Mail, Megaphone, MessageCircle,
   Package, Palette, PenLine, PenSquare, Plug, Radio, Receipt, Rocket, ShieldCheck, Sparkles,
-  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound, CalendarDays, PieChart,
+  Table2, Target, TrendingUp, Users, Wallet, Waypoints, Zap, Gauge, LineChart, KeyRound, CalendarDays, PieChart, Cable,
   Truck, IdCard, Stethoscope, HeartPulse, CalendarClock, Factory, Cog, Layers, Repeat, Timer,
   Building, Home, FileSignature, Wrench, HardHat, ShoppingCart, Undo2, GraduationCap,
   HeartHandshake, Gift, ClipboardList, Boxes, Ticket, Utensils, Hammer, Ship, Beaker, Scale,

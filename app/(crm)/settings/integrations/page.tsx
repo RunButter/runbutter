@@ -251,7 +251,7 @@ export default function IntegrationsPage() {
           {/* Outgoing webhooks / connections */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-base font-medium text-primary">Connectors</h2>
+              <h2 className="text-base font-medium text-primary">Outgoing webhooks</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
               <button onClick={() => { setBrowsing((b) => !b); setPicking(false); }} disabled={!canEdit}
                 className="ml-auto h-8 px-3 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">

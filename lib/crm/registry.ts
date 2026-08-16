@@ -332,7 +332,12 @@ export const NAV = [
     { slug: 'objects', label: 'Objects', icon: 'Table2', href: '/settings/objects' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
     { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
-    { slug: 'integrations', label: 'Integrations', icon: 'Plug', href: '/settings/integrations' },
+    // Connectors is its own entry, above Integrations. Connecting Slack was
+    // the eighth section on a page that also holds API keys, the MCP config,
+    // Google Calendar, the Excel feed and the delivery log — which is the kind
+    // of hidden nobody files a bug about.
+    { slug: 'connectors', label: 'Connectors', icon: 'Plug', href: '/settings/connectors' },
+    { slug: 'integrations', label: 'Integrations', icon: 'Cable', href: '/settings/integrations' },
     { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
     // Last, because it is the one you visit twice a year — but it belongs to the
     // workspace, not to a person, so it is here rather than under Account.

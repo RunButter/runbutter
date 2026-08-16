@@ -12,6 +12,7 @@ import { scoreProject } from '@/lib/plugins/quality';
 import { buildPlugin, skillSlug } from '@/lib/plugins/agent-plugin';
 import Thinking from '@/components/ui/Thinking';
 import { TEMPLATES } from '@/lib/plugins/templates';
+import { TOOL_CATALOG, TOOL_GROUPS } from '@/lib/agents/catalog';
 import { unzip } from '@/lib/plugins/unzip';
 import { importPlugin } from '@/lib/plugins/import';
 
@@ -225,8 +226,24 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
     };
     const { findings } = lintProject(project as any, buildPlugin(project as any));
     const report = scoreProject(findings, { skillCount: 1, perRunChars: (s.instructions || '').length, onDemandChars: 0 });
-    return { score: report.overall, notes: findings.filter((f) => f.severity !== 'idea').map((f) => f.fix || f.message) };
+    // EVERY finding, and the per-category breakdown — the same two things
+    // /plugins shows. This used to drop `idea` severity and slice the rest to
+    // four, so a skill with six problems reported four and looked finished.
+    return {
+      score: report.overall,
+      categories: report.categories,
+      findings: findings.map((f) => ({
+        severity: f.severity, text: f.fix || f.message, category: f.category,
+      })),
+    };
   }, [s.name, s.description, s.instructions]);
+
+  const tools = new Set(s.suggested_tools || []);
+  const toggleTool = (name: string) => {
+    const next = new Set(tools);
+    next.has(name) ? next.delete(name) : next.add(name);
+    set('suggested_tools', [...next]);
+  };
 
   return (
     // INLINE, not a modal. The public builder at /plugins puts the editor on the
@@ -257,6 +274,45 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
               {(s.instructions || '').length.toLocaleString()} / 20,000 characters
             </span>
           </label>
+          {/* SUGGESTED TOOLS. The column has existed since 0068, saveSkill has
+              always written it, and there was no input anywhere — so it was
+              initialised to [] and could never be anything else. It is a HINT
+              for whoever wires up an agent, never a grant: the runner's tool
+              list comes from the agent alone. */}
+          <div>
+            <span className="text-xs text-secondary block mb-1">
+              Tools this skill expects
+              <span className="ml-1.5 text-3xs text-tertiary">
+                a hint for whoever builds the agent — it grants nothing on its own
+              </span>
+            </span>
+            <div className="rounded-md border border-subtle bg-surface-sunken p-2 max-h-56 overflow-y-auto">
+              {TOOL_GROUPS.map((g) => {
+                const items = TOOL_CATALOG.filter((t) => t.group === g);
+                if (!items.length) return null;
+                return (
+                  <div key={g} className="mb-2 last:mb-0">
+                    <p className="text-3xs font-semibold uppercase tracking-wide text-tertiary">{g}</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {items.map((t) => (
+                        <button key={t.name} type="button" onClick={() => toggleTool(t.name)} title={t.name}
+                          className={`h-6 px-2 rounded-md text-3xs ring-1 ${tools.has(t.name)
+                            ? 'bg-accent/10 text-accent ring-accent/30'
+                            : 'text-secondary ring-subtle hover:bg-surface-hover'}`}>
+                          {t.label}{t.write ? ' ·w' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <span className="text-3xs text-tertiary mt-1 block">
+              {tools.size === 0 ? 'None selected.' : `${tools.size} selected.`} A “·w” tool writes,
+              so an agent granted it proposes changes unless the workspace is on auto.
+            </span>
+          </div>
+
           {review && (
             <div className="rounded-md border border-subtle bg-surface-sunken p-3">
               <div className="flex items-baseline gap-2">
@@ -265,10 +321,32 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
                 </span>
                 <span className="text-2xs text-tertiary">/ 100 · how it is written, nothing has been run</span>
               </div>
-              {review.notes.length > 0 && (
+
+              {/* The category bars the public builder shows. An overall number
+                  says a skill is a 62; these say which part of it is. */}
+              <div className="mt-2 grid sm:grid-cols-2 gap-x-4 gap-y-1">
+                {review.categories.map((c) => (
+                  <div key={c.category} className="flex items-center gap-2">
+                    <span className="text-3xs text-tertiary w-24 shrink-0 truncate">{c.label}</span>
+                    <span className="flex-1 h-1.5 rounded-full bg-surface-hover overflow-hidden">
+                      <span className={`block h-full rounded-full ${c.score >= 85 ? 'bg-success' : c.score >= 45 ? 'bg-warning' : 'bg-danger'}`}
+                        style={{ width: `${c.score}%` }} />
+                    </span>
+                    <span className="text-3xs text-tertiary tabular-nums w-7 text-right">{c.score}</span>
+                  </div>
+                ))}
+              </div>
+
+              {review.findings.length > 0 && (
                 <ul className="mt-2 space-y-1">
-                  {review.notes.slice(0, 4).map((n, i) => (
-                    <li key={i} className="text-2xs text-secondary leading-relaxed">{n}</li>
+                  {review.findings.map((f, i) => (
+                    <li key={i} className="text-2xs text-secondary leading-relaxed flex gap-1.5">
+                      <span className={`shrink-0 font-semibold ${f.severity === 'error' ? 'text-danger'
+                        : f.severity === 'warning' ? 'text-warning' : 'text-tertiary'}`}>
+                        {f.severity === 'error' ? '!' : f.severity === 'warning' ? '△' : '·'}
+                      </span>
+                      <span>{f.text}</span>
+                    </li>
                   ))}
                 </ul>
               )}
