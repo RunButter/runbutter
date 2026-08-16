@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound, CalendarDays, LineChart } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound, CalendarDays, LineChart, PieChart } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
@@ -37,8 +37,8 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
 // throughout — no hue.
-// 23 tiles, five of them spanning two columns: exactly 28 cells, so the
-// 4-column grid fills seven clean rows with no ragged gap at the end. Keep that
+// 27 tiles, five of them spanning two columns: exactly 32 cells, so the
+// 4-column grid fills eight clean rows with no ragged gap at the end. Keep that
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
 // The sum is `tiles + wideTiles`, and it has to stay a multiple of four; adding
 // one wide tile therefore costs two normal ones, not zero.
@@ -72,6 +72,10 @@ const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: stri
   { icon: Puzzle, beam: true, name: 'Agent skills, portable', body: 'Write a skill once, package it as an Agent Plugin. Import from GitHub, export yours back out.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
   // The calendar is the clearest demonstration of the one-database claim, so it
   // gets a tile rather than a line in the inventory nobody reads twice.
+  { icon: PieChart, name: 'Cap table and dilution', body: 'Shares, options with vesting, SAFEs. Model a round and watch what it does to everyone.' },
+  { icon: Scale, name: 'Multi-currency', body: 'Invoice in any currency, report in one. ECB rates, no per-lookup fee.' },
+  { icon: Target, name: 'Goals and funnels', body: 'Conversions and drop-off on your own cookieless analytics. No second product.' },
+  { icon: Plug, name: 'Public API directory', body: 'Vetted keyless APIs your agents can call, added in one click.' },
   { icon: CalendarDays, name: 'One company calendar', body: 'Invoices due, interviews, scheduled posts, campaign windows and bookings — on one grid, from one query.', wide: true },
   { icon: LineChart, name: 'Cash forecast', body: 'Hire two people, lose your biggest client, get paid three weeks late. Watch what happens to the money.' },
   { icon: KeyRound, name: 'Encrypted team vault', body: 'Shared logins your own server cannot read. Free password generator, no account.', href: '/password', cta: 'Open the generator' },
@@ -148,7 +152,7 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
 // flat list: a buyer scans for the module they care about, not 35 bullets.
 const INCLUDED: { group: string; items: string[] }[] = [
   { group: 'Sales', items: ['Deal pipeline', 'Companies and people', 'Product catalogue', 'Offers, accepted to invoice', 'VAT and NIP autofill'] },
-  { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'Collections KPIs and AR ageing', 'Cash forecast with scenarios', 'E-signatures', 'KSeF e-invoicing'] },
+  { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'Collections KPIs and AR ageing', 'Cash forecast with scenarios', 'Cap table and dilution', 'Multi-currency reporting', 'E-signatures', 'KSeF e-invoicing'] },
   { group: 'Marketing', items: ['Campaigns and budgets', 'Newsletters with AI drafting', 'Live segments and lead scoring', 'Drip sequences', 'Post studio with real previews', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Goals, funnels and live visitors', 'Source attribution'] },
   { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar', 'Mind maps and content boards'] },
   { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },

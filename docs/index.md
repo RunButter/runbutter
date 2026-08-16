@@ -81,6 +81,33 @@ that the chart is wrong.
 Umami is still supported and is now genuinely optional — see
 [Umami analytics](./umami-analytics.md) for why you probably no longer want it.
 
+## Who owns the company
+
+**Finance → Cap table** holds shares, options with real vesting schedules, SAFEs
+and convertible notes, and models what a priced round does to everybody.
+
+Three things it refuses to fudge:
+
+- **A SAFE gets no ownership percentage.** It converts at a price that does not
+  exist until a round does, and a percentage beside a SAFE is the classic
+  homemade-cap-table lie. They are listed separately with their cap and discount
+  and only become shares inside the round model.
+- **Both percentages are shown.** "Of issued shares" is what a founder means;
+  "fully diluted", including granted options *and* the unissued pool, is what an
+  investor means. They differ by a lot.
+- **Vesting is computed, never stored**, from the schedule and a date, rounded
+  down. A stored vested count goes stale silently every day, and rounding up
+  hands out equity nobody earned.
+
+A SAFE converts at the **better of** its cap and its discount — the holder gets
+the lower price and therefore more shares. Getting that backwards is the classic
+modelling error and it always favours the founder, which is why nobody catches
+it until the lawyers do.
+
+It models **ownership only**: no liquidation preferences, participation,
+anti-dilution or pro-rata. Those change an exit rather than the ownership line,
+and half-modelling them produces a confident wrong number.
+
 ## Money in more than one currency
 
 `currency` has been a column on invoices, expenses, transactions and bank

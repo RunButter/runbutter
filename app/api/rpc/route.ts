@@ -107,6 +107,10 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // Cap table (0122). simulate_round writes nothing — it is a model, and the
+  // separation is the same one /api/workspace/build makes.
+  'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',
+  'save_cap_security', 'delete_cap_security', 'delete_cap_holder', 'set_option_pool',
   // Multi-currency (0121). get_fx_status is a read; set_base_currency re-checks
   // owner/admin in SQL because a reporting currency changes every figure the
   // whole workspace sees. save_fx_rates is deliberately ABSENT — it is

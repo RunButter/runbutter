@@ -41,6 +41,12 @@ duration, entry and exit pages, custom events, goals, funnels and live visitors,
 computed in Postgres from the events already collected. Umami is now optional
 rather than the only way to get session metrics.
 
+**Cap table and dilution** — shares, options with vesting, SAFEs and notes,
+both ownership percentages, and a round simulator that converts SAFEs at the
+better of cap and discount. Ownership only: no liquidation preferences,
+participation or anti-dilution, because half-modelling those produces a number
+that looks authoritative and is not.
+
 **Multi-currency finance** — every figure converted into the workspace's
 reporting currency at the rate on the transaction's date, from the ECB's own
 keyless feed, with unconvertible amounts named rather than folded in.

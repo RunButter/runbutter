@@ -270,6 +270,9 @@ export const NAV = [
     { slug: 'sign', label: 'Signatures', icon: 'PenLine', href: '/finance/sign' },
     // Under Finance because that is where its figures come from, and last
     // because it is the monthly act rather than a daily one.
+    // Beside the investor update, because they are the same conversation: what
+    // the numbers are, and who owns the result.
+    { slug: 'cap-table', label: 'Cap table', icon: 'PieChart', href: '/cap-table' },
     { slug: 'investor-update', label: 'Investor update', icon: 'Mail', href: '/investor-update' },
   ]},
   { group: 'Marketing', items: [
