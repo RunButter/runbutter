@@ -143,3 +143,70 @@ export function looksWrong(c: Connector, url: string): string | null {
   if (url.includes(c.expect)) return null;
   return `That does not look like a ${c.name} URL — they usually contain "${c.expect}". Save it anyway if you know it is right.`;
 }
+
+/**
+ * "Tell me when…" — the step that was missing.
+ *
+ * ── CONNECTING AN APP DID NOTHING ON ITS OWN ────────────────────────────────
+ * A saved connection is an inert URL until an automation fires at it. So the
+ * old flow was: find the webhook screen in Slack, paste a URL, see it appear in
+ * a list, and then discover that nothing happens — the actual work was over in
+ * Automations, on a different screen, behind a builder with an object picker, a
+ * condition editor and an action list.
+ *
+ * That gap is where people give up, and it is not a UI problem: it is a missing
+ * step. These are the six events anybody actually wants to be told about,
+ * pre-wired to the connection that was just created.
+ *
+ * They produce an ORDINARY automation — same table, same dispatcher, same
+ * builder can open and edit it afterwards. A recipe is a prefilled form, never
+ * a second execution path, exactly as the agent gallery is for agents.
+ */
+export interface NotifyRecipe {
+  id: string;
+  label: string;
+  /** What lands in the channel, so the choice is obvious before you make it. */
+  detail: string;
+  object: string;
+  event: 'created' | 'updated';
+  conditions: { field: string; op: string; value: string }[];
+  /** On by default: the two nobody regrets switching on. */
+  common?: boolean;
+}
+
+export const NOTIFY_RECIPES: NotifyRecipe[] = [
+  { id: 'invoice-paid', label: 'An invoice gets paid', common: true,
+    detail: 'Fires when an invoice moves to paid.',
+    object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }] },
+  { id: 'invoice-overdue', label: 'An invoice goes overdue', common: true,
+    detail: 'Fires when an invoice moves to overdue.',
+    object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'overdue' }] },
+  { id: 'new-contact', label: 'Someone new is added',
+    detail: 'Every new person in the CRM.',
+    object: 'people', event: 'created', conditions: [] },
+  { id: 'new-company', label: 'A company is added',
+    detail: 'Every new organization.',
+    object: 'companies', event: 'created', conditions: [] },
+  { id: 'big-transaction', label: 'A large payment lands',
+    detail: 'Any bank transaction over 10,000.',
+    object: 'transactions', event: 'created', conditions: [{ field: 'amount', op: 'gt', value: '10000' }] },
+  { id: 'new-issue', label: 'An issue is raised',
+    detail: 'Every new issue in Projects.',
+    object: 'issues', event: 'created', conditions: [] },
+];
+
+/** The automation payload for a recipe, wired to a connection. */
+export function recipeAutomation(r: NotifyRecipe, connectionId: string, appName: string) {
+  return {
+    name: `${r.label} → ${appName}`,
+    trigger_type: 'event',
+    object: r.object,
+    event: r.event,
+    conditions: r.conditions,
+    enabled: true,
+    // connection_id, never a URL: the dispatcher resolves it and picks up the
+    // signing secret with it. A copied URL here would go unsigned and would not
+    // follow the connection if it were ever changed.
+    actions: [{ type: 'send_webhook', config: { connection_id: connectionId } }],
+  };
+}

@@ -4,12 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePrivy, getAccessToken } from '@privy-io/react-auth';
 import { Plug, Plus, Loader2, X, Trash2, Webhook, KeyRound, Copy, Check, Ban, Send, Calendar, CheckCircle, CalendarClock } from 'lucide-react';
 import {
-  loadConnections, saveConnection, deleteConnection, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
+  loadConnections, saveConnection, deleteConnection, saveAutomation, loadApiKeys, createApiKey, revokeApiKey, loadWebhookDeliveries,
   type Connection, type ApiKey, type WebhookDelivery,
 } from '@/lib/crm/automations';
 import ExcelConnect from '@/components/crm/ExcelConnect';
 import { apisByGroup, type PublicApi } from '@/lib/crm/api-directory';
 import ConnectorPicker from '@/components/crm/ConnectorPicker';
+import { NOTIFY_RECIPES, recipeAutomation } from '@/lib/crm/connectors';
 import ConnectedApps from '@/components/crm/ConnectedApps';
 import ExcelSync from '@/components/crm/ExcelSync';
 import SocialAccounts from '@/components/crm/SocialAccounts';
@@ -99,12 +100,50 @@ export default function IntegrationsPage() {
     setEditConn(null); reload();
   };
   /** A catalogue pick is an ordinary connection, saved the ordinary way. */
-  const addConnector = async (label: string, url: string) => {
-    if (!privy) return;
+  const addConnector = async (label: string, url: string): Promise<string | null> => {
+    if (!privy) return null;
     const res = await saveConnection(privy, null, { label, kind: 'generic', url, is_active: true });
-    if (res.error) { notify(res.error); return; }
-    setPicking(false);
+    if (res.error) { notify(res.error); return null; }
     reload();
+    return res.id ?? null;
+  };
+
+  /**
+   * Turn the ticked "tell me when…" boxes into automations.
+   *
+   * Each is an ORDINARY automation row through the ordinary saveAutomation —
+   * the builder can open, edit and disable them afterwards, and the dispatcher
+   * has no idea they were created by a wizard. A recipe is a prefilled form,
+   * never a second execution path.
+   *
+   * Failures are collected and reported rather than thrown away: switching on
+   * four alerts and silently getting three is worse than being told.
+   */
+  const addRecipes = async (connectionId: string, appName: string, ids: string[]) => {
+    if (!privy || !ids.length) return;
+    const failed: string[] = [];
+    for (const id of ids) {
+      const r = NOTIFY_RECIPES.find((x) => x.id === id);
+      if (!r) continue;
+      const res = await saveAutomation(privy, null, recipeAutomation(r, connectionId, appName) as any);
+      if (res.error) failed.push(r.label);
+    }
+    if (failed.length) notify(`Could not switch on: ${failed.join(', ')}`);
+    reload();
+  };
+
+  const testConnection = async (connectionId: string) => {
+    if (!privy) return { ok: false, text: 'Not signed in' };
+    try {
+      const res = await fetch('/api/integrations/test-webhook', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privyUserId: privy, connectionId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      return { ok: !!j.ok, text: j.ok ? 'It arrived' : (j.error || j.detail || 'No response') };
+    } catch {
+      return { ok: false, text: 'Could not send' };
+    }
   };
 
   /**
@@ -224,7 +263,10 @@ export default function IntegrationsPage() {
               </button>
               <button onClick={() => { setPicking((p) => !p); setBrowsing(false); }} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Connect an app</button>
             </div>
-            {picking && <ConnectorPicker canEdit={canEdit} onSave={addConnector} onClose={() => setPicking(false)} />}
+            {picking && (
+              <ConnectorPicker canEdit={canEdit} onSave={addConnector} onRecipes={addRecipes}
+                onTest={testConnection} onClose={() => setPicking(false)} />
+            )}
 
             {browsing && (
               <div className="card-surface p-4 mb-3">

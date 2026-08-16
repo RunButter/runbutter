@@ -107,6 +107,10 @@ const ALLOWED = new Set([
   'create_data_room', 'get_data_rooms', 'get_data_room_activity', 'revoke_data_room',
   // Client portals (0111). The two public readers have their own routes.
   'create_client_portal', 'get_client_portals', 'revoke_client_portal',
+  // Rotating a connection's signing secret (0123). Deliberately its own call:
+  // it breaks every receiver until they get the new value, which is right after
+  // a leak and wrong as a side effect of an edit.
+  'rotate_connection_secret',
   // Cap table (0122). simulate_round writes nothing — it is a model, and the
   // separation is the same one /api/workspace/build makes.
   'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',
