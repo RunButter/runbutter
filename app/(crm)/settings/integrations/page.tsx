@@ -9,6 +9,8 @@ import {
 } from '@/lib/crm/automations';
 import ExcelConnect from '@/components/crm/ExcelConnect';
 import { apisByGroup, type PublicApi } from '@/lib/crm/api-directory';
+import ConnectorPicker from '@/components/crm/ConnectorPicker';
+import ConnectedApps from '@/components/crm/ConnectedApps';
 import ExcelSync from '@/components/crm/ExcelSync';
 import SocialAccounts from '@/components/crm/SocialAccounts';
 import { rpc } from '@/lib/rpc';
@@ -28,6 +30,7 @@ export default function IntegrationsPage() {
 
   const [connections, setConnections] = useState<Connection[]>([]);
   const [browsing, setBrowsing] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
   const [live, setLive] = useState(false);
@@ -95,6 +98,15 @@ export default function IntegrationsPage() {
     if (res.error) { notify(res.error); return; }
     setEditConn(null); reload();
   };
+  /** A catalogue pick is an ordinary connection, saved the ordinary way. */
+  const addConnector = async (label: string, url: string) => {
+    if (!privy) return;
+    const res = await saveConnection(privy, null, { label, kind: 'generic', url, is_active: true });
+    if (res.error) { notify(res.error); return; }
+    setPicking(false);
+    reload();
+  };
+
   /**
    * Add a directory entry as an ordinary connection.
    *
@@ -200,14 +212,20 @@ export default function IntegrationsPage() {
           {/* Outgoing webhooks / connections */}
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-base font-medium text-primary">Outgoing webhooks</h2>
+              <h2 className="text-base font-medium text-primary">Connectors</h2>
               <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{connections.length}</span>
-              <button onClick={() => setBrowsing((b) => !b)} disabled={!canEdit}
-                className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
+              <button onClick={() => { setBrowsing((b) => !b); setPicking(false); }} disabled={!canEdit}
+                className="ml-auto h-8 px-3 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
                 Public APIs
               </button>
-              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Add</button>
+              <button onClick={() => setEditConn({ kind: 'generic', is_active: true })} disabled={!canEdit}
+                className="h-8 px-3 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
+                Paste a URL
+              </button>
+              <button onClick={() => { setPicking((p) => !p); setBrowsing(false); }} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"><Plus className="w-3.5 h-3.5" /> Connect an app</button>
             </div>
+            {picking && <ConnectorPicker canEdit={canEdit} onSave={addConnector} onClose={() => setPicking(false)} />}
+
             {browsing && (
               <div className="card-surface p-4 mb-3">
                 <h3 className="text-sm font-medium text-primary">Public APIs that need no key</h3>
@@ -243,7 +261,7 @@ export default function IntegrationsPage() {
 
             <div className="card-surface overflow-hidden">
               {loading ? <AppLoading />
-                : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No connections yet. Add a Slack / Zapier / Make webhook URL, or browse the public APIs above.</div>
+                : connections.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">Nothing connected yet. <b>Connect an app</b> walks you through Zapier, Make, n8n, Slack and the rest.</div>
                 : connections.map((c) => (
                   <div key={c.id} className="flex items-center gap-3 px-4 h-12 border-b border-subtle last:border-0">
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-3xs font-semibold ring-1 capitalize ${c.is_active ? 'bg-success/10 text-success ring-success/30' : 'bg-surface-hover text-tertiary ring-subtle'}`}>{c.kind}</span>
@@ -266,6 +284,10 @@ export default function IntegrationsPage() {
             </div>
             <p className="text-2xs text-tertiary mt-2">Each POST is signed — verify with the connection secret via the <code className="bg-surface-hover rounded px-1">X-RunButter-Signature</code> header (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>).</p>
           </section>
+
+          {/* Live OAuth grants (0099). Shipped with RPCs and no screen, which
+              made every grant unrevokable — see ConnectedApps. */}
+          <ConnectedApps privy={privy} />
 
           {/* Recent webhook deliveries */}
           {deliveries.length > 0 && (
