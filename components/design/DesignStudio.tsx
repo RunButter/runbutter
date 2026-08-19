@@ -10,6 +10,7 @@ import TokenEditor from '@/components/design/TokenEditor';
 import DesignPreview from '@/components/design/DesignPreview';
 import BrandIntake, { type IntakePatch } from '@/components/design/BrandIntake';
 import PresetPicker from '@/components/design/PresetPicker';
+import RemixBar from '@/components/design/RemixBar';
 
 /**
  * The studio itself — intake, editor, preview, export.
@@ -128,6 +129,9 @@ export default function DesignStudio({
             reach for when you do not have one. */}
         <div className="mt-4 pt-4 border-t border-subtle">
           <PresetPicker current={t} onPick={(next) => set(() => next)} dense={presetsDense} />
+        </div>
+        <div className="mt-4 pt-4 border-t border-subtle">
+          <RemixBar t={t} onApply={(next) => set(() => next)} />
         </div>
       </div>
 

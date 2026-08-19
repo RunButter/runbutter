@@ -12,6 +12,29 @@ halves of that are fixable.
 > no account, nothing uploaded, the same studio. What the signed-in screen adds is
 > storing the spec in your workspace and publishing it as a skill your agents carry.
 
+## It is a real format
+
+`DESIGN.md` is a specification — [google-labs-code/design.md](https://github.com/google-labs-code/design.md),
+built inside Google Stitch and open-sourced in April 2026 — and the whole value
+of a standard file name is that the reader already knows how to parse it. What
+comes out of here conforms to it:
+
+- **YAML frontmatter** carrying typed groups: `colors`, `typography`, `spacing`,
+  `rounded`, `components`. Values may be token references — `{colors.primary}`.
+- **Eight canonical sections, in order**: Overview, Colors, Typography, Layout,
+  Elevation & Depth, Shapes, Components, Do's and Don'ts. Order matters because
+  the model reads top to bottom and each section is context for the next.
+- **`omitted` with a reason** for anything that does not apply. "This brand uses
+  no shadows" and "nobody wrote this down" are different facts, and an empty
+  section reads as the second.
+
+A typography entry is a **level**, not a size: `fontFamily`, `fontSize`,
+`fontWeight`, `lineHeight`, `letterSpacing`, named by role (`h1`, `body-md`,
+`label`). A role tells an agent where to use it; a t-shirt size does not. And a
+scale that is only sizes means every generated heading comes out at weight 400
+with default leading — which is how a brand built on light display type gets
+rendered as one built on bold.
+
 ## Why a brand needs two layers
 
 Nearly every hand-written `DESIGN.md` is only the second one, which is why they
@@ -64,6 +87,44 @@ Nothing is applied without a click. A logo's biggest colour is usually the brand
 colour and sometimes it is the drop shadow; a `#` in a PDF is usually a swatch
 and sometimes it is a page reference. Everything found is shown with the context
 it was found in, and you tick what is right.
+
+## Six styles to start from
+
+Nobody types a design system from nothing. Six complete specs ship with it —
+**Quiet Product**, **Ink & Paper**, **Hard Edge**, **Warm Studio**,
+**Midnight Console**, **Soft Pop** — covering product UI, editorial and print,
+landing pages, portfolios, developer tools and consumer apps. Each has its own
+page under [`/brand/style/…`](https://runbutter.app/brand), free to copy.
+
+Each one is a *complete* spec: type levels with weight and tracking, a shadow
+scale or an explicit statement that there is none, components, voice and a
+don't-list. A preset that only filled in colours would teach people that a
+DESIGN.md is a palette, which is exactly the misunderstanding that makes
+hand-written ones useless.
+
+## Moves
+
+Exploring is the actual work, and it is the part people abandon: "warmer" by
+hand means editing nine hex values consistently, "denser" means eight spacing
+steps, and "flip to dark" means all of that plus deciding what every brand
+colour becomes on a ground it has never sat on.
+
+So the mechanical half is arithmetic — no model, no network, no key, one right
+answer every time:
+
+| Move | What it does |
+|---|---|
+| Flip light ↔ dark | Neutrals through a curve, never an inversion. Brand colours keep their hue and move only as far as legibility needs. |
+| Warmer / Cooler | Rotates every colour's hue. |
+| Desaturate / More saturated | Editorial work usually wants the first; campaign work the second. |
+| Bigger / Smaller type | Scales every level, adjusting leading to compensate. |
+| Bolder / Lighter headings | One weight step. Body is left alone — bold body text is noise, not emphasis. |
+| Rounder / Sharper | Scales every radius. Pills stay pills. |
+| Remove shadows | Drops the scale *and records why*, so the file states it rather than leaving a gap. |
+| More air / Denser | Scales the spacing steps, snapped back to your grid. |
+
+Every colour move re-runs the contrast check and says what it broke. One step of
+undo, because the only question anybody has after a move is "put it back".
 
 ## The preview
 
