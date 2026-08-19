@@ -34,6 +34,16 @@ export interface Preset {
   group: PresetGroup;
   /** One line: what it is for and who it suits. */
   blurb: string;
+  /**
+   * The metaphor. One sentence somebody remembers a week later.
+   *
+   * Not decoration and not the same job as `blurb`: a style is a FEELING before
+   * it is a token list, and "a white room with a single blue switch" transmits
+   * more of a design language than nine hex codes do. It is also what makes a
+   * gallery scannable — six paragraphs are six things to read, six metaphors
+   * are one glance.
+   */
+  essence: string;
   tokens: DesignTokens;
 }
 
@@ -80,6 +90,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'quiet-product', label: 'Quiet Product', group: 'Product',
     blurb: 'Restrained SaaS UI. Hierarchy from size and colour, almost never from weight.',
+    essence: 'A well-lit room where nothing is shouting.',
     tokens: make({
       name: 'Quiet Product', tagline: 'Software that gets out of the way.',
       description: 'A restrained interface style: near-black text on white, one accent, and space doing most of the work.',
@@ -149,6 +160,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'ink-and-paper', label: 'Ink & Paper', group: 'Editorial',
     blurb: 'Editorial and print-minded. Big serif display, generous measure, no shadows at all.',
+    essence: 'A broadsheet that happens to be on a screen.',
     tokens: make({
       name: 'Ink & Paper', tagline: 'Words first.',
       description: 'An editorial style built on contrast and rhythm rather than colour: warm paper, true ink, one red.',
@@ -207,6 +219,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'hard-edge', label: 'Hard Edge', group: 'Marketing',
     blurb: 'Neo-brutalist landing pages. Thick borders, offset shadows, one loud colour.',
+    essence: 'A poster stapled to a wall, in ink that has not dried.',
     tokens: make({
       name: 'Hard Edge', tagline: 'Say it loudly, say it once.',
       description: 'Flat colour, 2px borders and hard offset shadows. Built for landing pages that have to be remembered.',
@@ -268,6 +281,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'warm-studio', label: 'Warm Studio', group: 'Studio',
     blurb: 'Portfolios and creative studios. Cream, clay and a lot of air.',
+    essence: 'An empty gallery with one thing hung on the wall.',
     tokens: make({
       name: 'Warm Studio', tagline: 'Made by hand, mostly.',
       description: 'A soft, warm identity for studios and portfolios: cream ground, clay accent, oversized quiet type.',
@@ -324,6 +338,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'midnight-console', label: 'Midnight Console', group: 'Product',
     blurb: 'Dark-first developer tools. Mono numerals, low chroma, one signal green.',
+    essence: 'A cockpit at night — dark, and every light means something.',
     tokens: make({
       name: 'Midnight Console', tagline: 'Built for people who read logs.',
       description: 'A dark-first interface for technical products: near-black ground, low-chroma text, and colour reserved for state.',
@@ -388,6 +403,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'soft-pop', label: 'Soft Pop', group: 'Marketing',
     blurb: 'Friendly consumer apps. Rounded, pastel, generous — without going childish.',
+    essence: 'A rounded thing you want to press.',
     tokens: make({
       name: 'Soft Pop', tagline: 'Nice to use, on purpose.',
       description: 'A friendly consumer style: rounded shapes, pastel surfaces, and one saturated accent doing all the pointing.',

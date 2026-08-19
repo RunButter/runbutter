@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { Check, Copy, Download, FileJson, Package, TriangleAlert } from 'lucide-react';
+import { Check, Copy, Download, Package, TriangleAlert } from 'lucide-react';
 import { gaps, toDesignJson, toDesignMd, type DesignTokens } from '@/lib/design/tokens';
-import { bundleName, designFiles, designSkill } from '@/lib/design/export';
+import { bundleName, designFiles, designSkill, tailwindV4, tokensCss } from '@/lib/design/export';
 import { buildPlugin } from '@/lib/plugins/agent-plugin';
 import { zipSync } from '@/lib/plugins/zip';
 import TokenEditor from '@/components/design/TokenEditor';
@@ -27,6 +27,11 @@ import RemixBar from '@/components/design/RemixBar';
  * network calls, so the whole tool runs with no account, which is what makes it
  * worth linking to at all.
  */
+
+type FormatKey = 'md' | 'v4' | 'css' | 'json';
+const FORMAT_LABEL: Record<FormatKey, string> = {
+  md: 'DESIGN.md', v4: 'Tailwind v4', css: 'CSS variables', json: 'design.json',
+};
 
 export default function DesignStudio({
   t, set, logoUrl, onLogo, intro, sidebar, presetsDense,
@@ -112,9 +117,15 @@ export default function DesignStudio({
     saveZip(zipSync(files.map((f) => ({ path: `${name}/${f.path}`, content: f.content }))), `${name}-plugin.zip`);
   };
 
-  const copy = async (text: string, what: string) => {
+  // One place that knows the five formats, so the builder and the public style
+  // pages cannot end up offering different ones.
+  const copyFormat = async (k: FormatKey) => {
+    const text = k === 'md' ? toDesignMd(t)
+      : k === 'v4' ? tailwindV4(t)
+      : k === 'css' ? tokensCss(t)
+      : JSON.stringify(toDesignJson(t), null, 2);
     await navigator.clipboard?.writeText(text);
-    flash(`${what} copied.`);
+    flash(`${FORMAT_LABEL[k]} copied.`);
   };
 
   const missing = useMemo(() => gaps(t), [t]);
@@ -168,20 +179,21 @@ export default function DesignStudio({
               {note && <span className="text-2xs text-success inline-flex items-center gap-1"><Check className="w-3 h-3" />{note}</span>}
             </div>
             <p className="mt-0.5 text-2xs text-tertiary">
-              Four files, four readers, one source — so they cannot disagree with each other.
+              Five formats, five readers, one source — so they cannot disagree with each other or with
+              the preview above.
             </p>
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              {(['md', 'v4', 'css', 'json'] as const).map((k) => (
+                <button key={k} onClick={() => copyFormat(k)}
+                  className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                  <Copy className="w-3.5 h-3.5" /> {FORMAT_LABEL[k]}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <button onClick={downloadBundle}
                 className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
                 <Download className="w-3.5 h-3.5" /> Download the bundle
-              </button>
-              <button onClick={() => copy(toDesignMd(t), 'DESIGN.md')}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                <Copy className="w-3.5 h-3.5" /> DESIGN.md
-              </button>
-              <button onClick={() => copy(JSON.stringify(toDesignJson(t), null, 2), 'design.json')}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                <FileJson className="w-3.5 h-3.5" /> design.json
               </button>
               <button onClick={downloadPlugin}
                 className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
@@ -189,10 +201,8 @@ export default function DesignStudio({
               </button>
             </div>
             <p className="mt-2 text-3xs text-tertiary">
-              <code className="bg-surface-hover rounded px-1">DESIGN.md</code> · <code className="bg-surface-hover rounded px-1">design.json</code> ·{' '}
-              <code className="bg-surface-hover rounded px-1">tokens.css</code> · <code className="bg-surface-hover rounded px-1">tailwind.tokens.js</code>{' '}
-              · a README saying where each goes · your logo as bytes. The plugin zip is the Agent
-              Plugins 1.0 layout: <code className="bg-surface-hover rounded px-1">skills/design/SKILL.md</code>{' '}
+              The bundle carries all five plus a README saying where each goes and your logo as bytes.
+              The plugin zip is the Agent Plugins 1.0 layout: <code className="bg-surface-hover rounded px-1">skills/design/SKILL.md</code>{' '}
               plus <code className="bg-surface-hover rounded px-1">DESIGN.md</code> at the root, where Claude
               Code, Cursor and Copilot look.
             </p>

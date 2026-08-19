@@ -110,7 +110,8 @@ export default function PresetPicker({ current, onPick, dense }: {
                         </div>
                       </div>
                       <div className="px-3 py-2 bg-surface-sunken">
-                        <p className="text-2xs text-secondary leading-snug">{p.blurb}</p>
+                        <p className="text-2xs text-primary leading-snug">{p.essence}</p>
+                        <p className="mt-0.5 text-2xs text-tertiary leading-snug">{p.blurb}</p>
                         <p className="mt-1 text-3xs text-tertiary font-mono truncate">
                           {[t.type.heading, t.type.body].filter(Boolean).join(' · ')}
                           {t.type.levels?.length ? ` · ${t.type.levels.length} levels` : ''}

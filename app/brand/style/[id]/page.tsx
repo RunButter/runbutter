@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
-import StyleView from '@/components/design/StyleView';
+import FormatTabs from '@/components/design/FormatTabs';
+import StyleHero from '@/components/design/StyleHero';
 import { PRESETS, findPreset } from '@/lib/design/presets';
 import { SITE_URL } from '@/lib/site';
 
@@ -30,7 +31,7 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
   const p = findPreset(params.id);
   if (!p) return { title: 'Style not found — RunButter' };
   const title = `${p.label} — a free DESIGN.md style`;
-  const description = `${p.blurb} ${p.tokens.brand.description} Copy the DESIGN.md, design.json, CSS custom properties and Tailwind tokens — free, no account.`;
+  const description = `${p.essence} ${p.blurb} Copy the DESIGN.md, Tailwind v4 theme, CSS variables and design.json — free, no account.`;
   return {
     title: `${title} — RunButter`,
     description,
@@ -50,18 +51,22 @@ export default function StylePage({ params }: { params: { id: string } }) {
       <MarketingHeader />
 
       <section className="border-b border-subtle">
-        <div className="max-w-6xl mx-auto px-6 pt-24 md:pt-28 pb-10">
+        <div className="max-w-6xl mx-auto px-6 pt-24 md:pt-28 pb-8">
           <Link href="/brand" className="text-2xs font-mono text-tertiary hover:text-primary">← all styles</Link>
-          <h1 className="mt-3 text-4xl md:text-5xl font-medium tracking-[-0.03em] leading-[1.05]">{preset.label}</h1>
-          <p className="mt-4 text-base md:text-lg text-secondary leading-relaxed max-w-2xl">{preset.blurb}</p>
-          <p className="mt-2 text-sm text-tertiary max-w-2xl">{t.brand.description}</p>
-          <div className="mt-4 flex flex-wrap gap-1.5">
+          {/* The metaphor first, at headline size. A style is a FEELING before
+              it is a token list, and somebody deciding whether this is theirs
+              decides on that line rather than on the hex codes. */}
+          <p className="mt-4 text-2xs font-mono uppercase tracking-widest text-tertiary">{preset.group}</p>
+          <h1 className="mt-2 text-4xl md:text-5xl font-medium tracking-[-0.03em] leading-[1.05]">{preset.label}</h1>
+          <p className="mt-4 text-xl md:text-2xl text-secondary leading-snug max-w-2xl">{preset.essence}</p>
+          <p className="mt-4 text-sm text-tertiary leading-relaxed max-w-2xl">{t.brand.description}</p>
+          <div className="mt-5 flex flex-wrap gap-1.5">
             {[
-              preset.group,
               ...[t.type.heading, t.type.body].filter(Boolean) as string[],
               `${t.type.levels?.length ?? 0} type levels`,
               t.elevation.length ? `${t.elevation.length} shadows` : 'no shadows',
               `${t.colors.length} colours`,
+              `radius ${t.radius.map((r) => r.px).filter((x) => x < 999).join('/')}`,
             ].map((x) => (
               <span key={x} className="text-3xs font-mono text-tertiary bg-surface-sunken ring-1 ring-subtle rounded px-2 py-1">{x}</span>
             ))}
@@ -69,8 +74,20 @@ export default function StylePage({ params }: { params: { id: string } }) {
         </div>
       </section>
 
+      {/* The style, drawn at full width from its own tokens — the closest thing
+          to a screenshot that cannot go out of date, because it IS the spec
+          rendering rather than a picture of one. */}
+      <StyleHero preset={preset} />
+
       <section className="max-w-6xl mx-auto px-6 py-10 md:py-14">
-        <StyleView preset={preset} />
+        <FormatTabs tokens={t} />
+        <div className="mt-6">
+          <Link href={`/brand?style=${preset.id}`}
+            className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90">
+            Make it yours <ArrowRight className="w-4 h-4" />
+          </Link>
+          <span className="ml-3 text-2xs text-tertiary">Opens in the builder — swap the colours, drop in your logo, keep the rest.</span>
+        </div>
       </section>
 
       {/* The rules, in the HTML rather than only inside the code block: they are
@@ -115,7 +132,7 @@ export default function StylePage({ params }: { params: { id: string } }) {
               <Link key={p.id} href={`/brand/style/${p.id}`}
                 className="rounded-xl ring-1 ring-subtle bg-surface p-4 hover:ring-strong transition-shadow">
                 <div className="text-sm font-medium text-primary">{p.label}</div>
-                <div className="mt-1 text-2xs text-secondary leading-snug">{p.blurb}</div>
+                <div className="mt-1 text-2xs text-secondary leading-snug">{p.essence}</div>
                 <div className="mt-2.5 flex gap-1">
                   {p.tokens.colors.slice(0, 6).map((c) => (
                     <span key={c.name} className="w-4 h-4 rounded" style={{ background: c.hex, boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.08)' }} />

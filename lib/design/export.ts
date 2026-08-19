@@ -141,6 +141,48 @@ module.exports = {
 }
 
 /**
+ * Tailwind v4, which is CSS-first and does not read a JS config at all.
+ *
+ * ── SHIPPING ONLY THE v3 FRAGMENT WAS QUIETLY WRONG ─────────────────────────
+ * v4 moved the theme into the stylesheet: `@theme { --color-*: … }`, with the
+ * variable NAME deciding which utilities exist. Handing a v4 project a
+ * `tailwind.config.js` produces no error and no utilities — the file is simply
+ * never read — which is the worst possible failure for a generated file whose
+ * entire job is to be pasted somewhere and work.
+ *
+ * The namespaces are load-bearing: `--color-` mints `bg-*`/`text-*`/`border-*`,
+ * `--text-` mints `text-*` sizes, `--font-` mints `font-*`, `--radius-` mints
+ * `rounded-*`, `--spacing-` mints the spacing scale, `--shadow-` mints
+ * `shadow-*`. A token in the wrong namespace is a class that does not exist.
+ */
+export function tailwindV4(t: DesignTokens): string {
+  const L: string[] = [];
+  L.push(`/* ${t.brand.name || 'Brand'} — generated from DESIGN.md. Tailwind v4: paste into your CSS. */`);
+  L.push(`@import "tailwindcss";`);
+  L.push('');
+  L.push('@theme {');
+  for (const c of t.colors || []) if (c.name && c.hex) L.push(`  --color-${cssName(c.name)}: ${c.hex.toUpperCase()};`);
+  if (t.type.heading) L.push(`  --font-heading: "${t.type.heading}", sans-serif;`);
+  if (t.type.body) L.push(`  --font-body: "${t.type.body}", sans-serif;`);
+  if (t.type.mono) L.push(`  --font-mono: "${t.type.mono}", monospace;`);
+  // v4 carries leading, tracking and weight as paired `--text-<name>--*` keys,
+  // so `text-h1` applies the whole level rather than only its size.
+  for (const l of t.type.levels || []) {
+    const n = cssName(l.name);
+    L.push(`  --text-${n}: ${l.fontSize}px;`);
+    if (l.lineHeight) L.push(`  --text-${n}--line-height: ${l.lineHeight};`);
+    if (l.letterSpacing) L.push(`  --text-${n}--letter-spacing: ${l.letterSpacing};`);
+    if (l.fontWeight) L.push(`  --text-${n}--font-weight: ${l.fontWeight};`);
+  }
+  for (const r of t.radius || []) L.push(`  --radius-${cssName(r.name)}: ${r.px}px;`);
+  for (const e of t.elevation || []) L.push(`  --shadow-${cssName(e.name)}: ${resolveRefs(e.value, t)};`);
+  (t.space.scale || []).forEach((n, i) => L.push(`  --spacing-${SPACE_NAMES[i] || i + 1}: ${n}px;`));
+  L.push('}');
+  L.push('');
+  return L.join('\n');
+}
+
+/**
  * The README that stops a bundle becoming four files nobody knows what to do
  * with. Written for the person who received it, not the one who made it.
  */
@@ -156,7 +198,8 @@ disagree with each other.
 | \`DESIGN.md\` | a person, and an AI agent | Put it at the root of the repo or the project folder. Claude Code, Cursor and Copilot pick it up. |
 | \`design.json\` | scripts and build steps | The exact values, nothing else. Import it. |
 | \`tokens.css\` | the browser | Paste into your stylesheet, or \`@import\` it. Everything is a \`--brand-*\` custom property. |
-| \`tailwind.tokens.js\` | Tailwind | Merge into \`theme.extend\`. It is a fragment, not a whole config. |
+| \`tailwind.v4.css\` | Tailwind v4 | Paste it in. v4 is CSS-first and never reads a JS config. |
+| \`tailwind.config.js\` | Tailwind v3 | Merge into \`theme.extend\`. A fragment, not a whole config. |
 ${hasLogo ? '| `assets/` | everyone | The logo, as supplied. `DESIGN.md` refers to it by this path. |\n' : ''}
 ## Using it with an AI agent
 
@@ -191,7 +234,8 @@ export function designFiles(
     { path: 'DESIGN.md', content: toDesignMd(t) },
     { path: 'design.json', content: JSON.stringify(toDesignJson(t), null, 2) + '\n' },
     { path: 'tokens.css', content: tokensCss(t) },
-    { path: 'tailwind.tokens.js', content: tailwindFragment(t) },
+    { path: 'tailwind.v4.css', content: tailwindV4(t) },
+    { path: 'tailwind.config.js', content: tailwindFragment(t) },
     { path: 'README.md', content: bundleReadme(t, !!logo) },
   ];
   if (logo) files.push({ path: `assets/${logo.name}`, content: logo.bytes });

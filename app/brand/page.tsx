@@ -144,7 +144,8 @@ export default function BrandPage() {
                     </div>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-2xs text-secondary leading-snug">{p.blurb}</p>
+                    <p className="text-2xs text-primary leading-snug">{p.essence}</p>
+                    <p className="mt-1 text-2xs text-tertiary leading-snug">{p.blurb}</p>
                     <p className="mt-1.5 text-3xs text-tertiary font-mono truncate">
                       {[t.type.heading, t.type.body].filter(Boolean).join(' · ')} · {t.type.levels?.length} levels
                     </p>
