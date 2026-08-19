@@ -65,6 +65,7 @@ const NOTES: Record<string, SurfaceNote> = {
   agents: { what: "the workspace's AI agents — you can read them, but creating one stays with a person", tool: null },
   objects: { what: 'the record types themselves — adding a new kind of thing', tool: 'propose_object' },
   skills: { what: 'reusable instruction packs any agent can carry', tool: 'save_skill' },
+  design: { what: "the brand spec — exact colours, fonts, spacing, voice and the never-do rules. READ it with get_design before writing copy or choosing a colour; editing it stays with a person", tool: 'get_design (read only)' },
   automations: { what: 'rules that run on a trigger — you can read them, not write them', tool: null },
   'my-team': { what: 'the people who work here', tool: null },
   chat: { what: 'team chat channels', tool: 'post_message' },

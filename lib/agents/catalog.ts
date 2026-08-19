@@ -57,6 +57,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // agent is an actor with permissions, a skill is only instructions.
   { name: 'list_agents', label: 'List agents', group: 'Workspace' },
   { name: 'list_skills', label: 'List skills', group: 'Workspace' },
+  { name: 'get_design', label: 'Read the design spec', group: 'Workspace' },
   { name: 'save_skill', label: 'Write a skill', group: 'Workspace', write: true },
 
   // Newsletters (0070/0071). `save_newsletter` never sends and never attaches a

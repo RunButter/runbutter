@@ -116,6 +116,17 @@ export const TOOLS = [
   // `propose_object` draws — changing what the workspace IS stays with a person.
   { name: 'list_agents', description: 'List this workspace\'s AI agents — name, role, autonomy, schedule and which tools each may use.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_skills', description: 'List the reusable instruction packs (skills) in this workspace.', inputSchema: { type: 'object', properties: {} } },
+  // A subsystem with dedicated RPCs and no TOOL is invisible to every agent and
+  // to /api/mcp — the failure that left Docs unreachable while the Docs screen
+  // sat there full of documents. 0125 gave the design spec two RPCs, so it gets
+  // this in the same breath.
+  //
+  // READ ONLY, and deliberately. The spec is the workspace's own brand, edited
+  // in a studio with a preview and a contrast check; a model rewriting it from
+  // a sentence somebody typed is the same category of change `propose_object`
+  // refuses to make. Publishing it as a skill stays with a person too — that is
+  // what changes an unattended agent's system prompt.
+  { name: 'get_design', description: 'Read this workspace\'s design spec: exact brand colours with what each is for, fonts, type scale, spacing, corner radii, tone of voice, and the rules about what to do and never do. Call this BEFORE writing customer-facing copy, designing anything, choosing a colour, or generating HTML — then follow the values exactly rather than approximating them. Returns null when nobody has written one, which means ask rather than invent.', inputSchema: { type: 'object', properties: {} } },
   { name: 'save_skill', description: 'Create or update a skill: a named, reusable instruction pack that agents can be given. Write `instructions` as markdown describing how this company does the thing. Omit `id` to create.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' }, instructions: { type: 'string' } }, required: ['name', 'instructions'] } },
 
   // ── Newsletters (0070/0071, designs 0098) ─────────────────────────────────
@@ -380,6 +391,22 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       return (Array.isArray(data) ? data : []).map((s: any) => ({
         id: s.id, name: s.name, description: s.description, source: s.source,
       }));
+    }
+
+    case 'get_design': {
+      const { data, error } = await ctx.admin.rpc('get_design_tokens', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      if (error) throw new Error(error.message);
+      // Null is answered as a WARNING rather than as an empty object. A model
+      // handed `{}` treats it as "this brand has no rules" and invents some;
+      // told there is no spec, it asks. Same reasoning as screen_sanctions
+      // refusing to report `no_data` as "clear".
+      if (!data) {
+        return {
+          spec: null,
+          warning: 'This workspace has not written a design spec yet, so there are no brand values to follow. Do not invent colours, fonts or a tone of voice — say so, and point the person at Marketing → Design.',
+        };
+      }
+      return data;
     }
 
     case 'save_skill': {
