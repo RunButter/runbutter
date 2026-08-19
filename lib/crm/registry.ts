@@ -259,6 +259,10 @@ export const NAV = [
     { slug: 'people', label: 'People', icon: 'Users', href: '/objects/people' },
     { slug: 'products', label: 'Products', icon: 'Package', href: '/objects/products' },
     { slug: 'offers', label: 'Offers', icon: 'FileText', href: '/objects/offers' },
+    // Orders sit with the catalogue they sell from. Their own screen rather
+    // than /objects/orders because an order has line items, and the generic
+    // RecordTable is flat.
+    { slug: 'orders', label: 'Orders', icon: 'ShoppingCart', href: '/orders' },
   ]},
   { group: 'Finance', items: [
     { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },

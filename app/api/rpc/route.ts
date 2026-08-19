@@ -111,6 +111,10 @@ const ALLOWED = new Set([
   // it breaks every receiver until they get the new value, which is right after
   // a leak and wrong as a side effect of an edit.
   'rotate_connection_secret',
+  // Orders and stock (0124). apply_order_stock is deliberately ABSENT — it is
+  // the idempotency primitive, and a client that could call it directly could
+  // decrement a shelf without an order to explain it.
+  'get_orders', 'get_order', 'save_order', 'set_order_status', 'delete_order', 'get_low_stock',
   // Cap table (0122). simulate_round writes nothing — it is a model, and the
   // separation is the same one /api/workspace/build makes.
   'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',
