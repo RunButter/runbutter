@@ -153,6 +153,7 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
         // landing bento, which is the one place a stranger arriving from a
         // search for "how to write a SKILL.md" will never be.
         { label: 'Skill builder', href: '/plugins' },
+        { label: 'DESIGN.md builder', href: '/brand' },
         { label: 'PDF toolkit', href: '/pdf' },
         { label: 'Password generator', href: '/password' },
         { label: 'AI cost calculator', href: '/ai-cost' },

@@ -81,7 +81,7 @@ const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: stri
   { icon: KeyRound, name: 'Encrypted team vault', body: 'Shared logins your own server cannot read. Free password generator, no account.', href: '/password', cta: 'Open the generator' },
   // Wide, because "your AI stays on brand" is the claim everyone makes and
   // nobody explains. The sentence has to say HOW.
-  { icon: Palette, beam: true, name: 'A design spec your AI actually follows', body: 'Upload a logo and your brand PDF — the exact hex codes, fonts and rules come out. Live preview, contrast checked, exported as DESIGN.md, CSS and a skill every agent carries.', wide: true },
+  { icon: Palette, beam: true, name: 'A design spec your AI actually follows', body: 'Upload a logo and your brand PDF — the exact hex codes, fonts and rules come out. Live preview, contrast checked, exported as DESIGN.md, CSS and a skill every agent carries.', wide: true, href: '/brand', cta: 'Open the free DESIGN.md builder' },
   { icon: ShoppingCart, name: 'Orders and stock', body: 'Products, line items, and a shelf that moves when an order ships.' },
   { icon: Cable, name: 'One-click connectors', body: 'Zapier, Make, n8n, Slack. Pick the app, paste one URL, choose what to be told about.' },
 ];

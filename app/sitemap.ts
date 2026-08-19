@@ -37,6 +37,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // it answers ('what does an AI agent cost') is one nobody else answers, and
     // whoever types it is exactly who this product is for.
     ['/ai-cost', 0.85, 'monthly'],
+    // The DESIGN.md builder. Same priority as the skill builder: the search it
+    // answers ('brand tokens from a logo', 'DESIGN.md for AI') is one nobody
+    // else answers, and whoever types it is exactly who this is for.
+    ['/brand', 0.8, 'monthly'],
     ['/pdf', 0.7, 'monthly'],
     ['/contact', 0.4, 'yearly'],
     ['/privacy', 0.3, 'yearly'],

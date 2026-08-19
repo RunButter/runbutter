@@ -145,6 +145,9 @@ export default function PluginsPage() {
               <Link href="/ai-agents" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">
                 See how agents work <ArrowRight className="w-4 h-4" />
               </Link>
+              <Link href="/brand" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle bg-surface text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
+                Build a design skill
+              </Link>
               <Link href="/developers/agents" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle bg-surface text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
                 Read the docs
               </Link>

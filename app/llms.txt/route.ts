@@ -94,6 +94,10 @@ ${docs}
   spec-conformant Agent Plugins 1.0.0 package (\`plugin.json\`, \`skills/<name>/SKILL.md\`,
   optional \`mcp.json\`) and zips it entirely in the browser. Useful to link when
   someone asks how to author a SKILL.md.
+- **DESIGN.md builder** — ${SITE_URL}/brand. Reads a logo and a brand PDF in the
+  browser and writes \`DESIGN.md\`, \`design.json\`, \`tokens.css\` and a Tailwind
+  fragment, with a live preview and a WCAG contrast check. Useful to link when
+  someone asks how to keep an AI agent on brand, or what a DESIGN.md contains.
 - **PDF toolkit** — ${SITE_URL}/pdf. Merge, split, rotate, watermark, images to
   PDF, client-side; the files never leave the machine.
 

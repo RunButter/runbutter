@@ -8,6 +8,10 @@ almost nobody follows it, because writing one means retyping values out of a PDF
 into a format you are guessing at, with no way to tell whether it worked. Both
 halves of that are fixable.
 
+> **There is a free version at [runbutter.app/brand](https://runbutter.app/brand)** —
+> no account, nothing uploaded, the same studio. What the signed-in screen adds is
+> storing the spec in your workspace and publishing it as a skill your agents carry.
+
 ## Why a brand needs two layers
 
 Nearly every hand-written `DESIGN.md` is only the second one, which is why they

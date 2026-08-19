@@ -118,6 +118,43 @@ export function starterTokens(name: string, accent: string): DesignTokens {
   };
 }
 
+/** Fills in anything a stored document is missing, so an old shape still loads. */
+export function normalizeTokens(raw: any): DesignTokens {
+  const d = (raw && typeof raw === 'object') ? raw : {};
+  const arr = (x: any) => (Array.isArray(x) ? x : []);
+  return {
+    brand: {
+      name: String(d.brand?.name || ''),
+      tagline: d.brand?.tagline || undefined,
+      logo: d.brand?.logo || undefined,
+      logoDark: d.brand?.logoDark || undefined,
+    },
+    colors: arr(d.colors).filter((c: any) => c && c.name && c.hex)
+      .map((c: any) => ({ name: String(c.name), hex: String(c.hex), use: c.use ? String(c.use) : undefined })),
+    type: {
+      heading: d.type?.heading || undefined,
+      body: d.type?.body || undefined,
+      mono: d.type?.mono || undefined,
+      scale: arr(d.type?.scale).filter((s: any) => s?.name && Number.isFinite(+s.px))
+        .map((s: any) => ({ name: String(s.name), px: +s.px })),
+      weights: arr(d.type?.weights).filter((w: any) => w?.name && Number.isFinite(+w.value))
+        .map((w: any) => ({ name: String(w.name), value: +w.value })),
+    },
+    space: {
+      base: Number.isFinite(+d.space?.base) ? +d.space.base : undefined,
+      scale: arr(d.space?.scale).map((n: any) => +n).filter((n: number) => Number.isFinite(n)),
+    },
+    radius: arr(d.radius).filter((r: any) => r?.name && Number.isFinite(+r.px))
+      .map((r: any) => ({ name: String(r.name), px: +r.px })),
+    voice: {
+      tone: arr(d.voice?.tone).map(String),
+      weSay: arr(d.voice?.weSay).map(String),
+      weNeverSay: arr(d.voice?.weNeverSay).map(String),
+    },
+    rules: { do: arr(d.rules?.do).map(String), dont: arr(d.rules?.dont).map(String) },
+  };
+}
+
 const hex = (s: string) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(s || '').trim());
 
 /**
