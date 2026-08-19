@@ -115,6 +115,9 @@ const ALLOWED = new Set([
   // the idempotency primitive, and a client that could call it directly could
   // decrement a shelf without an order to explain it.
   'get_orders', 'get_order', 'save_order', 'set_order_status', 'delete_order', 'get_low_stock',
+  // The design spec (0125). One jsonb document per workspace, written whole —
+  // see the migration for why this one does not follow the partial-update rule.
+  'get_design_tokens', 'save_design_tokens',
   // Cap table (0122). simulate_round writes nothing — it is a model, and the
   // separation is the same one /api/workspace/build makes.
   'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',

@@ -281,6 +281,12 @@ export const NAV = [
   ]},
   { group: 'Marketing', items: [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
+    // Marketing rather than Settings, and the distinction is real: Settings →
+    // Branding is the ten values an invoice renderer reads, and this is the
+    // whole spec — palette, type, spacing, voice, and the rules an AI agent
+    // needs before it writes a word. It sits next to the surfaces that consume
+    // it rather than beside the switches nobody opens twice.
+    { slug: 'design', label: 'Design', icon: 'Palette', href: '/design' },
     { slug: 'campaigns', label: 'Campaigns', icon: 'Rocket', href: '/objects/campaigns' },
     { slug: 'posts', label: 'Posts', icon: 'PenSquare', href: '/marketing/posts' },
     { slug: 'newsletters', label: 'Newsletters', icon: 'Mail', href: '/marketing/newsletters' },
