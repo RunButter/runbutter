@@ -118,6 +118,9 @@ const ALLOWED = new Set([
   // The design spec (0125). One jsonb document per workspace, written whole —
   // see the migration for why this one does not follow the partial-update rule.
   'get_design_tokens', 'save_design_tokens',
+  // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
+  // ceiling is not privileged, and being surprised by one is the actual harm.
+  'get_plan_usage',
   // Cap table (0122). simulate_round writes nothing — it is a model, and the
   // separation is the same one /api/workspace/build makes.
   'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',
@@ -293,8 +296,33 @@ export async function POST(req: NextRequest) {
   }
 
   const { data, error } = await db().rpc(fn, args);
-  return NextResponse.json({
-    data: data ?? null,
-    error: error ? { message: error.message, code: (error as any).code ?? null, details: (error as any).details ?? null } : null,
-  });
+  if (error) return NextResponse.json({ data: null, error: rpcError(error) });
+  return NextResponse.json({ data: data ?? null, error: null });
+}
+
+/**
+ * A plan ceiling, said in words rather than in an exception name.
+ *
+ * 0108 and 0126 raise `PLAN_LIMIT_RECORDS: the free plan includes 500 records
+ * and this workspace has 500. Upgrade to add more.` The sentence is written for
+ * a person; the prefix is written for a matcher, and showing both means every
+ * screen either renders SQL shouting or hand-rolls its own strip. Doing it here
+ * covers every create path the browser has at once — which is the same argument
+ * for putting the guard in `create_record` rather than in each caller.
+ *
+ * `upgrade_required` matches what lib/plans-server.ts answers on the REST and
+ * MCP side, so a client handles one code whichever door it came through.
+ */
+function rpcError(error: any) {
+  const message = String(error?.message ?? 'Something went wrong.');
+  const m = /^PLAN_LIMIT_([A-Z_]+):\s*([\s\S]+)$/.exec(message);
+  if (m) {
+    return {
+      message: `${m[2].charAt(0).toUpperCase()}${m[2].slice(1)} Change it in Settings → Plans.`,
+      code: 'upgrade_required' as const,
+      limit: m[1].toLowerCase(),
+      details: null,
+    };
+  }
+  return { message, code: error?.code ?? null, details: error?.details ?? null };
 }

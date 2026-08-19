@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase';
-import { checkFeature, planDeniedBody } from '@/lib/plans-server';
+import { checkFeature, checkLimit, limitDeniedBody, planDeniedBody } from '@/lib/plans-server';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 
@@ -51,6 +51,13 @@ export async function POST(req: NextRequest) {
   // Before the PDF is uploaded, so a refused request leaves nothing in storage.
   const planDenied = await checkFeature(ws.id, 'eSignatures');
   if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
+
+  // And the monthly allowance. `eSignatures` says the workspace bought the
+  // feature; `maxESignPerMonth` says how much of it — Team includes ten a month
+  // and that number had never been read by anything. Checked here rather than
+  // in SQL because a signing request is created by this route and nothing else.
+  const overLimit = await checkLimit(v.userId, ws.id, 'maxESignPerMonth');
+  if (overLimit) return NextResponse.json(limitDeniedBody(overLimit), { status: 402 });
 
   // Store the original privately.
   await ensureBucket(admin);

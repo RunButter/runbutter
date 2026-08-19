@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkLimit, limitDeniedBody } from '@/lib/plans-server';
 import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
 import { resolveHrCompanyServer } from '@/lib/hr/company-server';
@@ -52,16 +53,27 @@ export async function POST(req: NextRequest) {
         }
         const companyId = caller.companyId;
 
-        // 2. Enforce Pro limits
         const { data: company } = await supabaseAdmin
             .from('companies')
             .select('plan, name')
             .eq('id', companyId)
             .single();
 
-        if (company?.plan === 'free') {
-            return NextResponse.json({ error: 'Multi-user teams require a Premium plan.' }, { status: 403 });
-        }
+        // 2. Seats.
+        //
+        // This used to be `plan === 'free' → 403 Multi-user teams require a
+        // Premium plan`, which was wrong in the direction that costs a customer
+        // rather than us: the Free plan includes TWO seats and always has, so
+        // the second person the pricing page promises was refused. It also read
+        // `companies.plan` directly, the column Stripe writes rather than the
+        // one the product reads (0090's trigger bridges them) — that split has
+        // bitten this codebase before.
+        //
+        // `maxSeats` counts people who hold a seat AND invitations already sent,
+        // so the ceiling is reached when the invite goes out rather than when
+        // somebody clicks the link they were legitimately given.
+        const seatDenial = await checkLimit(privyUserId, companyId, 'maxSeats');
+        if (seatDenial) return NextResponse.json(limitDeniedBody(seatDenial), { status: 402 });
 
         // 3. Check if email is already in company
         const { data: existingUser } = await supabaseAdmin

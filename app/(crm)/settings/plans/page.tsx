@@ -10,6 +10,7 @@ import {
 } from '@/lib/plans';
 import { loadMyHrCompanies } from '@/lib/crm/data';
 import AppLoading from '@/components/ui/AppLoading';
+import PlanUsage from '@/components/crm/PlanUsage';
 
 // Maps a paid plan to its Stripe price id. Env var names keep the old
 // STARTER/PRO wording so existing Render config keeps working after the
@@ -62,6 +63,13 @@ export default function PlansPage() {
               Sales, finance, projects and recruiting in one place — upgrade for more seats, records, and modules.
               {!company && ' Sign in to manage your subscription.'}
             </p>
+
+            {/* Above the tiers, not below them: "am I outgrowing this" is the
+                question somebody opens this page with, and the answer belongs
+                before the thing they might buy rather than after it. */}
+            {company?.id && user && (
+              <PlanUsage privy={user.id} workspaceId={company.id} plan={company.plan} />
+            )}
 
             <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
               {PLAN_ORDER.map((key, idx) => {

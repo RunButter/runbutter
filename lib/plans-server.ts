@@ -111,3 +111,114 @@ export function planDeniedBody(d: PlanDenial) {
     requiredPlan: d.needs,
   };
 }
+
+// ── Numeric limits ──────────────────────────────────────────────────────────
+//
+// `checkFeature` above answers "has this workspace bought the feature". These
+// answer "has it used up the allowance", which nothing has ever asked. Six
+// limits shipped with the pivot, are printed on the landing page, in Settings →
+// Plans and on the billing screen, and had zero enforcement call sites between
+// them: a Free workspace could hold a million records and run twenty
+// automations, and the numbers on the pricing page were decoration.
+
+import { getLimit, type PlanLimits } from '@/lib/plans';
+
+export type LimitKey = keyof PlanLimits;
+
+/** Which usage counter answers each limit. One map, so the pairing is stated once. */
+const USAGE_KEY: Record<LimitKey, string> = {
+  maxSeats: 'seats',
+  maxRecords: 'records',
+  maxPositions: 'positions',
+  maxCandidates: 'candidates',
+  maxAutomations: 'automations',
+  maxESignPerMonth: 'esign_month',
+};
+
+/** How each limit is named in a sentence somebody reads at the moment it stops them. */
+const LIMIT_NOUN: Record<LimitKey, string> = {
+  maxSeats: 'people in the workspace',
+  maxRecords: 'records',
+  maxPositions: 'open positions',
+  maxCandidates: 'candidates',
+  maxAutomations: 'automations',
+  maxESignPerMonth: 'e-signatures this month',
+};
+
+export interface LimitDenial {
+  plan: string; limit: LimitKey; used: number; max: number; message: string;
+}
+
+/**
+ * Every counter for a workspace, or null if it cannot be read.
+ *
+ * One RPC (0126), shared with the usage bars on the plans screen. Two counts of
+ * "how many records is that" eventually disagree, and the number somebody is
+ * SHOWN has to be the number that blocks them — being refused at 500 while the
+ * screen says 486 is worse than showing nothing.
+ */
+export async function planUsage(privy: string, workspaceId: string): Promise<Record<string, number> | null> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.rpc('get_plan_usage', { p_privy: privy, p_workspace: workspaceId });
+    if (error || !data || typeof data !== 'object') return null;
+    return data as Record<string, number>;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Is there room for one more? Null when there is, a described denial when not.
+ *
+ * ── FAILS OPEN, LIKE EVERYTHING ELSE HERE ───────────────────────────────────
+ * An unreadable plan resolves to `business` and an unreadable COUNT lets the
+ * write through. The asymmetry is deliberate and is the lesson PlanGate taught:
+ * the cost of a miss is a free workspace keeping one extra row for an hour, and
+ * the cost of a false block is a paying customer unable to enter data with no
+ * way to tell why. Those are not the same mistake.
+ *
+ * `Infinity` short-circuits before any query, so a Business workspace — every
+ * workspace that matters for throughput — pays nothing for this at all.
+ */
+export async function checkLimit(
+  privy: string, workspaceId: string, limit: LimitKey, adding = 1,
+): Promise<LimitDenial | null> {
+  const plan = await workspacePlan(workspaceId);
+  const max = getLimit(plan, limit);
+  if (!isFinite(max)) return null;
+
+  const usage = await planUsage(privy, workspaceId);
+  if (!usage) return null;
+  const used = Number(usage[USAGE_KEY[limit]] ?? 0);
+  if (used + adding <= max) return null;
+
+  return {
+    plan, limit, used, max,
+    message: max === 0
+      ? `${capitalize(LIMIT_NOUN[limit])} are not included in the ${PLANS[normalizePlan(plan)].name} plan. Change it in Settings → Plans.`
+      : `The ${PLANS[normalizePlan(plan)].name} plan allows ${max.toLocaleString()} ${LIMIT_NOUN[limit]} and this workspace has ${used.toLocaleString()}. Change it in Settings → Plans.`,
+  };
+}
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/**
+ * The body a route answers a limit with.
+ *
+ * 402 again, and the same `upgrade_required` code as a missing feature: to a
+ * script the two are one situation — this workspace needs a bigger plan — and
+ * splitting them would make every integrator handle two codes for one fix.
+ * `limit`, `used` and `max` are there so a client can say something useful
+ * without parsing the sentence.
+ */
+export function limitDeniedBody(d: LimitDenial) {
+  return {
+    error: d.message,
+    code: 'upgrade_required' as const,
+    limit: d.limit,
+    used: d.used,
+    max: isFinite(d.max) ? d.max : null,
+    plan: d.plan,
+  };
+}
