@@ -1,7 +1,8 @@
 'use client';
 
 import { rpc } from '@/lib/rpc';
-import { EMPTY_TOKENS, normalizeTokens, starterTokens, type DesignTokens } from '@/lib/design/tokens';
+import { EMPTY_TOKENS, normalizeTokens, type DesignTokens } from '@/lib/design/tokens';
+import { starterTokens } from '@/lib/design/presets';
 
 /**
  * Reading and writing the workspace's design spec.

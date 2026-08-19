@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { RotateCcw } from 'lucide-react';
 import DesignStudio from '@/components/design/DesignStudio';
-import { normalizeTokens, starterTokens, type DesignTokens } from '@/lib/design/tokens';
+import { normalizeTokens, type DesignTokens } from '@/lib/design/tokens';
+import { PRESETS, findPreset, presetTokens } from '@/lib/design/presets';
 
 /**
  * The free studio, with nowhere to save.
@@ -22,19 +24,31 @@ import { normalizeTokens, starterTokens, type DesignTokens } from '@/lib/design/
 const KEY = 'rb-design-draft';
 
 export default function BrandStudioClient() {
-  const [t, setT] = useState<DesignTokens>(() => starterTokens('', '#4653CE'));
+  const params = useSearchParams();
+  const [t, setT] = useState<DesignTokens>(() => presetTokens(PRESETS[0]));
   const [restored, setRestored] = useState(false);
   const loaded = useRef(false);
 
   // Read after mount, never during render: the server has no localStorage, and
   // seeding state from it directly is a hydration mismatch on every visit.
+  //
+  // `?style=` WINS over the saved draft. Arriving from a style page having just
+  // pressed "Make it yours" and being shown last week's half-finished palette
+  // instead is the one behaviour nobody would forgive.
   useEffect(() => {
+    const wanted = params.get('style');
+    const preset = wanted ? findPreset(wanted) : null;
+    if (preset) {
+      setT(presetTokens(preset));
+      loaded.current = true;
+      return;
+    }
     try {
       const raw = window.localStorage.getItem(KEY);
       if (raw) { setT(normalizeTokens(JSON.parse(raw))); setRestored(true); }
     } catch { /* private mode, or somebody's extension. Not worth a message. */ }
     loaded.current = true;
-  }, []);
+  }, [params]);
 
   useEffect(() => {
     if (!loaded.current) return;
@@ -44,7 +58,7 @@ export default function BrandStudioClient() {
   const set = useCallback((fn: (prev: DesignTokens) => DesignTokens) => setT((p) => fn(p)), []);
 
   const reset = () => {
-    setT(starterTokens('', '#4653CE'));
+    setT(presetTokens(PRESETS[0]));
     setRestored(false);
     try { window.localStorage.removeItem(KEY); } catch { /* ignore */ }
   };

@@ -1,25 +1,29 @@
 /**
- * A brand, in a shape a machine can apply exactly.
+ * A brand, in the shape the DESIGN.md specification defines.
  *
- * ── WHY THIS EXISTS ─────────────────────────────────────────────────────────
- * The common advice is "feed the AI your brand PDF and it will figure it out".
- * It does not, reliably — a PDF is pixels and loose text, so the model
- * RE-DERIVES the brand on every run and lands somewhere slightly different each
- * time. The accent is #6366F1 today and "indigo-ish" tomorrow. That is what
- * people mean when they say a DESIGN.md "needs tinkering".
+ * ── THE FORMAT IS NOT OURS TO INVENT ────────────────────────────────────────
+ * `DESIGN.md` is a real specification — google-labs-code/design.md, built
+ * inside Stitch and open-sourced in April 2026 — and the whole value of a
+ * standard file name is that the agent already knows how to read it. A file
+ * that says DESIGN.md at the top and then does something else is worse than one
+ * with a different name, because the reader stops looking for what it expects.
  *
- * So a brand spec has to be TWO layers, and almost every hand-written DESIGN.md
- * is only the second:
+ * So the export is: YAML frontmatter carrying typed tokens (`colors`,
+ * `typography`, `spacing`, `rounded`, `components`), then the eight canonical
+ * `##` sections IN ORDER — Overview, Colors, Typography, Layout, Elevation &
+ * Depth, Shapes, Components, Do's and Don'ts. Order matters because the model
+ * reads top to bottom and each section is context for the next. Sections that
+ * do not apply go in `omitted` with a reason rather than being silently absent,
+ * which is the difference between "we have no shadows" and "nobody wrote this
+ * down yet".
  *
- *   1. DETERMINISTIC — hex codes, font names, a numeric scale, file names.
- *      A model must never guess these, and a human must never retype them.
- *      They live in `design.json` and are quoted verbatim in the markdown.
- *   2. JUDGEMENT — when to use which, tone, what we never do. Prose is the
- *      right tool for exactly this and the wrong tool for a hex code.
- *
- * `DESIGN.md` carries both: the exact values in a fenced JSON block a model can
- * lift without interpreting, and the prose underneath for the calls that need a
- * person's taste written down.
+ * ── WHICH IS ALSO WHY THE TWO LAYERS SURVIVE ────────────────────────────────
+ * The values a model must never guess (hex, font, size) live in the
+ * frontmatter, to be lifted verbatim. The judgement — what each colour is FOR,
+ * how the voice sounds, what we never do — is prose, and the canonical sections
+ * have exactly the right slots for it: brand and voice under Overview, the
+ * never-list under Do's and Don'ts. Almost every hand-written DESIGN.md is only
+ * the prose half, which is why they read well and produce inconsistent work.
  *
  * Zero imports, so a route handler, a client component and a test all read the
  * same code — the rule lib/finance/runway.ts and lib/vault/password.ts follow.
@@ -27,10 +31,47 @@
 
 export interface Swatch { name: string; hex: string; use?: string }
 
+/**
+ * One typography level, with the spec's own field names.
+ *
+ * `h1` / `body-md` / `label-caps` rather than `sm`/`lg`: a NAMED ROLE tells an
+ * agent where to use it, and a t-shirt size does not. This replaced a plain
+ * `{name, px}` scale — that carried a number and nothing about weight, leading
+ * or tracking, so every generated heading was 400-weight with default leading
+ * and looked nothing like the brand it came from.
+ */
+export interface TypeLevel {
+  name: string;
+  /** Omitted means "the body family". Only set it when this level differs. */
+  fontFamily?: string;
+  fontSize: number;
+  fontWeight?: number;
+  /** Unitless multiplier, as the spec's examples use. */
+  lineHeight?: number;
+  /** With its unit: `-0.02em`. */
+  letterSpacing?: string;
+  /** Not a spec field — ours, and rendered as prose. */
+  use?: string;
+}
+
+export interface Shadow { name: string; value: string; use?: string }
+
+/**
+ * A component in the spec's `components` map: a name and property/token pairs.
+ *
+ * Values may be literals (`12px`) or token references (`{colors.primary}`).
+ * Kept as strings rather than a typed union on purpose — the spec allows any
+ * property name, and a whitelist here would silently drop whatever a designer
+ * actually needed to say.
+ */
+export interface ComponentSpec { name: string; props: { key: string; value: string }[] }
+
 export interface DesignTokens {
   brand: {
     name: string;
     tagline?: string;
+    /** One line on the feel of it — becomes the spec's `description`. */
+    description?: string;
     /** A file name, not a URL: a signed URL expires and an export must not. */
     logo?: string;
     logoDark?: string;
@@ -40,17 +81,23 @@ export interface DesignTokens {
     heading?: string;
     body?: string;
     mono?: string;
-    /** Named steps, px. A scale beats "make it bigger". */
-    scale?: { name: string; px: number }[];
-    weights?: { name: string; value: number }[];
+    levels?: TypeLevel[];
   };
   space: { base?: number; scale?: number[] };
   radius: { name: string; px: number }[];
-  voice: {
-    tone?: string[];
-    weSay?: string[];
-    weNeverSay?: string[];
+  elevation: Shadow[];
+  components: ComponentSpec[];
+  /** Prose for each canonical section. Empty means "use the generated line". */
+  notes: {
+    overview?: string;
+    colors?: string;
+    typography?: string;
+    layout?: string;
+    elevation?: string;
+    shapes?: string;
+    components?: string;
   };
+  voice: { tone?: string[]; weSay?: string[]; weNeverSay?: string[] };
   rules: { do: string[]; dont: string[] };
 }
 
@@ -60,92 +107,96 @@ export const EMPTY_TOKENS: DesignTokens = {
   type: {},
   space: {},
   radius: [],
+  elevation: [],
+  components: [],
+  notes: {},
   voice: {},
   rules: { do: [], dont: [] },
 };
 
-/**
- * A starting point that is already correct rather than already empty.
- *
- * The in-app skills editor used to open a blank box, which is the hardest
- * version of every writing task. These are real defaults a designer edits down,
- * with the accent left to whatever the workspace already branded itself.
- */
-export function starterTokens(name: string, accent: string): DesignTokens {
-  return {
-    brand: { name: name || 'Our brand' },
-    colors: [
-      { name: 'accent', hex: accent || '#6366F1', use: 'Primary actions, links, the one thing on a screen you want clicked' },
-      { name: 'foreground', hex: '#111114', use: 'Body text' },
-      { name: 'muted', hex: '#6B7280', use: 'Secondary text, captions, timestamps' },
-      { name: 'background', hex: '#FFFFFF', use: 'Page' },
-      { name: 'surface', hex: '#F7F7F8', use: 'Cards, panels, anything raised off the page' },
-      { name: 'border', hex: '#E5E7EB', use: 'Hairlines and dividers' },
-      { name: 'success', hex: '#16A34A', use: 'Confirmed, paid, done' },
-      { name: 'warning', hex: '#D97706', use: 'Needs attention, not yet wrong' },
-      { name: 'danger', hex: '#DC2626', use: 'Destructive actions and real errors' },
-    ],
-    type: {
-      heading: 'Inter',
-      body: 'Inter',
-      mono: 'JetBrains Mono',
-      scale: [
-        { name: 'xs', px: 12 }, { name: 'sm', px: 14 }, { name: 'base', px: 16 },
-        { name: 'lg', px: 20 }, { name: 'xl', px: 24 }, { name: '2xl', px: 32 },
-        { name: '3xl', px: 44 },
-      ],
-      weights: [{ name: 'regular', value: 400 }, { name: 'medium', value: 500 }, { name: 'semibold', value: 600 }],
-    },
-    space: { base: 4, scale: [4, 8, 12, 16, 24, 32, 48, 64] },
-    radius: [{ name: 'sm', px: 6 }, { name: 'md', px: 10 }, { name: 'lg', px: 16 }, { name: 'full', px: 9999 }],
-    voice: {
-      tone: ['plain', 'direct', 'warm', 'never breathless'],
-      weSay: ['Get started', 'Something went wrong', 'Save'],
-      weNeverSay: ['Simply', 'Just', 'Effortlessly', 'Revolutionary', 'Unlock'],
-    },
-    rules: {
-      do: [
-        'Use one accent colour per screen. If two things are both primary, neither is.',
-        'Make hierarchy from size and colour before reaching for weight.',
-        'Leave more space than feels necessary.',
-      ],
-      dont: [
-        'Never invent a colour that is not in the palette above.',
-        'Never use pure black (#000) for text.',
-        'Never centre a paragraph of more than two lines.',
-      ],
-    },
-  };
-}
+export const SPEC_VERSION = 'alpha';
 
-/** Fills in anything a stored document is missing, so an old shape still loads. */
+/** The canonical body sections, in the order the specification requires. */
+export const SECTIONS = [
+  'Overview', 'Colors', 'Typography', 'Layout',
+  'Elevation & Depth', 'Shapes', 'Components', "Do's and Don'ts",
+] as const;
+
+const hex = (s: string) => /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(s || '').trim());
+const okColors = (t: DesignTokens) => (t.colors || []).filter((c) => c.name && hex(c.hex));
+
+// ── Normalising ─────────────────────────────────────────────────────────────
+
+/**
+ * Fills in anything a stored document is missing, so an old shape still loads.
+ *
+ * It also MIGRATES the pre-spec shape: `type.scale` was `{name, px}` and is
+ * lifted into full typography levels here rather than in a migration, because
+ * the column is one jsonb document and a SQL rewrite of nested arrays is far
+ * more likely to be wrong than a pure function with a test around it.
+ */
 export function normalizeTokens(raw: any): DesignTokens {
   const d = (raw && typeof raw === 'object') ? raw : {};
   const arr = (x: any) => (Array.isArray(x) ? x : []);
+  const str = (x: any) => (x === undefined || x === null ? undefined : String(x));
+  const num = (x: any) => (Number.isFinite(+x) ? +x : undefined);
+
+  const levels: TypeLevel[] = arr(d.type?.levels)
+    .filter((l: any) => l?.name && Number.isFinite(+l.fontSize))
+    .map((l: any) => ({
+      name: String(l.name),
+      fontFamily: str(l.fontFamily),
+      fontSize: +l.fontSize,
+      fontWeight: num(l.fontWeight),
+      lineHeight: num(l.lineHeight),
+      letterSpacing: str(l.letterSpacing),
+      use: str(l.use),
+    }));
+
+  // The old `{name, px}` scale. Converted, never dropped: somebody spent time
+  // on those numbers and losing them on an upgrade is the worst kind of bug.
+  if (!levels.length) {
+    for (const s of arr(d.type?.scale)) {
+      if (!s?.name || !Number.isFinite(+s.px)) continue;
+      levels.push({ name: String(s.name), fontSize: +s.px });
+    }
+  }
+
   return {
     brand: {
       name: String(d.brand?.name || ''),
-      tagline: d.brand?.tagline || undefined,
-      logo: d.brand?.logo || undefined,
-      logoDark: d.brand?.logoDark || undefined,
+      tagline: str(d.brand?.tagline),
+      description: str(d.brand?.description),
+      logo: str(d.brand?.logo),
+      logoDark: str(d.brand?.logoDark),
     },
     colors: arr(d.colors).filter((c: any) => c && c.name && c.hex)
-      .map((c: any) => ({ name: String(c.name), hex: String(c.hex), use: c.use ? String(c.use) : undefined })),
+      .map((c: any) => ({ name: String(c.name), hex: String(c.hex), use: str(c.use) })),
     type: {
-      heading: d.type?.heading || undefined,
-      body: d.type?.body || undefined,
-      mono: d.type?.mono || undefined,
-      scale: arr(d.type?.scale).filter((s: any) => s?.name && Number.isFinite(+s.px))
-        .map((s: any) => ({ name: String(s.name), px: +s.px })),
-      weights: arr(d.type?.weights).filter((w: any) => w?.name && Number.isFinite(+w.value))
-        .map((w: any) => ({ name: String(w.name), value: +w.value })),
+      heading: str(d.type?.heading),
+      body: str(d.type?.body),
+      mono: str(d.type?.mono),
+      levels,
     },
     space: {
-      base: Number.isFinite(+d.space?.base) ? +d.space.base : undefined,
+      base: num(d.space?.base),
       scale: arr(d.space?.scale).map((n: any) => +n).filter((n: number) => Number.isFinite(n)),
     },
     radius: arr(d.radius).filter((r: any) => r?.name && Number.isFinite(+r.px))
       .map((r: any) => ({ name: String(r.name), px: +r.px })),
+    elevation: arr(d.elevation).filter((e: any) => e?.name && e?.value)
+      .map((e: any) => ({ name: String(e.name), value: String(e.value), use: str(e.use) })),
+    components: arr(d.components).filter((c: any) => c?.name)
+      .map((c: any) => ({
+        name: String(c.name),
+        props: arr(c.props).filter((p: any) => p?.key).map((p: any) => ({ key: String(p.key), value: String(p.value ?? '') })),
+      })),
+    notes: {
+      overview: str(d.notes?.overview), colors: str(d.notes?.colors),
+      typography: str(d.notes?.typography), layout: str(d.notes?.layout),
+      elevation: str(d.notes?.elevation), shapes: str(d.notes?.shapes),
+      components: str(d.notes?.components),
+    },
     voice: {
       tone: arr(d.voice?.tone).map(String),
       weSay: arr(d.voice?.weSay).map(String),
@@ -155,145 +206,267 @@ export function normalizeTokens(raw: any): DesignTokens {
   };
 }
 
-const hex = (s: string) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(s || '').trim());
+// ── YAML ────────────────────────────────────────────────────────────────────
 
 /**
- * Only what is actually set, in a stable order.
+ * Enough YAML for this document, written by hand.
  *
- * Empty sections are DROPPED rather than emitted blank. A heading with nothing
- * under it reads as "we have no rules about this", and a model treats an empty
- * list as permission.
+ * A dependency for eleven lines of emitter is the wrong trade, and the same
+ * call `lib/markdown.ts` and `lib/plugins/zip.ts` make. The one thing it must
+ * get right is QUOTING: `#1A1C1E` unquoted is a comment and the colour
+ * vanishes, and a font called `Söhne: Buch` is a parse error whose only symptom
+ * is a file the agent skips.
  */
-export function toDesignJson(t: DesignTokens): Record<string, any> {
-  const out: Record<string, any> = { brand: { name: t.brand.name } };
-  if (t.brand.tagline) out.brand.tagline = t.brand.tagline;
-  if (t.brand.logo) out.brand.logo = t.brand.logo;
-  if (t.brand.logoDark) out.brand.logoDark = t.brand.logoDark;
+function yamlScalar(v: string | number): string {
+  if (typeof v === 'number') return String(v);
+  const s = String(v);
+  if (s === '') return "''";
+  if (/^[A-Za-z0-9][A-Za-z0-9 ._\-/+]*$/.test(s) && !/^(true|false|null|yes|no|on|off)$/i.test(s)) return s;
+  return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
 
-  const colors = (t.colors || []).filter((c) => c.name && hex(c.hex));
+const yamlKey = (k: string) => (/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(k) ? k : `"${k.replace(/"/g, '\\"')}"`);
+
+// ── The exact values ────────────────────────────────────────────────────────
+
+/**
+ * The frontmatter, as the object the spec describes.
+ *
+ * Empty groups are DROPPED and named in `omitted` instead. A heading with
+ * nothing under it reads as "we have no rules about this", and a model treats
+ * an empty list as permission — whereas `omitted: [{section: spacing, reason:
+ * …}]` is a statement somebody made.
+ */
+export function toSpecObject(t: DesignTokens): Record<string, any> {
+  const out: Record<string, any> = { version: SPEC_VERSION, name: t.brand.name || 'Untitled' };
+  if (t.brand.description || t.brand.tagline) out.description = t.brand.description || t.brand.tagline;
+
+  const colors = okColors(t);
   if (colors.length) out.colors = Object.fromEntries(colors.map((c) => [c.name, c.hex.toUpperCase()]));
 
-  const type: Record<string, any> = {};
-  if (t.type.heading) type.heading = t.type.heading;
-  if (t.type.body) type.body = t.type.body;
-  if (t.type.mono) type.mono = t.type.mono;
-  if (t.type.scale?.length) type.scale = Object.fromEntries(t.type.scale.map((s) => [s.name, `${s.px}px`]));
-  if (t.type.weights?.length) type.weights = Object.fromEntries(t.type.weights.map((w) => [w.name, w.value]));
-  if (Object.keys(type).length) out.type = type;
-
-  if (t.space.base || t.space.scale?.length) {
-    out.space = {};
-    if (t.space.base) out.space.base = `${t.space.base}px`;
-    if (t.space.scale?.length) out.space.scale = t.space.scale.map((n) => `${n}px`);
+  const levels = t.type.levels || [];
+  if (levels.length) {
+    out.typography = Object.fromEntries(levels.map((l) => {
+      const v: Record<string, any> = {};
+      const fam = l.fontFamily || (/^h[1-6]$|^display|^title/i.test(l.name) ? t.type.heading : t.type.body);
+      if (fam) v.fontFamily = fam;
+      v.fontSize = `${l.fontSize}px`;
+      if (l.fontWeight) v.fontWeight = l.fontWeight;
+      if (l.lineHeight) v.lineHeight = l.lineHeight;
+      if (l.letterSpacing) v.letterSpacing = l.letterSpacing;
+      return [l.name, v];
+    }));
   }
-  if (t.radius?.length) out.radius = Object.fromEntries(t.radius.map((r) => [r.name, `${r.px}px`]));
+
+  if (t.space.scale?.length) {
+    // Named steps, not an array: `{spacing.md}` has to resolve to something.
+    const names = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl'];
+    out.spacing = Object.fromEntries(t.space.scale.map((n, i) => [names[i] || `s${i + 1}`, `${n}px`]));
+  }
+  if (t.radius?.length) out.rounded = Object.fromEntries(t.radius.map((r) => [r.name, `${r.px}px`]));
+  if (t.components?.length) {
+    out.components = Object.fromEntries(t.components
+      .filter((c) => c.name && c.props.length)
+      .map((c) => [c.name, Object.fromEntries(c.props.filter((p) => p.key).map((p) => [p.key, p.value]))]));
+  }
+
+  const omitted: { section: string; reason: string }[] = [];
+  if (!colors.length) omitted.push({ section: 'colors', reason: 'Not defined yet.' });
+  if (!levels.length) omitted.push({ section: 'typography', reason: 'Not defined yet.' });
+  if (!t.space.scale?.length) omitted.push({ section: 'spacing', reason: 'Not defined yet.' });
+  if (!t.elevation?.length) omitted.push({ section: 'elevation', reason: 'This brand uses no shadows — depth comes from tone and spacing.' });
+  if (omitted.length) out.omitted = omitted;
   return out;
 }
 
+/** The frontmatter block, between its `---` fences. */
+export function toFrontmatter(t: DesignTokens): string {
+  const o = toSpecObject(t);
+  const L: string[] = ['---'];
+  const emit = (obj: Record<string, any>, indent: string) => {
+    for (const [k, v] of Object.entries(obj)) {
+      if (v === undefined || v === null) continue;
+      if (Array.isArray(v)) {
+        L.push(`${indent}${yamlKey(k)}:`);
+        for (const item of v) {
+          if (item && typeof item === 'object') {
+            const entries = Object.entries(item);
+            L.push(`${indent}  - ${yamlKey(entries[0][0])}: ${yamlScalar(entries[0][1] as any)}`);
+            for (const [ik, iv] of entries.slice(1)) L.push(`${indent}    ${yamlKey(ik)}: ${yamlScalar(iv as any)}`);
+          } else {
+            L.push(`${indent}  - ${yamlScalar(item)}`);
+          }
+        }
+      } else if (v && typeof v === 'object') {
+        L.push(`${indent}${yamlKey(k)}:`);
+        emit(v, `${indent}  `);
+      } else {
+        L.push(`${indent}${yamlKey(k)}: ${yamlScalar(v)}`);
+      }
+    }
+  };
+  emit(o, '');
+  L.push('---');
+  return L.join('\n');
+}
+
+/** The same values as JSON, for a build step that would rather not parse YAML. */
+export const toDesignJson = (t: DesignTokens) => toSpecObject(t);
+
+// ── The document ────────────────────────────────────────────────────────────
+
+const para = (s?: string) => (s || '').trim();
+
+function overviewProse(t: DesignTokens): string {
+  if (para(t.notes.overview)) return para(t.notes.overview)!;
+  const bits: string[] = [];
+  if (t.brand.tagline) bits.push(t.brand.tagline);
+  if (t.brand.description) bits.push(t.brand.description);
+  return bits.join(' ') || `The visual identity for ${t.brand.name || 'this brand'}.`;
+}
+
 /**
- * DESIGN.md — the deliverable.
+ * DESIGN.md, to spec.
  *
- * ── THE EXACT VALUES COME FIRST, AS JSON ────────────────────────────────────
- * A fenced ```json block near the top, because that is the one part a model
- * must lift verbatim rather than interpret. Prose describing a colour as
- * "a deep indigo" is how #6366F1 becomes #4F46E5 on the third screen.
- *
- * ── THE PROSE IS THE PART A PDF CANNOT CARRY ────────────────────────────────
- * Everything after it is judgement: what each colour is FOR, how the voice
- * sounds, and the explicit never-do list. That list is last and blunt on
- * purpose — a rule buried in a paragraph is a rule that gets averaged away.
+ * The eight canonical sections in their required order, each one carrying both
+ * halves: the values (already exact in the frontmatter, restated here as tables
+ * a human can read) and the judgement (what it is for, when to reach for it).
+ * A section with nothing to say is skipped and declared in `omitted` — never
+ * emitted empty.
  */
 export function toDesignMd(t: DesignTokens): string {
   const L: string[] = [];
-  const name = t.brand.name || 'Our brand';
+  const name = t.brand.name || 'Untitled';
 
-  L.push(`# ${name} — design`);
+  L.push(toFrontmatter(t));
   L.push('');
-  if (t.brand.tagline) { L.push(`> ${t.brand.tagline}`); L.push(''); }
-  L.push('This file tells a person **and an AI agent** how to make something that looks like us.');
-  L.push('The JSON block is exact — copy those values, never approximate them. Everything after it is');
-  L.push('judgement, which is what prose is for.');
+  L.push(`# ${name}`);
   L.push('');
 
-  L.push('## Exact values');
+  // 1 ── Overview
+  L.push('## Overview');
   L.push('');
-  L.push('```json');
-  L.push(JSON.stringify(toDesignJson(t), null, 2));
-  L.push('```');
+  L.push(overviewProse(t));
   L.push('');
+  if (t.voice.tone?.length || t.voice.weSay?.length || t.voice.weNeverSay?.length) {
+    // Voice has no canonical section and belongs here rather than nowhere: it
+    // is the half of a brand that decides whether generated copy sounds like
+    // you, and Overview is where an agent builds its idea of the thing.
+    if (t.voice.tone?.length) { L.push(`**Voice** — ${t.voice.tone.join(', ')}.`); L.push(''); }
+    if (t.voice.weSay?.length) {
+      L.push('We say: ' + t.voice.weSay.map((s) => `“${s}”`).join(' · '));
+      L.push('');
+    }
+    if (t.voice.weNeverSay?.length) {
+      L.push('We never say: ' + t.voice.weNeverSay.map((s) => `“${s}”`).join(' · '));
+      L.push('');
+    }
+  }
 
-  const colors = (t.colors || []).filter((c) => c.name && hex(c.hex));
+  // 2 ── Colors
+  const colors = okColors(t);
   if (colors.length) {
-    L.push('## Colour, and what each one is for');
+    L.push('## Colors');
     L.push('');
-    L.push('| Token | Hex | Use it for |');
+    if (para(t.notes.colors)) { L.push(para(t.notes.colors)!); L.push(''); }
+    L.push('| Token | Value | Use it for |');
     L.push('|---|---|---|');
     for (const c of colors) L.push(`| \`${c.name}\` | \`${c.hex.toUpperCase()}\` | ${c.use || '—'} |`);
     L.push('');
   }
 
-  if (t.type.heading || t.type.body || t.type.scale?.length) {
-    L.push('## Type');
+  // 3 ── Typography
+  const levels = t.type.levels || [];
+  if (levels.length || t.type.body) {
+    L.push('## Typography');
     L.push('');
-    if (t.type.heading) L.push(`- **Headings** — ${t.type.heading}`);
-    if (t.type.body) L.push(`- **Body** — ${t.type.body}`);
-    if (t.type.mono) L.push(`- **Code** — ${t.type.mono}`);
-    if (t.type.scale?.length) {
-      L.push(`- **Sizes** — ${t.type.scale.map((s) => `${s.name} ${s.px}px`).join(' · ')}`);
-      L.push('- Sizes come from that scale. A one-off pixel value is how a scale stops being one.');
+    if (para(t.notes.typography)) { L.push(para(t.notes.typography)!); L.push(''); }
+    const fams: string[] = [];
+    if (t.type.heading) fams.push(`**${t.type.heading}** for headings`);
+    if (t.type.body) fams.push(`**${t.type.body}** for body`);
+    if (t.type.mono) fams.push(`**${t.type.mono}** for code and numerals`);
+    if (fams.length) { L.push(fams.join(', ') + '.'); L.push(''); }
+    if (levels.length) {
+      L.push('| Level | Size | Weight | Line height | Tracking | Use it for |');
+      L.push('|---|---|---|---|---|---|');
+      for (const l of levels) {
+        L.push(`| \`${l.name}\` | ${l.fontSize}px | ${l.fontWeight ?? '—'} | ${l.lineHeight ?? '—'} | ${l.letterSpacing || '—'} | ${l.use || '—'} |`);
+      }
+      L.push('');
+      L.push('Every size comes from that table. A one-off pixel value is how a scale stops being one.');
+      L.push('');
     }
-    L.push('');
   }
 
-  if (t.space.scale?.length || t.radius?.length) {
-    L.push('## Space and shape');
+  // 4 ── Layout
+  if (t.space.scale?.length || t.space.base || para(t.notes.layout)) {
+    L.push('## Layout');
     L.push('');
-    if (t.space.base) L.push(`- Everything is a multiple of **${t.space.base}px**.`);
+    if (para(t.notes.layout)) { L.push(para(t.notes.layout)!); L.push(''); }
+    if (t.space.base) L.push(`- Every measurement is a multiple of **${t.space.base}px**.`);
     if (t.space.scale?.length) L.push(`- Steps: ${t.space.scale.map((n) => `${n}px`).join(' · ')}`);
-    if (t.radius?.length) L.push(`- Corners: ${t.radius.map((r) => `${r.name} ${r.px}px`).join(' · ')}`);
     L.push('');
   }
 
-  if (t.voice.tone?.length || t.voice.weSay?.length || t.voice.weNeverSay?.length) {
-    L.push('## Voice');
+  // 5 ── Elevation & Depth
+  if (t.elevation?.length || para(t.notes.elevation)) {
+    L.push('## Elevation & Depth');
     L.push('');
-    if (t.voice.tone?.length) L.push(`We sound **${t.voice.tone.join(', ')}**.`);
-    L.push('');
-    if (t.voice.weSay?.length) {
-      L.push('We say:');
-      for (const s of t.voice.weSay) L.push(`- ${s}`);
-      L.push('');
-    }
-    if (t.voice.weNeverSay?.length) {
-      L.push('We never say:');
-      for (const s of t.voice.weNeverSay) L.push(`- ${s}`);
+    if (para(t.notes.elevation)) { L.push(para(t.notes.elevation)!); L.push(''); }
+    if (t.elevation?.length) {
+      L.push('| Level | Shadow | Use it for |');
+      L.push('|---|---|---|');
+      for (const e of t.elevation) L.push(`| \`${e.name}\` | \`${e.value}\` | ${e.use || '—'} |`);
       L.push('');
     }
   }
 
-  if (t.rules.do?.length) {
-    L.push('## How to use it');
+  // 6 ── Shapes
+  if (t.radius?.length || para(t.notes.shapes)) {
+    L.push('## Shapes');
     L.push('');
-    for (const r of t.rules.do) L.push(`- ${r}`);
+    if (para(t.notes.shapes)) { L.push(para(t.notes.shapes)!); L.push(''); }
+    if (t.radius?.length) {
+      L.push(`Corner radii: ${t.radius.map((r) => `**${r.name}** ${r.px}px`).join(' · ')}.`);
+      L.push('');
+    }
+  }
+
+  // 7 ── Components
+  if (t.components?.length || para(t.notes.components)) {
+    L.push('## Components');
+    L.push('');
+    if (para(t.notes.components)) { L.push(para(t.notes.components)!); L.push(''); }
+    for (const c of t.components || []) {
+      if (!c.props.length) continue;
+      L.push(`- **${c.name}** — ${c.props.map((p) => `${p.key}: \`${p.value}\``).join(', ')}`);
+    }
     L.push('');
   }
 
-  // LAST, and blunt. A constraint buried mid-document is a constraint an agent
-  // averages against everything else it read.
-  if (t.rules.dont?.length) {
-    L.push('## Never');
+  // 8 ── Do's and Don'ts. Last, and blunt: a constraint buried mid-document is
+  // one an agent averages against everything else it read.
+  if (t.rules.do?.length || t.rules.dont?.length) {
+    L.push("## Do's and Don'ts");
     L.push('');
-    for (const r of t.rules.dont) L.push(`- ${r}`);
+    for (const r of t.rules.do || []) L.push(`- **Do** ${lower(r)}`);
+    for (const r of t.rules.dont || []) L.push(`- **Don't** ${lower(stripNegation(r))}`);
     L.push('');
   }
 
   L.push('---');
   L.push('');
-  L.push('If a value you need is not written above, **ask** — do not invent one. An invented colour');
-  L.push('or a one-off font size is how a brand stops being a brand.');
+  L.push('If a value you need is not written above, **ask** — do not invent one. An invented colour or');
+  L.push('a one-off font size is how a brand stops being a brand.');
   L.push('');
   return L.join('\n');
 }
+
+/** "Never centre a paragraph" → "centre a paragraph", so **Don't** reads right. */
+function stripNegation(s: string): string {
+  return s.replace(/^\s*(never|don['’]t|do not|avoid)\s+/i, '');
+}
+const lower = (s: string) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
 
 /**
  * The same content as a SKILL.md body, for the agent-plugin format.
@@ -307,11 +480,13 @@ export const toSkillBody = (t: DesignTokens) => toDesignMd(t);
 /** What is missing, in the order it is worth fixing. Never a score. */
 export function gaps(t: DesignTokens): string[] {
   const out: string[] = [];
-  if (!t.brand.name?.trim()) out.push('No brand name — every heading in the file falls back to a placeholder.');
-  if (!(t.colors || []).some((c) => c.name === 'accent' && hex(c.hex))) out.push('No accent colour, which is the one value an agent reaches for first.');
+  if (!t.brand.name?.trim()) out.push('No name — the file has nothing to call this brand.');
+  if (!okColors(t).some((c) => c.name === 'primary' || c.name === 'accent')) out.push('No primary or accent colour, which is the value an agent reaches for first.');
   if (!t.type.body) out.push('No body font named, so text is whatever the tool defaults to.');
-  if (!t.type.scale?.length) out.push('No type scale — sizes will be invented per screen.');
-  if (!t.rules.dont?.length) out.push('No “never” list. It is the section that does the most work.');
+  if (!(t.type.levels || []).length) out.push('No type levels — every heading size will be invented per screen.');
+  if (!(t.type.levels || []).some((l) => l.fontWeight)) out.push('No weights on the type levels, so everything generated comes out at 400.');
+  if (!t.rules.dont?.length) out.push('No “don’t” list. It is the section that does the most work.');
+  if (!(t.components || []).length) out.push('No components. A button described once is a button that looks the same everywhere.');
   if (!t.brand.logo) out.push('No logo file, so anything generated is unbranded.');
   return out;
 }

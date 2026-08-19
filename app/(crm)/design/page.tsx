@@ -130,7 +130,7 @@ export default function DesignPage() {
           {err && <p className="text-2xs text-danger">{err}</p>}
 
           <DesignStudio
-            t={t} set={set} logoUrl={logoUrl}
+            t={t} set={set} logoUrl={logoUrl} presetsDense
             intro={
               <>
                 <h2 className="text-sm font-medium text-primary">

@@ -37,19 +37,70 @@ const cssName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').repla
  */
 export function tokensCss(t: DesignTokens): string {
   const L: string[] = [];
-  L.push(`/* ${t.brand.name || 'Brand'} — generated. Edit the source, not this file. */`);
+  L.push(`/* ${t.brand.name || 'Brand'} — generated from DESIGN.md. Edit the source, not this file. */`);
   L.push(':root {');
   for (const c of t.colors || []) if (c.name && c.hex) L.push(`  --brand-${cssName(c.name)}: ${c.hex.toUpperCase()};`);
   if (t.type.heading) L.push(`  --brand-font-heading: "${t.type.heading}";`);
   if (t.type.body) L.push(`  --brand-font-body: "${t.type.body}";`);
   if (t.type.mono) L.push(`  --brand-font-mono: "${t.type.mono}";`);
-  for (const s of t.type.scale || []) L.push(`  --brand-text-${cssName(s.name)}: ${s.px}px;`);
-  for (const w of t.type.weights || []) L.push(`  --brand-weight-${cssName(w.name)}: ${w.value};`);
-  (t.space.scale || []).forEach((n, i) => L.push(`  --brand-space-${i + 1}: ${n}px;`));
+  // One custom property per FIELD of a level, not one per size. A level is a
+  // size AND a weight AND a leading AND a tracking, and emitting only the size
+  // is how every generated heading came out at 400 with default leading.
+  for (const l of t.type.levels || []) {
+    const n = cssName(l.name);
+    L.push(`  --brand-text-${n}: ${l.fontSize}px;`);
+    if (l.fontWeight) L.push(`  --brand-text-${n}-weight: ${l.fontWeight};`);
+    if (l.lineHeight) L.push(`  --brand-text-${n}-leading: ${l.lineHeight};`);
+    if (l.letterSpacing) L.push(`  --brand-text-${n}-tracking: ${l.letterSpacing};`);
+  }
+  (t.space.scale || []).forEach((n, i) => L.push(`  --brand-space-${SPACE_NAMES[i] || i + 1}: ${n}px;`));
   for (const r of t.radius || []) L.push(`  --brand-radius-${cssName(r.name)}: ${r.px}px;`);
+  for (const e of t.elevation || []) L.push(`  --brand-shadow-${cssName(e.name)}: ${resolveRefs(e.value, t)};`);
   L.push('}');
   L.push('');
+  // The levels again as ready-made classes. A variable still leaves four
+  // declarations to write per heading, and the point of a level is that it is
+  // one decision — so the file ships the decision, not the ingredients.
+  for (const l of t.type.levels || []) {
+    const n = cssName(l.name);
+    const fam = l.fontFamily
+      ? `"${l.fontFamily}"`
+      : /^h[1-6]$|^display|^title/i.test(l.name) ? 'var(--brand-font-heading, inherit)' : 'var(--brand-font-body, inherit)';
+    L.push(`.brand-${n} {`);
+    L.push(`  font-family: ${fam};`);
+    L.push(`  font-size: var(--brand-text-${n});`);
+    if (l.fontWeight) L.push(`  font-weight: var(--brand-text-${n}-weight);`);
+    if (l.lineHeight) L.push(`  line-height: var(--brand-text-${n}-leading);`);
+    if (l.letterSpacing) L.push(`  letter-spacing: var(--brand-text-${n}-tracking);`);
+    L.push('}');
+  }
+  L.push('');
   return L.join('\n');
+}
+
+/** The spec's own step names, so `{spacing.md}` resolves to something real. */
+const SPACE_NAMES = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl'];
+
+/**
+ * `{colors.primary}` → the hex it points at.
+ *
+ * The spec allows token references anywhere, and a CSS file containing a
+ * literal `{colors.primary}` is a broken declaration the browser drops in
+ * silence. Unresolvable references are left ALONE rather than blanked: a
+ * visible `{colors.tertiary}` in the output is a question somebody can answer,
+ * and an empty value is a mystery.
+ */
+export function resolveRefs(value: string, t: DesignTokens): string {
+  return String(value || '').replace(/\{([a-z]+)\.([A-Za-z0-9_-]+)\}/g, (whole, group, key) => {
+    if (group === 'colors') return t.colors.find((c) => c.name === key)?.hex.toUpperCase() ?? whole;
+    if (group === 'rounded') { const r = t.radius.find((x) => x.name === key); return r ? `${r.px}px` : whole; }
+    if (group === 'spacing') {
+      const i = SPACE_NAMES.indexOf(key);
+      const n = i >= 0 ? t.space.scale?.[i] : undefined;
+      return n === undefined ? whole : `${n}px`;
+    }
+    return whole;
+  });
 }
 
 /** A `theme.extend` fragment. Not a whole config — merging beats replacing. */
@@ -57,16 +108,30 @@ export function tailwindFragment(t: DesignTokens): string {
   const theme: Record<string, any> = {};
   const colors = Object.fromEntries((t.colors || []).filter((c) => c.name && c.hex).map((c) => [cssName(c.name), c.hex.toUpperCase()]));
   if (Object.keys(colors).length) theme.colors = { brand: colors };
+
   const font: Record<string, string[]> = {};
   if (t.type.heading) font.heading = [t.type.heading, 'sans-serif'];
   if (t.type.body) font.body = [t.type.body, 'sans-serif'];
   if (t.type.mono) font.mono = [t.type.mono, 'monospace'];
   if (Object.keys(font).length) theme.fontFamily = font;
-  if (t.type.scale?.length) theme.fontSize = Object.fromEntries(t.type.scale.map((s) => [s.name, `${s.px}px`]));
-  if (t.radius?.length) theme.borderRadius = Object.fromEntries(t.radius.map((r) => [r.name, `${r.px}px`]));
-  if (t.space.scale?.length) theme.spacing = Object.fromEntries(t.space.scale.map((n, i) => [String(i + 1), `${n}px`]));
 
-  return `// ${t.brand.name || 'Brand'} — generated. Merge into tailwind.config.js.
+  // Tailwind's tuple form: ['16px', {lineHeight, letterSpacing, fontWeight}].
+  // The plain string form carries the size alone, which loses three quarters of
+  // what a type level actually is.
+  if (t.type.levels?.length) {
+    theme.fontSize = Object.fromEntries(t.type.levels.map((l) => {
+      const extra: Record<string, string | number> = {};
+      if (l.lineHeight) extra.lineHeight = String(l.lineHeight);
+      if (l.letterSpacing) extra.letterSpacing = l.letterSpacing;
+      if (l.fontWeight) extra.fontWeight = l.fontWeight;
+      return [cssName(l.name), Object.keys(extra).length ? [`${l.fontSize}px`, extra] : `${l.fontSize}px`];
+    }));
+  }
+  if (t.radius?.length) theme.borderRadius = Object.fromEntries(t.radius.map((r) => [cssName(r.name), `${r.px}px`]));
+  if (t.space.scale?.length) theme.spacing = Object.fromEntries(t.space.scale.map((n, i) => [SPACE_NAMES[i] || String(i + 1), `${n}px`]));
+  if (t.elevation?.length) theme.boxShadow = Object.fromEntries(t.elevation.map((e) => [cssName(e.name), resolveRefs(e.value, t)]));
+
+  return `// ${t.brand.name || 'Brand'} — generated from DESIGN.md. Merge into tailwind.config.js.
 module.exports = {
   theme: {
     extend: ${JSON.stringify(theme, null, 6).replace(/\n/g, '\n  ')},
@@ -154,12 +219,12 @@ export function designSkill(t: DesignTokens) {
   return {
     name: 'design',
     title: `${name} design`,
-    description: `How to make something that looks like ${name}: exact colours, type, spacing, voice, and the things we never do. Use when designing, writing UI copy, building a page, or choosing a colour.`,
+    description: `How to make something that looks like ${name}: the exact colours, typography levels, spacing, shapes, components, voice and the things we never do. Use when designing anything, writing UI copy, building a page or a graphic, or choosing a colour.`,
     instructions: toDesignMd(t),
     resources: [{
       path: 'design.json',
       content: JSON.stringify(toDesignJson(t), null, 2) + '\n',
-      purpose: 'The exact token values as JSON. Read it when you need a hex code, a font name or a size and want to be certain rather than close.',
+      purpose: 'The DESIGN.md tokens as JSON — colors, typography levels, spacing, rounded, components. Read it when you need a hex code, a font, a weight or a size and want to be certain rather than close.',
     }],
   };
 }
@@ -173,15 +238,23 @@ export function designSkill(t: DesignTokens) {
  * until a real button exists.
  */
 export function contrastRows(t: DesignTokens): { fg: string; bg: string; label: string }[] {
-  const bg = t.colors.find((c) => c.name === 'background')?.hex || '#FFFFFF';
-  const surface = t.colors.find((c) => c.name === 'surface')?.hex;
+  const at = (n: string) => t.colors.find((c) => c.name === n)?.hex;
+  const bg = at('background') || '#FFFFFF';
+  const surface = at('surface');
   const rows: { fg: string; bg: string; label: string }[] = [];
   for (const c of t.colors) {
-    if (c.name === 'background' || c.name === 'surface') continue;
+    if (c.name === 'background' || c.name === 'surface' || /^on-/.test(c.name)) continue;
     rows.push({ fg: c.hex, bg, label: `${c.name} on background` });
     if (surface) rows.push({ fg: c.hex, bg: surface, label: `${c.name} on surface` });
   }
-  const accent = t.colors.find((c) => c.name === 'accent')?.hex;
-  if (accent) rows.push({ fg: readableOn(accent), bg: accent, label: 'button label on accent' });
+  // The button label, which is the pairing that fails most often and the one
+  // nobody checks: a palette can be perfect and still ship a primary button
+  // whose text cannot be read on it. `on-primary` is used when the spec names
+  // one, so the check tests what will actually be rendered rather than what we
+  // would have picked.
+  const primary = at('primary') || at('accent');
+  if (primary) {
+    rows.push({ fg: at('on-primary') || readableOn(primary), bg: primary, label: 'label on primary' });
+  }
   return rows;
 }

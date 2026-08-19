@@ -80,6 +80,28 @@ function Chips({ label, hint, items, onChange, placeholder }: {
   );
 }
 
+/**
+ * The prose for one canonical DESIGN.md section.
+ *
+ * Sits at the FOOT of the values it describes rather than in a "notes" panel of
+ * its own: the sentence explaining why the palette is what it is only makes
+ * sense next to the palette, and a separate tab is where that sentence goes to
+ * be forgotten. Blank means the exported file writes the generated line, which
+ * is honest but generic — this is where a spec stops being a token dump.
+ */
+function Note({ value, onChange, placeholder }: {
+  value?: string; onChange: (v: string) => void; placeholder: string;
+}) {
+  return (
+    <label className="block mt-3">
+      <span className="text-3xs font-semibold uppercase tracking-wide text-tertiary">Why</span>
+      <textarea value={value || ''} onChange={(e) => onChange(e.target.value)} rows={2}
+        placeholder={placeholder} aria-label="Section note"
+        className="mt-1 w-full px-2.5 py-1.5 rounded-lg bg-surface-sunken ring-1 ring-subtle text-2xs text-primary placeholder:text-tertiary resize-y" />
+    </label>
+  );
+}
+
 export default function TokenEditor({ t, set }: {
   t: DesignTokens;
   set: (fn: (prev: DesignTokens) => DesignTokens) => void;
@@ -115,6 +137,18 @@ export default function TokenEditor({ t, set }: {
               className={`${field} mt-0.5 w-full`} />
           </label>
         </div>
+        <label className="block mt-2">
+          <span className="text-3xs text-tertiary">Description</span>
+          <input value={t.brand.description || ''} placeholder="A restrained interface style: near-black on white, one accent, space doing the work."
+            onChange={(e) => set((p) => ({ ...p, brand: { ...p.brand, description: e.target.value } }))}
+            className={`${field} mt-0.5 w-full`} />
+          <span className="mt-0.5 block text-3xs text-tertiary/90">
+            Goes in the file&apos;s frontmatter as <code className="bg-surface-hover rounded px-1">description</code> — the first
+            thing an agent reads about the feel of it.
+          </span>
+        </label>
+        <Note value={t.notes.overview} placeholder="Calm, dense and readable. Nothing decorative competes with what is on the screen."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, overview: v || undefined } }))} />
       </Section>
 
       <Section title="Colour"
@@ -168,6 +202,8 @@ export default function TokenEditor({ t, set }: {
             <Plus className="w-3 h-3" /> Add a colour
           </button>
         </div>
+        <Note value={t.notes.colors} placeholder="Nine roles, one accent. Status colours are for state, never decoration."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, colors: v || undefined } }))} />
       </Section>
 
       <Section title="Type" hint="Name the families even if the machine reading this cannot render them — the name is what a designer needs and a model can look up.">
@@ -182,50 +218,63 @@ export default function TokenEditor({ t, set }: {
           ))}
         </div>
 
-        <p className="mt-3 text-3xs font-semibold uppercase tracking-wide text-tertiary">Scale</p>
-        <p className="text-3xs text-tertiary/90">Sizes come from here. A one-off pixel value is how a scale stops being one.</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {(t.type.scale || []).map((s, i) => (
-            <span key={i} className="inline-flex items-center gap-1 rounded-lg bg-surface-sunken ring-1 ring-subtle px-1.5 py-1">
-              <input value={s.name} aria-label={`Step ${i + 1} name`}
-                onChange={(e) => set((p) => ({ ...p, type: { ...p.type, scale: (p.type.scale || []).map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) } }))}
-                className="w-12 bg-transparent text-2xs text-primary outline-none" />
-              <input type="number" value={s.px} aria-label={`Step ${i + 1} size`}
-                onChange={(e) => set((p) => ({ ...p, type: { ...p.type, scale: (p.type.scale || []).map((x, j) => (j === i ? { ...x, px: +e.target.value || 0 } : x)) } }))}
-                className="w-11 bg-transparent text-2xs text-secondary font-mono outline-none tabular-nums" />
-              <button aria-label={`Remove ${s.name}`} className="text-tertiary hover:text-danger"
-                onClick={() => set((p) => ({ ...p, type: { ...p.type, scale: (p.type.scale || []).filter((_, j) => j !== i) } }))}>
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-          <button onClick={() => set((p) => ({ ...p, type: { ...p.type, scale: [...(p.type.scale || []), { name: 'new', px: 16 }] } }))}
-            className="h-7 px-2 inline-flex items-center gap-1 rounded-lg text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover">
-            <Plus className="w-3 h-3" /> Step
+        <p className="mt-3 text-3xs font-semibold uppercase tracking-wide text-tertiary">Levels</p>
+        <p className="text-3xs text-tertiary/90">
+          A level is a size AND a weight AND a leading AND a tracking. Name them by ROLE —
+          <code className="bg-surface-hover rounded px-1 mx-0.5">h1</code>,
+          <code className="bg-surface-hover rounded px-1 mx-0.5">body-md</code>,
+          <code className="bg-surface-hover rounded px-1 mx-0.5">label</code> — because a role tells an
+          agent where to use it and a t-shirt size does not.
+        </p>
+        <div className="mt-1.5 flex flex-col gap-1">
+          <div className="hidden sm:flex items-center gap-1 px-0.5 text-3xs text-tertiary">
+            <span className="w-24 shrink-0">Level</span>
+            <span className="w-14 shrink-0">Size</span>
+            <span className="w-14 shrink-0">Weight</span>
+            <span className="w-14 shrink-0">Leading</span>
+            <span className="w-16 shrink-0">Tracking</span>
+            <span className="flex-1">Use it for</span>
+          </div>
+          {(t.type.levels || []).map((l, i) => {
+            const patch = (v: Partial<typeof l>) => set((p) => ({
+              ...p, type: { ...p.type, levels: (p.type.levels || []).map((x, j) => (j === i ? { ...x, ...v } : x)) },
+            }));
+            return (
+              <div key={i} className="flex items-center gap-1">
+                <input value={l.name} onChange={(e) => patch({ name: e.target.value })}
+                  aria-label={`Level ${i + 1} name`} placeholder="body-md"
+                  className={`${field} w-24 shrink-0 text-2xs font-mono`} />
+                <input type="number" value={l.fontSize} onChange={(e) => patch({ fontSize: +e.target.value || 0 })}
+                  aria-label={`${l.name} size`} className={`${field} w-14 shrink-0 text-2xs tabular-nums`} />
+                <input type="number" step={100} value={l.fontWeight ?? ''} placeholder="400"
+                  onChange={(e) => patch({ fontWeight: +e.target.value || undefined })}
+                  aria-label={`${l.name} weight`} className={`${field} w-14 shrink-0 text-2xs tabular-nums`} />
+                <input type="number" step={0.05} value={l.lineHeight ?? ''} placeholder="1.5"
+                  onChange={(e) => patch({ lineHeight: +e.target.value || undefined })}
+                  aria-label={`${l.name} line height`} className={`${field} w-14 shrink-0 text-2xs tabular-nums`} />
+                <input value={l.letterSpacing ?? ''} placeholder="-0.02em"
+                  onChange={(e) => patch({ letterSpacing: e.target.value || undefined })}
+                  aria-label={`${l.name} tracking`} className={`${field} w-16 shrink-0 text-2xs font-mono`} />
+                <input value={l.use ?? ''} placeholder="Page title"
+                  onChange={(e) => patch({ use: e.target.value || undefined })}
+                  aria-label={`What ${l.name} is for`} className={`${field} flex-1 min-w-0 text-2xs`} />
+                <button aria-label={`Remove ${l.name}`}
+                  onClick={() => set((p) => ({ ...p, type: { ...p.type, levels: (p.type.levels || []).filter((_, j) => j !== i) } }))}
+                  className="p-1.5 shrink-0 rounded-md text-tertiary hover:text-danger hover:bg-danger/10">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+          <button onClick={() => set((p) => ({
+            ...p, type: { ...p.type, levels: [...(p.type.levels || []), { name: 'body-md', fontSize: 15, fontWeight: 400, lineHeight: 1.55 }] },
+          }))}
+            className="self-start h-7 px-2.5 inline-flex items-center gap-1 rounded-md text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover">
+            <Plus className="w-3 h-3" /> Add a level
           </button>
         </div>
-
-        <p className="mt-3 text-3xs font-semibold uppercase tracking-wide text-tertiary">Weights</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {(t.type.weights || []).map((w, i) => (
-            <span key={i} className="inline-flex items-center gap-1 rounded-lg bg-surface-sunken ring-1 ring-subtle px-1.5 py-1">
-              <input value={w.name} aria-label={`Weight ${i + 1} name`}
-                onChange={(e) => set((p) => ({ ...p, type: { ...p.type, weights: (p.type.weights || []).map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) } }))}
-                className="w-16 bg-transparent text-2xs text-primary outline-none" />
-              <input type="number" step={100} value={w.value} aria-label={`Weight ${i + 1} value`}
-                onChange={(e) => set((p) => ({ ...p, type: { ...p.type, weights: (p.type.weights || []).map((x, j) => (j === i ? { ...x, value: +e.target.value || 400 } : x)) } }))}
-                className="w-11 bg-transparent text-2xs text-secondary font-mono outline-none tabular-nums" />
-              <button aria-label={`Remove ${w.name}`} className="text-tertiary hover:text-danger"
-                onClick={() => set((p) => ({ ...p, type: { ...p.type, weights: (p.type.weights || []).filter((_, j) => j !== i) } }))}>
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-          <button onClick={() => set((p) => ({ ...p, type: { ...p.type, weights: [...(p.type.weights || []), { name: 'bold', value: 700 }] } }))}
-            className="h-7 px-2 inline-flex items-center gap-1 rounded-lg text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover">
-            <Plus className="w-3 h-3" /> Weight
-          </button>
-        </div>
+        <Note value={t.notes.typography} placeholder="Hierarchy comes from size and colour before weight."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, typography: v || undefined } }))} />
       </Section>
 
       <Section title="Space and shape" hint="A rhythm and a corner. Two numbers that decide more of how something feels than any colour does.">
@@ -244,6 +293,9 @@ export default function TokenEditor({ t, set }: {
               className={`${field} mt-0.5 w-full font-mono text-2xs`} />
           </label>
         </div>
+
+        <Note value={t.notes.layout} placeholder="An 8px rhythm and a measure of 62–72 characters. Wider is not more generous."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, layout: v || undefined } }))} />
 
         <p className="mt-3 text-3xs font-semibold uppercase tracking-wide text-tertiary">Corner radius</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -267,6 +319,107 @@ export default function TokenEditor({ t, set }: {
             <Plus className="w-3 h-3" /> Radius
           </button>
         </div>
+        <Note value={t.notes.shapes} placeholder="One radius per element size. Mixing square and round in one view reads as a mistake."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, shapes: v || undefined } }))} />
+      </Section>
+
+      <Section title="Elevation"
+        hint="What a shadow MEANS here. A shadow on something that cannot move is a lie, so a brand with no shadows says so rather than leaving the section blank.">
+        <div className="flex flex-col gap-1">
+          {(t.elevation || []).map((e, i) => {
+            const patch = (v: Partial<typeof e>) => set((p) => ({ ...p, elevation: p.elevation.map((x, j) => (j === i ? { ...x, ...v } : x)) }));
+            return (
+              <div key={i} className="flex items-center gap-1">
+                <span className="w-12 h-8 shrink-0 rounded-md bg-surface ring-1 ring-subtle"
+                  style={{ boxShadow: e.value }} aria-hidden />
+                <input value={e.name} onChange={(ev) => patch({ name: ev.target.value })}
+                  aria-label={`Shadow ${i + 1} name`} placeholder="md"
+                  className={`${field} w-16 shrink-0 text-2xs font-mono`} />
+                <input value={e.value} onChange={(ev) => patch({ value: ev.target.value })}
+                  aria-label={`${e.name} value`} placeholder="0 4px 12px rgb(0 0 0 / 0.08)"
+                  className={`${field} flex-1 min-w-0 text-2xs font-mono`} />
+                <input value={e.use ?? ''} onChange={(ev) => patch({ use: ev.target.value || undefined })}
+                  aria-label={`What ${e.name} is for`} placeholder="Cards and popovers"
+                  className={`${field} flex-1 min-w-0 text-2xs`} />
+                <button aria-label={`Remove ${e.name}`}
+                  onClick={() => set((p) => ({ ...p, elevation: p.elevation.filter((_, j) => j !== i) }))}
+                  className="p-1.5 shrink-0 rounded-md text-tertiary hover:text-danger hover:bg-danger/10">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+          <button onClick={() => set((p) => ({ ...p, elevation: [...p.elevation, { name: 'md', value: '0 4px 12px rgb(0 0 0 / 0.08)', use: '' }] }))}
+            className="self-start h-7 px-2.5 inline-flex items-center gap-1 rounded-md text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover">
+            <Plus className="w-3 h-3" /> Add a level
+          </button>
+          {!t.elevation?.length && (
+            <p className="text-3xs text-tertiary">
+              None declared. That is a valid answer and the exported file will state it — depth from
+              tone and space is a real choice, and print-minded work should make it out loud.
+            </p>
+          )}
+        </div>
+        <Note value={t.notes.elevation} placeholder="Depth emerges through tonal layering rather than shadow."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, elevation: v || undefined } }))} />
+      </Section>
+
+      <Section title="Components"
+        hint="The section an agent copies most literally. Values can be literals (12px) or references to your own tokens — {colors.primary}, {rounded.md}, {spacing.lg}.">
+        <div className="flex flex-col gap-2">
+          {(t.components || []).map((c, i) => {
+            const setC = (v: Partial<typeof c>) => set((p) => ({ ...p, components: p.components.map((x, j) => (j === i ? { ...x, ...v } : x)) }));
+            return (
+              <div key={i} className="rounded-lg bg-surface-sunken ring-1 ring-subtle p-2">
+                <div className="flex items-center gap-1">
+                  <input value={c.name} onChange={(e) => setC({ name: e.target.value })}
+                    aria-label={`Component ${i + 1} name`} placeholder="button-primary"
+                    className={`${field} flex-1 min-w-0 text-2xs font-mono`} />
+                  <button aria-label={`Remove ${c.name}`}
+                    onClick={() => set((p) => ({ ...p, components: p.components.filter((_, j) => j !== i) }))}
+                    className="p-1.5 shrink-0 rounded-md text-tertiary hover:text-danger hover:bg-danger/10">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="mt-1 flex flex-col gap-1">
+                  {c.props.map((pr, k) => (
+                    <div key={k} className="flex items-center gap-1">
+                      <input value={pr.key} aria-label={`Property ${k + 1}`} placeholder="backgroundColor"
+                        onChange={(e) => setC({ props: c.props.map((x, m) => (m === k ? { ...x, key: e.target.value } : x)) })}
+                        className={`${field} w-36 shrink-0 text-2xs font-mono`} />
+                      <input value={pr.value} aria-label={`${pr.key} value`} placeholder="{colors.primary}"
+                        onChange={(e) => setC({ props: c.props.map((x, m) => (m === k ? { ...x, value: e.target.value } : x)) })}
+                        className={`${field} flex-1 min-w-0 text-2xs font-mono`} />
+                      <button aria-label={`Remove ${pr.key}`}
+                        onClick={() => setC({ props: c.props.filter((_, m) => m !== k) })}
+                        className="p-1 shrink-0 rounded-md text-tertiary hover:text-danger">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => setC({ props: [...c.props, { key: '', value: '' }] })}
+                    className="self-start h-6 px-2 inline-flex items-center gap-1 rounded-md text-3xs font-semibold text-tertiary ring-1 ring-subtle hover:bg-surface-hover">
+                    <Plus className="w-3 h-3" /> Property
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          <button onClick={() => set((p) => ({
+            ...p,
+            components: [...p.components, { name: 'button-primary', props: [
+              { key: 'backgroundColor', value: '{colors.primary}' },
+              { key: 'textColor', value: '{colors.on-primary}' },
+              { key: 'rounded', value: '{rounded.md}' },
+              { key: 'padding', value: '10px 16px' },
+            ] }],
+          }))}
+            className="self-start h-7 px-2.5 inline-flex items-center gap-1 rounded-md text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover">
+            <Plus className="w-3 h-3" /> Add a component
+          </button>
+        </div>
+        <Note value={t.notes.components} placeholder="A secondary button is an outline, never a second filled colour."
+          onChange={(v) => set((p) => ({ ...p, notes: { ...p.notes, components: v || undefined } }))} />
       </Section>
 
       <Section title="Voice" hint="The part no PDF carries and no model can infer. It is also the part that makes generated copy sound like you rather than like everyone.">

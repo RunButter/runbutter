@@ -9,6 +9,7 @@ import { zipSync } from '@/lib/plugins/zip';
 import TokenEditor from '@/components/design/TokenEditor';
 import DesignPreview from '@/components/design/DesignPreview';
 import BrandIntake, { type IntakePatch } from '@/components/design/BrandIntake';
+import PresetPicker from '@/components/design/PresetPicker';
 
 /**
  * The studio itself — intake, editor, preview, export.
@@ -27,7 +28,7 @@ import BrandIntake, { type IntakePatch } from '@/components/design/BrandIntake';
  */
 
 export default function DesignStudio({
-  t, set, logoUrl, onLogo, intro, sidebar,
+  t, set, logoUrl, onLogo, intro, sidebar, presetsDense,
 }: {
   t: DesignTokens;
   set: (fn: (prev: DesignTokens) => DesignTokens) => void;
@@ -37,6 +38,8 @@ export default function DesignStudio({
   intro?: React.ReactNode;
   /** Anything only one of the two pages has: saving, publishing to agents. */
   sidebar?: React.ReactNode;
+  /** Collapse the style picker — right where a workspace already has a spec. */
+  presetsDense?: boolean;
 }) {
   const [note, setNote] = useState('');
   // The uploaded logo lives in the tab: bytes for the zip, an object URL for
@@ -120,6 +123,12 @@ export default function DesignStudio({
       <div className="card-surface p-4">
         {intro}
         <div className={intro ? 'mt-3' : ''}><BrandIntake onLogo={takeLogo} onApply={applyPatch} /></div>
+        {/* Below the uploads, not above: somebody with a logo and a brand PDF
+            should be offered the accurate route first. A style is what you
+            reach for when you do not have one. */}
+        <div className="mt-4 pt-4 border-t border-subtle">
+          <PresetPicker current={t} onPick={(next) => set(() => next)} dense={presetsDense} />
+        </div>
       </div>
 
       <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 items-start">

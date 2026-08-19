@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, FolderTree } from 'lucide-react';
+import { Suspense } from 'react';
 import BrandStudioClient from '@/components/design/BrandStudioClient';
+import { PRESETS } from '@/lib/design/presets';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
 import { SITE_URL } from '@/lib/site';
 
@@ -90,8 +92,68 @@ export default function BrandPage() {
         </div>
       </section>
 
+      {/* `useSearchParams` inside the studio needs a boundary, or the whole
+          page opts out of static rendering — and this page's job is to be a
+          fast, crawlable answer to "what does a DESIGN.md look like". */}
       <section className="max-w-[1600px] mx-auto px-6 py-14 md:py-20">
-        <BrandStudioClient />
+        <Suspense fallback={<div className="h-96 rounded-2xl ring-1 ring-subtle bg-surface-sunken" />}>
+          <BrandStudioClient />
+        </Suspense>
+      </section>
+
+      {/* ── The gallery ─────────────────────────────────────────────────────
+          In the HTML, above the fold of the explanatory prose: somebody who
+          arrived asking what a DESIGN.md looks like wants to SEE six, not read
+          about the concept. Each links to its own page, which is what makes
+          them findable at all. */}
+      <section className="border-t border-subtle bg-surface-sunken">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
+          <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Or start from a style</h2>
+          <p className="text-secondary mt-3 leading-relaxed max-w-2xl">
+            Six complete specs — colours with roles, typography levels with weight and tracking,
+            spacing, shapes, components, voice and a don&apos;t list. Free to copy, and each one opens
+            in the builder so you can make it yours.
+          </p>
+          <div className="mt-7 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PRESETS.map((p) => {
+              const t = p.tokens;
+              const at = (n: string) => t.colors.find((c) => c.name === n)?.hex;
+              const bg = at('background') || '#FFFFFF';
+              const fg = at('foreground') || '#111111';
+              const display = t.type.levels?.find((l) => l.name === 'display') || t.type.levels?.[0];
+              return (
+                <Link key={p.id} href={`/brand/style/${p.id}`}
+                  className="rounded-xl ring-1 ring-subtle overflow-hidden bg-surface hover:ring-strong transition-shadow">
+                  <div style={{ background: bg, padding: '20px 18px 18px' }}>
+                    <div style={{
+                      fontFamily: t.type.heading ? `"${t.type.heading}", sans-serif` : 'system-ui, sans-serif',
+                      fontSize: 26, lineHeight: 1.02, color: fg,
+                      fontWeight: display?.fontWeight ?? 600, letterSpacing: display?.letterSpacing,
+                    }}>{p.label}</div>
+                    <div style={{
+                      fontFamily: t.type.body ? `"${t.type.body}", sans-serif` : 'system-ui, sans-serif',
+                      fontSize: 12.5, color: at('muted') || '#6B7280', marginTop: 6, lineHeight: 1.5,
+                    }}>{t.brand.tagline}</div>
+                    <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
+                      {t.colors.slice(0, 7).map((c) => (
+                        <span key={c.name} style={{
+                          width: 16, height: 16, borderRadius: 4, background: c.hex,
+                          boxShadow: 'inset 0 0 0 1px rgb(0 0 0 / 0.1)',
+                        }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-2xs text-secondary leading-snug">{p.blurb}</p>
+                    <p className="mt-1.5 text-3xs text-tertiary font-mono truncate">
+                      {[t.type.heading, t.type.body].filter(Boolean).join(' · ')} · {t.type.levels?.length} levels
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       {/* ── What you just made ─────────────────────────────────────────────

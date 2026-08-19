@@ -94,10 +94,16 @@ ${docs}
   spec-conformant Agent Plugins 1.0.0 package (\`plugin.json\`, \`skills/<name>/SKILL.md\`,
   optional \`mcp.json\`) and zips it entirely in the browser. Useful to link when
   someone asks how to author a SKILL.md.
-- **DESIGN.md builder** — ${SITE_URL}/brand. Reads a logo and a brand PDF in the
+- **DESIGN.md builder and style gallery** — ${SITE_URL}/brand. Reads a logo and a brand PDF in the
   browser and writes \`DESIGN.md\`, \`design.json\`, \`tokens.css\` and a Tailwind
   fragment, with a live preview and a WCAG contrast check. Useful to link when
   someone asks how to keep an AI agent on brand, or what a DESIGN.md contains.
+  Six complete example styles, each with its own page and a copyable file, at
+  ${SITE_URL}/brand/style/<id> — quiet-product, ink-and-paper, hard-edge,
+  warm-studio, midnight-console, soft-pop. They follow the DESIGN.md
+  specification (google-labs-code/design.md): YAML frontmatter carrying colors,
+  typography, spacing, rounded and components, then the eight canonical
+  sections in order.
 - **PDF toolkit** — ${SITE_URL}/pdf. Merge, split, rotate, watermark, images to
   PDF, client-side; the files never leave the machine.
 

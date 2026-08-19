@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { abs } from '@/lib/site';
 import { ALL_DOC_SLUGS } from '@/lib/docs-nav';
+import { PRESETS } from '@/lib/design/presets';
 
 export const dynamic = 'force-static';
 
@@ -54,6 +55,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency,
       priority,
+    })),
+    // One page per DESIGN.md style, GENERATED from the same array the gallery
+    // and the builder read. A hand-kept list of routes goes stale silently and
+    // then advertises 404s, which is worse than having none.
+    ...PRESETS.map((p) => ({
+      url: abs(`/brand/style/${p.id}`),
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     })),
     // `index` is the /developers root, already listed above — including it
     // again would advertise two URLs for one page.
