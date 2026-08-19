@@ -5,7 +5,8 @@ import { ArrowRight } from 'lucide-react';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
 import FormatTabs from '@/components/design/FormatTabs';
 import StyleHero from '@/components/design/StyleHero';
-import { PRESETS, findPreset } from '@/lib/design/presets';
+import { PRESETS, findPreset, type Preset } from '@/lib/design/presets';
+import { getPublishedStyle } from '@/lib/design/library-server';
 import { SITE_URL } from '@/lib/site';
 
 /**
@@ -27,8 +28,38 @@ export function generateStaticParams() {
   return PRESETS.map((p) => ({ id: p.id }));
 }
 
-export function generateMetadata({ params }: { params: { id: string } }): Metadata {
-  const p = findPreset(params.id);
+// Published styles are rendered on demand and cached. `dynamicParams` is the
+// default, and it is what lets one URL space hold both the six that ship and
+// everything the library grows — `reserved_design_slug` is why a published
+// style can never claim a built-in's URL.
+export const revalidate = 300;
+
+/**
+ * A built-in first, then the library.
+ *
+ * That ORDER is the safety property, and it is the same one the CRUD monolith
+ * uses for custom objects: a curated style can never be shadowed by something
+ * somebody published, whatever they called it.
+ */
+async function resolve(id: string): Promise<Preset | null> {
+  const built = findPreset(id);
+  if (built) return built;
+  const row = await getPublishedStyle(id);
+  if (!row) return null;
+  return {
+    id: row.slug,
+    label: row.name,
+    group: (['Product', 'Marketing', 'Editorial', 'Studio'].includes(row.group_key)
+      ? row.group_key : 'Studio') as Preset['group'],
+    blurb: row.blurb || '',
+    essence: row.essence || '',
+    tokens: row.tokens,
+    published: { author: row.author, authorUrl: row.author_url, at: row.created_at },
+  };
+}
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const p = await resolve(params.id);
   if (!p) return { title: 'Style not found — RunButter' };
   const title = `${p.label} — a free DESIGN.md style`;
   const description = `${p.essence} ${p.blurb} Copy the DESIGN.md, Tailwind v4 theme, CSS variables and design.json — free, no account.`;
@@ -40,11 +71,12 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
   };
 }
 
-export default function StylePage({ params }: { params: { id: string } }) {
-  const preset = findPreset(params.id);
+export default async function StylePage({ params }: { params: { id: string } }) {
+  const preset = await resolve(params.id);
   if (!preset) notFound();
   const t = preset.tokens;
   const others = PRESETS.filter((p) => p.id !== preset.id).slice(0, 3);
+  const pub = preset.published;
 
   return (
     <div className="min-h-screen bg-canvas text-primary antialiased">
@@ -56,10 +88,23 @@ export default function StylePage({ params }: { params: { id: string } }) {
           {/* The metaphor first, at headline size. A style is a FEELING before
               it is a token list, and somebody deciding whether this is theirs
               decides on that line rather than on the hex codes. */}
-          <p className="mt-4 text-2xs font-mono uppercase tracking-widest text-tertiary">{preset.group}</p>
+          <p className="mt-4 text-2xs font-mono uppercase tracking-widest text-tertiary">
+            {preset.group}{pub && ' · published'}
+          </p>
           <h1 className="mt-2 text-4xl md:text-5xl font-medium tracking-[-0.03em] leading-[1.05]">{preset.label}</h1>
           <p className="mt-4 text-xl md:text-2xl text-secondary leading-snug max-w-2xl">{preset.essence}</p>
           <p className="mt-4 text-sm text-tertiary leading-relaxed max-w-2xl">{t.brand.description}</p>
+          {pub?.author && (
+            <p className="mt-3 text-sm text-tertiary">
+              by{' '}
+              {pub.authorUrl
+                // nofollow ugc: the ONE field on this page that becomes a link,
+                // and it was typed by whoever published. A dofollow link from an
+                // indexed page is the payload every spam submission is after.
+                ? <a href={pub.authorUrl} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-secondary hover:underline">{pub.author}</a>
+                : <span className="text-secondary">{pub.author}</span>}
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap gap-1.5">
             {[
               ...[t.type.heading, t.type.body].filter(Boolean) as string[],

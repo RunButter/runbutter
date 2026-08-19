@@ -45,6 +45,13 @@ export interface Preset {
    */
   essence: string;
   tokens: DesignTokens;
+  /**
+   * Set only for a style that came out of the public library, never for one
+   * that ships. The style PAGE takes both shapes so there is one renderer
+   * rather than two that drift — a published spec deserves the same page the
+   * curated ones get, or publishing is a lesser thing than it looks.
+   */
+  published?: { author?: string | null; authorUrl?: string | null; at?: string };
 }
 
 // ── A compact way to write one ──────────────────────────────────────────────

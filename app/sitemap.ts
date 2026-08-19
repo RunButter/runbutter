@@ -42,6 +42,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // answers ('brand tokens from a logo', 'DESIGN.md for AI') is one nobody
     // else answers, and whoever types it is exactly who this is for.
     ['/brand', 0.8, 'monthly'],
+    // The published library. Its entries are found by FOLLOWING links from this
+    // page rather than enumerated here — a build-time sitemap of database rows
+    // is stale the moment somebody publishes, and a stale sitemap advertises
+    // pages that do not exist yet as readily as it lists ones that do.
+    ['/brand/library', 0.7, 'daily'],
     ['/pdf', 0.7, 'monthly'],
     ['/contact', 0.4, 'yearly'],
     ['/privacy', 0.3, 'yearly'],

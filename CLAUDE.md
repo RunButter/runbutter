@@ -26,7 +26,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `supabase/schema.sql`.
 - **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
-  owner). 0125 (design spec) and 0126 (the remaining plan limits) are NEW and pending.** Do not take any of that on trust when
+  owner). 0125 (design spec), 0126 (the remaining plan limits) and 0127 (the public style library)
+  are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -1120,6 +1121,27 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
     database client. 604 kB → 122 kB. Watch for this whenever a `use client` lib is shared with a
     marketing route.
 - **The remaining plan limits (0126)** — see item 2 below.
+- **The public style library (0127)** — publish a spec from the studio; it lands at
+  `/brand/library` and `/brand/style/<slug>`.
+  - **The published row is a frozen SNAPSHOT of the tokens, never a pointer to
+    `workspaces.design_tokens`, and must not become one.** Editing a draft must not rewrite a page
+    strangers bookmarked, and a public route reading a tenant's live row is one scoping bug from
+    serving an unlaunched brand. Same call the shareable-dashboards design makes.
+  - Reads are **server components using the service role**, so NOTHING was added to `keep_public` —
+    fewer anon-reachable DEFINER functions is strictly better, and 0105 exists because that list
+    grew by accident for sixty migrations. Only the three WRITE/own-list functions are in
+    `/api/rpc`'s ALLOWED.
+  - `/brand/style/<slug>` resolves a **built-in FIRST, the library second**, and
+    `reserved_design_slug` refuses the six names at publish time — the ordering is the safety
+    property, exactly as with custom objects in the CRUD monolith.
+  - Publishing needs an account and is capped at 10/workspace: that IS the moderation. `author_url`
+    is the only field that becomes a link, so it is http/https-only in SQL and `rel="nofollow ugc"`
+    on the page.
+  - A library outage renders an **empty state, never a 500** — `listPublishedStyles` returns `[]` on
+    any failure and the page says nobody has published one yet.
+  - **A SQL-language function body is validated at CREATE**, so `design_slugify` had to be defined
+    *after* the `unaccent_or_self` helper it calls; the first ordering rolled the whole migration
+    back.
 
 **The three things to pick up, in order:**
 1. **Investor update.** A newsletter template that pulls runway, revenue trend and pipeline movement,
@@ -1144,10 +1166,12 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0125 and 0126.** 0125 adds `workspaces.design_tokens` + `get/save_design_tokens` — without
+- **Run 0125, 0126 and 0127.** 0125 adds `workspaces.design_tokens` + `get/save_design_tokens` — without
   it Marketing → Design works but cannot save, and says so rather than failing silently. 0126
   enforces the five plan limits nothing was reading and adds `get_plan_usage`; without it the
-  pricing page keeps promising numbers nothing checks.
+  pricing page keeps promising numbers nothing checks. 0127 adds `design_styles` + the publish/read
+  functions; without it the studio's Share panel says so rather than failing silently, and
+  `/brand/library` renders its empty state.
 - ~~Run migrations 0103–0107~~ — **ALL APPLIED AND VERIFIED against production (2026-08-14)**, by
   probing `pg_proc` rather than believing a report: 0 anon-callable DEFINER functions (was 69),
   `service_role` still holds the CRUD monolith so `/api/rpc` is unaffected, `builtin_extras_write`

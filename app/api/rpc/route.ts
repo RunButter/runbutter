@@ -121,6 +121,11 @@ const ALLOWED = new Set([
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',
+  // The public style library (0127). The two READ functions are absent on
+  // purpose — the gallery and the style pages are server components that call
+  // them with the service role, so no browser needs them and no anon grant is
+  // required. list/get here would only widen the surface for nothing.
+  'publish_design_style', 'unpublish_design_style', 'list_my_design_styles',
   // Cap table (0122). simulate_round writes nothing — it is a model, and the
   // separation is the same one /api/workspace/build makes.
   'get_cap_table', 'simulate_round', 'list_cap_holders', 'save_cap_holder',

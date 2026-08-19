@@ -102,6 +102,32 @@ don't-list. A preset that only filled in colours would teach people that a
 DESIGN.md is a palette, which is exactly the misunderstanding that makes
 hand-written ones useless.
 
+## Publishing it
+
+Made something good? **Share it publicly** in the studio turns your spec into a
+page anyone can read and copy, listed at
+[`/brand/library`](https://runbutter.app/brand/library) with its own URL under
+`/brand/style/…`.
+
+Three things about it are deliberate:
+
+- **It is a snapshot, not a link.** The public page holds a *copy* of the tokens
+  as they were when you pressed publish. Carrying on editing does not touch it
+  until you press Update. That is right on its own terms — a page strangers have
+  bookmarked should not change because you were experimenting on a Tuesday — and
+  it is also the security property: a public route that read a workspace's live
+  row would be one scoping bug away from serving a brand nobody has launched yet.
+- **It needs an account.** Anonymous publishing to an indexed page is a spam
+  funnel. A workspace member can publish, the workspace is credited, and ten per
+  workspace is the ceiling. The free tool at `/brand` deliberately cannot
+  publish — it has no workspace to publish from.
+- **Taking it down is immediate and total.** The row is deleted, not flagged, and
+  the link 404s. Nothing you have in the studio is affected.
+
+A published style can never claim a built-in's URL: the six that ship are
+resolved first and their slugs are reserved at publish time, so a collision is
+impossible rather than merely unlikely.
+
 ## Moves
 
 Exploring is the actual work, and it is the part people abandon: "warmer" by

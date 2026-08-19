@@ -103,7 +103,8 @@ ${docs}
   warm-studio, midnight-console, soft-pop. They follow the DESIGN.md
   specification (google-labs-code/design.md): YAML frontmatter carrying colors,
   typography, spacing, rounded and components, then the eight canonical
-  sections in order.
+  sections in order. Specs published by other people are at
+  ${SITE_URL}/brand/library, each on its own page under /brand/style/.
 - **PDF toolkit** — ${SITE_URL}/pdf. Merge, split, rotate, watermark, images to
   PDF, client-side; the files never leave the machine.
 

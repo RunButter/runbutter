@@ -154,6 +154,7 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
         // search for "how to write a SKILL.md" will never be.
         { label: 'Skill builder', href: '/plugins' },
         { label: 'DESIGN.md builder', href: '/brand' },
+        { label: 'Design style library', href: '/brand/library' },
         { label: 'PDF toolkit', href: '/pdf' },
         { label: 'Password generator', href: '/password' },
         { label: 'AI cost calculator', href: '/ai-cost' },

@@ -108,7 +108,12 @@ export default function BrandPage() {
           them findable at all. */}
       <section className="border-t border-subtle bg-surface-sunken">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
-          <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Or start from a style</h2>
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <h2 className="text-2xl md:text-3xl font-medium tracking-tight">Or start from a style</h2>
+            <Link href="/brand/library" className="text-sm text-secondary hover:text-primary inline-flex items-center gap-1">
+              Styles people published <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
           <p className="text-secondary mt-3 leading-relaxed max-w-2xl">
             Six complete specs — colours with roles, typography levels with weight and tracking,
             spacing, shapes, components, voice and a don&apos;t list. Free to copy, and each one opens
@@ -235,6 +240,9 @@ export default function BrandPage() {
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link href="/auth/register" className="inline-flex items-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">
                 Start free <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link href="/brand/library" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle bg-surface text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
+                Browse the library
               </Link>
               <Link href="/plugins" className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md border border-subtle bg-surface text-primary text-sm font-medium hover:bg-surface-hover transition-colors">
                 Build an agent skill

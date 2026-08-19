@@ -11,6 +11,7 @@ import type { DesignTokens } from '@/lib/design/tokens';
 import { loadDesign, saveDesign, seedFrom } from '@/lib/design/store';
 import { designSkill } from '@/lib/design/export';
 import DesignStudio from '@/components/design/DesignStudio';
+import PublishPanel from '@/components/design/PublishPanel';
 
 /**
  * The design studio, signed in.
@@ -144,6 +145,7 @@ export default function DesignPage() {
               </>
             }
             sidebar={
+              <>
               <div className="card-surface p-4">
                 <h2 className="text-sm font-medium text-primary">Give it to the agents</h2>
                 <p className="mt-0.5 text-2xs text-tertiary">
@@ -157,6 +159,12 @@ export default function DesignPage() {
                   Save as a skill
                 </button>
               </div>
+              {/* Publishing is a workspace act, so it lives here rather than in
+                  the shared studio: the free tool at /brand has nowhere to
+                  publish FROM, and an account is what keeps the library from
+                  being a spam funnel. */}
+              <PublishPanel privy={privy} ws={ws.id} tokens={t} />
+              </>
             }
           />
         </div>
