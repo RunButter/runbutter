@@ -24,9 +24,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state: 0001–0104 verified applied against production (2026-08-14, through the Supabase
-  connector — read from `pg_proc`, not taken on trust). 0105 and 0106 are NEW and pending, and
-  0105 is a SECURITY fix — see Owner actions.** Do not take any of that on trust when
+- **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
+  Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
+  owner). 0125 (design spec) and 0126 (the remaining plan limits) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -1095,15 +1095,44 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
   a body at creation, and `loadNavActivity` swallows its own error), so the symptom was an ABSENCE:
   the nav badge counts had never once appeared. **0107** fixes it.
 
+**Shipped this session (0125, 0126 — both PENDING on production):**
+- **The design spec (0125)** — `Marketing → Design`, and free/public at **`/brand`**.
+  `lib/design/*` is pure (zero network, no Node APIs), so both pages render ONE
+  `components/design/DesignStudio`; the signed-in one adds saving and publishing to agents.
+  - **A brand spec is TWO layers and almost every hand-written DESIGN.md is only the second.**
+    Deterministic (hex, fonts, scale — a model must never guess these) and judgement (what each
+    colour is FOR, voice, the never-list). The exported file puts the values in a fenced JSON block
+    to be lifted verbatim, prose underneath. That is why a spec derived from a PDF alone "needs
+    tinkering" — it is all layer one, re-derived differently on every run.
+  - **Colours come from the MODAL EXACT PIXEL, canvas smoothing OFF.** Quantising is the textbook
+    approach and shifts a flat brand colour by up to eight per channel; buckets only GROUP and each
+    reports its most common exact member. An SVG is read as TEXT first — `fill="#0A2540"` is what
+    the designer typed. **Pantone and CMYK are NAMED, never converted** (no free lookup;
+    device-dependent) and fonts come from a WHITELIST, because an invented font name in a file whose
+    purpose is to be believed literally is worse than none.
+  - Four generated files, four readers, one source: `DESIGN.md`, `design.json`, `tokens.css`,
+    `tailwind.tokens.js`. Plus an Agent Plugins 1.0 zip — a design spec is a SKILL, not a new file
+    type, because the spec defines one place instructions live and `check:plugin` gates that shape.
+  - `get_design` is a READ-only agent tool and answers a missing spec with a WARNING, never `{}` —
+    a model handed an empty object reads it as "this brand has no rules".
+  - **`normalizeTokens` had to move out of `lib/design/store.ts` into `tokens.ts`**: store imports
+    `lib/rpc` → supabase-js, so the public page whose whole pitch is "talks to no server" shipped the
+    database client. 604 kB → 122 kB. Watch for this whenever a `use client` lib is shared with a
+    marketing route.
+- **The remaining plan limits (0126)** — see item 2 below.
+
 **The three things to pick up, in order:**
 1. **Investor update.** A newsletter template that pulls runway, revenue trend and pipeline movement,
    drafted by the copilot from real numbers rather than a blank page, reviewed before it sends. It is
    the monthly chore every founder hates and the one feature people tell each other about. The
    primitives all exist — this is assembly, not new machinery.
-2. **Plan enforcement.** `maxRecords`, `maxSeats`, `maxAutomations` and `maxESignPerMonth` are
-   DISPLAYED AND NOT ENFORCED, and `audit_log` is sold on Enterprise with no table behind it. This is
-   revenue sitting in code that is already written; no new feature converts as well as making the
-   paywall real.
+2. ~~**Plan enforcement**~~ — **done. 0108 did `maxRecords`; 0126 did the other five** (seats,
+   positions, candidates, automations, e-signatures per month) plus the hole in the first: deals and
+   orders were records nobody counted, because both have dedicated RPCs rather than a branch of
+   `create_record`, which is where the guard sits. **A limit enforced in ONE function is enforced
+   only for the paths that go through it** — check every writer when adding one. Settings → Plans
+   draws the usage from `get_plan_usage`, the SAME function the enforcement reads.
+   **`audit_log` is still sold on Enterprise with no table behind it.** That is what remains here.
 3. **Shareable dashboards** (the Dune-style ask). The architecture decision is settled and is the
    whole feature: **publish a frozen SNAPSHOT, never a live query.** A link that runs a query means
    any bug in that path is a tenant-wide breach; a link that serves a stored JSON blob computed at
@@ -1115,6 +1144,10 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0125 and 0126.** 0125 adds `workspaces.design_tokens` + `get/save_design_tokens` — without
+  it Marketing → Design works but cannot save, and says so rather than failing silently. 0126
+  enforces the five plan limits nothing was reading and adds `get_plan_usage`; without it the
+  pricing page keeps promising numbers nothing checks.
 - ~~Run migrations 0103–0107~~ — **ALL APPLIED AND VERIFIED against production (2026-08-14)**, by
   probing `pg_proc` rather than believing a report: 0 anon-callable DEFINER functions (was 69),
   `service_role` still holds the CRUD monolith so `/api/rpc` is unaffected, `builtin_extras_write`
