@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound, CalendarDays, LineChart, PieChart } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound, CalendarDays, LineChart, PieChart, Palette, ShoppingCart, Cable } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
@@ -37,8 +37,8 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
 // throughout — no hue.
-// 27 tiles, five of them spanning two columns: exactly 32 cells, so the
-// 4-column grid fills eight clean rows with no ragged gap at the end. Keep that
+// 30 tiles, six of them spanning two columns: exactly 36 cells, so the
+// 4-column grid fills nine clean rows with no ragged gap at the end. Keep that
 // arithmetic true when editing — an odd tile leaves a hole in the last row.
 // The sum is `tiles + wideTiles`, and it has to stay a multiple of four; adding
 // one wide tile therefore costs two normal ones, not zero.
@@ -79,6 +79,11 @@ const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: stri
   { icon: CalendarDays, name: 'One company calendar', body: 'Invoices due, interviews, scheduled posts, campaign windows and bookings — on one grid, from one query.', wide: true },
   { icon: LineChart, name: 'Cash forecast', body: 'Hire two people, lose your biggest client, get paid three weeks late. Watch what happens to the money.' },
   { icon: KeyRound, name: 'Encrypted team vault', body: 'Shared logins your own server cannot read. Free password generator, no account.', href: '/password', cta: 'Open the generator' },
+  // Wide, because "your AI stays on brand" is the claim everyone makes and
+  // nobody explains. The sentence has to say HOW.
+  { icon: Palette, beam: true, name: 'A design spec your AI actually follows', body: 'Upload a logo and your brand PDF — the exact hex codes, fonts and rules come out. Live preview, contrast checked, exported as DESIGN.md, CSS and a skill every agent carries.', wide: true },
+  { icon: ShoppingCart, name: 'Orders and stock', body: 'Products, line items, and a shelf that moves when an order ships.' },
+  { icon: Cable, name: 'One-click connectors', body: 'Zapier, Make, n8n, Slack. Pick the app, paste one URL, choose what to be told about.' },
 ];
 
 // Prices, names and limits are DERIVED from lib/plans.ts — the same file that
@@ -144,6 +149,7 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
   { q: 'My team lives in Excel. Do we have to stop?', a: 'No, and there are two ways to keep working the way you already do. The simple one is a live link you paste into Excel once (Data → Get Data → From Web); after that, Refresh All pulls today’s numbers, and the link is read-only so it cannot change anything. The second is a real two-way sync with a workbook in OneDrive or SharePoint: edits people make in the sheet come back into RunButter, and the sheet is refreshed to match. Rows you delete in Excel are never deleted here — a filter or a sort looks identical to a deletion over Microsoft’s API, so deleting stays something you do deliberately in the app.' },
   { q: 'Is there a calendar?', a: 'One, over everything. Invoices due, bills to pay, issue deadlines, scheduled posts and newsletters, campaign start and end dates, interviews and Cal.com bookings all appear on the same grid — not because they were synced from five apps, but because they are rows in one database. Money coming in and money going out are deliberately different colours. It reads only: an interview is still created in Hiring, a post is still scheduled in Marketing.' },
   { q: 'Where do we keep shared passwords?', a: 'In the vault, and the point of it is that we cannot read it. The registrar login, the analytics account, the shared social inbox — they normally live in a spreadsheet, because buying a fifth subscription to hold six passwords is a worse trade. Items here are encrypted in your browser with a key built from a workspace passphrase that is never sent anywhere, so the database holds ciphertext and no title column. There is no reset, which is what makes the rest of that sentence true. It is not a replacement for 1Password — no per-user keys, no browser extension — it replaces the spreadsheet.' },
+  { q: 'How do I stop AI writing off-brand?', a: 'Give it the spec instead of hoping. Marketing → Design reads your logo and your brand PDF in the browser and pulls out the exact hex codes, font names, sizes and the rules — no retyping, nothing uploaded. You see it applied to a real page, a real product screen and a WCAG contrast table before you save. It exports as DESIGN.md for Claude Code, Cursor or Copilot, as design.json, as CSS custom properties and as a Tailwind fragment, and it saves as a skill every agent in the workspace carries. Pantone and CMYK are named rather than converted, because a hex guessed from either is an invented number.' },
   { q: 'Is my data private and secure?', a: 'Every workspace is isolated and access runs through audited server-side functions that verify your session token. Analytics are first-party and cookieless.' },
   { q: 'How does the Google Calendar integration work?', open: true, a: 'It is optional, and connected per recruiter. Link your own Google account and RunButter creates a calendar event for each interview you schedule, generates a Google Meet link, invites the candidate, and emails them the details, then keeps the event in sync if you reschedule or cancel. It only touches events RunButter creates; it never reads the rest of your calendar, and you can disconnect at any time.' },
 ];
@@ -151,12 +157,12 @@ const FAQ: { q: string; a: string; open?: boolean }[] = [
 // The full inventory, grouped by module. Grouped chunks rather than one long
 // flat list: a buyer scans for the module they care about, not 35 bullets.
 const INCLUDED: { group: string; items: string[] }[] = [
-  { group: 'Sales', items: ['Deal pipeline', 'Companies and people', 'Product catalogue', 'Offers, accepted to invoice', 'VAT and NIP autofill'] },
+  { group: 'Sales', items: ['Deal pipeline', 'Companies and people', 'Product catalogue', 'Orders and stock levels', 'Offers, accepted to invoice', 'VAT and NIP autofill'] },
   { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'Collections KPIs and AR ageing', 'Cash forecast with scenarios', 'Cap table and dilution', 'Multi-currency reporting', 'E-signatures', 'KSeF e-invoicing'] },
   { group: 'Marketing', items: ['Campaigns and budgets', 'Newsletters with AI drafting', 'Live segments and lead scoring', 'Drip sequences', 'Post studio with real previews', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Goals, funnels and live visitors', 'Source attribution'] },
   { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar', 'Mind maps and content boards'] },
   { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
-  { group: 'Platform', items: ['Custom record types', 'AI workspace builder', 'AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'PDF toolkit, in the browser', 'Company calendar', 'Encrypted team vault', 'Password generator', 'Sanctions screening (OFAC)', 'Roles and permissions', 'GDPR controls'] },
+  { group: 'Platform', items: ['Custom record types', 'AI workspace builder', 'AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'PDF toolkit, in the browser', 'Company calendar', 'Design spec for your agents', 'One-click app connectors', 'Encrypted team vault', 'Password generator', 'Sanctions screening (OFAC)', 'Roles and permissions', 'GDPR controls'] },
 ];
 
 const MCP_SNIPPET = `{

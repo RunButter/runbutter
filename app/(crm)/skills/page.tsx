@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Loader2 } from 'lucide-react';
+import { ArrowRight, Palette } from 'lucide-react';
 import { getWorkspace, type WorkspaceContext } from '@/lib/crm/data';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import SkillsSection from '@/components/crm/SkillsSection';
@@ -46,6 +46,23 @@ export default function SkillsPage() {
         <div className="max-w-5xl mx-auto">
           {privy && ws ? (
             <div className="space-y-4">
+              {/* A design spec IS a skill — the studio just knows the shape, so
+                  the values come out of a logo and a PDF instead of being typed
+                  into a text box. Linked from here because this is where
+                  somebody looks when they want their agents to stay on brand. */}
+              <a href="/design" className="card-surface p-3 flex items-center gap-3 hover:bg-surface-hover">
+                <span className="w-8 h-8 rounded-lg bg-accent/10 text-accent grid place-items-center shrink-0">
+                  <Palette className="w-4 h-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-primary">Writing a brand skill? Use the design studio</span>
+                  <span className="block text-2xs text-tertiary">
+                    Upload a logo and your guidelines, see a live preview, and save it here as a
+                    <code className="bg-surface-hover rounded px-1 mx-1">design</code> skill every agent carries.
+                  </span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-tertiary shrink-0" />
+              </a>
               <SkillsSection skills={skills} ws={ws.id} privy={privy} onChange={() => ws && privy && reload(ws, privy)} />
               {/* Below the library, not above it: exporting is what you do
                   after you have skills worth exporting. */}

@@ -24,6 +24,7 @@ making them, and every step it took is on the record. See
 | Call it from my own code | [REST API & MCP](./api.md) |
 | Track something the built-ins don't cover | [Custom objects](./custom-objects.md) |
 | Keep the team's shared logins somewhere safe | [The team vault](./vault.md) |
+| Stop AI writing off-brand | [The design spec](./design.md) |
 | Report a bug, or a security issue | [Support](./support.md) |
 | Send a pull request | [Contributing](./contributing.md) |
 | See what's next | [Roadmap](./roadmap.md) |

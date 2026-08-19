@@ -55,6 +55,16 @@ keyless feed, with unconvertible amounts named rather than folded in.
 and no key on the server, plus a password generator that is also a free public
 tool. See [The team vault](./vault.md).
 
+**A design spec** — upload a logo and a brand PDF, get the exact hex codes,
+fonts and rules out of them in the browser, check it against a real page and a
+WCAG contrast table, and export it as `DESIGN.md`, `design.json`, CSS custom
+properties, a Tailwind fragment and a skill every agent carries. Pantone and
+CMYK are named rather than converted. See [The design spec](./design.md).
+
+**Orders and stock** — products with line items, and a shelf that moves when an
+order ships. Applied once per order, idempotently, so a re-send cannot
+double-decrement.
+
 **Self-hosting** — `npm run migrate`, a one-file `supabase/schema.sql`,
 `docker compose up`, generated keys.
 
