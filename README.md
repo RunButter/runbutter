@@ -16,8 +16,15 @@ team does.
 ![Postgres](https://img.shields.io/badge/Postgres-16-black.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)
 ![No AI token bill](https://img.shields.io/badge/AI-bring%20your%20own%20key-black.svg)
+[![Star on GitHub](https://img.shields.io/github/stars/RunButter/runbutter?style=flat&color=black&label=stars)](https://github.com/RunButter/runbutter/stargazers)
 
 </div>
+
+<br />
+
+<img src="docs/images/design-studio.png" alt="The design studio: brand tokens on the left, a live preview of a real page on the right" width="100%" />
+
+<br />
 
 ---
 
@@ -67,6 +74,27 @@ instructions: **[docs/install.md](docs/install.md)**.
 > minutes, and there is no way around it in this stack, so it is said here
 > rather than discovered halfway through. Everything else stays on your machine.
 
+## Free tools, no account
+
+Six of them, all client-side, all MIT. Nothing uploads — they exist because they
+are useful, and because they are the honest way to show what the rest is like.
+
+| | |
+|---|---|
+| [**DESIGN.md builder**](https://runbutter.app/brand) | Upload a logo and a brand PDF, get the exact hex codes, type levels and rules out of them. Exports Google's [DESIGN.md](https://github.com/google-labs-code/design.md) format, Tailwind v4, CSS variables. |
+| [**Style library**](https://runbutter.app/brand/library) | Complete design systems, free to copy into Claude Code, Cursor or Copilot. |
+| [**Agent skill builder**](https://runbutter.app/plugins) | Write a skill, get a spec-conformant Agent Plugins 1.0 package. |
+| [**PDF toolkit**](https://runbutter.app/pdf) | Merge, split, rotate, watermark, PDF→images, PDF→Markdown. The files never leave your machine. |
+| [**Password generator**](https://runbutter.app/password) | Rejection-sampled, entropy shown, no network. |
+| [**AI cost calculator**](https://runbutter.app/ai-cost) | What an agent actually costs to run, per model. |
+
+<table>
+<tr>
+<td width="50%"><a href="https://runbutter.app/brand/style/hard-edge"><img src="docs/images/style-page.png" alt="A design system page: the style rendered in its own tokens" /></a></td>
+<td width="50%"><a href="https://runbutter.app/plugins"><img src="docs/images/skill-builder.png" alt="The agent skill builder" /></a></td>
+</tr>
+</table>
+
 ## What's inside
 
 | Pillar | Highlights |
@@ -77,10 +105,23 @@ instructions: **[docs/install.md](docs/install.md)**.
 | **Projects** | Projects, issues, board, roadmap, mind maps |
 | **HR (a full ATS)** | Positions and a public careers page, candidate pipeline, Big-5 and work-style assessments, interviews via Google Calendar, onboarding, GDPR tooling |
 | **Docs & Files** | Documents, notes, checklists and tables in one editor; export to PDF/Word in the browser; uploads are text-extracted and full-text searchable **next to the ledger** |
-| **Agents** | 26 tools behind one executor, reusable skill packs, notes written back onto records, scheduled unattended runs |
+| **Agents** | Every tool behind one executor (the list is generated from [`lib/agents/catalog.ts`](lib/agents/catalog.ts) and published at [`/.well-known/mcp.json`](https://runbutter.app/.well-known/mcp.json) — read one of those rather than a number typed into a README), reusable skill packs, notes written back onto records, scheduled unattended runs |
 | **Automate** | Trigger → filter → action, incoming webhooks, signed and retried outgoing webhooks |
 | **Integrations** | REST API, MCP server, and Excel — a read-only CSV feed or a real two-way Microsoft Graph sync |
 | **Anything else** | Custom objects: describe your business and get a workspace, or start from one of ten trade templates |
+
+## What it looks like
+
+<img src="docs/images/deals-board.png" alt="The deals board: drag a card between stages and it saves" width="100%" />
+
+*Every object gets a board and a calendar, not just deals — they are built on the
+same `ObjectDef`, so a record type you invented this morning gets both for free.*
+
+<img src="docs/images/invoices-table.png" alt="The invoices table" width="100%" />
+
+*One table component, one set of five SQL functions. That is why CSV import, the
+REST API, Excel sync and every agent tool reach a new record type the day you
+create it.*
 
 ## Three things that make it different
 
@@ -144,6 +185,20 @@ better than we would. → [docs/contributing.md](docs/contributing.md)
 
 Found something broken? [Open an issue](https://github.com/RunButter/runbutter/issues).
 Found a vulnerability? [SECURITY.md](SECURITY.md) — privately, please.
+
+<!-- docs/images/social-preview.png is for the repository's SOCIAL PREVIEW, set
+     in Settings → General → Social preview. GitHub does not read it from the
+     tree, so it has to be uploaded by hand — once. Without it, every link to
+     this repo posted anywhere renders as a grey box with a filename. -->
+
+## If this is useful
+
+**Star it.** It is the whole marketing budget. A star is how the next person
+looking for "open source CRM I can self-host" finds out this exists, and it
+costs you one click.
+
+Then: run it, break it, and [tell us what broke](https://github.com/RunButter/runbutter/issues).
+The most useful issue is the one that starts "I tried to do X and".
 
 ## Licence
 

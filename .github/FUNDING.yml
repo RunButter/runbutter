@@ -1,0 +1,5 @@
+# GitHub renders a Sponsor button from this. Uncomment the line that is true —
+# an empty or wrong entry renders a button that goes nowhere, which is worse
+# than no button.
+# github: [YOUR-GITHUB-USERNAME]
+# custom: ["https://runbutter.app/pricing"]
