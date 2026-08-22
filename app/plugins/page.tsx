@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, FolderTree } from 'lucide-react';
 import PluginBuilder from '@/components/plugins/PluginBuilder';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
+import ToolFooter from '@/components/landing/ToolFooter';
 import { SPEC_VERSION } from '@/lib/plugins/agent-plugin';
 import { SITE_URL } from '@/lib/site';
 
@@ -155,6 +156,12 @@ export default function PluginsPage() {
           </div>
         </div>
       </section>
+
+      <ToolFooter
+        current="/plugins"
+        headline={'A skill needs an agent to carry it'}
+        body={'You have just written down how your team does something. In RunButter that file becomes a skill any agent carries into its system prompt — and those agents work on your actual records: chasing an invoice, screening a candidate, drafting the follow-up. Same file, somewhere it can act.'}
+      />
 
       <MarketingFooter />
     </div>

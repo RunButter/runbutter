@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import BrandStudioClient from '@/components/design/BrandStudioClient';
 import { PRESETS } from '@/lib/design/presets';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
+import ToolFooter from '@/components/landing/ToolFooter';
 import { SITE_URL } from '@/lib/site';
 
 /**
@@ -254,6 +255,12 @@ export default function BrandPage() {
           </div>
         </div>
       </section>
+
+      <ToolFooter
+        current="/brand"
+        headline={'A spec your agents actually carry'}
+        body={'A file is only useful if something reads it. Inside RunButter this same studio saves the spec to your workspace and publishes it as a skill every agent carries — so “write the launch email” comes out in your colours and your words without being told each time.'}
+      />
 
       <MarketingFooter />
     </div>

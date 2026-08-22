@@ -33,7 +33,11 @@ import { TooltipProvider } from '@/components/ui/tooltip';
  */
 const PUBLIC_PREFIXES = [
   '/ai-agents', '/plugins', '/terms', '/privacy', '/cookies', '/contact',
-  '/developers', '/careers', '/apply', '/forms', '/l/', '/pdf-tools', '/password', '/brand',
+  // `/pdf-tools` was here and that route has never existed — the toolkit is at
+  // `/pdf`, so it loaded the whole auth SDK on a page that imports Privy
+  // nowhere. Wrong in the direction that merely costs 600ms, which is why
+  // nothing reported it.
+  '/developers', '/careers', '/apply', '/forms', '/l/', '/pdf', '/password', '/brand',
   // TRAILING SLASH IS LOAD-BEARING. isPublicPath ends with a bare startsWith(p),
   // so '/i' would also match '/insights' — the signed-in screen — and stop Privy
   // mounting on it. '/l/' carries one for the same reason.

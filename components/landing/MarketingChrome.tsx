@@ -152,6 +152,7 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
         // The free tools. They had no route into them from any page but the
         // landing bento, which is the one place a stranger arriving from a
         // search for "how to write a SKILL.md" will never be.
+        { label: 'All free tools', href: '/tools' },
         { label: 'Skill builder', href: '/plugins' },
         { label: 'DESIGN.md builder', href: '/brand' },
         { label: 'Design style library', href: '/brand/library' },

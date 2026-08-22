@@ -33,6 +33,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ['/developers', 0.9, 'weekly'],
     // Free tools: each is its own reason to visit, from a search that has
     // nothing to do with wanting a CRM.
+    // The hub that links every free tool. Six orphans are not a cluster, and
+    // until this page existed nothing linked them to each other.
+    ['/tools', 0.85, 'monthly'],
     ['/plugins', 0.8, 'monthly'],
     // The agent cost calculator. Higher than the other tools because the search
     // it answers ('what does an AI agent cost') is one nobody else answers, and

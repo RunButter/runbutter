@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Calculator } from 'lucide-react';
 import AgentCostCalculator from '@/components/landing/AgentCostCalculator';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
+import ToolFooter from '@/components/landing/ToolFooter';
 import StructuredData from '@/components/landing/StructuredData';
 import { SITE_URL } from '@/lib/site';
 
@@ -121,6 +122,12 @@ export default function AiCostPage() {
           </div>
         </section>
       </main>
+
+      <ToolFooter
+        current="/ai-cost"
+        headline={'These are estimates. RunButter records what you actually spent'}
+        body={'Every AI feature here runs on your own API key, and every call is recorded — per agent, per model, per feature — so the number on your screen is what happened rather than what a calculator predicted. No per-token markup, no AI credits, no plan rationing how much thinking you get.'}
+      />
 
       <MarketingFooter />
     </>

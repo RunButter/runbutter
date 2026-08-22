@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, KeyRound, ShieldCheck, WifiOff } from 'lucide-react';
 import { MarketingHeader, MarketingFooter } from '@/components/landing/MarketingChrome';
+import ToolFooter from '@/components/landing/ToolFooter';
 import StructuredData from '@/components/landing/StructuredData';
 import PasswordGeneratorCard from '@/components/landing/PasswordGeneratorCard';
 import { SITE_URL } from '@/lib/site';
@@ -134,6 +135,12 @@ export default function PasswordPage() {
           </dl>
         </section>
       </main>
+      <ToolFooter
+        current="/password"
+        headline={'The same idea, for the passwords your team shares'}
+        body={'This generator has no server, and neither does the RunButter vault: the registrar login, the analytics account, the shared social inbox are encrypted in your browser with a key we never receive. It replaces the spreadsheet, not 1Password — and it comes with the rest of the company in the same database.'}
+      />
+
       <MarketingFooter />
     </>
   );
