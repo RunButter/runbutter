@@ -7,6 +7,8 @@ import { Menu, Loader2 } from 'lucide-react';
 import { getWorkspace } from '@/lib/crm/data';
 import NavRail from '@/components/crm/NavRail';
 import LoadErrorBanner from '@/components/crm/LoadErrorBanner';
+import CopilotPanel from '@/components/crm/CopilotPanel';
+import CommandPalette from '@/components/CommandPalette';
 import PlanGate from '@/components/PlanGate';
 import { type PlanFeature } from '@/lib/plans';
 
@@ -93,6 +95,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             : children}
         </div>
       </main>
+      {/* Same shell as the CRM half, so the same two things. Neither was
+          mounted here: the rail's Search button and ⌘K fired an event nothing
+          was listening for, and the Copilot vanished the moment you opened a
+          hiring screen — exactly where "move these five candidates" is asked. */}
+      <CopilotPanel />
+      <CommandPalette />
     </div>
   );
 }

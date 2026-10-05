@@ -4,14 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import {
-  Users, Briefcase, CheckCircle2, Calendar, TrendingUp, Clock, Plus, Columns3, Sparkles, Mail, ArrowUpRight,
+  Users, Briefcase, Calendar, Clock, Plus,
 } from 'lucide-react';
 import { loadHrOverview, hrStatus, type HrOverview } from '@/lib/hr/overview';
 import HiringFunnel from '@/components/crm/HiringFunnel';
 import StatCard from '@/components/ui/StatCard';
-import PageHeader from '@/components/ui/PageHeader';
+import PageHeader from '@/components/dashboard/PageHeader';
+import DataBadge from '@/components/ui/DataBadge';
 import SectionCard from '@/components/ui/SectionCard';
-import ListRow, { RowTile } from '@/components/ui/ListRow';
+import ListRow from '@/components/ui/ListRow';
 import AppLoading from '@/components/ui/AppLoading';
 
 const fmtDate = (s?: string | null) => {
@@ -20,17 +21,6 @@ const fmtDate = (s?: string | null) => {
   return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString('en', { day: '2-digit', month: 'short' });
 };
 
-// Icons here are wayfinding, not status, so they are all one colour. They used
-// to be accent/warning/success by row, which implied a grouping that does not
-// exist — "Interviews" is not more urgent than "Candidates".
-const QUICK = [
-  { label: 'Hiring pipeline', desc: 'Drag-and-drop stages', icon: Columns3, href: '/dashboard/pipeline' },
-  { label: 'Candidates', desc: 'Browse all applicants', icon: Users, href: '/dashboard/candidates' },
-  { label: 'Positions', desc: 'Create & manage roles', icon: Briefcase, href: '/dashboard/positions' },
-  { label: 'Interviews', desc: 'Schedule & track', icon: Calendar, href: '/dashboard/interviews' },
-  { label: 'Talent Treasury', desc: 'Explore your talent pool', icon: Sparkles, href: '/dashboard/treasury' },
-  { label: 'Email templates', desc: 'Reusable candidate emails', icon: Mail, href: '/dashboard/templates' },
-];
 
 export default function HrOverviewPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -44,67 +34,41 @@ export default function HrOverviewPage() {
   const kpis = [
     { label: 'Candidates', value: s?.totalCandidates, icon: Users },
     { label: 'Open roles', value: s?.activePositions, icon: Briefcase },
-    { label: 'Assessed', value: s?.assessmentsCompleted, icon: CheckCircle2 },
     { label: 'Interviews', value: s?.upcomingInterviews, icon: Calendar },
-    { label: 'New', value: s?.newApplications, icon: TrendingUp, sub: 'last 7 days' },
-    { label: 'Pending', value: s?.pendingReview, icon: Clock },
+    { label: 'To review', value: s?.pendingReview, icon: Clock, sub: s ? `${s.newApplications} new this week` : undefined },
   ];
 
   return (
-    <div className="p-5 sm:p-6 2xl:p-8">
-      <div className="max-w-7xl space-y-6">
-        <PageHeader
-          title="Recruiting"
-          subtitle="Your hiring pipeline, candidates and open roles"
-          // Live/Sample earns its place — it tells you whether the numbers are
-          // real. The plan chip did not: which plan you are on is a Settings
-          // fact, not a hiring one, and it sat beside the title on every visit.
-          badges={
-            <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${hr?.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-              {hr?.live ? 'Live' : 'Sample'}
-            </span>
-          }
-          actions={
-            <Link href="/dashboard/positions/new" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
-              <Plus className="w-4 h-4" /> New position
-            </Link>
-          }
-        />
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <>
+      {/* The same header every other screen has. This one was a 24px title
+          with an uppercase SAMPLE chip and a 40px button, which made Recruiting
+          look like a different product from the rail beside it. */}
+      <PageHeader title="Recruiting" badge={hr ? <DataBadge live={hr.live} /> : null}>
+        <Link href="/dashboard/positions/new"
+          className="h-7 px-2 inline-flex items-center gap-1 rounded-md text-xs font-medium text-inverse-fg bg-inverse hover:bg-inverse/90 transition-colors">
+          <Plus className="w-3.5 h-3.5" /> New position
+        </Link>
+      </PageHeader>
+    <div className="px-5 lg:px-7 pb-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
             <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} sub={(k as any).sub} />
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4">
-          <SectionCard
-            className="lg:col-span-2"
-            title="Hiring funnel"
-            subtitle="Candidates by stage"
-            action="Open pipeline"
-            actionHref="/dashboard/pipeline"
-          >
-            {!hr
-              ? <AppLoading />
-              : <HiringFunnel stages={hr.funnel} />}
-          </SectionCard>
-
-          <SectionCard title="Quick actions">
-            <div className="-mx-5">
-              {QUICK.slice(0, 4).map((q) => (
-                <ListRow
-                  key={q.label}
-                  href={q.href}
-                  leading={<RowTile><q.icon className="w-4 h-4" /></RowTile>}
-                  title={q.label}
-                  sub={q.desc}
-                  trailing={<ArrowUpRight className="w-4 h-4 text-tertiary" />}
-                />
-              ))}
-            </div>
-          </SectionCard>
-        </div>
+        {/* Full width. A "Quick actions" card sat beside it listing four
+            links that are already in the rail one inch to the left. */}
+        <SectionCard
+          title="Hiring funnel"
+          subtitle="Candidates by stage"
+          action="Open pipeline"
+          actionHref="/dashboard/pipeline"
+        >
+          {!hr
+            ? <AppLoading />
+            : <HiringFunnel stages={hr.funnel} />}
+        </SectionCard>
 
         <SectionCard
           flush
@@ -150,5 +114,6 @@ export default function HrOverviewPage() {
         </SectionCard>
       </div>
     </div>
+    </>
   );
 }

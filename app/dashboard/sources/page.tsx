@@ -1,11 +1,13 @@
 'use client';
 
+import PageHeader from '@/components/dashboard/PageHeader';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { supabase } from '@/lib/supabase';
 import {
-    Radio, Plus, Copy, Check, Loader2, MousePointerClick, Users, TrendingUp, Link2,
+    Plus, Copy, Check, Loader2, MousePointerClick, Users, TrendingUp, Link2,
 } from 'lucide-react';
 import { rpc } from '@/lib/rpc';
 import { listPositions } from '@/lib/hr/positions';
@@ -137,13 +139,9 @@ export default function SourcesPage() {
     }
 
     return (
-        <div className="p-5 lg:p-8 max-w-[1200px] mx-auto">
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
-                    <Radio className="w-5 h-5 text-accent" /> Source Tracking
-                </h1>
-                <p className="text-sm text-secondary">Generate tracking links per job board and see what actually converts.</p>
-            </div>
+        <>
+        <PageHeader title="Source tracking" subtitle="Generate tracking links per job board and see what actually converts." />
+        <div className="px-5 lg:px-7 pb-8 max-w-5xl mx-auto">
 
             {/* KPI row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -265,6 +263,7 @@ export default function SourcesPage() {
                 .treasury-input:focus { box-shadow: 0 0 0 2px hsl(var(--accent) / 0.4); }
             `}</style>
         </div>
+        </>
     );
 }
 

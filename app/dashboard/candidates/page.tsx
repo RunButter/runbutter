@@ -105,7 +105,7 @@ export default function CandidatesPage() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder='Search resumes — react node -junior  or  "node.js"'
+                        placeholder="Search résumés"
                         className="h-8 w-[18rem] max-w-[44vw] pl-8 pr-8 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                     {/* Resume full-text search across every CV in the
                         workspace — the one search in the product that reads
@@ -117,10 +117,14 @@ export default function CandidatesPage() {
                 </Button>
             </PageHeader>
 
-            {/* Search-syntax hint */}
-            <div className="px-4 py-1.5 border-b border-subtle bg-surface-sunken/40 text-2xs text-tertiary font-mono">
-                space = AND · <span className="text-secondary">or</span> = OR · <span className="text-secondary">-term</span> = NOT · "quotes" = exact phrase
-            </div>
+            {/* The syntax help appears once somebody is searching. It was a
+                permanent monospace strip across the page, which is a manual
+                pinned above a table most visits never search. */}
+            {searchTerm.trim() && (
+                <p className="px-6 -mt-2 text-2xs text-tertiary">
+                    space = and · <span className="text-secondary">or</span> = either · <span className="text-secondary">-word</span> = exclude · "quotes" = exact phrase
+                </p>
+            )}
 
             <div className="p-6">
                 {/* Mobile: card list */}

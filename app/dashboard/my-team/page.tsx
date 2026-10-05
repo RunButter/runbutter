@@ -1,5 +1,7 @@
 'use client';
 
+import PageHeader from '@/components/dashboard/PageHeader';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
@@ -75,13 +77,9 @@ export default function MyTeamPage() {
     }
 
     return (
-        <div className="p-5 lg:p-8 max-w-[1200px] mx-auto">
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
-                    <Users className="w-5 h-5 text-accent" /> My Team
-                </h1>
-                <p className="text-sm text-secondary">Your hired team — onboarding, culture fit, and wellbeing.</p>
-            </div>
+        <>
+        <PageHeader title="My team" subtitle="Your hired team — onboarding, culture fit, and wellbeing." />
+        <div className="px-5 lg:px-7 pb-8 max-w-5xl mx-auto">
 
             {team.length === 0 ? (
                 <div className="text-center py-20 text-tertiary">
@@ -174,5 +172,6 @@ export default function MyTeamPage() {
                 />
             )}
         </div>
+        </>
     );
 }
