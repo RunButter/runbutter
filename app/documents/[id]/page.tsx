@@ -3,7 +3,8 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock, FileDown } from 'lucide-react';
+import { ArrowLeft, Printer, Pencil, Send, Check, Loader2, Lock, FileDown, FileCode } from 'lucide-react';
+import DocumentComposer from '@/components/crm/DocumentComposer';
 import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocument } from '@/lib/crm/data';
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 import { useDialog } from '@/components/ui/Dialog';
@@ -47,6 +48,10 @@ function DocumentInner() {
   const [blocked, setBlocked] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [converting, setConverting] = useState(false);
+  // Editing happens in the same popup the list uses, over this page — it used
+  // to be a separate full-page builder. `?edit=1` opens it straight away, which
+  // is where the old /edit URL and "Accept → invoice" now land.
+  const [editing, setEditing] = useState(search.get('edit') === '1');
 
   const reload = useCallback(() => {
     if (token) {
@@ -68,7 +73,19 @@ function DocumentInner() {
     const res = await convertOffer(privy, id);
     setConverting(false);
     if (res.error) { notify(res.error); return; }
-    if (res.id) router.push(`/documents/${res.id}`);
+    if (res.id) router.push(`/documents/${res.id}?edit=1`);
+  };
+
+  // FA(3) KSeF XML. Lived only on the old full-page builder.
+  const exportKsef = async () => {
+    const res = await fetch('/api/ksef/invoice-xml', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privyUserId: privy, invoiceId: id }),
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); notify(e.error || 'KSeF export failed'); return; }
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a'); a.href = url; a.download = `${doc?.number || 'faktura'}-fa3.xml`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (blocked) {
@@ -124,8 +141,12 @@ function DocumentInner() {
             )}
             {!recipient && (
               <>
-                <button onClick={() => router.push(`/documents/${id}/edit`)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
+                <button onClick={() => setEditing(true)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
                   className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                {!isOffer && (
+                  <button onClick={exportKsef} title="Download FA(3) e-invoice XML"
+                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /> KSeF</button>
+                )}
                 <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
                   className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
               </>
@@ -267,6 +288,11 @@ function DocumentInner() {
         </div>
       </div>
 
+      {editing && privy && !recipient && (
+        <DocumentComposer privyUserId={privy} kind={isOffer ? 'offer' : 'invoice'} id={id}
+          onClose={() => { setEditing(false); router.replace(`/documents/${id}`); }}
+          onSaved={() => { setEditing(false); router.replace(`/documents/${id}`); reload(); }} />
+      )}
       {sendOpen && privy && (
         <SendDocumentModal privyUserId={privy} invoiceId={id} kind={doc.kind} onClose={() => setSendOpen(false)} onSent={() => { setSendOpen(false); reload(); }} />
       )}
