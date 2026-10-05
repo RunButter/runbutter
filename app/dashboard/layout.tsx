@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas text-primary">
+    <div className="app-glass flex h-screen overflow-hidden bg-canvas text-primary">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
       <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />

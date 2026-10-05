@@ -4,6 +4,11 @@
 // (bg-surface, text-secondary, border-subtle, bg-accent) rather than literal
 // palette colors, so a theme change is a token change, not a per-file rewrite.
 const hsl = (v) => `hsl(var(${v}) / <alpha-value>)`;
+// Glass: the colour's own alpha is multiplied by a per-scope variable. Outside
+// the app shell the variable is unset (= 1) and these are ordinary opaque
+// tokens; inside `.app-glass` (globals.css) the canvas goes clear and surfaces
+// go translucent, so one class turns every card, table and dialog to glass.
+const glass = (v, a) => `hsl(var(${v}) / calc(<alpha-value> * var(${a}, 1)))`;
 
 module.exports = {
   darkMode: 'class',
@@ -19,11 +24,11 @@ module.exports = {
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {
-        canvas: hsl('--canvas'),
+        canvas: glass('--canvas', '--canvas-a'),
         surface: {
-          DEFAULT: hsl('--surface'),
-          hover: hsl('--surface-hover'),
-          sunken: hsl('--surface-sunken'),
+          DEFAULT: glass('--surface', '--surface-a'),
+          hover: glass('--surface-hover', '--tint-a'),
+          sunken: glass('--surface-sunken', '--tint-a'),
         },
         accent: {
           DEFAULT: hsl('--accent'),
@@ -79,11 +84,14 @@ module.exports = {
         // Resting elevation for cards — soft and low, so white cards float on
         // the grey canvas (light) and read as raised (dark). This is the shift
         // from the old dead-flat look toward the shadcn block gallery.
-        card: '0 1px 2px -1px hsl(240 10% 10% / 0.08), 0 4px 12px -3px hsl(240 10% 10% / 0.10)',
+        // Defined as variables so the glass shell can add its rim highlight
+        // (an inset white hairline on the top edge) without every card
+        // carrying a second class.
+        card: 'var(--shadow-card)',
         // Hover / emphasis lift.
-        elevated: '0 2px 4px -2px hsl(240 10% 10% / 0.10), 0 10px 24px -6px hsl(240 10% 10% / 0.16)',
+        elevated: 'var(--shadow-elevated)',
         // Floating layers (menus, dialogs, popovers).
-        popover: '0 8px 24px -6px hsl(240 10% 10% / 0.12), 0 2px 6px -2px hsl(240 10% 10% / 0.08)',
+        popover: 'var(--shadow-popover)',
       },
       fontSize: {
         // THE product type scale. Compact, but one step up from where it was:

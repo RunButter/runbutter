@@ -65,6 +65,10 @@
        rounder at once. 1rem gives cards ~20px (rounded-xl) — the soft floating
        look — while compact controls stay ~14px via rounded-md. */
     --radius: 1rem;
+
+    --shadow-card: 0 1px 2px -1px hsl(240 10% 10% / 0.08), 0 4px 12px -3px hsl(240 10% 10% / 0.10);
+    --shadow-elevated: 0 2px 4px -2px hsl(240 10% 10% / 0.10), 0 10px 24px -6px hsl(240 10% 10% / 0.16);
+    --shadow-popover: 0 8px 24px -6px hsl(240 10% 10% / 0.12), 0 2px 6px -2px hsl(240 10% 10% / 0.08);
   }
 
   .dark {
@@ -107,6 +111,10 @@
     --success-text: 152 60% 62%;
     --warning-text: 40 95% 62%;
     --danger-text:  0 85% 72%;
+
+    --shadow-card: 0 1px 2px -1px hsl(0 0% 0% / 0.4), 0 4px 12px -3px hsl(0 0% 0% / 0.35);
+    --shadow-elevated: 0 2px 4px -2px hsl(0 0% 0% / 0.45), 0 10px 24px -6px hsl(0 0% 0% / 0.5);
+    --shadow-popover: 0 8px 24px -6px hsl(0 0% 0% / 0.55), 0 2px 6px -2px hsl(0 0% 0% / 0.4);
   }
 
   html { scroll-behavior: smooth; }
@@ -538,4 +546,131 @@
      was providing. */
   .pp-row { animation: none; }
   .pp-meter { animation: none; width: var(--pp-pct, 0%); }
+}
+
+
+/* ============================================================================
+   Glass + liquid metal.
+   ----------------------------------------------------------------------------
+   The app shells (CRM and HR layouts) carry `.app-glass`. Inside it the canvas
+   token goes clear, surfaces go translucent (tailwind.config `glass()`), and
+   anything that floats — a card, a popover, a dialog — frosts what is behind
+   it. Outside it (marketing, public documents, careers) every token is the
+   ordinary opaque colour, so nothing a customer prints or a candidate reads
+   turns into frosted glass by accident.
+
+   Why a scope and not new classes: forty-odd screens already say bg-surface
+   and shadow-card. Restyling the meaning of those words restyles every screen
+   at once, including the ones nobody remembers to open.
+
+   Plain CSS after the layers on purpose, so these win over utilities of the
+   same specificity without !important.
+   ========================================================================== */
+.app-glass {
+  --canvas-a: 0;
+  --surface-a: 0.52;
+  --tint-a: 0.5;
+  --shadow-card:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.7),
+    0 0 0 1px hsl(0 0% 100% / 0.55),
+    0 1px 2px -1px hsl(230 20% 20% / 0.08),
+    0 8px 28px -10px hsl(230 25% 25% / 0.18);
+  --shadow-elevated:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.8),
+    0 0 0 1px hsl(0 0% 100% / 0.6),
+    0 2px 6px -2px hsl(230 20% 20% / 0.10),
+    0 16px 40px -12px hsl(230 25% 25% / 0.26);
+  --shadow-popover:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.75),
+    0 0 0 1px hsl(230 15% 50% / 0.12),
+    0 24px 60px -16px hsl(230 25% 20% / 0.30);
+
+  /* The backdrop the glass frosts. Soft light pooled in three places on a
+     cool silver base — enough colour for blur to have something to work on,
+     never enough to compete with a number in a table. Fixed, so it does not
+     scroll away under long pages. */
+  background-color: hsl(225 20% 94%);
+  background-image:
+    radial-gradient(60rem 40rem at 0% 0%, hsl(212 85% 84% / 0.9), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 8%, hsl(268 70% 88% / 0.8), transparent 60%),
+    radial-gradient(56rem 40rem at 72% 110%, hsl(162 60% 82% / 0.85), transparent 60%),
+    radial-gradient(40rem 30rem at 35% 55%, hsl(200 70% 92% / 0.6), transparent 70%),
+    linear-gradient(180deg, hsl(220 25% 97%), hsl(225 18% 92%));
+  background-attachment: fixed;
+}
+.dark .app-glass {
+  --surface-a: 0.55;
+  --tint-a: 0.6;
+  --shadow-card:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.07),
+    0 0 0 1px hsl(0 0% 100% / 0.07),
+    0 8px 28px -10px hsl(0 0% 0% / 0.6);
+  --shadow-elevated:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.1),
+    0 0 0 1px hsl(0 0% 100% / 0.1),
+    0 16px 40px -12px hsl(0 0% 0% / 0.7);
+  --shadow-popover:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.09),
+    0 0 0 1px hsl(0 0% 100% / 0.1),
+    0 24px 60px -16px hsl(0 0% 0% / 0.75);
+  background-color: hsl(230 14% 6%);
+  background-image:
+    radial-gradient(60rem 40rem at 0% 0%, hsl(220 60% 22% / 0.55), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 10%, hsl(270 40% 20% / 0.45), transparent 60%),
+    radial-gradient(56rem 40rem at 70% 110%, hsl(165 50% 16% / 0.5), transparent 60%),
+    linear-gradient(180deg, hsl(230 14% 7%), hsl(230 14% 5%));
+}
+
+/* Frost: only on things that float. Blur is not free, and a translucent row
+   inside an already-frosted card gains nothing from a second pass. */
+.app-glass :is(.shadow-card, .shadow-popover, .shadow-elevated, .card-surface, .card, .glass) {
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+}
+/* A floating layer must stay readable over whatever is under it — a menu over
+   a table full of numbers is the worst case — so it is far more opaque. */
+.app-glass .shadow-popover { --surface-a: 0.86; }
+.dark .app-glass .shadow-popover { --surface-a: 0.82; }
+/* Modal scrims: lighter and blurrier, so the page reads as frosted behind
+   the dialog rather than switched off. */
+.app-glass .bg-black\/50, .app-glass .bg-black\/40 {
+  background-color: hsl(230 25% 15% / 0.28);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  backdrop-filter: blur(6px) saturate(140%);
+}
+
+/* Liquid metal: the primary fill. A chrome bar — light caught on the top
+   edge, a hard horizon just under the middle where a polished cylinder
+   reflects, and a darker lip. Graphite on light, polished silver on dark.
+   background-IMAGE, so every `hover:bg-inverse/90` keeps compiling and the
+   hover is a brightness lift instead. */
+.bg-inverse {
+  background-image: linear-gradient(180deg,
+    hsl(230 8% 38%) 0%, hsl(230 9% 22%) 46%, hsl(230 12% 9%) 54%, hsl(230 10% 16%) 100%);
+  box-shadow:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.30),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.45),
+    0 1px 2px 0 hsl(230 20% 10% / 0.25),
+    0 6px 16px -6px hsl(230 25% 10% / 0.35);
+}
+.dark .bg-inverse {
+  background-image: linear-gradient(180deg,
+    hsl(0 0% 100%) 0%, hsl(225 12% 90%) 46%, hsl(225 10% 76%) 54%, hsl(225 12% 88%) 100%);
+  box-shadow:
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.9),
+    inset 0 -1px 0 0 hsl(225 10% 55% / 0.6),
+    0 6px 18px -6px hsl(0 0% 0% / 0.6);
+}
+.bg-inverse:not(:disabled):hover { filter: brightness(1.12) saturate(1.05); }
+
+/* The active nav item and segmented-control thumbs are small glass lozenges. */
+.app-glass .glass-pill {
+  background-color: hsl(var(--surface) / 0.7);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-glass { --surface-a: 0.97; --tint-a: 1; }
 }
