@@ -317,7 +317,7 @@ function SubscribersModal({ list, ws, privy, onClose }: { list: NewsletterList; 
         <div className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary flex-1 truncate">{list.name}</h3>
           <span className="text-2xs text-tertiary tabular-nums">{total}</span>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-3 border-b border-subtle">
           <input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} className="input-field" placeholder="Search email or name" />
@@ -386,7 +386,7 @@ function ImportModal({ list, ws, privy, onClose }: { list: NewsletterList; ws: s
       <div className="bg-surface rounded-xl w-full max-w-lg shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary flex-1">Add to {list.name}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           {done ? (

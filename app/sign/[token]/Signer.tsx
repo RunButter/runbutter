@@ -111,7 +111,7 @@ export default function Signer({ token, title, signerName, docUrl }: {
           <div>
             <div className="relative rounded-lg border border-subtle bg-white h-40">
               <canvas ref={canvasRef} className="w-full h-full touch-none" />
-              <button onClick={clear} className="absolute top-1.5 right-1.5 p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"><RotateCcw className="w-3.5 h-3.5" /></button>
+              <button onClick={clear} aria-label="Clear signature" title="Clear signature" className="absolute top-1.5 right-1.5 p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"><RotateCcw className="w-3.5 h-3.5" /></button>
             </div>
             <p className="mt-1 text-2xs text-tertiary">Draw with a mouse or finger.</p>
           </div>

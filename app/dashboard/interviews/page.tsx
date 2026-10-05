@@ -189,7 +189,7 @@ function InterviewModal({
       <div className="bg-surface border border-subtle rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary">{isEdit ? 'Reschedule interview' : 'Schedule interview'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           <label className="block">

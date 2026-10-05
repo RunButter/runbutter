@@ -101,8 +101,7 @@ export default function RecordNotes({ privy, workspaceId, object, recordId }: {
           <span className="text-xs text-tertiary inline-flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</span>
         ) : rows.length === 0 ? (
           <p className="text-xs text-tertiary">
-            Nothing recorded yet. An agent with the <span className="font-mono">add_record_note</span> tool
-            writes what it finds here — with a source, and never a confidence score.
+            No notes yet. Add one, or ask the Copilot to research this record — every note it writes cites a source.
           </p>
         ) : (
           <div className="space-y-2">

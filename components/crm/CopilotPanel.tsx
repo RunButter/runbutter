@@ -222,7 +222,7 @@ export default function CopilotPanel() {
     return (
       <button
         onClick={() => toggle(true)}
-        title="Open copilot"
+        title="Open copilot" aria-label="Open copilot"
         className="fixed bottom-5 right-5 z-30 h-11 w-11 rounded-full bg-inverse text-inverse-fg shadow-card ring-1 ring-subtle flex items-center justify-center hover:opacity-90"
       >
         <Sparkles className="w-4 h-4" />
@@ -250,10 +250,10 @@ export default function CopilotPanel() {
           <span className="truncate">{thread?.title || 'Copilot'}</span>
           <ChevronDown className="w-3 h-3 shrink-0 text-tertiary" />
         </button>
-        <button onClick={startThread} title="New conversation" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover hover:text-secondary">
+        <button onClick={startThread} title="New conversation" aria-label="New conversation" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover hover:text-secondary">
           <Plus className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => toggle(false)} title="Hide copilot" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover hover:text-secondary">
+        <button onClick={() => toggle(false)} title="Hide copilot" aria-label="Hide copilot" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover hover:text-secondary">
           <PanelRightClose className="w-3.5 h-3.5" />
         </button>
       </header>

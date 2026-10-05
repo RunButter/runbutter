@@ -284,7 +284,7 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
       <div className="bg-surface border border-subtle rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle sticky top-0 bg-surface">
           <h3 className="text-sm font-medium text-primary">{initial.id ? 'Edit agent' : 'New agent'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-4">
           <Field label="Name"><input value={a.name || ''} onChange={(e) => set('name', e.target.value)} className="input-field" placeholder="Collections assistant" /></Field>
@@ -714,7 +714,7 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
         <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle">
           <Bot className="w-4 h-4 text-accent" />
           <h3 className="text-sm font-medium text-primary flex-1 truncate">Run {agent.name}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           <textarea autoFocus value={task} onChange={(e) => setTask(e.target.value)} rows={3} className="input-field !h-auto py-2 resize-y" placeholder="Describe the task, e.g. 'List overdue invoices and draft a reminder task for each.'" />

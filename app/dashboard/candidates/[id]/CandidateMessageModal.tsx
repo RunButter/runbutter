@@ -65,7 +65,7 @@ export default function CandidateMessageModal({ candidate, privyUserId, onClose 
                         <h3 className="font-semibold text-primary flex items-center gap-2"><Mail className="w-5 h-5 text-accent" /> Message {candidate.full_name?.split(' ')[0]}</h3>
                         <p className="text-xs text-tertiary">{candidate.email}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary" aria-label="Close"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="p-5 space-y-4">

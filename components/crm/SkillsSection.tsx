@@ -254,7 +254,7 @@ function SkillEditor({ initial, onClose, onSave }: { initial: Partial<Skill>; on
       <div className="card-surface overflow-hidden">
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-sm font-medium text-primary">{initial.id ? 'Edit skill' : 'New skill'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-4">
           <label className="block">
@@ -414,7 +414,7 @@ function ImportModal({ ws, privy, onClose, onDone }: { ws: string; privy: string
         <div className="h-12 flex items-center gap-2 px-4 border-b border-subtle sticky top-0 bg-surface">
           <Github className="w-4 h-4 text-secondary" />
           <h3 className="text-sm font-medium text-primary flex-1">Import skills from GitHub</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           <div className="flex gap-2">

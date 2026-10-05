@@ -76,7 +76,7 @@ export default function SegmentBuilder({
         <div className="h-12 shrink-0 flex items-center gap-2 px-4 border-b border-subtle">
           <input value={name} onChange={(e) => setName(e.target.value)}
             className="text-sm font-medium text-primary bg-transparent outline-none flex-1 focus:bg-surface-hover rounded px-1 -mx-1" />
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

@@ -95,7 +95,7 @@ export default function MemberOnboardingModal({ member, privyUserId, onClose, on
                         <h3 className="text-xl font-semibold text-primary">{member.full_name}</h3>
                         <p className="text-sm text-secondary">{member.position_title || 'Team member'} · Onboarding</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover text-tertiary" aria-label="Close"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="p-6 space-y-8">

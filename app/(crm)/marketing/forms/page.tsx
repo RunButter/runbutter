@@ -162,7 +162,7 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
       <div className="w-full max-w-xl max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-base font-medium text-primary">{f.id ? 'Edit form' : 'New form'}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
@@ -236,7 +236,7 @@ function Submissions({ form, privy, wsId, onClose }: { form: FormRow; privy: str
       <div className="w-full max-w-md h-full bg-surface ring-1 ring-subtle shadow-popover flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h3 className="text-base font-medium text-primary truncate">Submissions · {form.name}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-3">
           {rows === null ? (

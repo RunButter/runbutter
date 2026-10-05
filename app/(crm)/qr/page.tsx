@@ -262,7 +262,7 @@ export default function QrPage() {
                 <button onClick={() => { setLogoHref(null); setLogoError(''); setLogoSource('space'); }}
                   className={chip(logoSource === 'space')}>Just clear the space</button>
                 {logoHref && (
-                  <button onClick={clearLogo} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-tertiary hover:text-primary hover:bg-surface-sunken" title="Remove the logo">
+                  <button onClick={clearLogo} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-tertiary hover:text-primary hover:bg-surface-sunken" title="Remove the logo" aria-label="Remove the logo">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}

@@ -372,7 +372,7 @@ export default function SettingsPage() {
                                                 type="button"
                                                 onClick={removeItemLogo}
                                                 className="absolute -top-2 -right-2 p-1.5 bg-danger/10 text-danger rounded-full hover:bg-red-200 transition shadow-sm"
-                                            >
+                                             aria-label="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>

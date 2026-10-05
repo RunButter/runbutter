@@ -65,7 +65,7 @@ export default function SequenceBuilder({
           <input value={name} onChange={(e) => setName(e.target.value)}
             className="text-sm font-medium text-primary bg-transparent outline-none flex-1 focus:bg-surface-hover rounded px-1 -mx-1" />
           {days > 0 && <span className="text-2xs text-tertiary">{days} day{days === 1 ? '' : 's'} long</span>}
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

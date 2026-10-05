@@ -222,7 +222,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
       <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
           <input autoFocus value={a.name} onChange={(e) => set({ name: e.target.value })} placeholder="Automation name" className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary" />
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 2xl:p-7">

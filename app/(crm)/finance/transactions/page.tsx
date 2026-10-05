@@ -382,7 +382,7 @@ function ReconcileDrawer({ txn, privy, canEdit, categorySuggestions, onClose, on
       <div className="w-full max-w-sm h-full bg-surface shadow-popover ring-1 ring-subtle flex flex-col animate-in slide-in-from-right duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-base font-medium text-primary">Transaction</h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 2xl:p-6 space-y-5">
@@ -480,7 +480,7 @@ function AddAccount({ privy, onClose, onSaved }: { privy: string | null; onClose
       <div className="w-full max-w-sm bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
         <div className="h-12 flex items-center justify-between px-4 border-b border-subtle">
           <h2 className="text-base font-medium text-primary">New bank account</h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-3">
           <label className="block"><span className="block text-xs font-semibold text-secondary mb-1">Name *</span>
@@ -582,7 +582,7 @@ function ImportTxns({ privy, accounts, defaultAccount, onClose, onDone }: {
             {step === 'map' && <button onClick={() => setStep('source')} className="p-1 -ml-1 rounded text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>}
             Import transactions
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 2xl:p-6">

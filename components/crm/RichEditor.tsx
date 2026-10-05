@@ -130,7 +130,7 @@ export default function RichEditor({
           <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={btn(editor.isActive('heading', { level: 2 }))} title="Heading 2"><Heading2 className="w-4 h-4" /></button>
           <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={btn(editor.isActive('bulletList'))} title="Bullet list"><List className="w-4 h-4" /></button>
           <button onClick={() => editor.chain().focus().toggleTaskList().run()} className={btn(editor.isActive('taskList'))} title="Checklist"><ListChecks className="w-4 h-4" /></button>
-          <button onClick={addLink} className={btn(editor.isActive('link'))} title="Link"><Link2 className="w-4 h-4" /></button>
+          <button onClick={addLink} className={btn(editor.isActive('link'))} title="Link" aria-label="Link"><Link2 className="w-4 h-4" /></button>
           {onImageUpload && (
             <button onClick={() => filePick.current?.click()} className={btn(false)} title="Insert image"><ImagePlus className="w-4 h-4" /></button>
           )}
