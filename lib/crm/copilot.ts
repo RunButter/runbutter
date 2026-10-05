@@ -165,6 +165,13 @@ export function describeCall(name: string, args: any): string {
     case 'update_record': return `Update a ${one}`;
     case 'add_record_note': return `Add a note to a ${one || 'record'}`;
     case 'propose_object': return `Create a new record type — ${args?.plural || args?.slug || 'object'}`;
+    case 'propose_agent': return `${args?.id ? 'Change' : 'Create'} the agent “${args?.name || 'New agent'}”${Array.isArray(args?.tools) ? ` with ${args.tools.length} tools` : ''}`;
+    case 'run_agent': return `Hand a task to an agent${args?.task ? ` — “${String(args.task).slice(0, 80)}”` : ''}`;
+    case 'save_document': {
+      const n = Array.isArray(args?.lines) ? args.lines.length : 0;
+      const what = args?.kind === 'offer' ? 'offer' : 'invoice';
+      return `${args?.id ? 'Update' : 'Draft'} an ${what}${n ? ` with ${n} line${n === 1 ? '' : 's'}` : ''}`;
+    }
     case 'call_connection': return `Send data to a saved connection`;
     case 'list_records': return `List ${obj || 'records'}`;
     case 'search_records': return `Search ${obj || 'records'}${args?.q ? ` for “${args.q}”` : ''}`;

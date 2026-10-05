@@ -546,9 +546,18 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **The model never authors email HTML.** It fills a template; the renderer does the part that must
   be right. `save_newsletter` never sends and never attaches a list — an audience is one click from
   every subscriber's inbox and is a person's decision on the send screen.
-- **Skills are writable by the copilot, agents are not.** A skill is instructions (`suggested_tools`
-  is a hint, never a grant). An agent is an ACTOR with a tool list, an autonomy setting and maybe a
-  schedule. Same line `propose_object` draws.
+- **Skills are writable by the copilot; agents are PROPOSED.** A skill is instructions
+  (`suggested_tools` is a hint, never a grant). An agent is an ACTOR with a tool list, an autonomy
+  setting and maybe a schedule, so `propose_agent` is `alwaysPropose` — it writes nothing, the card is
+  approved, and `applyAgent` saves exactly that through `save_agent`. A new agent is always `suggest`.
+- **`run_agent` is delegation, and it is ONE level deep** (`ToolCtx.depth`): an agent started by
+  another agent cannot start a third, and nobody can delegate to itself. It is plan-gated like the Run
+  button, and both go through `lib/agents/delegate.ts → executeAgentRun` — the ONE way a run starts, so
+  a delegated run gets the same key, tools, autonomy, transcript and token accounting as a manual one.
+  The delegated agent keeps ITS autonomy; its proposals wait on its own run.
+- **`save_document`** writes invoices/offers the way the composer does: header through the monolith,
+  lines through `save_invoice_items` (which writes the total). It never takes an amount, rejects
+  product ids from another workspace, and never sends.
 - **0103: `skills.source` accepts `copilot`.** It was `local | github`, so `save_skill` silently
   mapped `'copilot'` back to `'local'` through its own `case` — the code carried a comment explaining
   an attribution the database was discarding. `source` is deliberately NOT updatable: editing a

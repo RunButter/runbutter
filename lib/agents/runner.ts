@@ -152,8 +152,8 @@ export async function runAgent(ctx: ToolCtx, agent: AgentDef, provider: AIProvid
     // its writes execute; without this it reports "I created a Vehicles object"
     // about a proposal nobody has approved yet, which is a lie the transcript
     // then carries.
-    (allowed.includes('propose_object')
-      ? ` One exception in both modes: propose_object NEVER creates anything. It returns a plan a person approves. Say you proposed it, never that you created it.`
+    (allowed.includes('propose_object') || allowed.includes('propose_agent')
+      ? ` One exception in both modes: propose_object and propose_agent NEVER create anything. They return a plan a person approves. Say you proposed it, never that you created it.`
       : '') +
     skillBlock(skills);
 
@@ -261,8 +261,8 @@ export async function executeProposed(ctx: ToolCtx, proposed: any[]): Promise<an
   const results: any[] = [];
   for (const p of proposed) {
     try {
-      const result = p.name === 'propose_object'
-        ? await applyObject(ctx, p.args)
+      const result = p.name === 'propose_object' ? await applyObject(ctx, p.args)
+        : p.name === 'propose_agent' ? await applyAgent(ctx, p.args)
         : await callTool(ctx, p.name, p.args);
       results.push({ name: p.name, args: p.args, result });
     } catch (e: any) { results.push({ name: p.name, args: p.args, result: { error: e?.message || 'failed' } }); }
@@ -311,4 +311,32 @@ async function applyObject(ctx: ToolCtx, obj: any): Promise<any> {
     fields_created: fields.length - failed.length,
     ...(failed.length ? { fields_failed: failed } : {}),
   };
+}
+
+/**
+ * Save an approved agent through the same save_agent call the Agents screen
+ * uses. The proposal was cleaned by the tool (known tools only, suggest
+ * autonomy for anything new), and this writes exactly that — the card a person
+ * approved is the agent that exists.
+ */
+async function applyAgent(ctx: ToolCtx, a: any): Promise<any> {
+  let existing: any = null;
+  if (a?.id) {
+    const { data } = await ctx.admin.rpc('get_agent_full', { p_workspace: ctx.workspace, p_id: a.id });
+    existing = data;
+    if (!existing) throw new Error('That agent no longer exists.');
+  }
+  const { data: id, error } = await ctx.admin.rpc('save_agent', {
+    p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: existing?.id ?? null,
+    p_name: a?.name || 'New agent', p_role: a?.role || '', p_instructions: a?.instructions || '',
+    p_provider: existing?.provider || '', p_model: existing?.model || '',
+    p_allowed_tools: Array.isArray(a?.tools) ? a.tools : [],
+    p_allowed_objects: existing?.allowed_objects || [],
+    p_autonomy: existing?.autonomy || 'suggest',
+    p_max_steps: existing?.max_steps || 12,
+    p_skill_ids: existing?.skill_ids || [],
+    p_schedule: a?.schedule || 'off', p_schedule_hour: a?.schedule_hour ?? 9, p_schedule_task: a?.schedule_task || '',
+  });
+  if (error) throw new Error(error.message);
+  return { saved: true, agent_id: id, name: a?.name, link: '/agents' };
 }

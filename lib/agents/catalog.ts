@@ -104,6 +104,11 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // by what a workspace owner already set up in Settings → Integrations.
   // Shape, not contents. See alwaysPropose.
   { name: 'propose_object', label: 'Propose a new object', group: 'Workspace', write: true, alwaysPropose: true },
+  // An agent is an actor, not a row: approval always, like a new object.
+  { name: 'propose_agent', label: 'Propose an agent', group: 'Workspace', write: true, alwaysPropose: true },
+  // Delegation. Write, so a suggest-mode caller proposes the hand-off first.
+  { name: 'run_agent', label: 'Hand a task to an agent', group: 'Workspace', write: true },
+  { name: 'save_document', label: 'Write an invoice or offer', group: 'Finance', write: true },
 
   { name: 'list_connections', label: 'List connections', group: 'Connections' },
   { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },

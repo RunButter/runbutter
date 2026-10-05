@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase';
 import { checkFeature, planDeniedBody } from '@/lib/plans-server';
 import { authorizePrivy } from '@/lib/auth/privy-verify';
-import { openSecret } from '@/lib/crypto/secrets';
-import { defaultModel, type AIProvider } from '@/lib/ai/providers';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { runAgent, type AgentDef, type SkillDef } from '@/lib/agents/runner';
+import { executeAgentRun } from '@/lib/agents/delegate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,85 +32,11 @@ export async function POST(req: Request) {
   const planDenied = await checkFeature(workspaceId, 'aiAgents');
   if (planDenied) return NextResponse.json(planDeniedBody(planDenied), { status: 402 });
 
-  const admin = createAdminClient();
-
-  // BYO key (also validates workspace membership — raises NOT_A_MEMBER otherwise).
-  const { data: secret, error: secErr } = await admin.rpc('get_ai_secret', { p_privy: privyUserId, p_workspace: workspaceId });
-  if (secErr) return NextResponse.json({ error: secErr.message }, { status: /NOT_A_MEMBER/.test(secErr.message) ? 403 : 500 });
-  if (!secret) return NextResponse.json({ error: 'No AI provider configured. Add a key in Settings → AI keys.' }, { status: 400 });
-
-  let apiKey: string;
-  try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }
-  catch { return NextResponse.json({ error: 'Could not decrypt the stored AI key.' }, { status: 500 }); }
-
-  const { data: agentRow, error: aErr } = await admin.rpc('get_agent_full', { p_workspace: workspaceId, p_id: agentId });
-  if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });
-  if (!agentRow) return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
-  const agent = agentRow as AgentDef & { enabled?: boolean };
-  if (agent.enabled === false) return NextResponse.json({ error: 'This agent is disabled' }, { status: 400 });
-
-  const provider = (secret as any).provider as AIProvider;
-  // BALANCED: an agent drives a tool loop of up to 40 turns, so this is the
-  // most expensive fallback in the product — and the one the compiler could not
-  // flag, because agents call `agentTurn` rather than `callAI`.
-  const model = agent.model || (secret as any).model || defaultModel(provider, 'balanced');
-  const baseUrl = (secret as any).base_url || undefined;
-
-  // The browser mints the run id so it can poll from the first second — this
-  // response does not arrive until the whole loop is done. It cannot collide
-  // its way into someone else's run: create_agent_run falls back to a fresh id
-  // rather than writing into an existing row (0095).
+  // Everything below the auth line is shared with the `run_agent` tool, so a
+  // run a person starts and a run an agent delegates are the same run.
   const wantedId = typeof b?.runId === 'string' && /^[0-9a-f-]{36}$/i.test(b.runId) ? b.runId : null;
-  const { data: runId } = await admin.rpc('create_agent_run', {
-    p_workspace: workspaceId, p_agent_id: agentId, p_agent_name: agent.name, p_task: task, p_privy: privyUserId,
-    p_id: wantedId,
-  });
-
-  // Attached skills (0068). Read with the workspace scoped in SQL, so an agent
-  // row carrying a foreign id resolves to nothing rather than to another
-  // tenant's skill. rpc() returns { data, error } and never throws.
-  let skills: SkillDef[] = [];
-  const skillIds: string[] = (agent as any).skill_ids || [];
-  if (skillIds.length) {
-    const { data: sRows, error: sErr } = await admin.rpc('get_agent_skills', { p_workspace: workspaceId, p_ids: skillIds });
-    if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });
-    skills = Array.isArray(sRows) ? (sRows as SkillDef[]) : [];
-  }
-
-  // The agent's identity travels with the context so add_record_note (0084) can
-  // attribute a finding without the model being asked to name itself — which it
-  // would get wrong, and which would be unverifiable if it got it right.
-  const ctx = {
-    admin, workspace: workspaceId, privy: privyUserId,
-    agentId, agentName: agent.name, runId: (runId as string) ?? null,
-  };
-  /**
-   * Stream each step into the run row so the browser can watch (0095).
-   *
-   * Only when there is a run to write to — `create_agent_run` returning nothing
-   * is not fatal to the run itself, and a null id would make every step a
-   * pointless round trip. Errors are already swallowed by the runner: progress
-   * is a nicety, and a run must not fail because a progress write did.
-   */
-  const onStep = runId
-    ? async (step: any, replaceLast?: boolean) => {
-        await admin.rpc('append_agent_run_step', {
-          p_id: runId, p_step: step, p_replace_last: !!replaceLast,
-        });
-      }
-    : undefined;
-
-  const outcome = await runAgent(ctx, agent, provider, apiKey, model, baseUrl, task, skills, onStep);
-
-  await admin.rpc('finish_agent_run', {
-    p_id: runId, p_status: outcome.status,
-    p_steps: outcome.steps, p_proposed: outcome.proposed, p_result: outcome.result,
-    // What the provider counted (0096), plus the model that did it — the same
-    // agent run on haiku and on opus are not comparable costs, and the agent's
-    // model can change between runs.
-    p_input_tokens: outcome.usage.input, p_output_tokens: outcome.usage.output,
-    p_cached_tokens: outcome.usage.cached, p_model: model,
-  });
-
+  const res = await executeAgentRun({ admin: createAdminClient(), workspace: workspaceId, privy: privyUserId, agentId, task, runId: wantedId });
+  if (!res.ok) return NextResponse.json({ error: res.error }, { status: res.status });
+  const { runId, outcome } = res;
   return NextResponse.json({ runId, ...outcome });
 }

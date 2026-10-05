@@ -31,6 +31,8 @@ import { normalizeBlueprint, FIELD_TYPES, OBJECT_ICON_NAMES, type BlueprintObjec
 export interface ToolCtx {
   admin: any; workspace: string; privy: string;
   agentId?: string | null; agentName?: string; runId?: string | null;
+  /** 0 for a person's run or the Copilot; 1 inside an agent another agent started. */
+  depth?: number;
 }
 
 /**
@@ -207,6 +209,31 @@ export const TOOLS = [
       primary: { type: 'boolean', description: 'Exactly one field is the name the record is called by.' },
     }, required: ['label', 'type'] } },
   }, required: ['singular', 'fields'] } },
+  { name: 'save_document', description: 'Create or update an invoice or an offer (quote) WITH its line items, the way a person does in the invoice window. The total is computed from the lines; never pass an amount. Omit `id` to create — the number continues the workspace\'s own series unless you give one. Pass `company_id` from list_records(companies). Passing `lines` replaces all existing lines; omit it to change only the header. Returns the document id and a link to preview and send it — sending is a person\'s act, never yours.', inputSchema: { type: 'object', properties: {
+    kind: { type: 'string', enum: ['invoice', 'offer'] },
+    id: { type: 'string', description: 'Existing document id to update.' },
+    company_id: { type: 'string' },
+    number: { type: 'string' },
+    issued_at: { type: 'string', description: 'YYYY-MM-DD. Defaults to today on create.' },
+    due_at: { type: 'string', description: 'YYYY-MM-DD. Defaults to +14 days (invoice) or +30 (offer) on create.' },
+    status: { type: 'string', description: 'invoice: draft|sent|paid|overdue · offer: draft|sent|accepted|declined. Defaults to draft.' },
+    notes: { type: 'string' },
+    lines: { type: 'array', items: { type: 'object', properties: {
+      description: { type: 'string' }, quantity: { type: 'number' }, unit_price: { type: 'number' },
+      tax_rate: { type: 'number', description: 'VAT percent, e.g. 23.' }, discount_pct: { type: 'number' },
+      product_id: { type: 'string', description: 'Optional, from list_records(products).' },
+    }, required: ['description', 'unit_price'] } },
+  }, required: ['kind'] } },
+  { name: 'propose_agent', description: 'Propose a new AI agent, or a change to an existing one. NOTHING is created until a person approves — on any autonomy setting — because an agent is an actor with tools and possibly a schedule. New agents always start in suggest mode (their writes need approval). `tools` must be names from this tool list; unknown names are dropped. Use list_agents first to avoid duplicates and to get an id when editing.', inputSchema: { type: 'object', properties: {
+    id: { type: 'string', description: 'Existing agent id to change.' },
+    name: { type: 'string' }, role: { type: 'string' },
+    instructions: { type: 'string', description: 'What the agent does and how, in plain language.' },
+    tools: { type: 'array', items: { type: 'string' } },
+    schedule: { type: 'string', enum: ['off', 'hourly', 'daily', 'weekly'] },
+    schedule_hour: { type: 'number', description: 'UTC hour 0–23 for daily/weekly.' },
+    schedule_task: { type: 'string', description: 'What it does on each scheduled run. Required for a schedule.' },
+  }, required: ['name', 'instructions'] } },
+  { name: 'run_agent', description: 'Hand a task to one of this workspace\'s agents and wait for its answer. The agent works with ITS OWN tools and autonomy — a suggest-mode agent only proposes, and its proposals wait for a person on its own run. An agent started this way cannot start another. Get the id from list_agents.', inputSchema: { type: 'object', properties: { agent_id: { type: 'string' }, task: { type: 'string' } }, required: ['agent_id', 'task'] } },
   { name: 'list_connections', description: 'Outgoing connections this workspace has set up (Slack, Discord, Zapier, Make, n8n or a generic webhook). Returns their ids and labels so you can send to one — the destination URLs are not exposed.', inputSchema: { type: 'object', properties: {} } },
   { name: 'call_connection', description: 'Send a message and optional structured data to one of this workspace\'s saved connections. Use it to post to Slack/Discord or to hand data to Zapier/Make/n8n. Call list_connections first to get an id. You cannot specify a URL — only a saved connection.', inputSchema: { type: 'object', properties: { connection_id: { type: 'string', description: 'id from list_connections.' }, message: { type: 'string', description: 'Human-readable text. This is what shows up in a Slack or Discord channel.' }, data: { type: 'object', description: 'Optional structured payload for automation tools.' } }, required: ['connection_id', 'message'] } },
 ] as const;
@@ -228,6 +255,18 @@ import { READ_TOOLS as _READ, WRITE_TOOLS as _WRITE } from '@/lib/agents/catalog
 }
 
 const rpcObject = (o: string) => (o === 'offers' ? 'invoices' : o);
+
+/** "INV-0041" → "INV-0042", padding kept; the composer's rule, server side. */
+function nextDocNumber(existing: (string | null | undefined)[], prefix: string): string {
+  let best: { head: string; n: number; width: number } | null = null;
+  for (const raw of existing) {
+    const m = String(raw || '').match(/^(.*?)(\d+)$/);
+    if (!m) continue;
+    const n = parseInt(m[2], 10);
+    if (!best || n > best.n) best = { head: m[1], n, width: m[2].length };
+  }
+  return best ? best.head + String(best.n + 1).padStart(best.width, '0') : `${prefix}-0001`;
+}
 
 async function listRows(ctx: ToolCtx, object: string): Promise<any[]> {
   const { data, error } = await ctx.admin.rpc('list_records', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: rpcObject(object) });
@@ -805,6 +844,134 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       // Reported back to the model so it can fix a dropped field on the next
       // step rather than proposing a plan it thinks is complete and is not.
       return { proposal: obj, warnings, note: 'Not created. This is a proposal for a human to approve.' };
+    }
+
+    // ── Invoices & offers ────────────────────────────────────────────────────
+    /**
+     * The same two calls the invoice window makes: the header through the CRUD
+     * monolith, then the lines through save_invoice_items, which also writes
+     * the total. An agent never passes an amount — a total that disagrees with
+     * its lines is the one thing an invoice must not do.
+     */
+    case 'save_document': {
+      const kind = args?.kind === 'offer' ? 'offer' : 'invoice';
+      const id = args?.id ? String(args.id) : null;
+      const header: Record<string, any> = {};
+      for (const k of ['number', 'issued_at', 'due_at', 'status', 'notes']) {
+        if (args?.[k] !== undefined && args?.[k] !== null) header[k] = String(args[k]).slice(0, 2000);
+      }
+      if (args?.company_id) header.organization_id = String(args.company_id);
+
+      // Lines: products must belong to THIS workspace. save_invoice_items
+      // checks the invoice, not the product, and a foreign product id would
+      // put another tenant's product name on this document.
+      let lines: any[] | null = null;
+      if (Array.isArray(args?.lines)) {
+        const productIds = new Set((await listRows(ctx, 'products')).map((p: any) => p.id));
+        lines = args.lines.slice(0, 200).map((l: any) => ({
+          description: String(l?.description || '').slice(0, 500),
+          quantity: Number(l?.quantity ?? 1) || 0,
+          unit_price: Number(l?.unit_price) || 0,
+          tax_rate: Math.max(0, Number(l?.tax_rate) || 0),
+          discount_pct: Math.min(100, Math.max(0, Number(l?.discount_pct) || 0)),
+          ...(l?.product_id && productIds.has(String(l.product_id)) ? { product_id: String(l.product_id) } : {}),
+        })).filter((l: any) => l.description.trim() || l.unit_price > 0);
+      }
+
+      let docId = id;
+      if (docId) {
+        if (Object.keys(header).length) {
+          await rpc(ctx, 'update_record', { p_privy: ctx.privy, p_object: 'invoices', p_id: docId, p_data: header });
+        }
+      } else {
+        if (!lines?.length) throw new Error('A new document needs at least one line.');
+        const today = new Date();
+        const plus = (d: number) => new Date(today.getTime() + d * 86400000).toISOString().slice(0, 10);
+        if (!header.number) {
+          const existing = (await listRows(ctx, kind === 'offer' ? 'offers' : 'invoices'))
+            .filter((r: any) => r.direction !== 'cost').map((r: any) => r.number);
+          header.number = nextDocNumber(existing, kind === 'offer' ? 'OFF' : 'INV');
+        }
+        docId = await rpc(ctx, 'create_record', {
+          p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: 'invoices',
+          p_data: {
+            kind, direction: 'income', status: 'draft',
+            issued_at: today.toISOString().slice(0, 10), due_at: plus(kind === 'offer' ? 30 : 14),
+            ...header,
+          },
+        });
+      }
+      let total: number | null = null;
+      if (lines) total = Number(await rpc(ctx, 'save_invoice_items', { p_privy: ctx.privy, p_invoice: docId, p_items: lines })) || 0;
+      return {
+        id: docId, kind, number: header.number ?? undefined,
+        ...(total !== null ? { total, lines: lines!.length } : {}),
+        link: `/documents/${docId}`,
+        note: 'Saved as a draft. Sending it to the client is done by a person from the preview.',
+      };
+    }
+
+    // ── Agents ───────────────────────────────────────────────────────────────
+    /**
+     * Validates and returns a plan; WRITES NOTHING. Classified alwaysPropose,
+     * so this runs only to clean the proposal a person will read, and
+     * `executeProposed` → `applyAgent` writes it after they approve. An agent
+     * is an actor — tools, a schedule, its own key spend — which is the same
+     * reason propose_object never creates a table by itself.
+     */
+    case 'propose_agent': {
+      const known = new Set<string>([..._READ, ..._WRITE]);
+      const tools = Array.isArray(args?.tools)
+        ? Array.from(new Set(args.tools.map(String).filter((t: string) => known.has(t)))) : undefined;
+      const dropped = Array.isArray(args?.tools) ? args.tools.filter((t: any) => !known.has(String(t))) : [];
+      let existing: any = null;
+      if (args?.id) {
+        existing = await rpc(ctx, 'get_agent_full', { p_workspace: ctx.workspace, p_id: String(args.id) });
+        if (!existing) throw new Error('No agent with that id in this workspace. Call list_agents.');
+      }
+      const schedule = ['off', 'hourly', 'daily', 'weekly'].includes(args?.schedule) ? args.schedule : (existing?.schedule ?? 'off');
+      const proposal = {
+        id: existing?.id ?? null,
+        name: String(args?.name || existing?.name || 'New agent').slice(0, 120),
+        role: String(args?.role ?? existing?.role ?? '').slice(0, 200),
+        instructions: String(args?.instructions ?? existing?.instructions ?? '').slice(0, 20000),
+        tools: tools ?? existing?.allowed_tools ?? ['list_objects', 'list_records', 'search_records', 'get_record'],
+        // A new agent always starts in suggest. Turning an agent loose is a
+        // decision a person makes on its own screen, never one a model makes.
+        autonomy: existing?.autonomy ?? 'suggest',
+        schedule,
+        schedule_hour: Math.min(23, Math.max(0, Math.round(Number(args?.schedule_hour ?? existing?.schedule_hour ?? 9)))),
+        schedule_task: String(args?.schedule_task ?? existing?.schedule_task ?? '').slice(0, 2000),
+      };
+      return {
+        proposal, ...(dropped.length ? { warnings: [`Unknown tools dropped: ${dropped.join(', ')}`] } : {}),
+        note: 'Not created. This is a proposal for a human to approve.',
+      };
+    }
+
+    case 'run_agent': {
+      if ((ctx.depth ?? 0) >= 1) throw new Error('An agent started by another agent cannot start a third. Report back instead.');
+      const agentId = String(args?.agent_id || '');
+      const task = String(args?.task || '').slice(0, 4000);
+      if (!agentId || !task.trim()) throw new Error('agent_id and task are required.');
+      if (agentId === ctx.agentId) throw new Error('An agent cannot hand a task to itself.');
+      // Agents are a plan feature; the Copilot is not. Delegating is running an
+      // agent, so it is checked here exactly as the Run button is.
+      const { checkFeature } = await import('@/lib/plans-server');
+      const denied = await checkFeature(ctx.workspace, 'aiAgents');
+      if (denied) throw new Error('Running agents needs a plan with AI agents. The Copilot can still do the work itself.');
+      // Imported here, not at the top: delegate → runner → tools would be a
+      // cycle at module load.
+      const { executeAgentRun } = await import('@/lib/agents/delegate');
+      const res = await executeAgentRun({
+        admin: ctx.admin, workspace: ctx.workspace, privy: ctx.privy, agentId, task, depth: (ctx.depth ?? 0) + 1,
+      });
+      if (!res.ok) throw new Error(res.error);
+      return {
+        agent: res.agentName, run_id: res.runId, status: res.outcome.status,
+        result: String(res.outcome.result || '').slice(0, 4000),
+        ...(res.outcome.proposed.length ? { awaiting_approval: res.outcome.proposed.length, approve_at: '/agents' } : {}),
+      };
     }
 
     // ── Outbound ──────────────────────────────────────────────────────────────
