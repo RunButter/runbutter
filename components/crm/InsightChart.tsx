@@ -82,7 +82,7 @@ function Line({ buckets, currency }: { buckets: Bucket[]; currency: boolean }) {
   const d = buckets.map((b, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(b.value).toFixed(1)}`).join(' ');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" preserveAspectRatio="xMidYMid meet"
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 'auto' }} preserveAspectRatio="xMidYMid meet"
       role="img" aria-label="Trend">
       {[0, 0.5, 1].map((f) => (
         <line key={f} x1={padX} x2={W - padX} y1={padTop + plotH * (1 - f)} y2={padTop + plotH * (1 - f)}

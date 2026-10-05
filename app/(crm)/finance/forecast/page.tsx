@@ -250,7 +250,7 @@ function Chart({ months }: { months: ReturnType<typeof forecast>['months'] }) {
   const step = Math.ceil(months.length / 8);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" preserveAspectRatio="xMidYMid meet"
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 'auto' }} preserveAspectRatio="xMidYMid meet"
       role="img" aria-label="Projected cash by month" className="mt-3">
       <path d={area} fill="hsl(var(--accent))" opacity="0.10" />
       <line x1={padX} x2={W - padX} y1={y(0)} y2={y(0)} stroke="hsl(var(--border-strong))" strokeWidth="1" />

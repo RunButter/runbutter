@@ -22,7 +22,7 @@ export default function FinanceChart({ series }: { series: FinanceSeriesPoint[] 
   const grid = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Revenue versus costs by month">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Revenue versus costs by month">
       {/* gridlines + y labels */}
       {grid.map((f) => {
         const y = padTop + plotH * (1 - f);

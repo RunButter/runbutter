@@ -12,7 +12,7 @@
 export default function DataBadge({ live }: { live: boolean }) {
   if (live) return null;
   return (
-    <span className="text-3xs font-medium px-1.5 py-0.5 rounded-md bg-warning/10 text-warning">
+    <span className="shrink-0 whitespace-nowrap text-3xs font-medium px-1.5 py-0.5 rounded-md bg-warning/10 text-warning">
       Sample data
     </span>
   );

@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   Loader2, Plus, Upload, Download, Search, Landmark, Link2, X, Check, Trash2,
-  Tag, Ban, ArrowDownRight, ArrowUpRight, Sparkles, ArrowLeft,
+  Tag, Ban, ArrowDownRight, ArrowUpRight, Sparkles, ArrowLeft, MoreHorizontal,
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { OBJECTS } from '@/lib/crm/registry';
 import {
   loadLedger, loadBankAccounts, createBankAccount, deleteBankAccount,
@@ -124,7 +125,7 @@ export default function TransactionsPage() {
         <h1 className="text-md font-medium text-primary">Transactions</h1>
         <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-1.5">
-          <div className="relative">
+          <div className="relative hidden md:block">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
               className="h-7 w-40 pl-7 pr-2 text-xs rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
@@ -135,10 +136,22 @@ export default function TransactionsPage() {
                 className={`h-6 px-2 rounded-md text-2xs font-semibold transition-colors ${months === p.months ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{p.label}</button>
             ))}
           </div>
-          <button onClick={() => exportCsv(filtered)} disabled={filtered.length === 0}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40"><Download className="w-3.5 h-3.5" /> Export</button>
-          <button onClick={() => setImporting(true)} disabled={!canEdit}
-            className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40" title={!canEdit ? 'Sign in to import' : ''}><Upload className="w-3.5 h-3.5" /> Import</button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button aria-label="More actions"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem disabled={!canEdit} onSelect={() => setImporting(true)}>
+                <Upload className="w-3.5 h-3.5" /> Import statement
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={filtered.length === 0} onSelect={() => exportCsv(filtered)}>
+                <Download className="w-3.5 h-3.5" /> Export CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={() => setForm({ initial: { txn_date: new Date().toISOString().slice(0, 10), status: 'posted', method: 'transfer' } })} disabled={!canEdit}
             className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</button>
         </div>
@@ -172,7 +185,7 @@ export default function TransactionsPage() {
         ].map((c) => (
           <div key={c.label} className="card-surface p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-2xs font-medium uppercase tracking-wide text-tertiary">{c.label}</span>
+              <span className="text-xs font-medium text-tertiary">{c.label}</span>
               <c.icon className="w-4 h-4 text-tertiary" />
             </div>
             <div className={`mt-1 text-xl font-semibold tabular-nums ${c.tone}`}>{c.value}</div>
