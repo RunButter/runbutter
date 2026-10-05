@@ -25,7 +25,6 @@ import { MarketingHeader, MarketingFooter, REPO_URL } from '@/components/landing
 import { PLANS, PLAN_ORDER, formatLimit, type SubscriptionPlan } from '@/lib/plans';
 
 // Monochrome ASCII: greys read on both canvases; the drift shifts between them.
-const MONO = ['113,113,122', '161,161,170', '82,82,91'];
 
 const MODULES = [
   { icon: Target, name: 'Sales CRM', body: 'Companies, people, and a drag-and-drop deal pipeline on one relational core.' },
@@ -193,90 +192,37 @@ export default function HomePage() {
       <MarketingHeader home />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────
-          Taller than a standard hero: the type sits high, then a big
-          interactive product window is the centrepiece and breaks into the
-          page below.
-
-          The Flammarion engraving (1888, public domain) is now BOTH layers:
-          the real plate, full-bleed and visible, and the height bias for the
-          ASCII field drawn over it — so glyphs cluster on the ink and the
-          cursor's glow and ripples travel through the same picture you can
-          actually see. Width-fit at every viewport: 'contain' flipped to side
-          margins on ultrawide screens, which read as a crop. */}
+          One flat colour, type, and the real product. The engraving and the
+          ASCII field it fed are gone: a 284 KB plate plus a 17,000-cell canvas
+          loop was the heaviest thing on the page, and it argued "exploration"
+          for a product whose pitch is "your whole company in one place". The
+          chrome on the second line and on the button is the same liquid-metal
+          fill the app uses, so the site and the product read as one thing. */}
       <section className="relative overflow-hidden">
-        {/* The plate itself: whole composition, edge to edge, top-anchored,
-            with a slight deliberate overscan (.hero-art) past both sides.
-            multiply drops the paper onto the canvas; dark mode inverts to
-            white ink and screens it over the dark canvas. The bottom mask
-            dissolves it into the page before the product window. */}
-        <div className="hero-art absolute inset-x-0 top-0 pointer-events-none" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/flammarion-1400.webp"
-            srcSet="/flammarion-800.webp 800w, /flammarion-1400.webp 1400w"
-            sizes="100vw"
-            width={1376}
-            height={768}
-            alt=""
-            fetchPriority="high"
-            decoding="async"
-            className="w-full h-auto select-none mix-blend-multiply opacity-[0.55] dark:invert dark:mix-blend-screen dark:opacity-[0.4]
-                       [mask-image:linear-gradient(to_bottom,black_60%,transparent_98%)]
-                       [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_98%)]"
-          />
-        </div>
-        <div className="absolute inset-0">
-          <AsciiField
-            colors={MONO}
-            baseAlpha={0.1}
-            peakAlpha={0.5}
-            image="/flammarion.jpg"
-            /* Lighter than before: the real image now carries the picture, so
-               the field is the shimmer and the interaction, not the render. */
-            imageWeight={0.42}
-            imageFit="width"
-            focalX={0.5}
-            focalY={0}
-            imageScale={1}
-            /* The centre-calming contour is what keeps the plain field quiet;
-               with artwork it would erase the picture exactly where it matters. */
-            edgeBias={0.18}
-            cell={8}
-          />
-        </div>
-        {/* Two scrims instead of one. A full-width top gradient was the simple
-            option and it erased the engraving exactly where it is worth seeing.
-            This protects only the band the type actually occupies, and lets the
-            artwork survive at the edges and below. */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(56% 44% at 50% 28%, hsl(var(--canvas)/0.94) 38%, hsl(var(--canvas)/0.62) 68%, transparent 100%)' }}
-        />
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-canvas to-transparent pointer-events-none" />
-
-        {/* pt-16 on a phone: 96px of empty canvas above the badge pushed the
-            headline most of the way down the first screen. */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6 pt-20 md:pt-44 pb-16 md:pb-24 text-center">
-          {/* Two ranks, and the difference is COLOUR and SIZE, not weight —
-              the design rule the rest of the app follows. "Build beyond" is the
-              line the engraving is arguing for; the butter line stays because
-              it is the one people repeat back to you. */}
-          <h1 className="text-[2.6rem] leading-[1.04] md:text-[4.5rem] md:leading-[0.98] font-medium tracking-[-0.03em] text-primary">
-            Explore further.<br />
-            <span className="text-secondary">Build beyond.</span>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-16 md:pt-32 pb-14 md:pb-20 text-center">
+          <a href={REPO_URL} className="inline-flex items-center gap-2 h-8 pl-1.5 pr-3 rounded-full bg-surface ring-1 ring-subtle shadow-card text-xs text-secondary hover:text-primary transition-colors">
+            <span className="inline-flex items-center h-5 px-2 rounded-full bg-inverse text-inverse-fg text-2xs font-medium">MIT</span>
+            Open source · self-host or use the cloud
+            <ArrowRight className="w-3 h-3" />
+          </a>
+          {/* Two ranks by SIZE and COLOUR, never weight — the app's own rule. */}
+          <h1 className="mt-7 text-[2.5rem] leading-[1.04] md:text-[4.6rem] md:leading-[0.98] font-medium tracking-[-0.035em] text-primary">
+            Your whole company.<br />
+            <span className="text-chrome">One copilot runs it.</span>
           </h1>
-          <p className="mt-7 text-base md:text-lg text-primary max-w-xl mx-auto leading-relaxed">
-            Run your whole company, smooth as butter.
-          </p>
-          <p className="mt-2.5 text-sm md:text-base text-secondary max-w-xl mx-auto leading-relaxed">
-            Sales, invoicing, marketing, projects and hiring on one core — plus agents on your own key.
+          <p className="mt-6 text-base md:text-lg text-secondary max-w-2xl mx-auto leading-relaxed">
+            Sales, invoices, marketing, projects and hiring on one database — and a copilot that drafts the
+            invoice, chases the deal and puts your agents to work. You approve; it does the rest.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <div className="hidden sm:block"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-md bg-inverse text-inverse-fg text-sm font-medium hover:opacity-90 transition-opacity">
+            <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-full bg-inverse text-inverse-fg text-sm font-medium transition-[filter]">
               Start free <ArrowRight className="w-4 h-4" />
             </Link>
+            <a href={REPO_URL} className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-surface ring-1 ring-subtle shadow-card text-sm font-medium text-primary hover:bg-surface-hover transition-colors">
+              <Github className="w-4 h-4" /> Star on GitHub
+            </a>
           </div>
+          <div className="mt-5 hidden sm:flex justify-center"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
         </div>
 
         {/* the big product window breaks out of the hero into the page */}

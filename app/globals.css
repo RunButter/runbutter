@@ -15,7 +15,7 @@
     /* Light theme, shadcn-style elevation: the canvas is a soft grey so white
        cards visibly float on it (paired with shadow-card), the way the shadcn
        block gallery reads. */
-    --canvas:        60 6% 93%;     /* #eeeeec — warm paper, not blue-grey */
+    --canvas:        225 22% 95%;   /* one cool paper tone, shared by the site and the app */
     --surface:       0 0% 100%;     /* panels, tables, cards        */
     --surface-hover: 240 5% 95.5%;  /* row / item hover             */
     --surface-sunken:240 5% 97%;    /* rails, headers, inputs       */
@@ -75,7 +75,7 @@
     /* Deeper canvas + a lighter card surface than before, so cards clearly sit
        ABOVE the background (the shadcn dark look leans on surface contrast +
        borders, not heavy shadows). */
-    --canvas:        240 8% 5%;
+    --canvas:        228 12% 7%;
     --surface:       240 6% 11%;
     --surface-hover: 240 6% 15%;
     --surface-sunken:240 8% 8%;
@@ -663,6 +663,21 @@
     0 6px 18px -6px hsl(0 0% 0% / 0.6);
 }
 .bg-inverse:not(:disabled):hover { filter: brightness(1.12) saturate(1.05); }
+
+/* Liquid-metal TYPE: the same chrome as the fill, as a text clip. Polished
+   steel on light, bright silver on dark. Static — a moving sheen on a headline
+   is main-thread work in the window Lighthouse scores, for a flourish. */
+.text-chrome {
+  background-image: linear-gradient(180deg,
+    hsl(230 10% 46%) 0%, hsl(230 12% 22%) 48%, hsl(230 14% 10%) 52%, hsl(230 10% 34%) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  padding-bottom: 0.06em;
+}
+.dark .text-chrome {
+  background-image: linear-gradient(180deg,
+    hsl(0 0% 100%) 0%, hsl(225 12% 86%) 48%, hsl(225 10% 64%) 52%, hsl(225 14% 90%) 100%);
+}
 
 /* The active nav item and segmented-control thumbs are small glass lozenges. */
 .app-glass .glass-pill {
