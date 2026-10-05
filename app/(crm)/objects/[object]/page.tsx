@@ -7,7 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays, Sparkles, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { OBJECTS } from '@/lib/crm/registry';
-import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
+import { loadRecords, getRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
 import RecordTable from '@/components/crm/RecordTable';
 import RecordBoard from '@/components/crm/RecordBoard';
@@ -22,11 +22,10 @@ import { readListState, writeListState, sameListState, EMPTY_LIST_STATE } from '
 import ImportModal from '@/components/crm/ImportModal';
 import ExtractModal from '@/components/crm/ExtractModal';
 import FilterBar, { EMPTY_FILTERS, type FilterState } from '@/components/crm/FilterBar';
-import InvoiceItemsModal from '@/components/crm/InvoiceItemsModal';
+import DocumentComposer from '@/components/crm/DocumentComposer';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { Package } from 'lucide-react';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
@@ -77,7 +76,9 @@ export default function ObjectPage() {
     (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).view);
   const [group, setGroup] = useState<string>(() =>
     (typeof window === 'undefined' ? EMPTY_LIST_STATE : readListState(window.location.search)).group);
-  const [itemsFor, setItemsFor] = useState<string | null>(null);   // invoice/offer id whose line items are being edited
+  // Invoices and offers are written in DocumentComposer, not the generic form:
+  // undefined = closed, null = new, string = editing that id.
+  const [composing, setComposing] = useState<string | null | undefined>(undefined);
   const isDoc = slug === 'invoices' || slug === 'offers';
   // Counterparties are the records worth screening; a product or an issue is not.
   const screenable = slug === 'companies' || slug === 'people';
@@ -199,18 +200,17 @@ export default function ObjectPage() {
 
   const openEditFromDetail = async () => {
     if (!canEdit || !detail) return;
+    if (isDoc) { setComposing(detail.id); setDetail(null); return; }
     const raw = await getRecord(privy!, slug, detail.id);
     setForm({ id: detail.id, initial: raw || detail });
     setDetail(null);
   };
 
-  // Invoices/offers create a draft and open the editable builder; everything
-  // else opens the standard form.
+  // Invoices/offers open the composer, which writes NOTHING until Save. This
+  // used to create an empty record first and navigate to a full-page builder,
+  // so every abandoned attempt left a blank draft in the list.
   const newRecord = async () => {
-    if (isDoc && privy) {
-      const res = await createRecord(privy, slug, {});
-      if (res.id) { router.push(`/documents/${res.id}/edit`); return; }
-    }
+    if (isDoc && privy) { setComposing(null); return; }
     setForm({ id: null, initial: {} });
   };
 
@@ -322,10 +322,8 @@ export default function ObjectPage() {
         <RecordDetail object={object} row={detail} canEdit={canEdit} onEdit={openEditFromDetail} onClose={() => setDetail(null)}
           extraActions={isDoc ? (
             <>
-              <button onClick={() => setItemsFor(detail.id)} disabled={!privy} title={!privy ? 'Sign in' : ''}
-                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-accent hover:bg-accent/10 disabled:opacity-40 disabled:cursor-not-allowed"><Package className="w-3.5 h-3.5" /> Products</button>
               <button onClick={() => router.push(`/documents/${detail.id}`)}
-                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-accent hover:bg-accent/10"><FileText className="w-3.5 h-3.5" /> Document</button>
+                className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-accent hover:bg-accent/10"><FileText className="w-3.5 h-3.5" /> Preview &amp; send</button>
             </>
           ) : undefined}>
           {/* Companies only: a portal is scoped to an organisation, and people
@@ -346,7 +344,7 @@ export default function ObjectPage() {
       )}
       {form && (
         <RecordForm object={object} privyUserId={privy} recordId={form.id} initial={form.initial} suggestions={suggestions}
-          onClose={() => setForm(null)} onSaved={(newId) => { setForm(null); reload(); if (newId && isDoc) setItemsFor(newId); }} />
+          onClose={() => setForm(null)} onSaved={() => { setForm(null); reload(); }} />
       )}
       {extracting && (
         <ExtractModal object={object} privy={privy} workspaceId={wsId}
@@ -356,8 +354,11 @@ export default function ObjectPage() {
       {importing && (
         <ImportModal object={object} privyUserId={privy} onClose={() => setImporting(false)} onImported={() => { setImporting(false); reload(); }} />
       )}
-      {itemsFor && privy && (
-        <InvoiceItemsModal privyUserId={privy} invoiceId={itemsFor} onClose={() => setItemsFor(null)} onSaved={() => { setItemsFor(null); reload(); }} />
+      {composing !== undefined && privy && (
+        <DocumentComposer privyUserId={privy} kind={slug === 'offers' ? 'offer' : 'invoice'} id={composing}
+          existingNumbers={rows.filter((r: any) => r.direction !== 'cost').map((r: any) => r.number)}
+          onClose={() => setComposing(undefined)}
+          onSaved={() => { setComposing(undefined); reload(); }} />
       )}
     </>
   );
