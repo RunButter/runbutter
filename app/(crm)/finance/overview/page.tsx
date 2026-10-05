@@ -54,7 +54,7 @@ export default function FinanceOverview() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Finance</h1>
         <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
@@ -67,11 +67,11 @@ export default function FinanceOverview() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
+      <div className="flex-1 overflow-auto page-pad">
         {!fin ? (
           <AppLoading />
         ) : (
-          <div className="max-w-5xl mx-auto w-full space-y-6">
+          <div className="space-y-6">
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (

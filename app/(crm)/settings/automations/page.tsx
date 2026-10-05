@@ -79,7 +79,7 @@ export default function AutomationsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Automations</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <DataBadge live={live} />
@@ -98,8 +98,8 @@ export default function AutomationsPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-6">
           {/* Templates */}
           <div>
             <div className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2">Start from a template</div>

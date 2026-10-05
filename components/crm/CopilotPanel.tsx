@@ -232,7 +232,7 @@ export default function CopilotPanel() {
 
   return (
     <aside
-      className="glass hidden lg:flex shrink-0 h-full flex-col bg-surface/50 border-l border-subtle relative"
+      className="hidden lg:flex shrink-0 h-full flex-col bg-surface/60 border-l border-subtle relative"
       style={{ width }}
     >
       <div

@@ -183,10 +183,10 @@ export default function QrPage() {
   return (
     <>
       <PageHeader title="QR codes" />
-      <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
+      <div className="flex-1 overflow-auto page-pad">
         {/* The preview column is wide and sticky because it is the thing being
             made — the controls are how you get there, not the subject. */}
-        <div className="max-w-5xl mx-auto grid lg:grid-cols-[minmax(0,1fr)_420px] gap-8 items-start">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_420px] gap-8 items-start">
 
           <div className="space-y-6 min-w-0">
             <div className="flex flex-wrap gap-1.5">

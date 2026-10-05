@@ -42,8 +42,8 @@ export default function SkillsPage() {
   return (
     <>
       <PageHeader title="Skills" count={skills.length} />
-      <div className="flex-1 overflow-auto p-5 2xl:p-7 lg:p-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="w-full">
           {privy && ws ? (
             <div className="space-y-4">
               {/* A design spec IS a skill — the studio just knows the shape, so

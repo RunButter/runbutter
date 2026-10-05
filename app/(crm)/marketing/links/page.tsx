@@ -44,7 +44,7 @@ export default function LinksPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Short links</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {privy && ws && (
@@ -54,8 +54,8 @@ export default function LinksPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">Branded short links with click tracking. Share <span className="font-mono">{origin.replace(/^https?:\/\//, '')}/l/…</span> anywhere.</p>
 
           {loading ? (

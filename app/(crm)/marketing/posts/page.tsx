@@ -77,7 +77,7 @@ export default function PostsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Posts</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
         <DataBadge live={live} />
@@ -108,17 +108,17 @@ export default function PostsPage() {
           <PostBoard posts={posts} graph={board} ws={ws?.id ?? null} privy={privy} onNew={newPost} />
         </div>
       ) : (
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+      <div className="flex-1 overflow-auto page-pad">
         {loading ? (
           <AppLoading />
         ) : posts.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No posts yet — create your first one.</div>
         ) : view === 'calendar' ? (
-          <div className="max-w-5xl mx-auto w-full">
+          <div className="w-full">
             <PostCalendar posts={posts} onOpen={(id) => router.push(`/marketing/posts/${id}`)} onReschedule={reschedule} />
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto w-full">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {posts.map((p) => (
               <button key={p.id} onClick={() => router.push(`/marketing/posts/${p.id}`)}
                 className="text-left card-surface overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">

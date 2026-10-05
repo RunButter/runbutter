@@ -74,7 +74,7 @@ export default function FormsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Forms</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
@@ -84,8 +84,8 @@ export default function FormsPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
 
           {loading ? (
@@ -165,7 +165,7 @@ function Builder({ initial, onClose, onSaved, privy, wsId, notify }: {
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
+        <div className="flex-1 overflow-auto page-pad space-y-4">
           {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{err}</div>}
 
           <div className="grid grid-cols-2 gap-3">

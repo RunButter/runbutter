@@ -46,7 +46,7 @@ export default function SignPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Signatures</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
@@ -56,8 +56,8 @@ export default function SignPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">Send a PDF for e-signature. Each signer gets a private link; once everyone signs, the completed PDF with a signature certificate lands in every inbox.</p>
 
           {loading ? (
@@ -141,7 +141,7 @@ function CreateModal({ onClose, onDone, notify }: { onClose: () => void; onDone:
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
+        <div className="flex-1 overflow-auto page-pad space-y-4">
           {err && <div className="rounded-lg bg-danger/10 ring-1 ring-danger/30 px-3 py-2 text-xs text-danger">{err}</div>}
 
           <div>

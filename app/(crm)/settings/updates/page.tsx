@@ -56,7 +56,7 @@ export default function UpdatesPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Updates</h1>
         <button
           onClick={load}
@@ -67,7 +67,7 @@ export default function UpdatesPage() {
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
+      <div className="flex-1 overflow-auto page-pad">
         <div className="max-w-3xl space-y-4">
 
           {loading && !info ? (

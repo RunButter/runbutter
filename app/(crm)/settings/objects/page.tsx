@@ -137,8 +137,8 @@ export default function ObjectsPage() {
         </Button>
       </PageHeader>
 
-      <div className="flex-1 overflow-auto p-5 lg:p-6 2xl:p-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="max-w-4xl space-y-6">
           {error && <div className="rounded-lg bg-warning/10 text-warning px-3 py-2 text-xs">{error}</div>}
 
           <WorkspaceBuilder privy={privy} ws={ws} onApplied={refresh} />

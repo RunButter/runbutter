@@ -105,7 +105,7 @@ export default function DesignPage() {
     return (
       <>
         <PageHeader title="Design" />
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto page-pad">
           <div className="page-body rounded-lg ring-1 ring-subtle bg-surface-sunken p-4 text-sm text-secondary">
             Sign in to build a design spec — or use the free version at{' '}
             <a href="/brand" className="text-accent hover:underline">/brand</a>, which needs no account.

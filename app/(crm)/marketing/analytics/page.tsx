@@ -131,7 +131,7 @@ export default function WebAnalytics() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Web analytics</h1>
         <DataBadge live={live} />
         {sites.length > 1 && (
@@ -169,11 +169,11 @@ export default function WebAnalytics() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
+      <div className="flex-1 overflow-auto page-pad">
         {!stats ? (
           <AppLoading />
         ) : (
-          <div className="max-w-5xl mx-auto w-full space-y-6">
+          <div className="space-y-6">
             {/* Add-site / snippet card */}
             {showCard && (
               <div className={`rounded-xl bg-surface p-5 ${justAdded ? 'ring-2 ring-success/30' : 'ring-1 ring-subtle'}`}>

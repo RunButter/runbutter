@@ -32,7 +32,7 @@ export default function FilterBar({ object, rows, value, onChange }: {
   const setFacet = (k: string, v: string) => onChange({ ...value, facets: { ...value.facets, [k]: v } });
 
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle bg-surface-sunken/40">
+    <div className="shrink-0 flex flex-wrap items-center gap-1.5 page-x py-2">
       {usableFacets.map((f) => (
         <select key={f.key} value={value.facets[f.key] || ''} onChange={(e) => setFacet(f.key, e.target.value)}
           className={`h-7 px-2 text-xs rounded-md bg-surface ring-1 outline-none focus:ring-2 focus:ring-accent/30 capitalize ${value.facets[f.key] ? 'ring-accent/30 text-accent font-semibold' : 'ring-subtle text-secondary'}`}>

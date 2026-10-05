@@ -64,13 +64,13 @@ export default function AiKeysPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">AI keys</h1>
         <DataBadge live={live} />
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="max-w-2xl space-y-6">
           <div className="flex items-start gap-2 text-sm text-secondary rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
             <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <p>Bring your <b>own</b> AI key — you pay your provider directly, RunButter adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>

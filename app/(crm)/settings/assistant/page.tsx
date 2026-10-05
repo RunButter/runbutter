@@ -42,7 +42,7 @@ export default function AssistantPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Assistant</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
@@ -53,8 +53,8 @@ export default function AssistantPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">
             Chat with your workspace from Telegram — ask questions and create offers, invoices or people right from a DM. Runs on your workspace AI key; only people you allow can use it.
           </p>
@@ -142,7 +142,7 @@ function ConnectModal({ channel, onClose, onDone, notify }: { channel: Partial<C
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
+        <div className="flex-1 overflow-auto page-pad space-y-4">
           {!channel.id && (
             <ol className="text-xs text-secondary space-y-1.5 rounded-lg bg-surface-sunken ring-1 ring-subtle p-3 list-decimal pl-5">
               <li>In Telegram, message <span className="font-mono text-primary">@BotFather</span> → <span className="font-mono">/newbot</span>, pick a name.</li>

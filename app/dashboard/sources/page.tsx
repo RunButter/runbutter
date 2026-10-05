@@ -141,7 +141,7 @@ export default function SourcesPage() {
     return (
         <>
         <PageHeader title="Source tracking" subtitle="Generate tracking links per job board and see what actually converts." />
-        <div className="px-5 lg:px-7 pb-8 max-w-5xl mx-auto">
+        <div className="page-pad">
 
             {/* KPI row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

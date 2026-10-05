@@ -71,7 +71,7 @@ export default function BillingPage() {
 
     return (
         <div className="p-6">
-            <div className="max-w-6xl mx-auto">
+            <div className="w-full">
                 <div className="mb-6">
                     <h1 className="text-2xl font-medium text-primary tracking-tight">Plans &amp; billing</h1>
                     <p className="text-sm text-secondary mt-1">

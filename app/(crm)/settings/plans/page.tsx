@@ -47,17 +47,17 @@ export default function PlansPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Plans &amp; billing</h1>
         <span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
         <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body">
+      <div className="flex-1 overflow-auto page-pad">
         {loading ? (
           <AppLoading />
         ) : (
-          <div className="max-w-6xl mx-auto w-full">
+          <div className="w-full">
             <h2 className="text-xl font-semibold text-primary mb-1">One workspace, priced to grow with you</h2>
             <p className="text-sm text-secondary mb-6">
               Sales, finance, projects and recruiting in one place — upgrade for more seats, records, and modules.

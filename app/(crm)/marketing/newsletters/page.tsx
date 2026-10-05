@@ -107,8 +107,8 @@ export default function NewslettersPage() {
         )}
       </PageHeader>
 
-      <div className="flex-1 overflow-auto px-5 lg:px-7 pb-8">
-        <div className="max-w-5xl mx-auto w-full">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="w-full">
           {!privy && (
             <div className="rounded-xl bg-surface shadow-card p-4 text-sm text-secondary mb-4">Sign in to manage newsletters.</div>
           )}

@@ -166,7 +166,7 @@ export default function FilesPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Files</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-md bg-surface-sunken">
@@ -194,9 +194,9 @@ export default function FilesPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8 page-body" {...getRootProps()}>
+      <div className="flex-1 overflow-auto page-pad" {...getRootProps()}>
         <input {...getInputProps()} />
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">
             Contracts, invoices and CVs — stored privately and searched by what&apos;s <em>inside</em> them,
             not just by filename. {indexed > 0 && <span className="text-tertiary">{indexed} of {rows.length} indexed.</span>}

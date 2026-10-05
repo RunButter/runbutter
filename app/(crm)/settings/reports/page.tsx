@@ -83,7 +83,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Reports</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
         {canManage && (
@@ -94,8 +94,8 @@ export default function ReportsPage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl mx-auto w-full space-y-4">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="space-y-4">
           <p className="text-sm text-secondary -mt-1">
             Scheduled PDF reports, emailed automatically. Pick what goes in — new modules appear here on their own as they&rsquo;re added.
           </p>
@@ -174,7 +174,7 @@ function ScheduleModal({ initial, onClose, onSave }: { initial: ReportSchedule; 
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 2xl:p-6 space-y-4">
+        <div className="flex-1 overflow-auto page-pad space-y-4">
           <label className="block">
             <span className="block text-xs font-semibold text-secondary mb-1">Report name</span>
             <input value={s.name} onChange={(e) => set({ name: e.target.value })} className={input} />

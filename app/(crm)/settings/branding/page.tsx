@@ -172,7 +172,7 @@ export default function BrandingPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Branding</h1>
         <span className="text-2xs text-tertiary">Logo &amp; details on your invoices and offers</span>
         <button onClick={save} disabled={saving || !privy}
@@ -181,7 +181,7 @@ export default function BrandingPage() {
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 2xl:p-8">
+      <div className="flex-1 overflow-auto page-pad">
         {loading ? (
           <AppLoading />
         ) : privy && !wsId ? (
@@ -198,7 +198,7 @@ export default function BrandingPage() {
             </Link>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto w-full grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-4">
               <div>

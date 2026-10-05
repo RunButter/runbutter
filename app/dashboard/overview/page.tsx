@@ -49,8 +49,8 @@ export default function HrOverviewPage() {
           <Plus className="w-3.5 h-3.5" /> New position
         </Link>
       </PageHeader>
-    <div className="px-5 lg:px-7 pb-8">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="page-pad">
+      <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {kpis.map((k) => (
             <StatCard key={k.label} label={k.label} value={k.value === undefined ? '—' : k.value} icon={k.icon} sub={(k as any).sub} />

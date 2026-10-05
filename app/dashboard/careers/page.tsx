@@ -75,7 +75,7 @@ export default function CareersAdminPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Careers page</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">
           {publicCount} public
@@ -86,8 +86,8 @@ export default function CareersAdminPage() {
         </Link>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 2xl:p-6">
-        <div className="max-w-5xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto page-pad">
+        <div className="space-y-4">
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-tertiary">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…

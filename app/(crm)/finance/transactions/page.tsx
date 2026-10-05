@@ -121,7 +121,7 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Transactions</h1>
         <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-1.5">
@@ -158,7 +158,7 @@ export default function TransactionsPage() {
       </header>
 
       {/* Account tabs */}
-      <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-subtle overflow-x-auto">
+      <div className="shrink-0 flex items-center gap-2 page-x py-2 overflow-x-auto">
         <button onClick={() => setAccount(null)}
           className={`h-9 shrink-0 px-3 rounded-lg text-left ring-1 transition-colors ${account === null ? 'bg-surface ring-strong shadow-sm' : 'ring-subtle hover:bg-surface-sunken'}`}>
           <div className="text-xs font-semibold text-primary leading-tight">All accounts</div>
@@ -176,7 +176,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3 px-4 py-3">
+      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3 page-x py-3">
         {[
           { label: 'Money in', value: money(summary.inflow), tone: 'text-success', icon: ArrowUpRight },
           { label: 'Money out', value: money(summary.outflow), tone: 'text-danger', icon: ArrowDownRight },
@@ -194,7 +194,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Ledger */}
-      <div className="flex-1 overflow-auto px-4 pb-6">
+      <div className="flex-1 overflow-auto page-x pb-8">
         {loading ? (
           <AppLoading />
         ) : (

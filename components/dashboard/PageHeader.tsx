@@ -21,7 +21,7 @@ export default function PageHeader({ title, subtitle, count, badge, children }: 
   // height depending on which tab you opened. The subtitle sits on the same
   // line, quieter, rather than adding a second row that only some pages have.
   return (
-    <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+    <header className="h-16 shrink-0 flex items-center gap-3 page-x">
       <div className="min-w-0 flex items-center gap-2">
         <h1 className="text-md font-medium text-primary truncate">{title}</h1>
         {count !== undefined && (

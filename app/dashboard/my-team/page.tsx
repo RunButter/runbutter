@@ -79,7 +79,7 @@ export default function MyTeamPage() {
     return (
         <>
         <PageHeader title="My team" subtitle="Your hired team — onboarding, culture fit, and wellbeing." />
-        <div className="px-5 lg:px-7 pb-8 max-w-5xl mx-auto">
+        <div className="page-pad">
 
             {team.length === 0 ? (
                 <div className="text-center py-20 text-tertiary">

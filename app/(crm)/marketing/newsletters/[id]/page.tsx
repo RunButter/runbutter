@@ -173,7 +173,7 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <button onClick={() => router.push('/marketing/newsletters')} className="p-1.5 -ml-1.5 rounded-md text-tertiary hover:bg-surface-hover">
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -194,8 +194,8 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto px-5 lg:px-7 pb-8">
-        <div className="grid lg:grid-cols-2 gap-4 max-w-6xl mx-auto w-full items-start">
+      <div className="flex-1 overflow-auto page-pad">
+        <div className="grid lg:grid-cols-2 gap-4 items-start">
           {/* ── Editor ───────────────────────────────────────────────────── */}
           <div className="rounded-xl bg-surface shadow-card p-5 space-y-4">
             {locked && (
