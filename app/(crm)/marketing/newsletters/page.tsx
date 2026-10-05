@@ -108,7 +108,7 @@ export default function NewslettersPage() {
       </PageHeader>
 
       <div className="flex-1 overflow-auto px-5 lg:px-7 pb-8">
-        <div className="max-w-5xl">
+        <div className="max-w-5xl mx-auto w-full">
           {!privy && (
             <div className="rounded-xl bg-surface shadow-card p-4 text-sm text-secondary mb-4">Sign in to manage newsletters.</div>
           )}
@@ -125,7 +125,7 @@ export default function NewslettersPage() {
 
           {tab === 'sends' ? (
             rows.length === 0 ? (
-              <Empty icon={Mail} text="No newsletters yet." hint="Create one, pick a list, and it goes out on the next cron tick." />
+              <Empty icon={Mail} text="No newsletters yet." hint="Create one, pick a list, and it send it when it is ready." />
             ) : (
               <div className="rounded-xl bg-surface shadow-card divide-y divide-subtle overflow-hidden">
                 {rows.map((n) => (

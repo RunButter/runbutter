@@ -88,8 +88,21 @@ export default function RegisterPage() {
 
   const handleSubdomainChange = (value: string) => {
     const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setSubTouched(true);
     setFormData({ ...formData, subdomain: cleaned });
     checkSubdomain(cleaned);
+  };
+
+  // The address follows the company name until somebody edits it. Two fields
+  // that say the same thing, both required, is one more thing to type before
+  // anyone has seen the product.
+  const [subTouched, setSubTouched] = useState(false);
+  const handleCompanyChange = (value: string) => {
+    if (subTouched) { setFormData({ ...formData, companyName: value }); return; }
+    const slug = value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+    setFormData({ ...formData, companyName: value, subdomain: slug });
+    checkSubdomain(slug);
   };
 
   const handleCompanySubmit = async (e: React.FormEvent) => {
@@ -155,8 +168,8 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-8">
             <Logo />
           </div>
-          <h1 className="text-2xl font-medium text-primary mb-2">Create Your Account</h1>
-          <p className="text-secondary">Start hiring smarter in minutes</p>
+          <h1 className="text-2xl font-medium text-primary mb-2">Create your workspace</h1>
+          <p className="text-secondary">Sales, finance, marketing, projects and HR in one place</p>
         </div>
 
         <div className="mb-6 flex items-center justify-center gap-2">
@@ -204,11 +217,11 @@ export default function RegisterPage() {
           {step === 'company' && (
             <form onSubmit={handleCompanySubmit} className="space-y-5">
               <div className="p-3 bg-success/10 rounded-lg text-center text-sm text-success">
-                ✅ Signed in as <strong>{user?.email?.address ?? user?.google?.email ?? 'your account'}</strong>
+                Signed in as <strong>{user?.email?.address ?? user?.google?.email ?? 'your account'}</strong>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-secondary mb-2">Company Name</label>
+                <label className="block text-sm font-medium text-secondary mb-2">Company name</label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
@@ -216,14 +229,14 @@ export default function RegisterPage() {
                     className="w-full pl-10 pr-4 py-3 border border-subtle rounded-lg shadow-sm focus:ring-2 focus:ring-accent/30 focus:border-transparent outline-none"
                     placeholder="Acme Corporation"
                     value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                    onChange={(e) => handleCompanyChange(e.target.value)}
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-secondary mb-2">Subdomain</label>
+                <label className="block text-sm font-medium text-secondary mb-2">Address</label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" />
                   <input
@@ -251,7 +264,7 @@ export default function RegisterPage() {
                 disabled={submitting || !subdomainAvailable}
                 className="w-full py-3 bg-inverse hover:bg-inverse/90 text-inverse-fg font-semibold rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating...</> : 'Launch My Dashboard →'}
+                {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating…</> : 'Create workspace'}
               </button>
 
               <button

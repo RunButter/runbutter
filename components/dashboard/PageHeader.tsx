@@ -15,17 +15,20 @@ export default function PageHeader({ title, subtitle, count, badge, children }: 
   badge?: ReactNode;
   children?: ReactNode;
 }) {
+  // ONE GEOMETRY: h-16, everything on the centre line. This used to be
+  // `pt-6 pb-4 items-start` while twenty-six pages hand-rolled `h-16
+  // items-center`, so the title jumped six pixels and the actions changed
+  // height depending on which tab you opened. The subtitle sits on the same
+  // line, quieter, rather than adding a second row that only some pages have.
   return (
-    <header className="shrink-0 flex items-start gap-3 px-5 lg:px-7 pt-6 pb-4">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <h1 className="text-md font-medium tracking-tight text-primary truncate">{title}</h1>
-          {count !== undefined && (
-            <span className="text-2xs font-medium text-tertiary tabular-nums">{count}</span>
-          )}
-          {badge}
-        </div>
-        {subtitle && <p className="text-xs text-tertiary mt-0.5">{subtitle}</p>}
+    <header className="h-16 shrink-0 flex items-center gap-3 px-5 lg:px-7">
+      <div className="min-w-0 flex items-center gap-2">
+        <h1 className="text-md font-medium text-primary truncate">{title}</h1>
+        {count !== undefined && (
+          <span className="text-2xs font-medium text-tertiary tabular-nums">{count}</span>
+        )}
+        {badge}
+        {subtitle && <p className="hidden md:block text-xs text-tertiary truncate ml-1">{subtitle}</p>}
       </div>
       {children && <div className="ml-auto flex items-center gap-1.5 shrink-0">{children}</div>}
     </header>

@@ -112,17 +112,22 @@ export default function StatCard({
         )}
       </div>
 
-      <div className="mt-2 sm:mt-3 flex items-end justify-between gap-2">
-        <div className="min-w-0">
-          <div className={cn('text-2xl sm:text-stat font-medium tracking-tight tabular-nums truncate', tone || 'text-primary')}>
-            {value}
-          </div>
-          {sub && <div className="mt-1 text-xs font-medium text-tertiary truncate">{sub}</div>}
-        </div>
-        {spark && spark.length >= 2 && (
-          <span className={cn('shrink-0 self-center', tone || 'text-tertiary')}><Sparkline data={spark} /></span>
-        )}
+      {/* The figure gets the whole width. It used to share a row with the
+          sparkline and `truncate`, so on a four-across grid "$304,612" rendered
+          as "$304,6…" — a number with its last digits cut off is worse than no
+          number. The sparkline moves down beside the quiet sub-line, where
+          giving way costs nothing. */}
+      <div className={cn('mt-2 sm:mt-3 text-2xl sm:text-stat font-medium tracking-tight tabular-nums whitespace-nowrap', tone || 'text-primary')}>
+        {value}
       </div>
+      {(sub || (spark && spark.length >= 2)) && (
+        <div className="mt-1 flex items-center justify-between gap-2 min-h-[22px]">
+          <div className="min-w-0 text-xs font-medium text-tertiary truncate">{sub}</div>
+          {spark && spark.length >= 2 && (
+            <span className={cn('shrink-0', tone || 'text-tertiary')}><Sparkline data={spark} /></span>
+          )}
+        </div>
+      )}
 
       {footer && <div className="mt-2">{footer}</div>}
     </>

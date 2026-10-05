@@ -114,11 +114,11 @@ export default function PostsPage() {
         ) : posts.length === 0 ? (
           <div className="h-40 flex items-center justify-center text-sm text-tertiary">No posts yet — create your first one.</div>
         ) : view === 'calendar' ? (
-          <div className="max-w-5xl">
+          <div className="max-w-5xl mx-auto w-full">
             <PostCalendar posts={posts} onOpen={(id) => router.push(`/marketing/posts/${id}`)} onReschedule={reschedule} />
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto w-full">
             {posts.map((p) => (
               <button key={p.id} onClick={() => router.push(`/marketing/posts/${p.id}`)}
                 className="text-left card-surface overflow-hidden hover:ring-strong hover:shadow-soft-md hover:-translate-y-0.5 transition-all">

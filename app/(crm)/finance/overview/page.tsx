@@ -71,7 +71,7 @@ export default function FinanceOverview() {
         {!fin ? (
           <AppLoading />
         ) : (
-          <div className="max-w-5xl space-y-6">
+          <div className="max-w-5xl mx-auto w-full space-y-6">
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {cards.map((c) => (

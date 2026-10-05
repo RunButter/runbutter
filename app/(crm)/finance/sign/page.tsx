@@ -57,7 +57,7 @@ export default function SignPage() {
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl space-y-4">
+        <div className="max-w-5xl mx-auto w-full space-y-4">
           <p className="text-sm text-secondary -mt-1">Send a PDF for e-signature. Each signer gets a private link; once everyone signs, the completed PDF with a signature certificate lands in every inbox.</p>
 
           {loading ? (

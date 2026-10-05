@@ -91,7 +91,7 @@ export default function WorkspaceHome() {
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           {/* Greeting */}
           <div>
             <h2 className="text-2xl font-medium text-primary tracking-tight">{greeting()}{ws?.name ? `, ${ws.name}` : ''}</h2>

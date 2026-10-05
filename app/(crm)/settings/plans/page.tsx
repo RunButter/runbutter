@@ -57,7 +57,7 @@ export default function PlansPage() {
         {loading ? (
           <AppLoading />
         ) : (
-          <div className="max-w-6xl">
+          <div className="max-w-6xl mx-auto w-full">
             <h2 className="text-xl font-semibold text-primary mb-1">One workspace, priced to grow with you</h2>
             <p className="text-sm text-secondary mb-6">
               Sales, finance, projects and recruiting in one place — upgrade for more seats, records, and modules.

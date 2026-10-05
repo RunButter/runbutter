@@ -198,7 +198,7 @@ export default function BrandingPage() {
             </Link>
           </div>
         ) : (
-          <div className="max-w-5xl grid lg:grid-cols-2 gap-6">
+          <div className="max-w-5xl mx-auto w-full grid lg:grid-cols-2 gap-6">
             {/* Form */}
             <div className="space-y-4">
               <div>

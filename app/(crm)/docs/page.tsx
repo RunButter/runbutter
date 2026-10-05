@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLiveRefresh } from '@/lib/crm/live';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { FileText, Plus, Loader2, Sparkles, StickyNote, ListChecks, Table2, FileStack } from 'lucide-react';
+import { FileText, Plus, Loader2, StickyNote, ListChecks, Table2 } from 'lucide-react';
 import {
   loadDocs, saveDoc, deleteDoc, kindOf, tagDot, DOC_KINDS, KIND_META,
   type DocMeta, type DocKind,
@@ -75,12 +74,6 @@ export default function DocsPage() {
         <h1 className="text-md font-medium text-primary">Docs</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{shown.length}</span>
         <DataBadge live={live} />
-        {/* PDF tools are a sibling of Docs, not a setting — someone who just
-            exported a document to PDF is one click from merging it into
-            something else. */}
-        <Link href="/pdf" className="ml-auto h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary hover:bg-surface-hover">
-          <FileStack className="w-3.5 h-3.5" /> <span className="hidden sm:inline">PDF tools</span>
-        </Link>
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
@@ -120,9 +113,6 @@ export default function DocsPage() {
                 </button>
               ))}
             </div>
-            <p className="hidden lg:flex text-xs text-secondary items-center gap-1.5 ml-auto">
-              <Sparkles className="w-3.5 h-3.5 text-accent" /> AI writing uses your own key (Settings → AI keys).
-            </p>
           </div>
 
           {allTags.length > 0 && (

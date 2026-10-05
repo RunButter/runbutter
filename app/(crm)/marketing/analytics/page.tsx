@@ -173,7 +173,7 @@ export default function WebAnalytics() {
         {!stats ? (
           <AppLoading />
         ) : (
-          <div className="max-w-5xl space-y-6">
+          <div className="max-w-5xl mx-auto w-full space-y-6">
             {/* Add-site / snippet card */}
             {showCard && (
               <div className={`rounded-xl bg-surface p-5 ${justAdded ? 'ring-2 ring-success/30' : 'ring-1 ring-subtle'}`}>

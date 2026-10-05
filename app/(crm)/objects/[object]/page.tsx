@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLiveRefresh } from '@/lib/crm/live';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays, Sparkles } from 'lucide-react';
+import { Plus, Search, Upload, Download, FileText, Table2, Columns3, CalendarDays, Sparkles, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { OBJECTS } from '@/lib/crm/registry';
 import { loadRecords, getRecord, createRecord, deleteRecord, getWorkspace } from '@/lib/crm/data';
 import { toCSV, downloadCSV } from '@/lib/crm/csv';
@@ -270,13 +271,25 @@ export default function ObjectPage() {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
             className="h-7 w-44 pl-7 pr-2 text-xs bg-surface-sunken border border-subtle rounded-md text-primary placeholder:text-tertiary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25" />
         </div>
-        <Button size="sm" onClick={exportCsv} disabled={filtered.length === 0}><Download className="w-3.5 h-3.5" /> Export</Button>
-        <Button size="sm" onClick={() => setImporting(true)} disabled={!canEdit}><Upload className="w-3.5 h-3.5" /> Import</Button>
-        {/* Beside Import because it is the same intent at a different scale:
-            Import is many rows from a spreadsheet, this is one row from a
-            document somebody was sent. */}
-        <Button size="sm" onClick={() => setExtracting(true)} disabled={!canEdit}
-          title="Fill a form from a pasted document"><Sparkles className="w-3.5 h-3.5" /> Paste</Button>
+        {/* One menu for the occasional actions. Export, Import and Paste were
+            three buttons beside New on every record screen — four equal-weight
+            choices where people make one (New) daily and the rest monthly. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" aria-label="More actions"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem disabled={!canEdit} onSelect={() => setImporting(true)}>
+              <Upload className="w-3.5 h-3.5" /> Import CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!canEdit} onSelect={() => setExtracting(true)}>
+              <Sparkles className="w-3.5 h-3.5" /> Fill from a document
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={filtered.length === 0} onSelect={exportCsv}>
+              <Download className="w-3.5 h-3.5" /> Export CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button size="sm" variant="primary" onClick={newRecord} disabled={!canEdit}
           title={!object.form ? 'Read-only' : !privy ? 'Sign in to add' : ''}><Plus className="w-3.5 h-3.5" /> New</Button>
       </PageHeader>

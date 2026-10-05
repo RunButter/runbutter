@@ -240,18 +240,11 @@ export const NAV = [
     // its whole value is that uploaded documents become searchable rows in the
     // same database as the ledger.
     { slug: 'files', label: 'Files', icon: 'FolderOpen', href: '/files' },
-    // Maps sits with Docs and Files: it is a place to think, not a module of
-    // the business. Free-form canvas, so it belongs to no pillar.
     // One calendar over the whole company: invoice due dates, issue deadlines,
     // scheduled posts and newsletters, campaign windows, interviews and Cal.com
     // bookings. It sits with Docs and Files because it is a place to look, not
     // a module — every pillar feeds it and none owns it.
     { slug: 'calendar', label: 'Calendar', icon: 'CalendarDays', href: '/calendar' },
-    { slug: 'maps', label: 'Maps', icon: 'Waypoints', href: '/maps' },
-    { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
-    // Beside the PDF tools rather than under Marketing: it is a utility, not a
-    // campaign — the thing it most often encodes is a link somebody already has.
-    { slug: 'qr', label: 'QR codes', icon: 'QrCode', href: '/qr' },
   ]},
   { group: 'Sales', items: [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
@@ -334,6 +327,15 @@ export const NAV = [
     // Shared credentials are a team thing, not a setting: the registrar login
     // belongs to whoever needs it today, the same way an asset does.
     { slug: 'vault', label: 'Vault', icon: 'KeyRound', href: '/vault' },
+  ]},
+  // Utilities that belong to no pillar. They sat pinned at the top beside
+  // Home and Docs, which put seven loose links above every section and made
+  // the first thing in the rail a list of tools rather than the business.
+  // Collapsed here they are one click away and out of the way.
+  { group: 'Tools', items: [
+    { slug: 'maps', label: 'Maps', icon: 'Waypoints', href: '/maps' },
+    { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
+    { slug: 'qr', label: 'QR codes', icon: 'QrCode', href: '/qr' },
   ]},
   // Settings splits by WHO a change affects: everything here changes the
   // workspace for everyone in it…

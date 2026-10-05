@@ -85,7 +85,7 @@ export default function FormsPage() {
       </header>
 
       <div className="flex-1 overflow-auto p-6 2xl:p-8">
-        <div className="max-w-5xl space-y-4">
+        <div className="max-w-5xl mx-auto w-full space-y-4">
           <p className="text-sm text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
 
           {loading ? (

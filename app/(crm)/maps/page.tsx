@@ -77,7 +77,7 @@ export default function MapsPage() {
       </header>
 
       <div className="flex-1 overflow-auto p-5 sm:p-6 2xl:p-8">
-        <div className="max-w-5xl space-y-4">
+        <div className="max-w-5xl mx-auto w-full space-y-4">
           <p className="text-sm text-secondary -mt-1">
             Free-form canvases for thinking out loud — drag boxes around, connect them, and it saves as you go.
           </p>

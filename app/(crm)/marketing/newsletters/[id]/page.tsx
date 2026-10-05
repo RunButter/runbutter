@@ -195,7 +195,7 @@ export default function NewsletterComposer({ params }: { params: { id: string } 
       </header>
 
       <div className="flex-1 overflow-auto px-5 lg:px-7 pb-8">
-        <div className="grid lg:grid-cols-2 gap-4 max-w-6xl items-start">
+        <div className="grid lg:grid-cols-2 gap-4 max-w-6xl mx-auto w-full items-start">
           {/* ── Editor ───────────────────────────────────────────────────── */}
           <div className="rounded-xl bg-surface shadow-card p-5 space-y-4">
             {locked && (
