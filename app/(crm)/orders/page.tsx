@@ -45,7 +45,7 @@ const money = (n: any, cur: string) => {
 
 export default function OrdersPage() {
   const { ready, authenticated, user } = usePrivy();
-  const { confirm } = useDialog();
+  const { confirm, notify } = useDialog();
   const privy = authenticated && user ? user.id : null;
 
   const [wsId, setWsId] = useState<string | null>(null);
@@ -119,7 +119,8 @@ export default function OrdersPage() {
         : 'It holds no stock, so nothing changes on the shelf.',
       confirmLabel: 'Delete', danger: true,
     }))) return;
-    await rpc('delete_order', { p_privy: privy, p_workspace: wsId, p_id: r.id });
+    const { error } = await rpc('delete_order', { p_privy: privy, p_workspace: wsId, p_id: r.id });
+    if (error) await notify({ title: `Couldn’t delete it`, body: error.message });
     load(wsId, privy);
   };
 

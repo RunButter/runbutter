@@ -37,7 +37,7 @@ interface Row { id: string; ct: string; iv: string; updated_at: string; item: Va
 
 export default function VaultPage() {
   const { ready, authenticated, user } = usePrivy();
-  const { confirm } = useDialog();
+  const { confirm, notify } = useDialog();
   const privy = authenticated && user ? user.id : null;
 
   const [wsId, setWsId] = useState<string | null>(null);
@@ -130,7 +130,8 @@ export default function VaultPage() {
   const remove = async (id: string, title: string) => {
     if (!wsId || !privy || !key) return;
     if (!(await confirm({ title: 'Delete this login?', body: `“${title}” will be gone. There is no copy on the server that anyone can read.`, confirmLabel: 'Delete', danger: true }))) return;
-    await rpc('delete_vault_item', { p_privy: privy, p_workspace: wsId, p_id: id });
+    const { error } = await rpc('delete_vault_item', { p_privy: privy, p_workspace: wsId, p_id: id });
+    if (error) await notify({ title: `Couldn’t delete it`, body: error.message });
     await loadItems(key, wsId, privy);
   };
 

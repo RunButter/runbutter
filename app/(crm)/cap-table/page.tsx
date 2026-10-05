@@ -59,7 +59,7 @@ const KIND_LABEL: Record<string, string> = {
 
 export default function CapTablePage() {
   const { ready, authenticated, user } = usePrivy();
-  const { confirm } = useDialog();
+  const { confirm, notify } = useDialog();
   const privy = authenticated && user ? user.id : null;
 
   const [wsId, setWsId] = useState<string | null>(null);
@@ -143,13 +143,15 @@ export default function CapTablePage() {
       body: 'Their shares and options go too, so everyone else’s percentage changes.',
       confirmLabel: 'Remove', danger: true,
     }))) return;
-    await rpc('delete_cap_holder', { p_privy: privy, p_workspace: wsId, p_id: h.id });
+    const { error } = await rpc('delete_cap_holder', { p_privy: privy, p_workspace: wsId, p_id: h.id });
+    if (error) await notify({ title: `Couldn’t remove it`, body: error.message });
     load(wsId, privy);
   };
 
   const setPoolShares = async (v: number) => {
     if (!privy || !wsId) return;
-    await rpc('set_option_pool', { p_privy: privy, p_workspace: wsId, p_shares: v });
+    const { error } = await rpc('set_option_pool', { p_privy: privy, p_workspace: wsId, p_shares: v });
+    if (error) await notify({ title: `Couldn’t save it`, body: error.message });
     load(wsId, privy);
   };
 

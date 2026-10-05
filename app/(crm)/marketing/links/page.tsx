@@ -35,7 +35,8 @@ export default function LinksPage() {
   const remove = async (l: ShortLink) => {
     if (!privy || !ws) return;
     if (!await confirmDialog({ title: `Delete /l/${l.code}?`, body: 'The link stops working immediately.', danger: true, confirmLabel: 'Delete' })) return;
-    await rpc('delete_short_link', { p_privy: privy, p_workspace: ws.id, p_id: l.id });
+    const { error } = await rpc('delete_short_link', { p_privy: privy, p_workspace: ws.id, p_id: l.id });
+    if (error) await notify({ title: `Couldn’t delete it`, body: error.message });
     load();
   };
 

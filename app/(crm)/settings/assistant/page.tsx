@@ -35,7 +35,8 @@ export default function AssistantPage() {
   const remove = async (c: Channel) => {
     if (!privy || !ws) return;
     if (!await confirmDialog({ title: 'Disconnect this bot?', body: 'The bot stops responding immediately.', danger: true, confirmLabel: 'Disconnect' })) return;
-    await rpc('delete_assistant_channel', { p_privy: privy, p_workspace: ws.id, p_id: c.id });
+    const { error } = await rpc('delete_assistant_channel', { p_privy: privy, p_workspace: ws.id, p_id: c.id });
+    if (error) await notify({ title: `Couldn’t disconnect it`, body: error.message });
     load();
   };
 

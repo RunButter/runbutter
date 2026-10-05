@@ -46,7 +46,7 @@ const isMissing = (e: any) =>
 export default function SiteEngagement({ privy, siteId, days }: {
   privy: string | null; siteId: string | null; days: number;
 }) {
-  const { confirm } = useDialog();
+  const { confirm, notify } = useDialog();
   const [sessions, setSessions] = useState<Sessions | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [visitors, setVisitors] = useState(0);
@@ -138,7 +138,8 @@ export default function SiteEngagement({ privy, siteId, days }: {
   const removeGoal = async (g: Goal) => {
     if (!privy || !siteId) return;
     if (!(await confirm({ title: `Delete “${g.name}”?`, body: 'Any funnel using it keeps its other steps.', confirmLabel: 'Delete', danger: true }))) return;
-    await rpc('delete_site_goal', { p_privy: privy, p_site: siteId, p_id: g.id });
+    const { error } = await rpc('delete_site_goal', { p_privy: privy, p_site: siteId, p_id: g.id });
+    if (error) await notify({ title: `Couldn’t delete it`, body: error.message });
     load();
   };
 
