@@ -220,6 +220,8 @@ const ALLOWED = new Set([
   // SQL. get_object_settings is a member-level read because the sidebar calls
   // it on every page; the three writes are not.
   'get_object_settings', 'save_object_override', 'reset_object_override', 'save_builtin_field',
+  // Modules on/off (0128): presentation only, never a permission.
+  'get_nav_prefs', 'set_workspace_nav', 'set_my_nav',
   // Connected apps (0099). Only the two READ/REVOKE calls are here — register,
   // authorize, token and revoke are OAuth endpoints under /oauth/* and run
   // service_role. A browser that could mint a code or resolve a token would be

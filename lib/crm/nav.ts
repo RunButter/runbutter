@@ -5,6 +5,7 @@ import { NAV, OBJECTS } from './registry';
 import { loadCustomObjects, type CustomObject } from './custom';
 import { loadObjectSettings, EMPTY_SETTINGS, viewSlug, type ObjectSettings } from './objects';
 import { getWorkspace } from './data';
+import { rpc } from '@/lib/rpc';
 
 /**
  * The nav, with the workspace's own objects folded into it.
@@ -143,6 +144,26 @@ export function navWithOverrides(settings: ObjectSettings, nav: any[] = NAV): Na
 export function useNav(privy: string | null, enabled = true): NavGroup[] {
   const [objects, setObjects] = useState<CustomObject[]>([]);
   const [settings, setSettings] = useState<ObjectSettings>(EMPTY_SETTINGS);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [prefsTick, setPrefsTick] = useState(0);
+
+  // Settings → Modules announces a save so the rail updates without a reload.
+  useEffect(() => {
+    const on = () => setPrefsTick((t) => t + 1);
+    window.addEventListener(NAV_PREFS_EVENT, on);
+    return () => window.removeEventListener(NAV_PREFS_EVENT, on);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || !privy) return;
+    let cancelled = false;
+    getWorkspace(privy).then(async (w) => {
+      if (!w?.id || cancelled) return;
+      const p = await loadNavPrefs(privy, w.id);
+      if (!cancelled && p) setHidden(new Set([...p.workspace, ...p.mine]));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [privy, enabled, prefsTick]);
 
   useEffect(() => {
     if (!enabled || !privy) return;
@@ -168,5 +189,48 @@ export function useNav(privy: string | null, enabled = true): NavGroup[] {
     return () => { cancelled = true; };
   }, [privy, enabled]);
 
-  return navWithCustomObjects(objects, navWithOverrides(settings));
+  return applyNavPrefs(navWithCustomObjects(objects, navWithOverrides(settings)), hidden);
+}
+
+// ── Modules on/off (0128) ─────────────────────────────────────────────────────
+// PRESENTATION ONLY. A hidden screen is still reachable by URL and by the
+// Copilot; who may do what is decided by the RPCs, never by the sidebar.
+
+export const NAV_PREFS_EVENT = 'rb:nav-prefs';
+export interface NavPrefs { workspace: string[]; mine: string[]; can_edit_workspace: boolean }
+
+export const groupKey = (group: string) => 'g:' + norm(group);
+export const itemKey = (slug: string) => 'i:' + slug.toLowerCase();
+
+/**
+ * Sections nobody may switch off. Home is where you land; Settings holds the
+ * switch itself, and Account holds the AI keys — hiding any of them is how
+ * somebody locks themselves out of undoing it.
+ */
+export const LOCKED_GROUPS = new Set(['g:workspace', 'g:settings', 'g:account']);
+export const LOCKED_ITEMS = new Set(['i:home', 'i:modules']);
+
+export function applyNavPrefs(nav: NavGroup[], hidden: Set<string>): NavGroup[] {
+  if (hidden.size === 0) return nav;
+  return nav
+    .filter((g) => LOCKED_GROUPS.has(groupKey(g.group)) || !hidden.has(groupKey(g.group)))
+    .map((g) => ({ ...g, items: g.items.filter((it) => LOCKED_ITEMS.has(itemKey(it.slug)) || !hidden.has(itemKey(it.slug))) }))
+    .filter((g) => g.items.length > 0);
+}
+
+export async function loadNavPrefs(privy: string, ws: string): Promise<NavPrefs | null> {
+  // quiet: a workspace that has not run 0128 has nothing hidden, which is the
+  // same sidebar it always had — not a load failure worth a banner.
+  const { data, error } = await rpc('get_nav_prefs', { p_privy: privy, p_workspace: ws }, { quiet: true });
+  if (error || !data) return null;
+  const d = data as any;
+  return { workspace: d.workspace || [], mine: d.mine || [], can_edit_workspace: !!d.can_edit_workspace };
+}
+
+export async function saveNavPrefs(privy: string, ws: string, scope: 'workspace' | 'mine', keys: string[]): Promise<{ error?: string }> {
+  const fn = scope === 'workspace' ? 'set_workspace_nav' : 'set_my_nav';
+  const { error } = await rpc(fn, { p_privy: privy, p_workspace: ws, p_hidden: keys });
+  if (error) return { error: /does not exist|schema cache/i.test(error.message) ? 'Needs migration 0128.' : error.message };
+  window.dispatchEvent(new Event(NAV_PREFS_EVENT));
+  return {};
 }

@@ -341,6 +341,9 @@ export const NAV = [
   // workspace for everyone in it…
   { group: 'Settings', items: [
     { slug: 'branding', label: 'Branding', icon: 'Palette', href: '/settings/branding' },
+    // Switch whole sections or single screens off (0128). Next to Objects
+    // because both decide what this workspace looks like.
+    { slug: 'modules', label: 'Modules', icon: 'Boxes', href: '/settings/modules' },
     { slug: 'objects', label: 'Objects', icon: 'Table2', href: '/settings/objects' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
     { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
