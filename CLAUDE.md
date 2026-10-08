@@ -444,10 +444,21 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `text-md` 16 (page titles). `lg`+ are Tailwind defaults and belong to marketing.
   The app was ~1000 arbitrary `text-[Npx]` values, so the scale was unchangeable and stayed a full step
   too small (it read as 80% zoom on any desktop). Those are now tokens — **density is one config edit**.
-  Don't reintroduce arbitrary px sizes.
+  Don't reintroduce arbitrary px sizes. **The scale is in REM** and the app shell sets
+  `html:has(.app-glass) { font-size: 110% }`, so the whole app (type, spacing, icons, controls) is one
+  step larger than a document — people were zooming to 110% by hand. Px values in the scale's comments
+  are at the default root; the marketing site keeps that root.
 - **Desktop rhythm:** page header `h-14` + `px-5` with a `text-base` `<h1>`; modal/drawer headers stay
   `h-12`. Nav rail `w-64`. Table rows `h-11`, table head `h-10`. Page gutters `p-6 2xl:p-8`.
-- **App screens cap at `max-w-5xl`**; prose (terms/privacy/careers/landing), modals and document views
+- **One gutter: `.page-x` / `.page-pad`** (globals.css). Padding grows so content never exceeds 72rem,
+  and the HEADER takes the same class, so title, actions, filters and cards share one left and right
+  edge at every width. Don't add `max-w-5xl mx-auto` wrappers inside a page — that re-creates the
+  title-vs-content offset this replaced. Boards, maps and the roadmap stay full-bleed.
+- **Glass + liquid metal** is scoped to `.app-glass` (both app shells): one flat canvas colour, cards
+  are near-opaque with a lit rim, `bg-inverse` is a chrome fill, `.text-chrome` the same as type.
+  **Blur only on `shadow-popover` / `.glass`** — blurring every card over a fixed gradient made the
+  whole window repaint on scroll.
+- **App screens cap at `max-w-5xl`** (now via `.page-x`, 72rem); prose (terms/privacy/careers/landing), modals and document views
   keep a reading measure — widening a paragraph to 1024px makes it worse, not better.
 - **Elevation rule:** cards and real form fields (h-9+) are raised — `ring-1 ring-subtle` +
   `shadow-card`/`shadow-sm`. **Compact inline controls stay flat** (filter chips, table-cell inputs,
