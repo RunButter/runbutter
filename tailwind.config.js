@@ -103,18 +103,25 @@ module.exports = {
         // could not be changed at all without a thousand-line diff — that is the
         // actual reason it stayed too small. Adjust density HERE now.
         //
+        // In REM, not px, and that is the point: the app shell raises the root
+        // size (globals.css, `html:has(.app-glass)`), and text, spacing, icons
+        // and controls all grow together — what a person got by zooming the
+        // browser to 110%, which is what people were doing. In px the type
+        // could not follow the rest. Values in comments are at the default 16px
+        // root; the marketing site keeps that root and is unchanged.
+        //
         // Leading is deliberately loose (~1.5). Line-height is what makes a dense
         // app feel calm rather than stacked, and it costs no layout work because
         // the sizes themselves do not move.
-        '3xs': ['12px', '18px'],   // legal/footnote only — not for UI labels
-        '2xs': ['13px', '20px'],   // meta lines, table sub-values, counts
-        xs: ['14px', '22px'],      // secondary labels, filter chips
-        sm: ['15px', '24px'],      // DEFAULT UI text: rows, inputs, buttons, nav
-        base: ['16px', '26px'],    // section titles, emphasised body
-        md: ['18px', '28px'],      // page titles
+        '3xs': ['0.75rem', '1.125rem'],   // 12px — legal/footnote only, not UI labels
+        '2xs': ['0.8125rem', '1.25rem'],  // 13px — meta lines, table sub-values, counts
+        xs: ['0.875rem', '1.375rem'],     // 14px — secondary labels, filter chips
+        sm: ['0.9375rem', '1.5rem'],      // 15px — DEFAULT UI text: rows, inputs, buttons, nav
+        base: ['1rem', '1.625rem'],       // 16px — section titles, emphasised body
+        md: ['1.125rem', '1.75rem'],      // 18px — page titles
         // The one display size the product UI owns: a KPI figure. Named rather
         // than written as text-[26px] so it moves with the rest of the scale.
-        stat: ['30px', '38px'],
+        stat: ['1.875rem', '2.375rem'],
         // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },

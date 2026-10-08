@@ -78,9 +78,7 @@ export default function Comparison() {
         <div className="max-w-2xl">
           <h2 className="text-2xl md:text-4xl font-medium tracking-tight">How it compares</h2>
           <p className="text-secondary mt-3 leading-relaxed">
-            Most teams run six or seven tools that each hold a copy of the same customer. RunButter is
-            one relational core across all of it. Below is what that replaces — and the two places it
-            honestly does not.
+            What it replaces — and the two places it honestly does not.
           </p>
         </div>
 

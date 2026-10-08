@@ -119,6 +119,15 @@
 
   html { scroll-behavior: smooth; }
 
+  /* The app reads one step larger than a document. Everything in the product
+     is rem — type scale, spacing, icons, control heights — so raising the root
+     here is the same as the 110% browser zoom people were applying by hand,
+     except that breakpoints stay where they are (zoom shrinks the CSS viewport
+     and flips layouts to their tablet shape on a laptop). Scoped with :has()
+     to pages that render the app shell, so the marketing site, public
+     documents and careers pages keep the normal root. */
+  html:has(.app-glass) { font-size: 110%; }
+
   body {
     @apply bg-canvas text-primary antialiased;
     -webkit-font-smoothing: antialiased;

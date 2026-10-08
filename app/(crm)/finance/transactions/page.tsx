@@ -130,7 +130,7 @@ export default function TransactionsPage() {
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
               className="h-7 w-40 pl-7 pr-2 text-xs rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
           </div>
-          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
+          <div className="hidden sm:flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
             {PERIODS.map((p) => (
               <button key={p.label} onClick={() => setMonths(p.months)}
                 className={`h-6 px-2 rounded-md text-2xs font-semibold transition-colors ${months === p.months ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{p.label}</button>

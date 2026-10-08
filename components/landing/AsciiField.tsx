@@ -278,6 +278,12 @@ export default function AsciiField({
       buildTables();
       sampleArt();
       buildBase(driftAt(performance.now()));
+      // Setting canvas.width CLEARS the canvas. With the loop running the next
+      // frame repaints it, but in static mode (phones, reduced motion) there is
+      // no next frame — and the ResizeObserver's first callback arrives right
+      // after mount, so the field was drawn once and wiped blank for exactly
+      // the people the static mode exists for. Repaint here, every time.
+      draw(performance.now());
     }
 
     /**

@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // between navigation and auth-ready reads as a broken page.
   if (!ready || !authenticated) {
     return (
-      <div className="flex h-screen overflow-hidden bg-canvas">
+      <div className="app-glass flex h-screen overflow-hidden bg-canvas">
         <div className="hidden lg:flex"><NavRail /></div>
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-tertiary animate-spin" />

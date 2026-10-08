@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Script from 'next/script';
-import { ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, FileText, Building2, Table2, ShieldCheck, Zap, Plug, Database, Terminal, Bot, PenLine, FileInput, Link2, FileBarChart, Mail, MessagesSquare, FileSearch, Scale, FileStack, Puzzle, NotebookPen, KeyRound, CalendarDays, LineChart, PieChart, Palette, ShoppingCart, Cable } from 'lucide-react';
+import {
+  ArrowRight, Check, Sparkles, Target, Wallet, FolderKanban, Heart, Megaphone, Table2, Zap, Plug, Database, Terminal, Bot, PenLine, Mail, MessagesSquare, FileSearch, Puzzle, LineChart, Palette,
+} from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 
 // Self-tracking (dogfooding our own web analytics). Env-only so a self-host
@@ -9,6 +11,7 @@ import { Github } from '@/components/ui/BrandIcons';
 const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || '';
 const TRACK = process.env.NODE_ENV === 'production' && !!ANALYTICS_SITE_ID;
 import AsciiField from '@/components/landing/AsciiField';
+import HeroAscii from '@/components/landing/HeroAscii';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
 import Comparison from '@/components/landing/Comparison';
@@ -36,53 +39,24 @@ const MODULES = [
 
 // Cross-cutting capabilities, shown as a bento with rhythm. Monochrome
 // throughout — no hue.
-// 30 tiles, six of them spanning two columns: exactly 36 cells, so the
-// 4-column grid fills nine clean rows with no ragged gap at the end. Keep that
-// arithmetic true when editing — an odd tile leaves a hole in the last row.
-// The sum is `tiles + wideTiles`, and it has to stay a multiple of four; adding
-// one wide tile therefore costs two normal ones, not zero.
+// 12 tiles, four of them spanning two columns: exactly 16 cells, so the
+// 4-column grid fills four clean rows. It was 30 tiles — a wall nobody reads
+// past the second row, which buried the eight that sell the product under
+// twenty that answer questions nobody asked yet (those live in the comparison
+// table and the docs). Keep `tiles + wideTiles` a multiple of four.
 const CAPS: { icon: any; name: string; body: string; wide?: boolean; href?: string; cta?: string; beam?: boolean }[] = [
-  // The one tile with a page of its own behind it — agents are the hardest
-  // thing here to believe from a single sentence.
   { icon: Bot, beam: true, name: 'AI agents', body: 'A role, scoped tools, your own AI key. It asks before it writes.', wide: true, href: '/ai-agents', cta: 'See how agents work' },
-  // Wide, and early, because it is the answer to "but my business is not a
-  // software company" — the objection every vertical-shaped buyer arrives with.
-  { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments, kilns. Describe what you track and it gets a table, a form, search and agent access.', wide: true },
-  { icon: Mail, name: 'Newsletters and drip sequences', body: 'Campaigns, live segments and drips that follow up on their own. Opens, bounces and unsubscribes handled.', wide: true },
-  { icon: Table2, name: 'Excel, both ways', body: 'A live link, or a real two-way sync so edits in the sheet come back.' },
-  { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work. Your agents post there too.' },
+  { icon: Table2, name: 'Your own record types', body: 'Vehicles, patients, shipments. Describe what you track; it gets a table, a form and search.', wide: true },
+  { icon: Mail, name: 'Newsletters and drips', body: 'Campaigns, segments and follow-ups that run themselves.' },
   { icon: Zap, name: 'Automations', body: 'When something happens, do something.' },
-  { icon: PenLine, name: 'E-signatures', body: 'They sign in the browser. No account, no extra seat.' },
-  { icon: FileInput, name: 'Custom forms', body: 'Every answer lands as a record.' },
-  { icon: FileSearch, name: 'Files that become data', body: 'Contracts and CVs, indexed next to the ledger.' },
-  { icon: Link2, name: 'Short links', body: 'Your own shortener, with click tracking.' },
-  { icon: FileBarChart, name: 'Scheduled reports', body: 'The numbers that matter, in the right inboxes on Monday.' },
-  { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at the same endpoints.' },
-  { icon: FileText, name: 'e-Invoicing (KSeF)', body: 'Compliant FA(3) e-invoices for Poland.' },
-  { icon: Building2, name: 'Company lookup', body: 'Autofill a client from its VAT or NIP.' },
-  // Both of these are free public data doing work a vendor usually meters.
-  { icon: Scale, name: 'Sanctions screening', body: 'OFAC lists, matched in Postgres. No per-query fee.' },
-  { icon: FileStack, name: 'PDF toolkit', body: 'Merge, split, watermark. The files never leave your machine.', href: '/pdf', cta: 'Open the PDF tools' },
-  { icon: ShieldCheck, name: 'GDPR and privacy', body: 'Consent logs, anonymization, cookieless analytics.' },
-  // Both of these were only ever in the flat inventory further down, which is
-  // the section people skim last.
-  { icon: NotebookPen, name: 'Docs and mind maps', body: 'Write next to the records, with boards for planning.' },
-  { icon: KeyRound, name: 'Roles and permissions', body: 'Owner, admin, member. Audit log on Enterprise.' },
-  { icon: Puzzle, beam: true, name: 'Agent skills, portable', body: 'Write a skill once, package it as an Agent Plugin. Import from GitHub, export yours back out.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
-  // The calendar is the clearest demonstration of the one-database claim, so it
-  // gets a tile rather than a line in the inventory nobody reads twice.
-  { icon: PieChart, name: 'Cap table and dilution', body: 'Shares, options with vesting, SAFEs. Model a round and watch what it does to everyone.' },
-  { icon: Scale, name: 'Multi-currency', body: 'Invoice in any currency, report in one. ECB rates, no per-lookup fee.' },
-  { icon: Target, name: 'Goals and funnels', body: 'Conversions and drop-off on your own cookieless analytics. No second product.' },
-  { icon: Plug, name: 'Public API directory', body: 'Vetted keyless APIs your agents can call, added in one click.' },
-  { icon: CalendarDays, name: 'One company calendar', body: 'Invoices due, interviews, scheduled posts, campaign windows and bookings — on one grid, from one query.', wide: true },
-  { icon: LineChart, name: 'Cash forecast', body: 'Hire two people, lose your biggest client, get paid three weeks late. Watch what happens to the money.' },
-  { icon: KeyRound, name: 'Encrypted team vault', body: 'Shared logins your own server cannot read. Free password generator, no account.', href: '/password', cta: 'Open the generator' },
-  // Wide, because "your AI stays on brand" is the claim everyone makes and
-  // nobody explains. The sentence has to say HOW.
-  { icon: Palette, beam: true, name: 'A design spec your AI actually follows', body: 'Upload a logo and your brand PDF — the exact hex codes, type levels and rules come out, in Google’s DESIGN.md format. Six free styles to start from, live preview, contrast checked, exported as CSS, Tailwind and a skill every agent carries.', wide: true, href: '/brand', cta: 'Open the free DESIGN.md builder' },
-  { icon: ShoppingCart, name: 'Orders and stock', body: 'Products, line items, and a shelf that moves when an order ships.' },
-  { icon: Cable, name: 'One-click connectors', body: 'Zapier, Make, n8n, Slack. Pick the app, paste one URL, choose what to be told about.' },
+  { icon: PenLine, name: 'E-signatures', body: 'They sign in the browser. No account needed.' },
+  { icon: FileSearch, name: 'Files that become data', body: 'Contracts and CVs, searchable by what is inside.' },
+  { icon: Puzzle, beam: true, name: 'Portable agent skills', body: 'Write a skill once, import from GitHub, export it anywhere.', wide: true, href: '/plugins', cta: 'Open the free skill builder' },
+  { icon: Palette, beam: true, name: 'A brand your AI follows', body: 'Upload a logo and brand PDF; get exact colours, type and rules every agent uses.', wide: true, href: '/brand', cta: 'Open the free DESIGN.md builder' },
+  { icon: Table2, name: 'Excel, both ways', body: 'Edits in the sheet come back.' },
+  { icon: LineChart, name: 'Cash forecast', body: 'See what a late payment does to the money.' },
+  { icon: MessagesSquare, name: 'Team chat', body: 'Channels next to the work. Agents post there too.' },
+  { icon: Plug, name: 'REST API and MCP', body: 'Point Claude, Cursor or Zapier at it.' },
 ];
 
 // Prices, names and limits are DERIVED from lib/plans.ts — the same file that
@@ -192,27 +166,30 @@ export default function HomePage() {
       <MarketingHeader home />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────
-          One flat colour, type, and the real product. The engraving and the
-          ASCII field it fed are gone: a 284 KB plate plus a 17,000-cell canvas
-          loop was the heaviest thing on the page, and it argued "exploration"
-          for a product whose pitch is "your whole company in one place". The
-          chrome on the second line and on the button is the same liquid-metal
-          fill the app uses, so the site and the product read as one thing. */}
+          One flat colour, a live ASCII terrain, the headline, and the real
+          product. The field is the v3 AsciiField (cached base, capped cells,
+          ~30fps, loop only after load + idle), monochrome so it reads as
+          texture, and calm in the centre (edgeBias) so the type never sits on
+          noise. The cursor pushes ripples through it — the one bit of play on
+          a page that is otherwise all business. */}
       <section className="relative overflow-hidden">
-        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-16 md:pt-32 pb-14 md:pb-20 text-center">
-          <a href={REPO_URL} className="inline-flex items-center gap-2 h-8 pl-1.5 pr-3 rounded-full bg-surface ring-1 ring-subtle shadow-card text-xs text-secondary hover:text-primary transition-colors">
-            <span className="inline-flex items-center h-5 px-2 rounded-full bg-inverse text-inverse-fg text-2xs font-medium">MIT</span>
-            Open source · self-host or use the cloud
-            <ArrowRight className="w-3 h-3" />
-          </a>
+        <div className="absolute inset-0" aria-hidden="true">
+          <HeroAscii />
+        </div>
+        {/* Keeps the band the type occupies quiet, and dissolves the field into
+            the page before the product window. */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(36% 30% at 50% 40%, hsl(var(--canvas)/0.94) 35%, hsl(var(--canvas)/0.6) 65%, transparent 100%)' }} />
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-canvas to-transparent pointer-events-none" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-24 md:pt-40 pb-16 md:pb-24 text-center">
           {/* Two ranks by SIZE and COLOUR, never weight — the app's own rule. */}
-          <h1 className="mt-7 text-[2.5rem] leading-[1.04] md:text-[4.6rem] md:leading-[0.98] font-medium tracking-[-0.035em] text-primary">
+          <h1 className="text-[2.6rem] leading-[1.03] md:text-[4.8rem] md:leading-[0.97] font-medium tracking-[-0.035em] text-primary">
             Your whole company.<br />
             <span className="text-chrome">One copilot runs it.</span>
           </h1>
           <p className="mt-6 text-base md:text-lg text-secondary max-w-2xl mx-auto leading-relaxed">
-            Sales, invoices, marketing, projects and hiring on one database — and a copilot that drafts the
-            invoice, chases the deal and puts your agents to work. You approve; it does the rest.
+            Sales, finance, marketing, projects and hiring in one place. Open source.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/auth/register" className="inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-full bg-inverse text-inverse-fg text-sm font-medium transition-[filter]">
@@ -222,7 +199,6 @@ export default function HomePage() {
               <Github className="w-4 h-4" /> Star on GitHub
             </a>
           </div>
-          <div className="mt-5 hidden sm:flex justify-center"><CopyCommand command={`git clone ${REPO_URL}.git`} /></div>
         </div>
 
         {/* the big product window breaks out of the hero into the page */}
@@ -253,7 +229,6 @@ export default function HomePage() {
       {/* Modules strip (top padding clears the overlapping window) */}
       <section className="pt-36 md:pt-56">
         <div className="max-w-6xl mx-auto px-6 pb-8">
-          <p className="text-center text-xs text-tertiary mb-10">Switch tabs in the window above. It is the real interface, on sample data.</p>
           <div className="grid grid-cols-2 md:grid-cols-5 border border-subtle rounded-xl divide-y md:divide-y-0 md:divide-x divide-subtle overflow-hidden">
             {MODULES.map((m) => (
               <div key={m.name} className="p-5 hover:bg-surface-hover transition-colors">
@@ -272,7 +247,7 @@ export default function HomePage() {
           <Reveal>
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Everything else, already in the box</h2>
-              <p className="text-secondary mt-3 leading-relaxed">Five more subscriptions, built in and on the same records.</p>
+              <p className="text-secondary mt-3 leading-relaxed">On the same records, no extra subscriptions.</p>
             </div>
           </Reveal>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -337,9 +312,7 @@ export default function HomePage() {
                 </h2>
                 <p className="text-secondary mt-4 leading-relaxed">
                   Docked beside your work, so &ldquo;chase these&rdquo; means the invoices you are
-                  looking at. It reads and writes across the whole workspace &mdash; deals, invoices,
-                  documents, the hiring pipeline, team chat &mdash; through the same functions the
-                  screens use, so it can never reach further than you can.
+                  looking at. It can do anything you can &mdash; and nothing you can&apos;t.
                 </p>
                 <ul className="mt-6 space-y-2.5 text-sm text-secondary">
                   <li className="flex gap-2.5">
@@ -401,7 +374,7 @@ export default function HomePage() {
               <div className="max-w-2xl">
                 <h2 className="text-2xl md:text-4xl font-medium tracking-tight">It also tracks whatever you track</h2>
                 <p className="text-secondary mt-3 leading-relaxed">
-                  Describe your business in a sentence and RunButter proposes the record types — or build them by hand. Each one gets a table, a form, search and agent access immediately.
+                  Describe your business in a sentence and get the record types, or build them by hand.
                 </p>
               </div>
             </Reveal>
@@ -529,7 +502,7 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <h2 className="text-2xl md:text-4xl font-medium tracking-tight">Count what you are already paying</h2>
               <p className="text-secondary mt-3 leading-relaxed">
-                Tick what you have and put in your own figures. We are not going to guess at anyone else&apos;s price list.
+                Tick what you use and enter your own prices.
               </p>
             </div>
           </Reveal>
