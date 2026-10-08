@@ -140,3 +140,37 @@ export function licenceNote(repo: string, path: string): string {
   }
   return '';
 }
+
+/**
+ * The files a skill points at, as paths in the repository.
+ *
+ * Skills in the large collections keep their instructions short and push the
+ * long material one hop away — "read reference/tone-matching.md", "see
+ * ../../shared/untrusted-content.md". Importing only SKILL.md kept the pointer
+ * and lost the page, so an imported skill told the agent to read a file it
+ * would never be given. This finds those pointers (markdown links and
+ * backticked paths), resolves them against the skill's own folder, and keeps
+ * only the ones that really exist in the tree — never a path outside the repo,
+ * never a URL.
+ */
+export function referencedFiles(body: string, skillPath: string, treePaths: Set<string>, max = 6): string[] {
+  const dir = skillPath.split('/').slice(0, -1);
+  const found: string[] = [];
+  const re = /\]\(([^)\s#]+\.md)(?:#[^)]*)?\)|`([^`\s]+\.md)`/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body)) && found.length < max) {
+    const raw = m[1] || m[2];
+    if (/^[a-z]+:\/\//i.test(raw) || raw.startsWith('/')) continue;
+    const parts = [...dir];
+    let escaped = false;
+    for (const seg of raw.split('/')) {
+      if (seg === '.' || seg === '') continue;
+      if (seg === '..') { if (!parts.length) { escaped = true; break; } parts.pop(); continue; }
+      parts.push(seg);
+    }
+    if (escaped) continue;
+    const path = parts.join('/');
+    if (path !== skillPath && treePaths.has(path) && !found.includes(path)) found.push(path);
+  }
+  return found;
+}

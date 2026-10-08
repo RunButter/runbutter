@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { parseRepoUrl, parseSkillMd, classifyGithubResponse, waitFor, licenceNote, type GithubFailure } from '@/lib/skills/github';
+import { parseRepoUrl, parseSkillMd, classifyGithubResponse, waitFor, licenceNote, referencedFiles, type GithubFailure } from '@/lib/skills/github';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -118,15 +118,24 @@ export async function POST(req: Request) {
   }
 
   const base = `https://raw.githubusercontent.com/${ref.owner}/${ref.repo}/${branch}/`;
-  const skills = (await Promise.all(wanted.map(async (n) => {
+  const blobs = new Set((tree.json.tree as any[]).filter((n) => n.type === 'blob').map((n) => String(n.path)));
+  const rawText = async (path: string): Promise<string | null> => {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
     try {
-      const r = await fetch(base + n.path.split('/').map(encodeURIComponent).join('/'), { headers: { 'user-agent': UA['user-agent'] }, signal: ctl.signal });
-      if (!r.ok) return null;
-      const text = (await r.text()).slice(0, MAX_BYTES);
-      return { ...parseSkillMd(text, n.path), licence: licenceNote(`${ref.owner}/${ref.repo}`, String(n.path)) };
+      const r = await fetch(base + path.split('/').map(encodeURIComponent).join('/'), { headers: { 'user-agent': UA['user-agent'] }, signal: ctl.signal });
+      return r.ok ? (await r.text()).slice(0, MAX_BYTES) : null;
     } catch { return null; } finally { clearTimeout(t); }
+  };
+  const skills = (await Promise.all(wanted.map(async (n) => {
+    const text = await rawText(String(n.path));
+    if (text == null) return null;
+    const parsed = parseSkillMd(text, n.path);
+    return {
+      ...parsed,
+      instructions: await withReferences(parsed.instructions, String(n.path), blobs, rawText),
+      licence: licenceNote(`${ref.owner}/${ref.repo}`, String(n.path)),
+    };
   }))).filter(Boolean);
 
   if (!skills.length) return NextResponse.json({ error: 'Found SKILL.md files but none could be read.' }, { status: 502 });
@@ -137,4 +146,38 @@ export async function POST(req: Request) {
     truncated: Boolean(tree.json.truncated),
     skills,
   });
+}
+
+/**
+ * Append the files a skill points at, so the pointer arrives with its page.
+ *
+ * The budget is save_skill's 20,000-character limit (0068): the body first,
+ * then each referenced file in the order the skill mentions it while it fits.
+ * One that does not fit is NAMED rather than silently dropped — an agent told
+ * "read reference/x.md" that finds neither the file nor a note saying it was
+ * left out will improvise the contents.
+ */
+const SKILL_LIMIT = 19_500;
+async function withReferences(
+  body: string, skillPath: string, blobs: Set<string>, read: (p: string) => Promise<string | null>,
+): Promise<string> {
+  const dir = skillPath.split('/').slice(0, -1).join('/');
+  // The skill's own folder first: reference/tone-matching.md is specific to
+  // this skill, ../../shared/* is general guidance, and when only one fits the
+  // specific one is worth more.
+  const refs = referencedFiles(body, skillPath, blobs, 10)
+    .sort((a, b) => Number(!a.startsWith(dir + '/')) - Number(!b.startsWith(dir + '/')));
+  if (!refs.length) return body;
+  const rel = (p: string) => (p.startsWith(dir + '/') ? p.slice(dir.length + 1) : p);
+  let out = body.trimEnd() + '\n\n---\n\n_Files this skill refers to, included on import:_\n';
+  const skipped: string[] = [];
+  for (const path of refs) {
+    const text = await read(path);
+    if (text == null) { skipped.push(rel(path)); continue; }
+    const block = `\n## ${rel(path)}\n\n${text.trim()}\n`;
+    if (out.length + block.length > SKILL_LIMIT) { skipped.push(rel(path)); continue; }
+    out += block;
+  }
+  if (skipped.length) out += `\n_Not included (too long or unreadable): ${skipped.join(', ')}._\n`;
+  return out;
 }
