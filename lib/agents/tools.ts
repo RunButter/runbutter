@@ -234,6 +234,49 @@ export const TOOLS = [
     schedule_task: { type: 'string', description: 'What it does on each scheduled run. Required for a schedule.' },
   }, required: ['name', 'instructions'] } },
   { name: 'run_agent', description: 'Hand a task to one of this workspace\'s agents and wait for its answer. The agent works with ITS OWN tools and autonomy — a suggest-mode agent only proposes, and its proposals wait for a person on its own run. An agent started this way cannot start another. Get the id from list_agents.', inputSchema: { type: 'object', properties: { agent_id: { type: 'string' }, task: { type: 'string' } }, required: ['agent_id', 'task'] } },
+  // ── Running the company: the places a person manages that had no tool ───
+  { name: 'list_orders', description: 'Sales orders with their status, customer and totals.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_order', description: 'Create a draft order from products. Lines may name a product_id from list_records(products) or just a name and price. Stock moves only when a person marks it paid — never here.', inputSchema: { type: 'object', properties: {
+    customer: { type: 'string', description: 'Who it is for / where it ships.' }, company_id: { type: 'string' }, notes: { type: 'string' },
+    items: { type: 'array', items: { type: 'object', properties: { product_id: { type: 'string' }, name: { type: 'string' }, quantity: { type: 'number' }, unit_price: { type: 'number' } } } },
+  }, required: ['items'] } },
+  { name: 'save_position', description: 'Create or update an open role (HR). Omit id to create. is_published puts it on the public careers page, so leave it false unless asked.', inputSchema: { type: 'object', properties: {
+    id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, department: { type: 'string' },
+    location: { type: 'string' }, employment_type: { type: 'string' }, is_active: { type: 'boolean' }, is_published: { type: 'boolean' },
+  } } },
+  { name: 'list_interviews', description: 'Scheduled interviews with candidates. Scheduling one sends a calendar invite and an email, so it stays on the Interviews screen.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'list_forms', description: 'Public forms that collect submissions into the workspace.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_form', description: 'Create or update a public form. Each field: key, label, type (text|email|tel|textarea|select|checkbox), required, options (select only), map (first_name|last_name|email|phone|title|linkedin_url, or "" for a custom answer). Created disabled unless enabled is true.', inputSchema: { type: 'object', properties: {
+    id: { type: 'string' }, name: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' },
+    fields: { type: 'array', items: { type: 'object' } }, submit_message: { type: 'string' }, enabled: { type: 'boolean' },
+  }, required: ['name', 'fields'] } },
+  { name: 'list_short_links', description: 'Short links and their click counts.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'create_short_link', description: 'Create a tracked short link to an http(s) URL. Optional custom code.', inputSchema: { type: 'object', properties: { target: { type: 'string' }, title: { type: 'string' }, code: { type: 'string' } }, required: ['target'] } },
+  { name: 'list_segments', description: 'Saved newsletter audience segments and their filters.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_segment', description: 'Create or update a subscriber segment. Filters: [{field, op, value}] — fields status|email|name|consent_source|created_at|on_list|score, ops eq|neq|contains|not_contains|ends_with|is_set|is_empty|within_days|before_days|gt|lt. A segment selects people; it sends nothing.', inputSchema: { type: 'object', properties: {
+    id: { type: 'string' }, name: { type: 'string' }, description: { type: 'string' }, filters: { type: 'array', items: { type: 'object' } },
+  }, required: ['name', 'filters'] } },
+  { name: 'get_cap_table', description: 'Who owns the company: holders, securities and fully-diluted percentages.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'save_cap_holder', description: 'Add a shareholder or option holder, optionally with one security. kind: founder|investor|employee|advisor|entity. security.kind: shares|option|safe|note.', inputSchema: { type: 'object', properties: {
+    name: { type: 'string' }, kind: { type: 'string' }, email: { type: 'string' },
+    security: { type: 'object', properties: { kind: { type: 'string' }, quantity: { type: 'number' }, amount: { type: 'number' }, valuation_cap: { type: 'number' }, discount_pct: { type: 'number' }, strike: { type: 'number' }, vest_start: { type: 'string' }, vest_months: { type: 'number' }, cliff_months: { type: 'number' }, issued_on: { type: 'string' } } },
+  }, required: ['name', 'kind'] } },
+  { name: 'list_members', description: 'People in this workspace with their roles and account ids.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'invite_member', description: 'Invite somebody into the workspace by email (role: admin|member|recruiter|viewer|owner). ALWAYS a proposal — a person approves, because a new member can see the company\'s data. Only owners and admins can invite.', inputSchema: { type: 'object', properties: { email: { type: 'string' }, full_name: { type: 'string' }, role: { type: 'string' } }, required: ['email', 'full_name', 'role'] } },
+  { name: 'set_member_role', description: 'Change a member\'s role (owner|admin|member|recruiter|viewer). ALWAYS a proposal. Get account_id from list_members.', inputSchema: { type: 'object', properties: { account_id: { type: 'string' }, role: { type: 'string' } }, required: ['account_id', 'role'] } },
+  { name: 'update_workspace', description: 'Change company-wide settings: the workspace name, branding used on invoices, emails and the careers page (logo_url, accent_color #RRGGBB, legal_name, address, tax_id, vat_id, country, iban, bank_name, reg_no, email_from_name, email_footer, invoice_footer, document_footer, apply_intro), and which modules are hidden from the sidebar (hidden_modules: ["g:hr", "i:forecast", …] — the FULL list, replacing the old one). ALWAYS a proposal.', inputSchema: { type: 'object', properties: {
+    name: { type: 'string' }, branding: { type: 'object' }, hidden_modules: { type: 'array', items: { type: 'string' } },
+  } } },
+  { name: 'propose_automation', description: 'Propose an automation: when something happens (trigger "event": a record of `object` is created/updated, optionally matching conditions; or "schedule": every hour/day), do actions. Actions: send_email {to, subject, body} (use {{field}} placeholders), send_webhook {connection_id} (from list_connections — never a URL), create_record {object, data}, update_record {data}, ask_ai {prompt}. ALWAYS a proposal: it runs unattended once approved.', inputSchema: { type: 'object', properties: {
+    name: { type: 'string' }, trigger: { type: 'string', enum: ['event', 'schedule'] }, object: { type: 'string' }, event: { type: 'string', enum: ['created', 'updated'] },
+    conditions: { type: 'array', items: { type: 'object' } }, every: { type: 'string', enum: ['hour', 'day'] },
+    actions: { type: 'array', items: { type: 'object' } },
+  }, required: ['name', 'trigger', 'actions'] } },
+  { name: 'propose_field', description: 'Propose a new field on a record type — built-in (companies, invoices…) or one of this workspace\'s own objects. ALWAYS a proposal: a field changes the table, the form, imports and every agent\'s view of the object.', inputSchema: { type: 'object', properties: {
+    object: { type: 'string' }, label: { type: 'string' }, key: { type: 'string' },
+    type: { type: 'string', enum: [...FIELD_TYPES] }, options: { type: 'array', items: { type: 'string' } },
+    relation_to: { type: 'string' }, required: { type: 'boolean' },
+  }, required: ['object', 'label', 'type'] } },
   { name: 'list_connections', description: 'Outgoing connections this workspace has set up (Slack, Discord, Zapier, Make, n8n or a generic webhook). Returns their ids and labels so you can send to one — the destination URLs are not exposed.', inputSchema: { type: 'object', properties: {} } },
   { name: 'call_connection', description: 'Send a message and optional structured data to one of this workspace\'s saved connections. Use it to post to Slack/Discord or to hand data to Zapier/Make/n8n. Call list_connections first to get an id. You cannot specify a URL — only a saved connection.', inputSchema: { type: 'object', properties: { connection_id: { type: 'string', description: 'id from list_connections.' }, message: { type: 'string', description: 'Human-readable text. This is what shows up in a Slack or Discord channel.' }, data: { type: 'object', description: 'Optional structured payload for automation tools.' } }, required: ['connection_id', 'message'] } },
 ] as const;
@@ -974,6 +1017,238 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       };
     }
 
+    // ── Running the company ──────────────────────────────────────────────────
+    case 'list_orders':
+      return await rpc(ctx, 'get_orders', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+
+    case 'save_order': {
+      const productIds = new Set((await listRows(ctx, 'products')).map((p: any) => p.id));
+      const items = (Array.isArray(args?.items) ? args.items : []).slice(0, 200).map((i: any) => ({
+        // A product id from another workspace is dropped, not trusted: the
+        // order would otherwise show another tenant's product name.
+        product_id: i?.product_id && productIds.has(String(i.product_id)) ? String(i.product_id) : null,
+        name: String(i?.name || '').slice(0, 300),
+        quantity: String(Number(i?.quantity ?? 1) || 1),
+        unit_price: i?.unit_price != null ? String(Number(i.unit_price) || 0) : null,
+      })).filter((i: any) => i.product_id || i.name.trim());
+      if (!items.length) throw new Error('An order needs at least one line.');
+      const id = await rpc(ctx, 'save_order', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: null,
+        p_data: {
+          status: 'draft', placed_at: new Date().toISOString().slice(0, 10),
+          ship_to: args?.customer ? String(args.customer).slice(0, 500) : null,
+          organization_id: args?.company_id || null, notes: args?.notes ? String(args.notes).slice(0, 4000) : null,
+          items,
+        },
+      });
+      return { id, lines: items.length, status: 'draft', link: '/orders' };
+    }
+
+    case 'save_position': {
+      const data: Record<string, any> = {};
+      for (const k of ['title', 'description', 'department', 'location', 'employment_type']) {
+        if (args?.[k] !== undefined) data[k] = String(args[k] ?? '').slice(0, k === 'description' ? 20000 : 300);
+      }
+      for (const k of ['is_active', 'is_published']) if (typeof args?.[k] === 'boolean') data[k] = args[k];
+      if (!args?.id && !data.title) throw new Error('A new role needs a title.');
+      if (!args?.id && data.is_published === undefined) data.is_published = false;
+      const row = await rpc(ctx, 'hr_save_position', { p_privy: ctx.privy, p_id: args?.id || null, p_data: data, p_assessment: null });
+      return { id: (row as any)?.id ?? row, title: (row as any)?.title ?? data.title, published: (row as any)?.is_published ?? data.is_published, link: '/dashboard/positions' };
+    }
+
+    case 'list_interviews':
+      return await rpc(ctx, 'hr_list_interviews', { p_privy: ctx.privy });
+
+    case 'list_forms':
+      return await rpc(ctx, 'get_forms', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+
+    case 'save_form': {
+      const TYPES = new Set(['text', 'email', 'tel', 'textarea', 'select', 'checkbox']);
+      const MAPS = new Set(['', 'first_name', 'last_name', 'email', 'phone', 'title', 'linkedin_url']);
+      const fields = (Array.isArray(args?.fields) ? args.fields : []).slice(0, 40).map((f: any, i: number) => {
+        const label = String(f?.label || '').slice(0, 200);
+        const key = String(f?.key || label).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || `field_${i + 1}`;
+        const type = TYPES.has(f?.type) ? f.type : 'text';
+        return {
+          key, label, type, required: !!f?.required,
+          ...(type === 'select' ? { options: (Array.isArray(f?.options) ? f.options : []).map(String).slice(0, 50) } : {}),
+          map: MAPS.has(f?.map ?? '') ? (f?.map ?? '') : '',
+        };
+      }).filter((f: any) => f.label);
+      if (!fields.length) throw new Error('A form needs at least one field with a label.');
+      const id = await rpc(ctx, 'save_form', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: args?.id || null,
+        p_name: String(args?.name || 'Form').slice(0, 120), p_title: String(args?.title || args?.name || '').slice(0, 200),
+        p_description: String(args?.description || '').slice(0, 2000), p_fields: fields,
+        p_submit_message: String(args?.submit_message || 'Thanks — we will be in touch.').slice(0, 500),
+        p_enabled: args?.enabled === true,
+      });
+      return { id, fields: fields.length, enabled: args?.enabled === true, link: '/marketing/forms' };
+    }
+
+    case 'list_short_links':
+      return await rpc(ctx, 'get_short_links', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+
+    case 'create_short_link': {
+      const target = String(args?.target || '').trim();
+      if (!/^https?:\/\/[^\s]+$/i.test(target)) throw new Error('The target must be an http(s) URL.');
+      const code = args?.code ? String(args.code).trim().slice(0, 40) : null;
+      const row = await rpc(ctx, 'create_short_link', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_target: target, p_title: String(args?.title || '').slice(0, 200), p_code: code });
+      return row;
+    }
+
+    case 'list_segments':
+      return await rpc(ctx, 'get_segments', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+
+    case 'save_segment': {
+      // segment_match is a whitelist in SQL and save_segment rejects unknown
+      // filters (BAD_FILTERS), so this only shapes the payload.
+      const filters = (Array.isArray(args?.filters) ? args.filters : []).slice(0, 20).map((f: any) => ({
+        field: String(f?.field || ''), op: String(f?.op || ''), value: String(f?.value ?? ''),
+      }));
+      const id = await rpc(ctx, 'save_segment', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: args?.id || null,
+        p_name: String(args?.name || 'Segment').slice(0, 120), p_description: String(args?.description || '').slice(0, 1000), p_filters: filters,
+      });
+      return { id, filters: filters.length, note: 'A segment only selects subscribers; nothing was sent.' };
+    }
+
+    case 'get_cap_table':
+      return await rpc(ctx, 'get_cap_table', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_as_of: null });
+
+    case 'save_cap_holder': {
+      const KINDS = ['founder', 'investor', 'employee', 'advisor', 'entity'];
+      const kind = KINDS.includes(args?.kind) ? args.kind : 'investor';
+      const holderId = await rpc(ctx, 'save_cap_holder', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: null,
+        p_name: String(args?.name || '').slice(0, 200), p_kind: kind, p_email: args?.email ? String(args.email).slice(0, 200) : null,
+      });
+      let securityId: any = null;
+      const sec = args?.security;
+      if (sec && ['shares', 'option', 'safe', 'note'].includes(sec.kind)) {
+        const data: Record<string, any> = { holder_id: holderId, kind: sec.kind };
+        for (const k of ['quantity', 'amount', 'valuation_cap', 'discount_pct', 'strike', 'vest_months', 'cliff_months']) {
+          if (sec[k] != null && isFinite(Number(sec[k]))) data[k] = String(Number(sec[k]));
+        }
+        for (const k of ['vest_start', 'issued_on']) if (sec[k]) data[k] = String(sec[k]).slice(0, 10);
+        securityId = await rpc(ctx, 'save_cap_security', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: null, p_data: data });
+      }
+      return { holder_id: holderId, security_id: securityId, link: '/cap-table' };
+    }
+
+    case 'list_members': {
+      const rows = await rpc(ctx, 'get_members', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      return (Array.isArray(rows) ? rows : []).map((m: any) => ({
+        account_id: m.id ?? m.account_id, name: m.full_name ?? m.name ?? null, email: m.email ?? null, role: m.role,
+      }));
+    }
+
+    /**
+     * ── Proposals that change who can see what, or what runs unattended ─────
+     *
+     * Each of these is `alwaysPropose`: here it VALIDATES and returns the plan a
+     * person will read; nothing is written. `applyProposal` writes exactly that
+     * plan once approved — the same split as propose_object and propose_agent.
+     */
+    case 'invite_member': {
+      const role = String(args?.role || 'member').toLowerCase();
+      if (!['owner', 'admin', 'member', 'recruiter', 'viewer'].includes(role)) throw new Error('role must be owner, admin, member, recruiter or viewer.');
+      const email = String(args?.email || '').toLowerCase().trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('That email address does not look right.');
+      return { proposal: { email, full_name: String(args?.full_name || '').slice(0, 200), role }, note: 'Not sent. A person approves the invitation.' };
+    }
+
+    case 'set_member_role': {
+      const role = String(args?.role || '').toLowerCase();
+      if (!['owner', 'admin', 'member', 'recruiter', 'viewer'].includes(role)) throw new Error('role must be owner, admin, member, recruiter or viewer.');
+      const members = await rpc(ctx, 'get_members', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+      const m = (Array.isArray(members) ? members : []).find((x: any) => (x.id ?? x.account_id) === args?.account_id);
+      if (!m) throw new Error('No member with that account_id. Call list_members.');
+      return { proposal: { account_id: args.account_id, role, name: m.name ?? m.full_name ?? m.email ?? null, from: m.role }, note: 'Not changed. A person approves.' };
+    }
+
+    case 'update_workspace': {
+      const BRAND = ['logo_url', 'accent_color', 'legal_name', 'address', 'tax_id', 'vat_id', 'country', 'iban', 'bank_name', 'reg_no', 'email_from_name', 'email_footer', 'invoice_footer', 'document_footer', 'apply_intro'];
+      const branding: Record<string, string> = {};
+      const dropped: string[] = [];
+      for (const [k, v] of Object.entries(args?.branding || {})) {
+        if (!BRAND.includes(k)) { dropped.push(k); continue; }
+        const val = String(v ?? '').slice(0, 4000);
+        if (k === 'accent_color' && val && !/^#[0-9a-f]{6}$/i.test(val)) { dropped.push(k); continue; }
+        if (k === 'logo_url' && val && !/^https:\/\//i.test(val)) { dropped.push(k); continue; }
+        branding[k] = val;
+      }
+      const proposal: Record<string, any> = {};
+      if (args?.name) proposal.name = String(args.name).trim().slice(0, 80);
+      if (Object.keys(branding).length) proposal.branding = branding;
+      if (Array.isArray(args?.hidden_modules)) proposal.hidden_modules = args.hidden_modules.map(String).slice(0, 200);
+      if (!Object.keys(proposal).length) throw new Error('Nothing to change: pass name, branding or hidden_modules.');
+      return { proposal, ...(dropped.length ? { warnings: [`Ignored: ${dropped.join(', ')}`] } : {}), note: 'Not changed. A person approves.' };
+    }
+
+    case 'propose_automation': {
+      const OPS = new Set(['eq', 'neq', 'contains', 'gt', 'lt', 'empty', 'not_empty']);
+      const trigger = args?.trigger === 'schedule' ? 'schedule' : 'event';
+      const conditions = (Array.isArray(args?.conditions) ? args.conditions : []).slice(0, 10)
+        .map((c: any) => ({ field: String(c?.field || ''), op: String(c?.op || 'eq'), value: String(c?.value ?? '') }))
+        .filter((c: any) => c.field && OPS.has(c.op));
+      const conns = new Set(((await rpc(ctx, 'get_connections', { p_privy: ctx.privy, p_workspace: ctx.workspace })) as any[] || []).map((c: any) => c.id));
+      const actions: any[] = [];
+      const warnings: string[] = [];
+      for (const a of (Array.isArray(args?.actions) ? args.actions : []).slice(0, 10)) {
+        const type = String(a?.type || '');
+        const cfg = a?.config && typeof a.config === 'object' ? a.config : a;
+        if (type === 'send_email') {
+          if (!cfg?.to) { warnings.push('send_email without "to" dropped'); continue; }
+          actions.push({ type, config: { to: String(cfg.to).slice(0, 300), subject: String(cfg.subject || '').slice(0, 300), body: String(cfg.body || '').slice(0, 8000) } });
+        } else if (type === 'send_webhook') {
+          // A saved connection only. A URL from a model is how an automation
+          // becomes an exfiltration pipe, so `url` is never carried across.
+          if (!conns.has(cfg?.connection_id)) { warnings.push('send_webhook needs a connection_id from list_connections — dropped'); continue; }
+          actions.push({ type, config: { connection_id: cfg.connection_id } });
+        } else if (type === 'create_record' && cfg?.object) {
+          actions.push({ type, config: { object: String(cfg.object), data: cfg.data && typeof cfg.data === 'object' ? cfg.data : {} } });
+        } else if (type === 'update_record') {
+          actions.push({ type, config: { data: cfg?.data && typeof cfg.data === 'object' ? cfg.data : {} } });
+        } else if (type === 'ask_ai' && cfg?.prompt) {
+          actions.push({ type, config: { prompt: String(cfg.prompt).slice(0, 4000) } });
+        } else warnings.push(`Unknown action "${type}" dropped`);
+      }
+      if (!actions.length) throw new Error(`No usable actions. ${warnings.join('; ')}`);
+      const proposal = {
+        name: String(args?.name || 'Untitled automation').slice(0, 120), enabled: true, trigger_type: trigger,
+        object: String(args?.object || 'companies'), event: args?.event === 'updated' ? 'updated' : 'created',
+        conditions, actions,
+        ...(trigger === 'schedule' ? { schedule: { every: args?.every === 'hour' ? 'hour' : 'day' } } : {}),
+      };
+      return { proposal, ...(warnings.length ? { warnings } : {}), note: 'Not created. A person approves.' };
+    }
+
+    case 'propose_field': {
+      const object = String(args?.object || '').trim();
+      const type = (FIELD_TYPES as readonly string[]).includes(args?.type) ? args.type : null;
+      if (!object || !type) throw new Error(`object and a type (${FIELD_TYPES.join(', ')}) are required.`);
+      const label = String(args?.label || '').trim().slice(0, 80);
+      const key = String(args?.key || label).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+      if (!label || !key) throw new Error('A field needs a label.');
+      let customId: string | null = null;
+      if (!OBJECTS[object]) {
+        const objs = await rpc(ctx, 'get_custom_objects', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+        const hit = (Array.isArray(objs) ? objs : (objs as any)?.objects || []).find((o: any) => o.slug === object);
+        if (!hit) throw new Error(`No record type "${object}". Call list_objects.`);
+        customId = hit.id;
+      }
+      return {
+        proposal: {
+          object, custom_object_id: customId, label, key, type,
+          options: type === 'select' ? (Array.isArray(args?.options) ? args.options.map(String).slice(0, 50) : []) : [],
+          relation_to: type === 'relation' ? String(args?.relation_to || '') || null : null,
+          required: !!args?.required,
+        },
+        note: 'Not created. A person approves.',
+      };
+    }
+
     // ── Outbound ──────────────────────────────────────────────────────────────
     case 'list_connections': {
       const rows = await rpc(ctx, 'get_connections', { p_privy: ctx.privy, p_workspace: ctx.workspace });
@@ -1045,5 +1320,55 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
 
     default:
       throw new Error(`Unknown tool "${name}"`);
+  }
+}
+
+
+/**
+ * Apply an approved `alwaysPropose` proposal. The tool above only validated;
+ * this is the single place each of them is written, with the plan exactly as a
+ * person read it. propose_object and propose_agent keep their own appliers in
+ * the runner.
+ */
+export async function applyProposal(ctx: ToolCtx, name: string, p: any): Promise<any> {
+  switch (name) {
+    case 'invite_member': {
+      const { createInvite } = await import('@/lib/team/invite');
+      const r = await createInvite(ctx.admin, ctx.privy, { email: p.email, fullName: p.full_name, role: p.role }, ctx.workspace);
+      if (!r.ok) throw new Error(r.error);
+      return { invited: p.email, role: p.role, emailed: r.emailed };
+    }
+    case 'set_member_role':
+      await rpc(ctx, 'set_member_role', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_account: p.account_id, p_role: p.role });
+      return { changed: p.name ?? p.account_id, role: p.role };
+    case 'update_workspace': {
+      const done: string[] = [];
+      if (p.name) { await rpc(ctx, 'rename_workspace', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_name: p.name }); done.push('name'); }
+      if (p.branding && Object.keys(p.branding).length) { await rpc(ctx, 'save_workspace_branding', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_data: p.branding }); done.push('branding'); }
+      if (Array.isArray(p.hidden_modules)) { await rpc(ctx, 'set_workspace_nav', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_hidden: p.hidden_modules }); done.push('modules'); }
+      return { updated: done };
+    }
+    case 'propose_automation': {
+      const id = await rpc(ctx, 'save_automation', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_id: null, p_data: p });
+      return { created: true, automation_id: id, link: '/settings/automations' };
+    }
+    case 'propose_field': {
+      if (p.custom_object_id) {
+        const id = await rpc(ctx, 'save_custom_field', {
+          p_privy: ctx.privy, p_workspace: ctx.workspace, p_object: p.custom_object_id, p_id: null,
+          p_key: p.key, p_label: p.label, p_type: p.type, p_options: p.options || [], p_relation_to: p.relation_to,
+          p_required: !!p.required, p_primary: false, p_position: 1000,
+        });
+        return { created: true, field_id: id };
+      }
+      const id = await rpc(ctx, 'save_builtin_field', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace, p_slug: p.object, p_id: null,
+        p_key: p.key, p_label: p.label, p_type: p.type, p_options: p.options || [], p_relation_to: p.relation_to,
+        p_required: !!p.required, p_position: 1000,
+      });
+      return { created: true, field_id: id };
+    }
+    default:
+      throw new Error(`No applier for "${name}".`);
   }
 }

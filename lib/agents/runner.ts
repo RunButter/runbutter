@@ -5,7 +5,7 @@
 //   • 'suggest' agents never execute writes — they queue them for approval
 //   • everything (each turn + tool call + result) is logged to the run
 import { agentTurn, appendToolResult, noUsage, addUsage, type AIProvider, type ToolSpec, type AgentToolCall, type Usage } from '@/lib/ai/providers';
-import { TOOLS, callTool, isWriteTool, OBJECTS, type ToolCtx } from '@/lib/agents/tools';
+import { TOOLS, callTool, applyProposal, isWriteTool, OBJECTS, type ToolCtx } from '@/lib/agents/tools';
 import { isAlwaysProposed } from '@/lib/agents/catalog';
 
 export interface AgentDef {
@@ -272,6 +272,10 @@ export async function executeProposed(ctx: ToolCtx, proposed: any[]): Promise<an
     try {
       const result = p.name === 'propose_object' ? await applyObject(ctx, p.args)
         : p.name === 'propose_agent' ? await applyAgent(ctx, p.args)
+        // Every other always-proposed tool validated without writing; its
+        // applier writes the approved plan. Re-calling the tool would only
+        // validate it again.
+        : isAlwaysProposed(p.name) ? await applyProposal(ctx, p.name, p.args)
         : await callTool(ctx, p.name, p.args);
       results.push({ name: p.name, args: p.args, result });
     } catch (e: any) { results.push({ name: p.name, args: p.args, result: { error: e?.message || 'failed' } }); }

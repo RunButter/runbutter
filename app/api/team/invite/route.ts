@@ -1,146 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkLimit, limitDeniedBody } from '@/lib/plans-server';
-import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
-import { resolveHrCompanyServer } from '@/lib/hr/company-server';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
-import { Resend } from 'resend';
+import { createInvite } from '@/lib/team/invite';
 
 export const runtime = 'nodejs';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
-const ROLES = new Set(['owner', 'admin', 'member', 'recruiter', 'viewer']);
-
+// POST /api/team/invite { email, fullName, role }
+// Authentication lives here; everything else (who may invite, the seat limit,
+// the email) lives in lib/team/invite.ts, which the Copilot's invite_member
+// tool also uses — so neither road can skip a check the other makes.
 export async function POST(req: NextRequest) {
-    try {
-        const rl = rateLimit(`invite:${clientIp(req)}`, 30);
-        if (!rl.ok) return tooMany(rl.retryAfterS);
+  try {
+    const rl = rateLimit(`invite:${clientIp(req)}`, 30);
+    if (!rl.ok) return tooMany(rl.retryAfterS);
 
-        // Identity from the signed Privy token. This used to read privyUserId
-        // and companyId out of the request body and then "verify" the caller
-        // against those same values — so anyone who knew an admin's Privy DID
-        // could invite themselves into that workspace as owner.
-        const v = await verifyPrivyToken(req);
-        if (v.status !== 'verified') {
-            return NextResponse.json({ error: 'Your session is invalid or expired. Sign in again.' }, { status: 401 });
-        }
-        const privyUserId = v.userId;
-
-        const { email, fullName, role } = await req.json();
-
-        if (!email || !fullName || !role) {
-            return NextResponse.json({ error: 'Name, email and role are required.' }, { status: 400 });
-        }
-        if (!ROLES.has(String(role))) {
-            return NextResponse.json({ error: 'That role is not recognised.' }, { status: 400 });
-        }
-
-        const supabaseAdmin = createAdminClient();
-
-        // 1. Caller's company + role, resolved server-side from the proven identity.
-        //    Must be the ACTIVE workspace: this previously took an arbitrary
-        //    membership row (.limit(1) with no ORDER BY), so an owner of two
-        //    companies got a coin flip on which one received the invitation.
-        const caller = await resolveHrCompanyServer(privyUserId);
-
-        if (!caller || (caller.role !== 'owner' && caller.role !== 'admin')) {
-            return NextResponse.json({ error: 'Only owners and admins can invite people.' }, { status: 403 });
-        }
-        // Only an owner may mint another owner.
-        if (role === 'owner' && caller.role !== 'owner') {
-            return NextResponse.json({ error: 'Only an owner can invite another owner.' }, { status: 403 });
-        }
-        const companyId = caller.companyId;
-
-        const { data: company } = await supabaseAdmin
-            .from('companies')
-            .select('plan, name')
-            .eq('id', companyId)
-            .single();
-
-        // 2. Seats.
-        //
-        // This used to be `plan === 'free' → 403 Multi-user teams require a
-        // Premium plan`, which was wrong in the direction that costs a customer
-        // rather than us: the Free plan includes TWO seats and always has, so
-        // the second person the pricing page promises was refused. It also read
-        // `companies.plan` directly, the column Stripe writes rather than the
-        // one the product reads (0090's trigger bridges them) — that split has
-        // bitten this codebase before.
-        //
-        // `maxSeats` counts people who hold a seat AND invitations already sent,
-        // so the ceiling is reached when the invite goes out rather than when
-        // somebody clicks the link they were legitimately given.
-        const seatDenial = await checkLimit(privyUserId, companyId, 'maxSeats');
-        if (seatDenial) return NextResponse.json(limitDeniedBody(seatDenial), { status: 402 });
-
-        // 3. Check if email is already in company
-        const { data: existingUser } = await supabaseAdmin
-            .from('company_users')
-            .select('id')
-            .eq('email', email)
-            .eq('company_id', companyId)
-            .maybeSingle();
-
-        if (existingUser) {
-            return NextResponse.json({ error: 'User is already a part of this organization.' }, { status: 400 });
-        }
-
-        // 4. Insert the pending member with a single-use invite token. The token
-        //    is what proves the invite on the way back in — the previous flow
-        //    matched only on email address, which anyone could guess.
-        const inviteToken = randomUUID();
-        const { error: insertError } = await supabaseAdmin
-            .from('company_users')
-            .insert({
-                company_id: companyId,
-                email: email.toLowerCase().trim(),  // stored normalised; lookups were case-sensitive before
-                full_name: fullName,
-                role: role,
-                invite_token: inviteToken,
-                invited_at: new Date().toISOString(),
-                invited_by: privyUserId,
-            });
-
-        if (insertError) {
-            throw new Error(`DB Error: ${insertError.message}`);
-        }
-
-        // 5. Send Invite Email via Resend
-        const origin = req.headers.get('x-forwarded-host')
-            ? `${req.headers.get('x-forwarded-proto') || 'https'}://${req.headers.get('x-forwarded-host')}`
-            : (process.env.NEXT_PUBLIC_APP_URL || 'https://runbutter.app');
-        const acceptUrl = `${origin}/auth/accept?token=${inviteToken}`;
-
-        if (process.env.RESEND_API_KEY) {
-            await resend.emails.send({
-                from: 'RunButter <no-reply@runbutter.app>',
-                to: email,
-                subject: `You've been invited to join ${company?.name} on RunButter`,
-                html: `
-                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333; padding: 20px;">
-                        <h2 style="color:#111;">You've been invited to ${company?.name}</h2>
-                        <p style="line-height:1.6;">You have been invited to collaborate with your team at <b>${company?.name}</b> on RunButter.</p>
-                        <p style="line-height:1.6;">Your role: <b>${String(role).toUpperCase()}</b></p>
-                        <div style="text-align:center; margin:28px 0;">
-                          <a href="${acceptUrl}" style="background-color:#4653CE; color:#fff; padding:12px 28px; text-decoration:none; border-radius:8px; font-weight:600; display:inline-block;">Accept invitation</a>
-                        </div>
-                        <p style="font-size:12px; color:#6B7280; line-height:1.6;">
-                          This link is unique to you and can only be used once. You can sign in with any
-                          method — the invitation is tied to the link, not to how you sign in.
-                          If the button doesn't work, paste this into your browser:<br/>
-                          <span style="word-break:break-all;">${acceptUrl}</span>
-                        </p>
-                    </div>
-                `
-            });
-        }
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: any) {
-        console.error('Invite API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    const v = await verifyPrivyToken(req);
+    if (v.status !== 'verified') {
+      return NextResponse.json({ error: 'Your session is invalid or expired. Sign in again.' }, { status: 401 });
     }
+
+    const { email, fullName, role } = await req.json();
+    const res = await createInvite(createAdminClient(), v.userId, { email, fullName, role });
+    if (!res.ok) return NextResponse.json(res.body ?? { error: res.error }, { status: res.status });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Invite API Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

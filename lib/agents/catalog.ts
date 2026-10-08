@@ -109,6 +109,26 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // Delegation. Write, so a suggest-mode caller proposes the hand-off first.
   { name: 'run_agent', label: 'Hand a task to an agent', group: 'Workspace', write: true },
   { name: 'save_document', label: 'Write an invoice or offer', group: 'Finance', write: true },
+  { name: 'list_orders', label: 'List orders', group: 'Sales' },
+  { name: 'save_order', label: 'Draft an order', group: 'Sales', write: true },
+  { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
+  { name: 'list_interviews', label: 'List interviews', group: 'Hiring' },
+  { name: 'list_forms', label: 'List forms', group: 'Marketing' },
+  { name: 'save_form', label: 'Build a form', group: 'Marketing', write: true },
+  { name: 'list_short_links', label: 'List short links', group: 'Marketing' },
+  { name: 'create_short_link', label: 'Create a short link', group: 'Marketing', write: true },
+  { name: 'list_segments', label: 'List audience segments', group: 'Marketing' },
+  { name: 'save_segment', label: 'Save an audience segment', group: 'Marketing', write: true },
+  { name: 'get_cap_table', label: 'Read the cap table', group: 'Finance' },
+  { name: 'save_cap_holder', label: 'Add a shareholder', group: 'Finance', write: true },
+  { name: 'list_members', label: 'List members', group: 'Workspace' },
+  // Who can see the company, what runs unattended, and the shape of the data:
+  // a person approves these on every autonomy setting.
+  { name: 'invite_member', label: 'Invite a member', group: 'Workspace', write: true, alwaysPropose: true },
+  { name: 'set_member_role', label: 'Change a member role', group: 'Workspace', write: true, alwaysPropose: true },
+  { name: 'update_workspace', label: 'Change company settings', group: 'Workspace', write: true, alwaysPropose: true },
+  { name: 'propose_automation', label: 'Propose an automation', group: 'Workspace', write: true, alwaysPropose: true },
+  { name: 'propose_field', label: 'Propose a new field', group: 'Workspace', write: true, alwaysPropose: true },
 
   { name: 'list_connections', label: 'List connections', group: 'Connections' },
   { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },

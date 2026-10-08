@@ -167,6 +167,20 @@ export function describeCall(name: string, args: any): string {
     case 'propose_object': return `Create a new record type — ${args?.plural || args?.slug || 'object'}`;
     case 'propose_agent': return `${args?.id ? 'Change' : 'Create'} the agent “${args?.name || 'New agent'}”${Array.isArray(args?.tools) ? ` with ${args.tools.length} tools` : ''}`;
     case 'run_agent': return `Hand a task to an agent${args?.task ? ` — “${String(args.task).slice(0, 80)}”` : ''}`;
+    case 'save_order': return `Draft an order${Array.isArray(args?.items) ? ` with ${args.items.length} line${args.items.length === 1 ? '' : 's'}` : ''}${args?.customer ? ` for ${args.customer}` : ''}`;
+    case 'save_position': return `${args?.id ? 'Update' : 'Open'} the role “${args?.title || 'untitled'}”${args?.is_published ? ' and publish it on the careers page' : ''}`;
+    case 'save_form': return `${args?.id ? 'Update' : 'Build'} the form “${args?.name || 'Form'}”`;
+    case 'create_short_link': return `Create a short link to ${args?.target || 'a URL'}`;
+    case 'save_segment': return `Save the audience segment “${args?.name || 'Segment'}”`;
+    case 'save_cap_holder': return `Add ${args?.name || 'a holder'} to the cap table${args?.security?.kind ? ` with ${args.security.kind}` : ''}`;
+    case 'invite_member': return `Invite ${args?.email || 'someone'} as ${args?.role || 'member'}`;
+    case 'set_member_role': return `Make ${args?.name || 'a member'} ${args?.role || ''}${args?.from ? ` (was ${args.from})` : ''}`;
+    case 'update_workspace': {
+      const parts = [args?.name && `rename to “${args.name}”`, args?.branding && `update branding (${Object.keys(args.branding).join(', ')})`, Array.isArray(args?.hidden_modules) && `hide ${args.hidden_modules.length} module${args.hidden_modules.length === 1 ? '' : 's'}`].filter(Boolean);
+      return `Company settings: ${parts.join('; ') || 'no change'}`;
+    }
+    case 'propose_automation': return `Automation “${args?.name || 'Untitled'}”: ${args?.trigger_type === 'schedule' ? `every ${args?.schedule?.every || 'day'}` : `when a ${singular(args?.object || 'record')} is ${args?.event || 'created'}`} → ${(args?.actions || []).map((a: any) => a.type.replace(/_/g, ' ')).join(', ')}`;
+    case 'propose_field': return `Add a ${args?.type || ''} field “${args?.label || ''}” to ${String(args?.object || '').replace(/_/g, ' ')}`;
     case 'save_document': {
       const n = Array.isArray(args?.lines) ? args.lines.length : 0;
       const what = args?.kind === 'offer' ? 'offer' : 'invoice';

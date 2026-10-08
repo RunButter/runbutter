@@ -566,6 +566,17 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   button, and both go through `lib/agents/delegate.ts → executeAgentRun` — the ONE way a run starts, so
   a delegated run gets the same key, tools, autonomy, transcript and token accounting as a manual one.
   The delegated agent keeps ITS autonomy; its proposals wait on its own run.
+- **Running the company (2026-10).** Orders, roles, forms, short links, segments and cap-table holders
+  are ordinary writes. **Inviting a member, changing a role, company settings/branding/modules, an
+  automation and a new field are `alwaysPropose`**: the tool only validates and returns the plan, and
+  `applyProposal` (tools.ts) writes exactly that plan after a person approves. Membership goes through
+  `lib/team/invite.ts`, the SAME function `/api/team/invite` calls, so the owner/admin rule and the seat
+  limit cannot be skipped by taking the agent road. An automation's webhook step must name a saved
+  connection — a URL from a model is never carried into it. Interviews stay read-only (booking one sends
+  a calendar invite and an email) and the vault stays unreachable (client-side encryption: the server
+  cannot read it, by design).
+- **The rpc() audit must match `rpc(ctx, 'name', …)` too** — the executor's helper. The old regex only
+  matched `rpc('name'`, so the agent tools were never in the audit at all.
 - **`save_document`** writes invoices/offers the way the composer does: header through the monolith,
   lines through `save_invoice_items` (which writes the total). It never takes an amount, rejects
   product ids from another workspace, and never sends.
