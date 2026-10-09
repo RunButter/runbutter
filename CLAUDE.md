@@ -26,8 +26,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   `supabase/schema.sql`.
 - **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
-  owner). 0125 (design spec), 0126 (the remaining plan limits) and 0127 (the public style library)
-  are NEW and pending.** Do not take any of that on trust when
+  owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
+  0128 (modules on/off) and 0129 (AI key is owner/admin only) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -422,9 +422,26 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   what makes `JobPosting` structured data (and therefore Google Jobs) possible.
   `get_careers_position` enforces the same visibility as the index: active AND published, else null,
   so a hidden role can't be reached by guessing its id.
-- **Settings** = things that change the workspace for *everyone* (Branding, Members, Plans,
-  Integrations, Reports). **Account** = things that are yours alone (AI keys, Assistant).
-  **Team** stays people-only (My Team, Directory, Assets) — not settings.
+- **Settings** = things that change the workspace for *everyone* (Branding, Modules, Objects,
+  Members, Plans, Integrations, AI, Reports, Updates). **There is no Account section any more**
+  (2026-10): both its entries — the AI key and the Telegram bot — were workspace-wide, and a heading
+  saying "yours alone" over the key every agent reads is how a viewer could replace it (0129).
+  **Team** = Chat, Assets, Vault. My Team (onboarding of people already hired) is HR.
+- **`tabs` on a nav entry** fold related screens under ONE entry without moving them: Finance →
+  Overview (KPIs, Forecast), Investors (Cap table, Investor update), HR → Overview (Analytics),
+  Candidates (Email templates), Careers & sources (Careers page, Source tracking), Settings →
+  Integrations (Connectors, API & webhooks, Telegram bot). Every tab keeps its URL; the SHELL draws
+  the strip (`SectionTabs`, both layouts) from `navTabsFor(pathname)`, so a screen that becomes a
+  tab needs no edit. The rail stays lit on every tab (`navHrefs`), ⌘K lists each tab by name, and
+  `surfaceMap()` gives each tab its own line — a screen missing from that map is one the copilot
+  believes does not exist. The 2026-10 audit took the menu from 60 entries in 11 sections to 54 in 10.
+- **Folded routes REDIRECT, never 404** (`redirects()` in `next.config.js`): `/dashboard/billing` →
+  `/settings/plans` (query kept — Stripe's success/cancel URLs carry `?success=true`),
+  `/dashboard/settings` → Branding, `/dashboard/team` → Members, `/projects/board` → Issues' Board
+  view. There is ONE billing screen; the old one billed the oldest company and sent no plan or seat
+  count to checkout.
+- **Home follows Modules.** It reads the same `useNav()` the rail draws, so a company with HR
+  switched off does not open on a Candidates tile and a hiring funnel.
 - **Branding is the single place a brand is defined** (`workspaces`, 0024 + 0061) and now covers
   invoices/documents, the careers page + apply form, email, and favicon/social preview.
   HR's careers screen links to it rather than duplicating any of it.
@@ -473,6 +490,12 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Never use browser `confirm()`/`alert()`** — use `useDialog()` from `components/ui/Dialog.tsx`.
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
+  The Talent pool's Cognitive slider, sort and average went for the same reason (2026-10) — they
+  filtered on a column that is null for everyone. Signed in, a failed HR overview read is ZEROS,
+  never the sample: the sample said 107 candidates one click away from a Candidates list saying 0.
+- **Dates go through `fmtDay()` (`lib/utils.ts`)** — "30 Sep 2026" in the reader's language.
+  `new Date('2026-09-30').toLocaleDateString()` parses a date-only string as UTC midnight, so every
+  due date showed a day early west of Greenwich, and 03/04 is March or April depending on who reads it.
 
 ## OAuth for the MCP server (0099)
 - **Why it exists:** `/api/mcp` authenticated only with `Authorization: Bearer hb_…`. That is fine for
@@ -1112,7 +1135,9 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
   objects get both free. Board columns are declared options ∪ present values ∪ "No value" — **no
   record may ever be hidden**, which is what makes it trustworthy. Dragging is a one-key partial
   update, safe only because of 0088.
-- **`/insights` — ask a question, get a chart** (`lib/insights/*`, `InsightChart`). The model NEVER
+- **`/insights` — ask a question, get a chart** (`lib/insights/*`, `InsightChart`). ⚠️ The PAGE and
+  `/api/insights/ask` were described here for two months and never committed — the engine shipped,
+  the screen did not, and nothing linked to it. Both exist now (2026-10), in Workspace. The model NEVER
   sees a record: it gets column NAMES and returns a validated SPEC, and the arithmetic happens in
   the browser over `list_records`. Same shape as `/api/workspace/build`, same reason. The query is
   always shown and every part of it is a dropdown, so the screen works with **no AI key at all**.
@@ -1197,6 +1222,10 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0128 and 0129** (and 0125–0127 below if still pending). 0128 is Settings → Modules; without
+  it the switches say they could not save. **0129 is a security fix**: before it any member,
+  `viewer` included, could replace the workspace's AI key — including with a `custom` provider
+  pointing at their own server, which then received every agent and Copilot prompt.
 - **Run 0125, 0126 and 0127.** 0125 adds `workspaces.design_tokens` + `get/save_design_tokens` — without
   it Marketing → Design works but cannot save, and says so rather than failing silently. 0126
   enforces the five plan limits nothing was reading and adds `get_plan_usage`; without it the

@@ -14,17 +14,18 @@ import { hrStatus } from '@/lib/hr/overview';
 import { rpc } from '@/lib/rpc';
 
 // Psychometric dimensions the sliders filter on (discrete 0-100 score columns).
+// No COGNITIVE dimension: no cognitive test exists, `cognitive_score` is stored
+// null for everyone, so a slider on it filtered on nothing and a sort on it
+// sorted nothing — while advertising a test the product does not have.
 const DIMS = [
     { key: 'overall_score', label: 'Overall Match', accent: 'bg-accent' },
     { key: 'screening_score', label: 'Screening Fit', accent: 'bg-success' },
-    { key: 'cognitive_score', label: 'Cognitive', accent: 'bg-accent/70' },
     { key: 'personality_score', label: 'Personality', accent: 'bg-accent/40' },
     { key: 'work_style_score', label: 'Work Style', accent: 'bg-warning' },
 ] as const;
 
 const SORTS = [
     { key: 'overall_score', label: 'Highest Match' },
-    { key: 'cognitive_score', label: 'Highest Cognitive' },
     { key: 'screening_score', label: 'Best Screening Fit' },
     { key: 'recent', label: 'Most Recent' },
 ] as const;
@@ -133,7 +134,6 @@ export default function TreasuryPage() {
         return {
             n,
             avgOverall: avg('overall_score'),
-            avgCognitive: avg('cognitive_score'),
             avgPersonality: avg('personality_score'),
             topSource: top ? { name: top[0], pct: n ? Math.round((top[1] / n) * 100) : 0 } : null,
             assessedPct: n ? Math.round((assessed / n) * 100) : 0,
@@ -169,7 +169,7 @@ export default function TreasuryPage() {
 
     return (
         <div className="flex flex-col h-full">
-            <PageHeader title="Talent Treasury" count={filtered.length}>
+            <PageHeader title="Talent pool" count={filtered.length}>
                 <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
                     <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Filter by name, email, role…"
@@ -240,10 +240,9 @@ export default function TreasuryPage() {
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-6 max-w-[1400px] mx-auto">
                         {/* Micro-insights bar */}
-                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                             <Insight icon={Users} label="In view" value={`${insights.n}`} />
                             <Insight icon={Gauge} label="Avg match" value={insights.avgOverall != null ? `${insights.avgOverall}%` : '—'} />
-                            <Insight icon={Gauge} label="Avg cognitive" value={insights.avgCognitive != null ? `${insights.avgCognitive}%` : '—'} />
                             <Insight icon={Sparkles} label="Assessed" value={`${insights.assessedPct}%`} />
                             <Insight icon={Users} label="Main source" value={insights.topSource ? `${titleize(insights.topSource.name)} ${insights.topSource.pct}%` : '—'} />
                         </div>

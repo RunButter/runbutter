@@ -81,7 +81,7 @@ export default function PostsPage() {
         <h1 className="text-md font-medium text-primary">Posts</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{posts.length}</span>
         <DataBadge live={live} />
-        <span className="text-xs text-tertiary hidden sm:inline">Preview, review & approve social posts with your team and clients</span>
+        <span className="text-xs text-tertiary hidden xl:inline truncate">Plan, review and publish social posts</span>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center rounded-lg bg-surface-hover p-0.5">
             {([['calendar', CalendarDays, 'Calendar'], ['board', Workflow, 'Board'], ['grid', LayoutGrid, 'Grid']] as const).map(([v, Icon, label]) => (
@@ -94,7 +94,7 @@ export default function PostsPage() {
             ))}
           </div>
           <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
-            className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+            className="h-9 px-3.5 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} New post
           </button>
         </div>

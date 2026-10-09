@@ -83,7 +83,11 @@ export async function loadHrOverview(privyUserId: string | null): Promise<HrOver
     // One verified RPC (hr_overview_data) replaces the direct table reads —
     // the crown-jewel tables are no longer reachable with the anon key.
     const { data, error } = await rpc('hr_overview_data', { p_privy: privyUserId });
-    if (error || !data) return mockOverview();
+    // Signed in, a failed read is ZEROS, never the sample. The sample showed 107
+    // candidates on Overview while Candidates and Positions — which have no
+    // sample — said 0, so the same workspace told two stories one click apart.
+    // The shell's LoadErrorBanner is what says the read failed.
+    if (error || !data) return emptyOverview();
     const company: any = data.company;
 
     const rows = (data.status_rows || []) as { status: string; applied_at: string | null }[];
@@ -105,6 +109,15 @@ export async function loadHrOverview(privyUserId: string | null): Promise<HrOver
 
     return { company: company ? { name: company.name, plan: company.plan } : null, stats, funnel, recent, live: true };
   } catch {
-    return mockOverview();
+    return emptyOverview();
   }
+}
+
+function emptyOverview(): HrOverview {
+  return {
+    company: null,
+    stats: { totalCandidates: 0, activePositions: 0, assessmentsCompleted: 0, upcomingInterviews: 0, newApplications: 0, pendingReview: 0, hired: 0 },
+    funnel: FUNNEL.map((f) => ({ key: f.key, label: f.label, count: 0 })),
+    recent: [], live: true,
+  };
 }

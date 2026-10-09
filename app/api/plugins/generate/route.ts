@@ -82,7 +82,7 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!secret) {
     return NextResponse.json({
-      error: 'No AI provider configured. Add a key in Account → AI keys — RunButter never charges for tokens, so generation runs on your own key.',
+      error: 'No AI provider configured. Add a key in Settings → AI — RunButter never charges for tokens, so generation runs on your own key.',
     }, { status: 400 });
   }
 

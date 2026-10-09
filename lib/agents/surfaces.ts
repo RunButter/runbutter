@@ -38,6 +38,7 @@ interface SurfaceNote {
  */
 const NOTES: Record<string, SurfaceNote> = {
   docs: { what: 'documents, notes, to-do lists and simple tables', tool: 'save_doc' },
+  insights: { what: 'a chart built from a question over any record type', tool: 'chart_records' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },
   deals: { what: 'the sales pipeline board', tool: 'create_deal / update_deal / move_deal' },
   companies: { what: 'client and supplier organisations', tool: 'create_record(companies)' },
@@ -78,6 +79,16 @@ const NOTES: Record<string, SurfaceNote> = {
   chat: { what: 'team chat channels', tool: 'post_message' },
 };
 
+/** Notes for screens that are now a tab rather than an entry, keyed by path. */
+const TAB_SLUG: Record<string, string> = {
+  '/investor-update': 'investor-update',
+  '/finance/kpis': 'kpis',
+  '/finance/forecast': 'forecast',
+  '/dashboard/templates': 'templates',
+  '/dashboard/sources': 'sources',
+  '/dashboard/analytics': 'analytics',
+};
+
 /**
  * The map, as a compact block for the system prompt.
  *
@@ -88,17 +99,22 @@ const NOTES: Record<string, SurfaceNote> = {
 export function surfaceMap(): string {
   const lines: string[] = [];
   for (const group of NAV as any[]) {
-    // Settings and Account are configuration, not places records live. Listing
+    // Settings is configuration, not a place records live. Listing
     // them invites the copilot to offer changes it has no tools for and that
     // nobody asked an assistant to make.
-    if (group.group === 'Settings' || group.group === 'Account') continue;
-    const items = (group.items as any[])
-      .map((it) => {
-        const n = NOTES[it.slug];
-        const what = n?.what || it.label.toLowerCase();
-        const how = n?.tool ? `write with ${n.tool}` : 'no tool — you can only point them at it';
-        return `  ${it.label} (${it.href}) — ${what}; ${how}`;
-      });
+    if (group.group === 'Settings') continue;
+    const line = (label: string, href: string, slug: string) => {
+      const n = NOTES[slug];
+      const what = n?.what || label.toLowerCase();
+      const how = n?.tool ? `write with ${n.tool}` : 'no tool — you can only point them at it';
+      return `  ${label} (${href}) — ${what}; ${how}`;
+    };
+    // A tab is a screen of its own (Investors → Investor update), so it gets its
+    // own line. Leaving it out is what makes the copilot think it does not exist.
+    const items = (group.items as any[]).flatMap((it) => it.tabs?.length
+      ? it.tabs.map((t: { label: string; href: string }, i: number) =>
+          line(i === 0 ? it.label : `${it.label} → ${t.label}`, t.href, i === 0 ? it.slug : TAB_SLUG[t.href] || ''))
+      : [line(it.label, it.href, it.slug)]);
     if (items.length) lines.push(`${group.group}:`, ...items);
   }
   return lines.join('\n');

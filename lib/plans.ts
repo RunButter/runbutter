@@ -172,7 +172,7 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
     shortLinks: 'Short links',
     customForms: 'Custom forms',
     resumeSearch: 'Resume search',
-    talentTreasury: 'Talent Treasury',
+    talentTreasury: 'Talent pool',
     interviews: 'Calendar interviews',
     aiAgents: 'AI agents',
     apiAccess: 'REST API & MCP server',

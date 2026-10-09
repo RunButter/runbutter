@@ -15,7 +15,11 @@ export default function AiKeysPage() {
   const { confirm: confirmDialog } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
-  const canEdit = !!privy;
+  // The key is the WORKSPACE's — every agent, Copilot turn and writing-assistant
+  // call reads it — so only an owner or admin may change it (0129). Before that
+  // any member could point everyone's AI at a server of their choosing.
+  const [role, setRole] = useState<string | null>(null);
+  const canEdit = !!privy && (role === 'owner' || role === 'admin');
 
   const [rows, setRows] = useState<AiProviderRow[]>([]);
   const [live, setLive] = useState(false);
@@ -36,7 +40,7 @@ export default function AiKeysPage() {
   // Separate from `reload`: the key list and the spend answer different
   // questions, and a usage panel that reloads every time somebody toggles a key
   // is a round trip for nothing.
-  useEffect(() => { if (privy) getWorkspace(privy).then((w) => setWs(w?.id ?? null)); }, [privy]);
+  useEffect(() => { if (privy) getWorkspace(privy).then((w) => { setWs(w?.id ?? null); setRole(w?.role ?? null); }); }, [privy]);
 
   const def = PROVIDERS.find((p) => p.id === provider);
 
@@ -56,16 +60,19 @@ export default function AiKeysPage() {
     if (res.error) { setError(res.error); return; }
     setKey(''); setModel(''); setBaseUrl(''); reload();
   };
-  const makeDefault = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { is_default: true }); reload(); } };
-  const toggle = async (r: AiProviderRow) => { if (privy) { await setAiProviderMeta(privy, r.id, { enabled: !r.enabled }); reload(); } };
-  const remove = async (r: AiProviderRow) => { if (privy && await confirmDialog(`Remove your ${providerLabel(r.provider)} key?`)) { await deleteAiProvider(privy, r.id); reload(); } };
+  const after = (res: { error?: string }) => { setError(res.error ? res.error.replace(/^FORBIDDEN:\s*/, '') : ''); reload(); };
+  const makeDefault = async (r: AiProviderRow) => { if (privy) after(await setAiProviderMeta(privy, r.id, { is_default: true })); };
+  const toggle = async (r: AiProviderRow) => { if (privy) after(await setAiProviderMeta(privy, r.id, { enabled: !r.enabled })); };
+  const remove = async (r: AiProviderRow) => {
+    if (privy && await confirmDialog({ title: `Remove the ${providerLabel(r.provider)} key?`, body: 'Everyone in this workspace stops using it straight away.', danger: true, confirmLabel: 'Remove' })) after(await deleteAiProvider(privy, r.id));
+  };
 
   const inputCls = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
 
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 page-x">
-        <h1 className="text-md font-medium text-primary">AI keys</h1>
+        <h1 className="text-md font-medium text-primary">AI</h1>
         <DataBadge live={live} />
       </header>
 
@@ -73,10 +80,14 @@ export default function AiKeysPage() {
         <div className="max-w-2xl space-y-6">
           <div className="flex items-start gap-2 text-sm text-secondary rounded-xl bg-surface-sunken ring-1 ring-subtle p-3">
             <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <p>Bring your <b>own</b> AI key — you pay your provider directly, RunButter adds no token cost. Keys are <b>encrypted at rest</b> (AES-256-GCM) and never shown again after saving.</p>
+            <p>One key for the whole workspace — the Copilot, agents and the writing assistant all use it. You pay your provider directly; keys are encrypted and never shown again.</p>
           </div>
 
           <AIUsagePanel privy={privy} ws={ws} />
+
+          {privy && role && !canEdit && (
+            <p className="text-sm text-secondary">Only an owner or admin can add or change the workspace&rsquo;s AI key.</p>
+          )}
 
           {/* Add */}
           <div className="card-surface p-4">

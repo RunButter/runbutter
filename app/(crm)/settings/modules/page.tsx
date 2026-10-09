@@ -29,7 +29,11 @@ function Toggle({ on, disabled, onChange, label }: { on: boolean; disabled?: boo
     <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled}
       onClick={() => onChange(!on)}
       className={`relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-40 ${on ? 'bg-accent' : 'bg-strong'}`}>
-      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-transform ${on ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+      {/* Anchored with left-0.5 and moved in REM: with no `left`, an absolute
+          child of a button starts at the button's centred text position, and a
+          px translate drifts once the app root is 110% — the knob sat outside
+          the track. */}
+      <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`} />
     </button>
   );
 }
@@ -55,7 +59,9 @@ export default function ModulesPage() {
     });
   }, [ready, privy]);
 
-  const groups = useMemo(() => NAV.filter((g) => !LOCKED_GROUPS.has(groupKey(g.group))), []);
+  // Settings is never offered. Workspace is, item by item — its section stays
+  // (Home lives there) but Docs, Files, Signatures and Calendar can go.
+  const groups = useMemo(() => NAV.filter((g) => groupKey(g.group) !== 'g:settings'), []);
   const companyOff = new Set(prefs?.workspace ?? []);
   const list = scope === 'workspace' ? prefs?.workspace ?? [] : prefs?.mine ?? [];
   const off = new Set(list);
@@ -108,15 +114,18 @@ export default function ModulesPage() {
           {groups.map((g) => {
             const gk = groupKey(g.group);
             const lockedByCompany = scope === 'mine' && companyOff.has(gk);
-            const groupOn = !off.has(gk) && !lockedByCompany;
+            const groupLocked = LOCKED_GROUPS.has(gk);
+            const groupOn = groupLocked || (!off.has(gk) && !lockedByCompany);
             return (
               <section key={g.group} className="card-surface overflow-hidden">
                 <header className="flex items-center gap-3 px-5 h-14 border-b border-subtle">
                   <h2 className="text-sm font-medium text-primary">{g.group}</h2>
                   {lockedByCompany && <span className="text-2xs text-tertiary">Off for the company</span>}
                   <span className="ml-auto" />
-                  <Toggle on={groupOn} disabled={!canEdit || !prefs || lockedByCompany}
-                    onChange={(v) => toggle(gk, v)} label={`Show ${g.group}`} />
+                  {!groupLocked && (
+                    <Toggle on={groupOn} disabled={!canEdit || !prefs || lockedByCompany}
+                      onChange={(v) => toggle(gk, v)} label={`Show ${g.group}`} />
+                  )}
                 </header>
                 <ul className={`py-1.5 ${groupOn ? '' : 'opacity-45'}`}>
                   {g.items.map((it: any) => {

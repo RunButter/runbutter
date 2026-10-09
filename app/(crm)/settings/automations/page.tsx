@@ -286,7 +286,7 @@ function Builder({ automation, privy, connections, onClose, onSaved }: {
                     <textarea value={ac.config.prompt || ''} onChange={(e) => setCfg(i, { prompt: e.target.value })} rows={3}
                       placeholder="Write a two-sentence brief on {{first_name}} {{last_name}} for the team"
                       className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                    <p className="text-2xs text-tertiary">Runs on your workspace AI key (Settings → AI keys). The answer becomes <code className="bg-surface-hover rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
+                    <p className="text-2xs text-tertiary">Runs on your workspace AI key (Settings → AI). The answer becomes <code className="bg-surface-hover rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
                   </div>
                 )}
                 {ac.type === 'send_webhook' && (

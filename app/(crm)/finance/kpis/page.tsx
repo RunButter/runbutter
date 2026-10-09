@@ -94,7 +94,7 @@ export default function FinanceKpisPage() {
 
   return (
     <>
-      <PageHeader title="Finance KPIs" />
+      <PageHeader title="KPIs" />
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="page-body p-6 2xl:p-8 flex flex-col gap-5">
 

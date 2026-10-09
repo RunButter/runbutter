@@ -32,12 +32,12 @@ export async function runAssistant(admin: any, channel: AssistantChannel, messag
     p_privy: channel.acting_privy, p_workspace: channel.workspace_id,
   });
   if (error || !secret) {
-    return 'I can’t respond yet — no AI key is set for this workspace. Add one in RunButter → Settings → AI keys.';
+    return 'I can’t respond yet — no AI key is set for this workspace. Add one in RunButter → Settings → AI.';
   }
 
   let apiKey: string;
   try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }
-  catch { return 'I couldn’t read this workspace’s AI key. Re-add it in Settings → AI keys.'; }
+  catch { return 'I couldn’t read this workspace’s AI key. Re-add it in Settings → AI.'; }
 
   const provider = (secret as any).provider as AIProvider;
   // BALANCED: the assistant runs the same tool loop as an agent.

@@ -108,7 +108,7 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!secret) {
     return NextResponse.json({
-      error: 'No AI provider configured. Add a key in Account → AI keys — the figures below are still yours to copy.',
+      error: 'No AI provider configured. Add a key in Settings → AI — the figures below are still yours to copy.',
     }, { status: 400 });
   }
 
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       error: reply.trim()
         ? 'The model replied, but not with a draft it could read. Some models are much better at strict JSON.'
-        : 'The model returned nothing at all. Check the key and model name in Account → AI keys.',
+        : 'The model returned nothing at all. Check the key and model name in Settings → AI.',
     }, { status: 422 });
   }
 

@@ -140,7 +140,7 @@ async function runAction(admin: any, ev: any, rule: any, action: any): Promise<{
       // "Agent step": run the workspace's BYO AI on the record; the output is
       // injected as {{ai_output}} for every action after this one (chaining).
       const { data: secret } = await admin.rpc('get_ai_secret', { p_privy: rule.owner_privy, p_workspace: ev.workspace_id });
-      if (!secret) return { ok: false, detail: 'No AI provider configured (Settings → AI keys)' };
+      if (!secret) return { ok: false, detail: 'No AI provider configured (Settings → AI)' };
       let apiKey: string;
       try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }
       catch { return { ok: false, detail: 'Could not decrypt the stored AI key' }; }

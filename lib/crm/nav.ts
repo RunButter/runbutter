@@ -26,17 +26,15 @@ import { rpc } from '@/lib/rpc';
  * someone's object.
  */
 
-export interface NavItem { slug: string; label: string; icon: string; href: string; custom?: boolean }
+export interface NavItem { slug: string; label: string; icon: string; href: string; custom?: boolean; tabs?: { label: string; href: string }[] }
 export interface NavGroup { group: string; pinned?: boolean; items: NavItem[] }
 
 /**
  * Where a custom object may be filed.
  *
- * Automate, Settings and Account are deliberately absent. They are not places
- * you keep records — putting Vehicles between "Members & roles" and "Plans &
- * billing" makes both harder to find, and the whole reason Settings is split
- * from Account is that the distinction is about who a change affects, which a
- * record type has no answer to.
+ * Automate and Settings are deliberately absent. They are not places you keep
+ * records — putting Vehicles between "Members & roles" and "Plans & billing"
+ * makes both harder to find.
  */
 export const CUSTOM_OBJECT_GROUPS = ['Workspace', 'Sales', 'Finance', 'Marketing', 'HR', 'Projects', 'Team'];
 
@@ -203,11 +201,12 @@ export const groupKey = (group: string) => 'g:' + norm(group);
 export const itemKey = (slug: string) => 'i:' + slug.toLowerCase();
 
 /**
- * Sections nobody may switch off. Home is where you land; Settings holds the
- * switch itself, and Account holds the AI keys — hiding any of them is how
- * somebody locks themselves out of undoing it.
+ * Sections nobody may switch off as a whole. Home is where you land and
+ * Settings holds the switch itself (and the AI key) — hiding either is how
+ * somebody locks themselves out of undoing it. Workspace's other entries
+ * (Docs, Files, Signatures, Calendar) can still be switched off one by one.
  */
-export const LOCKED_GROUPS = new Set(['g:workspace', 'g:settings', 'g:account']);
+export const LOCKED_GROUPS = new Set(['g:workspace', 'g:settings']);
 export const LOCKED_ITEMS = new Set(['i:home', 'i:modules']);
 
 export function applyNavPrefs(nav: NavGroup[], hidden: Set<string>): NavGroup[] {

@@ -112,9 +112,7 @@ export default function AgentsPage() {
       <div className="flex-1 overflow-auto page-pad">
         <div className="space-y-8">
           <p className="text-sm text-secondary max-w-2xl">
-            Agents run on your own AI key and act through your workspace tools. Give one a role and
-            instructions, scope which tools and objects it may touch, and choose whether it proposes
-            changes for your approval or acts on its own.
+            Give an agent a role and the tools it may use. It proposes changes for your approval unless you let it act alone.
           </p>
 
           {!privy && (
@@ -182,8 +180,7 @@ export default function AgentsPage() {
             <section>
               <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Hire an agent</h2>
               <p className="text-xs text-secondary mb-3 max-w-2xl">
-                Ready-made configurations. Each one opens in the editor so you can read its
-                instructions and adjust its access before saving — all of them start in approve-writes mode.
+                Ready-made agents. Each opens in the editor first, and starts out asking before it writes.
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {AGENT_TEMPLATES.map((t) => (

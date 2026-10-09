@@ -93,7 +93,7 @@ export async function POST(req: Request) {
   const { data: secret, error } = await admin.rpc('get_ai_secret', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!secret) {
-    return NextResponse.json({ error: 'No AI provider configured. Add a key in Account → AI keys.' }, { status: 400 });
+    return NextResponse.json({ error: 'No AI provider configured. Add a key in Settings → AI.' }, { status: 400 });
   }
 
   let apiKey: string;
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       error: reply.trim()
         ? 'The model replied, but not with fields it could read. Some models are much better at strict JSON.'
-        : 'The model returned nothing at all. Check the key and model name in Account → AI keys.',
+        : 'The model returned nothing at all. Check the key and model name in Settings → AI.',
     }, { status: 422 });
   }
 

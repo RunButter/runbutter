@@ -68,19 +68,24 @@ export default function CommandPalette() {
         </CommandGroup>
         {nav.map((group: any) => (
           <CommandGroup key={group.group} heading={group.group}>
-            {group.items.map((it: any) => {
+            {group.items.flatMap((it: any) => {
               const Icon = iconFor(it.icon, ArrowRight);
-              return (
+              // A tab folded under an entry (KPIs under Finance → Overview) is
+              // still a place people search for by its own name.
+              const entries: { key: string; label: string; href: string }[] = it.tabs?.length
+                ? it.tabs.map((t: any, i: number) => ({ key: `${it.slug}-${i}`, label: i === 0 ? it.label : t.label, href: t.href }))
+                : [{ key: it.slug, label: it.label, href: it.href }];
+              return entries.map((e) => (
                 <CommandItem
-                  key={it.slug}
-                  value={`${group.group} ${it.label}`}
-                  onSelect={() => go(it.href)}
+                  key={e.key}
+                  value={`${group.group} ${e.label}`}
+                  onSelect={() => go(e.href)}
                 >
                   <Icon className="h-4 w-4 shrink-0 text-tertiary" />
-                  <span className="truncate">{it.label}</span>
+                  <span className="truncate">{e.label}</span>
                   <span className="ml-auto text-2xs text-tertiary/70">{group.group}</span>
                 </CommandItem>
-              );
+              ));
             })}
           </CommandGroup>
         ))}

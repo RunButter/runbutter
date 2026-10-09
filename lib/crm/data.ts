@@ -414,20 +414,6 @@ const ISSUE_STAGES: PipelineStage[] = [
   { id: 'cancelled', name: 'Cancelled', color: '#f87171', stage_type: 'lost' },
 ];
 
-export async function loadIssueBoard(privyUserId: string | null): Promise<BoardResult> {
-  const { rows, live } = await loadRecords(privyUserId, 'issues');
-  const records: PipelineRecord[] = rows.map((r: any) => ({
-    id: r.id,
-    stage_id: r.status,
-    title: r.name || r.title,
-    status: 'active',
-    position: 0,
-    // Card headline = issue title; sub-line = assignee (the board renders person.name + person.title).
-    person: { id: r.id, name: r.name || r.title, title: r.assignee || undefined },
-  }));
-  return { stages: ISSUE_STAGES, records, live };
-}
-
 // One project's dashboard: the project + its issues mapped onto the issue board.
 export async function loadProject(privyUserId: string | null, projectId: string): Promise<{ project: any; stages: PipelineStage[]; records: PipelineRecord[]; live: boolean }> {
   const toRecords = (issues: any[]): PipelineRecord[] => issues.map((r: any) => ({

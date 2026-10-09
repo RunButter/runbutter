@@ -134,7 +134,7 @@ const INCLUDED: { group: string; items: string[] }[] = [
   { group: 'Finance', items: ['Invoices and expenses', 'Branded PDF documents', 'Bank transaction ledger', 'Automatic reconciliation', 'Collections KPIs and AR ageing', 'Cash forecast with scenarios', 'Cap table and dilution', 'Multi-currency reporting', 'E-signatures', 'KSeF e-invoicing'] },
   { group: 'Marketing', items: ['Campaigns and budgets', 'Newsletters with AI drafting', 'Live segments and lead scoring', 'Drip sequences', 'Post studio with real previews', 'Short links', 'Custom forms', 'Cookieless web analytics', 'Goals, funnels and live visitors', 'Source attribution'] },
   { group: 'Projects', items: ['Projects and issues', 'Kanban board', 'Roadmap timeline', 'Docs with an AI toolbar', 'Mind maps and content boards'] },
-  { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent Treasury', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
+  { group: 'Hiring', items: ['Positions and apply pages', 'Skills and Big-5 assessments', 'Talent pool', 'Team Fit simulator', 'Interviews via Google Calendar', 'Email templates', 'Onboarding and pulse checks'] },
   { group: 'Platform', items: ['Custom record types', 'AI workspace builder', 'AI agents on your own key', 'Reusable agent skills', 'Team chat', 'Automations and webhooks', 'REST API and MCP server', 'Excel and Google Sheets sync', 'Full-text file search', 'Scheduled PDF reports', 'PDF toolkit, in the browser', 'Company calendar', 'DESIGN.md spec for your agents', 'One-click app connectors', 'Encrypted team vault', 'Password generator', 'Sanctions screening (OFAC)', 'Roles and permissions', 'GDPR controls'] },
 ];
 

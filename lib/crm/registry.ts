@@ -11,7 +11,10 @@ export const OBJECTS: Record<string, ObjectDef> = {
       { key: 'company', label: 'Company', type: 'relation', width: 160 },
       { key: 'email', label: 'Email', type: 'text', width: 220 },
       { key: 'source', label: 'Source', type: 'tags', width: 120 },
-      { key: 'synergy', label: 'Synergy', type: 'number', align: 'right', width: 100 },
+      // No "Synergy" column: it is the latest psychometric score, which exists
+      // only for someone who took a hiring assessment — on a sales contact list
+      // it was an empty column with a label nobody could explain. Candidates
+      // show their scores on the HR screens, where they mean something.
     ],
     form: [
       { key: 'first_name', label: 'First name', input: 'text', required: true },
@@ -51,7 +54,6 @@ export const OBJECTS: Record<string, ObjectDef> = {
     fields: [
       { key: 'number', label: 'Invoice', type: 'avatar', primary: true, width: 150 },
       { key: 'company', label: 'Account', type: 'relation', width: 160 },
-      { key: 'kind', label: 'Doc', type: 'tags', width: 90 },
       { key: 'direction', label: 'Type', type: 'tags', width: 100 },
       { key: 'category', label: 'Category', type: 'tags', width: 130 },
       { key: 'amount', label: 'Amount', type: 'currency', align: 'right', width: 120 },
@@ -230,16 +232,26 @@ export const OBJECTS: Record<string, ObjectDef> = {
 
 // One nav over the whole company OS. Sales/CRM leads; the shipped ATS is the HR
 // module; Finance + HRIS round it out. Nothing from the ATS is removed.
-// Four collapsible pillars over the company OS (+ a pinned Home). Order and
-// names match the product structure: Sales → Finance → HR → Team.
+//
+// `tabs` folds related screens under ONE entry (2026-10 audit: 60 entries in 11
+// sections was a menu nobody could hold in their head). Every tab keeps its own
+// URL — links, bookmarks and agent hand-backs still work — and the shell draws
+// the tab strip (`SectionTabs`). The FIRST tab is always the entry's own href.
+export interface NavTab { label: string; href: string }
 export const NAV = [
   { group: 'Workspace', pinned: true, items: [
     { slug: 'home', label: 'Home', icon: 'LayoutDashboard', href: '/home' },
+    // Any question about any record type, as a chart. Workspace rather than
+    // Finance because it reads every object, custom ones included.
+    { slug: 'insights', label: 'Insights', icon: 'BarChart3', href: '/insights' },
     { slug: 'docs', label: 'Docs', icon: 'FileText', href: '/docs' },
     // Files sits beside Docs, not under Settings: it is a place to work, and
     // its whole value is that uploaded documents become searchable rows in the
     // same database as the ledger.
     { slug: 'files', label: 'Files', icon: 'FolderOpen', href: '/files' },
+    // Beside Docs rather than under Finance: what gets signed is a contract, an
+    // NDA, an offer letter — documents, most of which never touch the ledger.
+    { slug: 'sign', label: 'Signatures', icon: 'PenLine', href: '/finance/sign' },
     // One calendar over the whole company: invoice due dates, issue deadlines,
     // scheduled posts and newsletters, campaign windows, interviews and Cal.com
     // bookings. It sits with Docs and Files because it is a place to look, not
@@ -258,19 +270,23 @@ export const NAV = [
     { slug: 'orders', label: 'Orders', icon: 'ShoppingCart', href: '/orders' },
   ]},
   { group: 'Finance', items: [
-    { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview' },
-    { slug: 'kpis', label: 'KPIs', icon: 'Gauge', href: '/finance/kpis' },
-    { slug: 'forecast', label: 'Forecast', icon: 'LineChart', href: '/finance/forecast' },
+    // Three views of the same numbers — where we are, how we are doing, where
+    // we are heading — so one entry with three tabs, not three entries.
+    { slug: 'finance', label: 'Overview', icon: 'TrendingUp', href: '/finance/overview', tabs: [
+      { label: 'Overview', href: '/finance/overview' },
+      { label: 'KPIs', href: '/finance/kpis' },
+      { label: 'Forecast', href: '/finance/forecast' },
+    ]},
     { slug: 'transactions', label: 'Transactions', icon: 'ArrowLeftRight', href: '/finance/transactions' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
     { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
-    { slug: 'sign', label: 'Signatures', icon: 'PenLine', href: '/finance/sign' },
-    // Under Finance because that is where its figures come from, and last
-    // because it is the monthly act rather than a daily one.
-    // Beside the investor update, because they are the same conversation: what
-    // the numbers are, and who owns the result.
-    { slug: 'cap-table', label: 'Cap table', icon: 'PieChart', href: '/cap-table' },
-    { slug: 'investor-update', label: 'Investor update', icon: 'Mail', href: '/investor-update' },
+    // Who owns the company and what they are told each month are the same
+    // conversation. The slug stays `cap-table` so a module someone switched off
+    // stays off.
+    { slug: 'cap-table', label: 'Investors', icon: 'PieChart', href: '/cap-table', tabs: [
+      { label: 'Cap table', href: '/cap-table' },
+      { label: 'Investor update', href: '/investor-update' },
+    ]},
   ]},
   { group: 'Marketing', items: [
     { slug: 'marketing', label: 'Overview', icon: 'Megaphone', href: '/marketing/overview' },
@@ -286,27 +302,39 @@ export const NAV = [
     { slug: 'forms', label: 'Forms', icon: 'FileInput', href: '/marketing/forms' },
     { slug: 'links', label: 'Short links', icon: 'Link2', href: '/marketing/links' },
     { slug: 'webanalytics', label: 'Web analytics', icon: 'Globe', href: '/marketing/analytics' },
-    { slug: 'sources', label: 'Source tracking', icon: 'Radio', href: '/dashboard/sources' },
   ]},
   { group: 'HR', items: [
-    { slug: 'hr-overview', label: 'Overview', icon: 'LayoutDashboard', href: '/dashboard/overview' },
-    { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates' },
-    { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
+    { slug: 'hr-overview', label: 'Overview', icon: 'LayoutDashboard', href: '/dashboard/overview', tabs: [
+      { label: 'Overview', href: '/dashboard/overview' },
+      { label: 'Analytics', href: '/dashboard/analytics' },
+    ]},
     { slug: 'positions', label: 'Positions', icon: 'Briefcase', href: '/dashboard/positions' },
-    // Careers page lives in HR, next to the roles it publishes — it is a
-    // hiring surface, not a settings screen. Its look comes from Settings →
-    // Branding so there is still only one place to define the brand.
-    { slug: 'careers', label: 'Careers page', icon: 'Globe2', href: '/dashboard/careers' },
-    { slug: 'treasury', label: 'Talent Treasury', icon: 'Sparkles', href: '/dashboard/treasury' },
+    // Email templates are what you send TO candidates, so they live a tab away
+    // from them rather than as an entry of their own.
+    { slug: 'candidates', label: 'Candidates', icon: 'Users', href: '/dashboard/candidates', tabs: [
+      { label: 'Candidates', href: '/dashboard/candidates' },
+      { label: 'Email templates', href: '/dashboard/templates' },
+    ]},
+    { slug: 'pipeline', label: 'Hiring pipeline', icon: 'Columns3', href: '/dashboard/pipeline' },
     { slug: 'interviews', label: 'Interviews', icon: 'Calendar', href: '/dashboard/interviews' },
-    { slug: 'templates', label: 'Email templates', icon: 'Mail', href: '/dashboard/templates' },
-    { slug: 'analytics', label: 'Analytics', icon: 'BarChart3', href: '/dashboard/analytics' },
+    { slug: 'treasury', label: 'Talent pool', icon: 'Sparkles', href: '/dashboard/treasury' },
+    // The public page and the links that bring people to it. Source tracking
+    // sat under Marketing, where it read as UTM links — it makes job-board
+    // links for a position, which is a hiring question. The careers page's
+    // look still comes from Settings → Branding.
+    { slug: 'careers', label: 'Careers & sources', icon: 'Globe2', href: '/dashboard/careers', tabs: [
+      { label: 'Careers page', href: '/dashboard/careers' },
+      { label: 'Source tracking', href: '/dashboard/sources' },
+    ]},
+    // The people already hired — onboarding and wellbeing — so HR, not Team.
+    { slug: 'my-team', label: 'My team', icon: 'Heart', href: '/dashboard/my-team' },
   ]},
   { group: 'Projects', items: [
     { slug: 'projects', label: 'Projects', icon: 'FolderKanban', href: '/objects/projects' },
+    // Issues has its own Board view (every object does), so the separate
+    // Board entry that drew the same cards is gone; /projects/board redirects.
     { slug: 'issues', label: 'Issues', icon: 'ListTodo', href: '/objects/issues' },
     { slug: 'roadmap', label: 'Roadmap', icon: 'GanttChartSquare', href: '/projects/roadmap' },
-    { slug: 'board', label: 'Board', icon: 'Columns3', href: '/projects/board' },
   ]},
   { group: 'Automate', items: [
     { slug: 'agents', label: 'Agents', icon: 'Bot', href: '/agents' },
@@ -322,7 +350,6 @@ export const NAV = [
   // My Team covers your own reports, and /objects/people holds contacts.
   { group: 'Team', items: [
     { slug: 'chat', label: 'Chat', icon: 'MessageCircle', href: '/chat' },
-    { slug: 'my-team', label: 'My Team', icon: 'Heart', href: '/dashboard/my-team' },
     { slug: 'assets', label: 'Assets', icon: 'Laptop', href: '/objects/assets' },
     // Shared credentials are a team thing, not a setting: the registrar login
     // belongs to whoever needs it today, the same way an asset does.
@@ -337,8 +364,11 @@ export const NAV = [
     { slug: 'pdf', label: 'PDF tools', icon: 'FileStack', href: '/pdf' },
     { slug: 'qr', label: 'QR codes', icon: 'QrCode', href: '/qr' },
   ]},
-  // Settings splits by WHO a change affects: everything here changes the
-  // workspace for everyone in it…
+  // Everything here changes the workspace for everyone in it. There used to be
+  // an "Account — yours alone" section beside it, and BOTH of its entries were
+  // workspace-wide: the AI key every agent reads, and the Telegram bot an admin
+  // connects. A heading that says "only you" over a switch that changes it for
+  // everybody is how a viewer ended up able to replace the AI key (0129).
   { group: 'Settings', items: [
     { slug: 'branding', label: 'Branding', icon: 'Palette', href: '/settings/branding' },
     // Switch whole sections or single screens off (0128). Next to Objects
@@ -347,20 +377,33 @@ export const NAV = [
     { slug: 'objects', label: 'Objects', icon: 'Table2', href: '/settings/objects' },
     { slug: 'members', label: 'Members & roles', icon: 'ShieldCheck', href: '/settings/members' },
     { slug: 'plans', label: 'Plans & billing', icon: 'CreditCard', href: '/settings/plans' },
-    // Connectors is its own entry, above Integrations. Connecting Slack was
-    // the eighth section on a page that also holds API keys, the MCP config,
-    // Google Calendar, the Excel feed and the delivery log — which is the kind
-    // of hidden nobody files a bug about.
-    { slug: 'connectors', label: 'Connectors', icon: 'Plug', href: '/settings/connectors' },
-    { slug: 'integrations', label: 'Integrations', icon: 'Cable', href: '/settings/integrations' },
+    // Three pages, one question — "what is connected to this workspace" — so
+    // one entry. Connectors first: connecting Slack is what most people come
+    // for, and it used to be the eighth section of the page now second.
+    { slug: 'connectors', label: 'Integrations', icon: 'Plug', href: '/settings/connectors', tabs: [
+      { label: 'Connectors', href: '/settings/connectors' },
+      { label: 'API & webhooks', href: '/settings/integrations' },
+      { label: 'Telegram bot', href: '/settings/assistant' },
+    ]},
+    { slug: 'ai-keys', label: 'AI', icon: 'Sparkles', href: '/settings/ai' },
     { slug: 'reports', label: 'Reports', icon: 'FileBarChart', href: '/settings/reports' },
-    // Last, because it is the one you visit twice a year — but it belongs to the
-    // workspace, not to a person, so it is here rather than under Account.
+    // Last, because it is the one you visit twice a year.
     { slug: 'updates', label: 'Updates', icon: 'Rocket', href: '/settings/updates' },
   ]},
-  // …and everything here is yours alone.
-  { group: 'Account', items: [
-    { slug: 'ai-keys', label: 'AI keys', icon: 'Sparkles', href: '/settings/ai' },
-    { slug: 'assistant', label: 'Assistant', icon: 'MessageCircle', href: '/settings/assistant' },
-  ]},
 ];
+
+/** The entry (and its tab list) that owns `pathname`, if the entry has tabs. */
+export function navTabsFor(pathname: string): { label: string; tabs: NavTab[] } | null {
+  const hit = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  for (const g of NAV as any[]) {
+    for (const it of g.items) {
+      if (it.tabs?.some((t: NavTab) => hit(t.href))) return { label: it.label, tabs: it.tabs };
+    }
+  }
+  return null;
+}
+
+/** Every href an entry answers for — its own plus its tabs'. */
+export function navHrefs(it: { href: string; tabs?: NavTab[] }): string[] {
+  return it.tabs?.length ? it.tabs.map((t) => t.href) : [it.href];
+}

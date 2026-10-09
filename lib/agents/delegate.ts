@@ -36,7 +36,7 @@ export async function executeAgentRun(req: AgentRunRequest): Promise<AgentRunRes
 
   const { data: secret, error: secErr } = await admin.rpc('get_ai_secret', { p_privy: privy, p_workspace: workspace });
   if (secErr) return { ok: false, status: /NOT_A_MEMBER/.test(secErr.message) ? 403 : 500, error: secErr.message };
-  if (!secret) return { ok: false, status: 400, error: 'No AI provider configured. Add a key in Settings → AI keys.' };
+  if (!secret) return { ok: false, status: 400, error: 'No AI provider configured. Add a key in Settings → AI.' };
 
   let apiKey: string;
   try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }

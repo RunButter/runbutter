@@ -91,7 +91,7 @@ export default function PositionsPage() {
                         className="h-8 w-56 pl-8 pr-2 text-sm rounded-lg bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
                 </div>
                 <Link href="/dashboard/positions/new" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
-                    <Plus className="w-3.5 h-3.5" /> Create
+                    <Plus className="w-3.5 h-3.5" /> New position
                 </Link>
             </PageHeader>
 

@@ -49,6 +49,7 @@ export default function SignPage() {
       <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Signatures</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+        <span className="text-xs text-tertiary hidden lg:inline truncate">Each signer gets a private link; the signed PDF goes to everyone.</span>
         {canManage && (
           <button onClick={() => setCreating(true)} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> Send for signing
@@ -58,7 +59,6 @@ export default function SignPage() {
 
       <div className="flex-1 overflow-auto page-pad">
         <div className="space-y-4">
-          <p className="text-sm text-secondary -mt-1">Send a PDF for e-signature. Each signer gets a private link; once everyone signs, the completed PDF with a signature certificate lands in every inbox.</p>
 
           {loading ? (
             <AppLoading />

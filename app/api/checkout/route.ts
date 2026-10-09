@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
             ],
             mode: 'subscription',
             allow_promotion_codes: true,
-            success_url: `${origin}/dashboard/billing?success=true&plan=${encodeURIComponent(plan || '')}&session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${origin}/dashboard/billing?canceled=true`,
+            success_url: `${origin}/settings/plans?success=true&plan=${encodeURIComponent(plan || '')}&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/settings/plans?canceled=true`,
             metadata: {
                 company_id: companyId,
                 company_name: companyName ?? '',

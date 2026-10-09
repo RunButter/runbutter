@@ -90,7 +90,11 @@ export default function CopilotPanel() {
   // "/objects/invoices" — and so a renamed built-in (0097) reads as whatever
   // this workspace calls it.
   const pageLabel = (() => {
-    for (const g of nav) for (const it of g.items) if (it.href === pathname) return it.label;
+    for (const g of nav) for (const it of g.items) {
+      if (it.href === pathname) return it.label;
+      const tab = it.tabs?.find((t) => t.href === pathname);
+      if (tab) return `${it.label} → ${tab.label}`;
+    }
     return '';
   })();
   const page = { path: pathname, label: pageLabel };

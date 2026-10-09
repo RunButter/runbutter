@@ -7,6 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Search, ChevronsUpDown, ChevronRight, LogOut, Loader2, Users } from 'lucide-react';
 import { iconFor } from '@/lib/crm/object-icons';
 import { useNav } from '@/lib/crm/nav';
+import { navHrefs } from '@/lib/crm/registry';
 import { getWorkspace, loadBranding, loadNavActivity, listMyWorkspaces, setActiveWorkspace, type WorkspaceContext, type WorkspaceOption } from '@/lib/crm/data';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import {
@@ -132,6 +133,8 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       return next;
     });
 
+  // An entry with tabs (Finance → Overview / KPIs / Forecast) stays lit on
+  // every one of them, or the rail goes dark the moment you switch tab.
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
@@ -188,7 +191,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           if (g.pinned) {
             return (
               <div key={g.group} className="px-2 mb-4 space-y-1">
-                {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
+                {g.items.map((it: any) => <Item key={it.slug} it={it} active={navHrefs(it).some(isActive)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
               </div>
             );
           }
@@ -200,7 +203,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
           // shows six to ten, and an explicit toggle is remembered from then on.
           // Before hydration localStorage is unreadable, so the same
           // active-section default renders on the server and no group flashes.
-          const hasActive = g.items.some((it: any) => isActive(it.href));
+          const hasActive = g.items.some((it: any) => navHrefs(it).some(isActive));
           const open = hydrated && g.group in collapsed ? !collapsed[g.group] : hasActive;
           return (
             <div key={g.group} className="px-2 mb-1">
@@ -213,7 +216,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
               </button>
               {open && (
                 <div className="mt-1 space-y-1">
-                  {g.items.map((it: any) => <Item key={it.slug} it={it} active={isActive(it.href)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
+                  {g.items.map((it: any) => <Item key={it.slug} it={it} active={navHrefs(it).some(isActive)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
                 </div>
               )}
             </div>

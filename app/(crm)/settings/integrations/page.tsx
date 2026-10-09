@@ -271,10 +271,11 @@ export default function IntegrationsPage() {
             {browsing && (
               <div className="card-surface p-4 mb-3">
                 <h3 className="text-sm font-medium text-primary">Public APIs that need no key</h3>
+                {/* A short vetted list, not a mirror of the 1,400-entry public-apis
+                    directory: no signup, https only, useful to a business, run by
+                    somebody who will still exist next year. */}
                 <p className="mt-0.5 text-2xs text-tertiary">
-                  A short vetted list, not a mirror of the 1,400-entry public-apis directory: no signup,
-                  https only, useful to a business, and run by somebody who will still exist next year.
-                  Adding one creates an ordinary connection — your agents call it by id, never by URL.
+                  No signup needed. Adding one creates a connection your agents can call.
                 </p>
                 <div className="mt-3 flex flex-col gap-3">
                   {apisByGroup().map((g) => (

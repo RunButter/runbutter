@@ -34,7 +34,7 @@ export default function Paywall({ children, isLocked, featureName }: PaywallProp
 
                     <div className="space-y-3">
                         <Link
-                            href="/dashboard/billing"
+                            href="/settings/plans"
                             className="btn-primary w-full py-3 flex items-center justify-center gap-2 group/btn"
                         >
                             <CreditCard className="w-5 h-5" />

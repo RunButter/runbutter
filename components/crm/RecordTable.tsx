@@ -7,6 +7,7 @@ import type { ObjectDef, FieldDef } from '@/lib/crm/types';
 import Badge, { toneFor, iconFor } from '@/components/ui/Badge';
 import { useDialog } from '@/components/ui/Dialog';
 import CompanyLogo from './CompanyLogo';
+import { fmtDay } from '@/lib/utils';
 
 export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
   const v = row[field.key];
@@ -37,13 +38,8 @@ export function FieldValue({ field, row }: { field: FieldDef; row: any }) {
     case 'currency':
       return <span className="font-mono text-primary">${Number(v).toLocaleString()}</span>;
     case 'date':
-      return <span className="text-secondary font-mono text-xs">{new Date(v).toLocaleDateString()}</span>;
+      return <span className="text-secondary tabular-nums whitespace-nowrap">{fmtDay(v)}</span>;
     case 'number': {
-      if (field.key === 'synergy') {
-        const n = Number(v);
-        const tone = n >= 80 ? 'text-success' : n >= 60 ? 'text-warning' : 'text-secondary';
-        return <span className={`font-mono ${tone}`}>{n}%</span>;
-      }
       return <span className="font-mono text-secondary">{Number(v).toLocaleString()}</span>;
     }
     default:

@@ -29,12 +29,14 @@ import RemixBar from '@/components/design/RemixBar';
  */
 
 type FormatKey = 'md' | 'v4' | 'css' | 'json';
+type Step = 'start' | 'edit' | 'export';
+const STEPS: [Step, string][] = [['start', 'Start'], ['edit', 'Colours & type'], ['export', 'Export']];
 const FORMAT_LABEL: Record<FormatKey, string> = {
   md: 'DESIGN.md', v4: 'Tailwind v4', css: 'CSS variables', json: 'design.json',
 };
 
 export default function DesignStudio({
-  t, set, logoUrl, onLogo, intro, sidebar, presetsDense,
+  t, set, logoUrl, onLogo, intro, sidebar, presetsDense, initialStep,
 }: {
   t: DesignTokens;
   set: (fn: (prev: DesignTokens) => DesignTokens) => void;
@@ -46,6 +48,8 @@ export default function DesignStudio({
   sidebar?: React.ReactNode;
   /** Collapse the style picker — right where a workspace already has a spec. */
   presetsDense?: boolean;
+  /** Which step opens first. A brand-new spec starts at Start; a saved one at its values. */
+  initialStep?: Step;
 }) {
   const [note, setNote] = useState('');
   // The uploaded logo lives in the tab: bytes for the zip, an object URL for
@@ -129,33 +133,81 @@ export default function DesignStudio({
   };
 
   const missing = useMemo(() => gaps(t), [t]);
+  // Three steps rather than one long page. It was ~780 words and 125 buttons on
+  // a single screen — intake, presets, remix, every token, preview and export
+  // all at once — which reads as a form to fill in rather than a tool. The
+  // preview stays beside every step, because it is what each step is FOR.
+  const [step, setStep] = useState<Step>(initialStep ?? (presetsDense ? 'edit' : 'start'));
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="card-surface p-4">
-        {intro}
-        <div className={intro ? 'mt-3' : ''}><BrandIntake onLogo={takeLogo} onApply={applyPatch} /></div>
-        {/* Below the uploads, not above: somebody with a logo and a brand PDF
-            should be offered the accurate route first. A style is what you
-            reach for when you do not have one. */}
-        <div className="mt-4 pt-4 border-t border-subtle">
-          <PresetPicker current={t} onPick={(next) => set(() => next)} dense={presetsDense} />
-        </div>
-        <div className="mt-4 pt-4 border-t border-subtle">
-          <RemixBar t={t} onApply={(next) => set(() => next)} />
-        </div>
+      <div className="inline-flex self-start items-center gap-0.5 rounded-lg bg-surface-sunken p-0.5" role="tablist">
+        {STEPS.map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={step === k} onClick={() => setStep(k)}
+            className={`h-8 px-3 rounded-md text-sm transition-colors ${step === k ? 'bg-surface text-primary shadow-sm font-medium' : 'text-tertiary hover:text-secondary'}`}>
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 items-start">
-        <TokenEditor t={t} set={set} />
+        <div className="flex flex-col gap-4 min-w-0">
+          {step === 'start' && (
+            <div className="card-surface p-4">
+              {intro}
+              <div className={intro ? 'mt-3' : ''}><BrandIntake onLogo={takeLogo} onApply={applyPatch} /></div>
+              {/* Below the uploads, not above: somebody with a logo and a brand PDF
+                  should be offered the accurate route first. A style is what you
+                  reach for when you do not have one. */}
+              <div className="mt-4 pt-4 border-t border-subtle">
+                <PresetPicker current={t} onPick={(next) => set(() => next)} dense={presetsDense} />
+              </div>
+              <div className="mt-4 pt-4 border-t border-subtle">
+                <RemixBar t={t} onApply={(next) => set(() => next)} />
+              </div>
+            </div>
+          )}
 
-        <div className="xl:sticky xl:top-4 flex flex-col gap-3">
+          {step === 'edit' && <TokenEditor t={t} set={set} />}
+
+          {step === 'export' && (
+            <>
+              <div className="card-surface p-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-medium text-primary flex-1">Copy or download</h2>
+                  {note && <span className="text-2xs text-success inline-flex items-center gap-1"><Check className="w-3 h-3" />{note}</span>}
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                  {(['md', 'v4', 'css', 'json'] as const).map((k) => (
+                    <button key={k} onClick={() => copyFormat(k)}
+                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                      <Copy className="w-3.5 h-3.5" /> {FORMAT_LABEL[k]}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <button onClick={downloadBundle}
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+                    <Download className="w-3.5 h-3.5" /> Download the bundle
+                  </button>
+                  <button onClick={downloadPlugin}
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                    <Package className="w-3.5 h-3.5" /> Agent plugin
+                  </button>
+                </div>
+                <p className="mt-2 text-2xs text-tertiary">
+                  The bundle holds every format plus your logo. The plugin puts{' '}
+                  <code className="bg-surface-hover rounded px-1">DESIGN.md</code> where Claude Code, Cursor and Copilot look.
+                </p>
+              </div>
+              {sidebar}
+            </>
+          )}
+        </div>
+
+        <div className="xl:sticky xl:top-4 flex flex-col gap-3 min-w-0">
           <div className="card-surface p-4">
             <h2 className="text-sm font-medium text-primary">Preview</h2>
-            <p className="mt-0.5 text-2xs text-tertiary">
-              Drawn with these values and nothing else. Nine swatches in a row always look fine;
-              a button, a table and a contrast ratio are where a palette tells the truth.
-            </p>
             <div className="mt-3"><DesignPreview tokens={t} logoUrl={shownLogo} /></div>
           </div>
 
@@ -164,51 +216,11 @@ export default function DesignStudio({
               <h2 className="text-sm font-medium text-primary inline-flex items-center gap-1.5">
                 <TriangleAlert className="w-3.5 h-3.5 text-warning" /> Still missing
               </h2>
-              <p className="mt-0.5 text-2xs text-tertiary">
-                In the order it is worth fixing. Deliberately not a score — a brand is not 78% done.
-              </p>
               <ul className="mt-2 flex flex-col gap-1">
                 {missing.map((g, i) => <li key={i} className="text-2xs text-secondary">• {g}</li>)}
               </ul>
             </div>
           )}
-
-          <div className="card-surface p-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-medium text-primary flex-1">Take it away</h2>
-              {note && <span className="text-2xs text-success inline-flex items-center gap-1"><Check className="w-3 h-3" />{note}</span>}
-            </div>
-            <p className="mt-0.5 text-2xs text-tertiary">
-              Five formats, five readers, one source — so they cannot disagree with each other or with
-              the preview above.
-            </p>
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              {(['md', 'v4', 'css', 'json'] as const).map((k) => (
-                <button key={k} onClick={() => copyFormat(k)}
-                  className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                  <Copy className="w-3.5 h-3.5" /> {FORMAT_LABEL[k]}
-                </button>
-              ))}
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <button onClick={downloadBundle}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
-                <Download className="w-3.5 h-3.5" /> Download the bundle
-              </button>
-              <button onClick={downloadPlugin}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                <Package className="w-3.5 h-3.5" /> Agent plugin
-              </button>
-            </div>
-            <p className="mt-2 text-3xs text-tertiary">
-              The bundle carries all five plus a README saying where each goes and your logo as bytes.
-              The plugin zip is the Agent Plugins 1.0 layout: <code className="bg-surface-hover rounded px-1">skills/design/SKILL.md</code>{' '}
-              plus <code className="bg-surface-hover rounded px-1">DESIGN.md</code> at the root, where Claude
-              Code, Cursor and Copilot look.
-            </p>
-          </div>
-
-          {sidebar}
         </div>
       </div>
     </div>

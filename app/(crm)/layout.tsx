@@ -8,6 +8,7 @@ import NavRail from '@/components/crm/NavRail';
 import CommandPalette from '@/components/CommandPalette';
 import CopilotPanel from '@/components/crm/CopilotPanel';
 import LoadErrorBanner from '@/components/crm/LoadErrorBanner';
+import SectionTabs from '@/components/crm/SectionTabs';
 import PlanGate from '@/components/PlanGate';
 import AppLoading from '@/components/ui/AppLoading';
 import { getWorkspace } from '@/lib/crm/data';
@@ -92,6 +93,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             visible over whatever empty state the page drew, or "this is broken"
             and "you have none of these" look identical. */}
         {!booting && <LoadErrorBanner />}
+        {!booting && <SectionTabs />}
         {booting
           ? <AppLoading kind="idle" label="Getting your workspace ready" hint="Restoring your session" />
           : body}

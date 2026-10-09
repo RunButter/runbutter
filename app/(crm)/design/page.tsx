@@ -131,7 +131,7 @@ export default function DesignPage() {
           {err && <p className="text-2xs text-danger">{err}</p>}
 
           <DesignStudio
-            t={t} set={set} logoUrl={logoUrl} presetsDense
+            t={t} set={set} logoUrl={logoUrl} presetsDense initialStep={seeded ? 'start' : 'edit'}
             intro={
               <>
                 <h2 className="text-sm font-medium text-primary">
@@ -139,8 +139,8 @@ export default function DesignPage() {
                 </h2>
                 <p className="mt-0.5 text-2xs text-tertiary">
                   {seeded
-                    ? 'This is seeded from your workspace branding. Drop in a logo and your guidelines and the exact values come out of them — nothing is uploaded, it all happens in this tab.'
-                    : 'Upload a logo or a brand document at any time. Everything found is shown before it is applied.'}
+                    ? 'Seeded from your branding. Drop in a logo or guidelines to pull the exact values — nothing is uploaded.'
+                    : 'Everything found in an upload is shown before it is applied.'}
                 </p>
               </>
             }
@@ -149,9 +149,7 @@ export default function DesignPage() {
               <div className="card-surface p-4">
                 <h2 className="text-sm font-medium text-primary">Give it to the agents</h2>
                 <p className="mt-0.5 text-2xs text-tertiary">
-                  Saves this as a skill called <code className="bg-surface-hover rounded px-1">design</code>.
-                  Every agent in the workspace carries it, so "write the launch email" and "draft the
-                  invoice note" come out in your colours and your words without being told each time.
+                  Saves it as the <code className="bg-surface-hover rounded px-1">design</code> skill, so every agent writes in your colours and voice.
                 </p>
                 <button onClick={publishSkill} disabled={busy === 'skill'}
                   className="mt-2.5 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">

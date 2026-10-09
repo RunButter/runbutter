@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { Megaphone, Wallet, Users, Target, ArrowUpRight, Radio } from 'lucide-react';
+import { Megaphone, Wallet, Users, Target, ArrowUpRight, Globe } from 'lucide-react';
 import { loadRecords } from '@/lib/crm/data';
 import StatCard from '@/components/ui/StatCard';
 import DataBadge from '@/components/ui/DataBadge';
@@ -96,7 +96,9 @@ export default function MarketingOverview() {
             <div className="grid sm:grid-cols-2 gap-3">
               {[
                 { label: 'Campaigns', desc: 'Plan, budget, and track results', icon: Megaphone, href: '/objects/campaigns', tone: 'text-accent' },
-                { label: 'Source tracking', desc: 'UTM links — see where people come from', icon: Radio, href: '/dashboard/sources', tone: 'text-accent' },
+                // Was "Source tracking — UTM links", which opened HR's job-board
+                // link generator. Web analytics is where visitors' sources are.
+                { label: 'Web analytics', desc: 'Visitors, sources and countries', icon: Globe, href: '/marketing/analytics', tone: 'text-accent' },
               ].map((q) => (
                 <Link key={q.label} href={q.href}
                   className="group flex items-center gap-3 card-surface p-4 hover:ring-strong hover:shadow-elevated transition-all">

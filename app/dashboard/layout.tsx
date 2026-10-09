@@ -7,6 +7,7 @@ import { Menu, Loader2 } from 'lucide-react';
 import { getWorkspace } from '@/lib/crm/data';
 import NavRail from '@/components/crm/NavRail';
 import LoadErrorBanner from '@/components/crm/LoadErrorBanner';
+import SectionTabs from '@/components/crm/SectionTabs';
 import CopilotPanel from '@/components/crm/CopilotPanel';
 import CommandPalette from '@/components/CommandPalette';
 import PlanGate from '@/components/PlanGate';
@@ -90,6 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             for a read that was failing) lives on this side. */}
         <LoadErrorBanner />
         <div className="flex-1 overflow-y-auto bg-canvas">
+          <SectionTabs />
           {requiredFeature
             ? <PlanGate plan={plan} feature={requiredFeature}>{children}</PlanGate>
             : children}

@@ -158,7 +158,7 @@ by hand.
   records, deliberately: sample data mixed into real data is indistinguishable
   from it a week later.
 - **Settings → Integrations** is where API keys, MCP and Excel live.
-- **Account → AI keys** is where you add your own model provider key. There is
+- **Settings → AI** is where you add your own model provider key. There is
   no platform key; nothing AI works until you add yours, and it spends your
   credit, not ours.
 

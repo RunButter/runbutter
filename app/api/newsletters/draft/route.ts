@@ -132,7 +132,7 @@ export async function POST(req: Request) {
   // Also validates membership — raises NOT_A_MEMBER otherwise.
   const { data: secret, error: secErr } = await admin.rpc('get_ai_secret', { p_privy: privyUserId, p_workspace: workspaceId });
   if (secErr) return NextResponse.json({ error: secErr.message }, { status: /NOT_A_MEMBER/.test(secErr.message) ? 403 : 500 });
-  if (!secret) return NextResponse.json({ error: 'No AI provider configured. Add a key in Account → AI keys.' }, { status: 400 });
+  if (!secret) return NextResponse.json({ error: 'No AI provider configured. Add a key in Settings → AI.' }, { status: 400 });
 
   let apiKey: string;
   try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }

@@ -42,6 +42,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, id: data });
   } catch (e: any) {
     const msg = String(e?.message || 'Failed to store key');
+    // 0129: the key is the workspace's, so only an owner or admin may set it.
+    if (/FORBIDDEN/.test(msg)) return NextResponse.json({ error: 'Only an owner or admin can change the workspace’s AI key.' }, { status: 403 });
+    if (/NOT_A_MEMBER/.test(msg)) return NextResponse.json({ error: 'You are not a member of this workspace.' }, { status: 403 });
     // 0038 renames the RPC signature; give a actionable hint if it's missing.
     const friendly = /store_ai_provider/.test(msg) ? 'Database migration 0038 has not been run yet (Supabase SQL editor).' : msg;
     return NextResponse.json({ error: friendly }, { status: 500 });

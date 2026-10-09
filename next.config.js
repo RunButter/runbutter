@@ -76,6 +76,20 @@ const nextConfig = {
   // the browser console / reports in prod for a few days, then rename the key
   // to 'Content-Security-Policy' to enforce. 'unsafe-inline' stays until Next
   // inline scripts get nonces; 'unsafe-eval' is dev-only (webpack HMR).
+  /**
+   * Screens that were folded into another (2026-10 audit). Redirects rather
+   * than deletions-with-404s, because these URLs are in Stripe's checkout
+   * return addresses, in old emails and in people's bookmarks.
+   * Query strings pass through, so ?success=true still reaches Plans & billing.
+   */
+  async redirects() {
+    return [
+      { source: '/dashboard/billing', destination: '/settings/plans', permanent: false },
+      { source: '/dashboard/settings', destination: '/settings/branding', permanent: false },
+      { source: '/dashboard/team', destination: '/settings/members', permanent: false },
+      { source: '/projects/board', destination: '/objects/issues?view=board', permanent: false },
+    ];
+  },
   async headers() {
     const csp = [
       "default-src 'self'",

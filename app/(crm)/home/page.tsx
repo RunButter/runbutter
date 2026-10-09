@@ -20,6 +20,7 @@ import SeedDemoData from '@/components/crm/SeedDemoData';
 import HomeExtras from '@/components/crm/HomeExtras';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
+import { useNav } from '@/lib/crm/nav';
 
 const money = (n: number) => (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
@@ -68,20 +69,30 @@ export default function WorkspaceHome() {
   // Truthful monthly net series (revenue − costs) for the Net-profit sparkline.
   const netSeries = fin?.series?.map((p) => p.revenue - p.costs) ?? [];
 
+  // Settings → Modules switches whole sections off; Home must follow, or a
+  // company that does not hire still opens on a Candidates tile and a hiring
+  // funnel. Read from the SAME nav the rail draws, so the two cannot disagree.
+  const nav = useNav(privy);
+  const shown = new Set(nav.map((g) => g.group));
+  const on = (group: string) => shown.has(group);
+
   const kpis = [
     { label: 'Cash in bank', value: money(cash), sub: `${accounts.length} account${accounts.length === 1 ? '' : 's'}`, icon: Wallet, tone: cash < 0 ? 'text-danger' : 'text-success', href: '/finance/transactions' },
     { label: 'Net profit', value: fin ? money(net) : '—', sub: fin ? `${fin.margin}% margin · 12M` : '—', icon: PiggyBank, tone: net >= 0 ? 'text-success' : 'text-danger', href: '/finance/overview', spark: netSeries, trend: monthlyMomentum(netSeries) },
     { label: 'Open pipeline', value: money(pipelineValue), sub: `${openDeals.length} active deal${openDeals.length === 1 ? '' : 's'}`, icon: Target, tone: 'text-accent', href: '/pipelines/sales/board' },
     { label: 'Candidates', value: hr ? String(hr.stats.totalCandidates) : '—', sub: hr ? `${hr.stats.pendingReview} in review` : '—', icon: Users, tone: 'text-accent', href: '/dashboard/overview' },
-  ];
+  ].filter((k) => on(k.label === 'Open pipeline' ? 'Sales' : k.label === 'Candidates' ? 'HR' : 'Finance'));
+  const kpiCols = ['', 'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:grid-cols-4'][kpis.length] || 'lg:grid-cols-4';
 
   const pillars = [
-    { label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board' },
-    { label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview' },
-    { label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview' },
-    { label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview' },
-    { label: 'Projects', desc: 'Boards & roadmap', icon: FolderKanban, href: '/projects/board' },
-  ];
+    { group: 'Sales', label: 'Sales', desc: `${openDeals.length} open deals`, icon: Target, href: '/pipelines/sales/board' },
+    { group: 'Finance', label: 'Finance', desc: `${money(cash)} cash`, icon: TrendingUp, href: '/finance/overview' },
+    { group: 'Marketing', label: 'Marketing', desc: 'Campaigns & analytics', icon: Megaphone, href: '/marketing/overview' },
+    { group: 'HR', label: 'Recruiting', desc: hr ? `${hr.stats.activePositions} open roles` : 'Hiring & HR', icon: Briefcase, href: '/dashboard/overview' },
+    { group: 'Projects', label: 'Projects', desc: 'Projects & roadmap', icon: FolderKanban, href: '/objects/projects' },
+  ].filter((p) => on(p.group));
+  const showCash = on('Finance');
+  const showHiring = on('HR');
 
   return (
     <>
@@ -106,7 +117,7 @@ export default function WorkspaceHome() {
           )}
 
           {/* Cross-pillar KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {kpis.length > 0 && <div className={`grid grid-cols-2 ${kpiCols} gap-3`}>
             {kpis.map((k) => (
               <StatCard
                 key={k.label}
@@ -120,7 +131,7 @@ export default function WorkspaceHome() {
                 href={k.href}
               />
             ))}
-          </div>
+          </div>}
 
           {/* Two questions the dashboard could not answer until the copilot and
               the usage table existed. Placed above the tables because "what did
@@ -128,8 +139,8 @@ export default function WorkspaceHome() {
           <HomeExtras privy={privy} ws={ws?.id ?? null} />
 
           {/* Cashflow + hiring funnel */}
-          <div className="grid lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 card-surface p-5">
+          {(showCash || showHiring) && <div className="grid lg:grid-cols-3 gap-4">
+            {showCash && <div className={`${showHiring ? 'lg:col-span-2' : 'lg:col-span-3'} card-surface p-5`}>
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <h3 className="text-base font-medium text-primary">Cashflow</h3>
@@ -145,9 +156,9 @@ export default function WorkspaceHome() {
               ) : (
                 <FinanceChart series={fin.series} />
               )}
-            </div>
+            </div>}
 
-            <div className="card-surface p-5 flex flex-col">
+            {showHiring && <div className={`${showCash ? '' : 'lg:col-span-3'} card-surface p-5 flex flex-col`}>
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-base font-medium text-primary">Hiring funnel</h3>
@@ -160,11 +171,11 @@ export default function WorkspaceHome() {
               ) : (
                 <HiringFunnel stages={hr.funnel} />
               )}
-            </div>
-          </div>
+            </div>}
+          </div>}
 
           {/* Explore pillars */}
-          <div>
+          {pillars.length > 0 && <div>
             <h2 className="text-base font-medium text-primary mb-3">Jump back in</h2>
             <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
               {pillars.map((p) => (
@@ -177,12 +188,12 @@ export default function WorkspaceHome() {
                 </Link>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Recent activity */}
-          <div className="grid lg:grid-cols-2 gap-4">
+          {(showCash || showHiring) && <div className={`grid ${showCash && showHiring ? 'lg:grid-cols-2' : ''} gap-4`}>
             {/* Recent applications */}
-            <div className="card-surface overflow-hidden">
+            {showHiring && <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
                 <h3 className="text-base font-medium text-primary">Recent applications</h3>
                 <Link href="/dashboard/candidates" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
@@ -207,10 +218,10 @@ export default function WorkspaceHome() {
                   );
                 })}
               </div>
-            </div>
+            </div>}
 
             {/* Recent transactions */}
-            <div className="card-surface overflow-hidden">
+            {showCash && <div className="card-surface overflow-hidden">
               <div className="flex items-center justify-between px-5 h-12 border-b border-subtle">
                 <h3 className="text-base font-medium text-primary">Recent transactions</h3>
                 <Link href="/finance/transactions" className="text-xs font-medium text-secondary hover:text-primary transition-colors inline-flex items-center gap-0.5">All <ArrowRight className="w-3 h-3" /></Link>
@@ -229,8 +240,8 @@ export default function WorkspaceHome() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+            </div>}
+          </div>}
         </div>
       </div>
     </>

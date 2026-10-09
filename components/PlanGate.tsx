@@ -51,7 +51,7 @@ export default function PlanGate({ plan, feature, label, children }: Props) {
                     <p className="text-secondary mb-6 text-sm">
                         This is included from the <span className="font-medium text-primary">{neededName}</span> plan. Upgrade to unlock it.
                     </p>
-                    <Link href="/dashboard/billing" className="btn-primary w-full py-3 flex items-center justify-center gap-2">
+                    <Link href="/settings/plans" className="btn-primary w-full py-3 flex items-center justify-center gap-2">
                         <CreditCard className="w-5 h-5" /> Upgrade to {neededName}
                         <ChevronRight className="w-5 h-5" />
                     </Link>

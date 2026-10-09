@@ -164,8 +164,12 @@ export default function WebAnalytics() {
               </button>
             </>
           )}
-          <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
-            className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
+          {/* With no site yet the setup card is already open below, so the
+              button would open what is on screen. */}
+          {sites.length > 0 && (
+            <button onClick={() => { setSnippetOpen(true); setJustAdded(null); }}
+              className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90"><Plus className="w-3.5 h-3.5" /> Add website</button>
+          )}
         </div>
       </header>
 

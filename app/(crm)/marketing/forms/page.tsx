@@ -77,6 +77,7 @@ export default function FormsPage() {
       <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Forms</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+        <span className="text-xs text-tertiary hidden lg:inline truncate">Every submission becomes a person in your CRM.</span>
         {canManage && (
           <button onClick={() => edit()} className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> New form
@@ -86,7 +87,6 @@ export default function FormsPage() {
 
       <div className="flex-1 overflow-auto page-pad">
         <div className="space-y-4">
-          <p className="text-sm text-secondary -mt-1">Public forms for lead capture. Every submission becomes a person in your CRM, tagged with the form it came from.</p>
 
           {loading ? (
             <AppLoading />

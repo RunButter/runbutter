@@ -90,7 +90,7 @@ issue Polish e-invoices.
 ## AI
 
 There is no AI variable, on purpose. Model provider keys are **per workspace**,
-added in the app under Account → AI keys, encrypted at rest, and spent by the
+added in the app under Settings → AI, encrypted at rest, and spent by the
 workspace that owns them. A platform-wide key would mean a platform-wide bill
 and a platform-wide blast radius.
 

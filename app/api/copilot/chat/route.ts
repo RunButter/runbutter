@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   if (secErr) return NextResponse.json({ error: secErr.message }, { status: /NOT_A_MEMBER/.test(secErr.message) ? 403 : 500 });
   if (!secret) {
     return NextResponse.json({
-      error: 'No AI key yet. Add one in Settings → AI keys — the copilot runs on your own provider key, so nothing is billed here.',
+      error: 'No AI key yet. Add one in Settings → AI — the copilot runs on your own provider key, so nothing is billed here.',
     }, { status: 400 });
   }
 

@@ -237,7 +237,7 @@ export default function Showcase() {
         eyebrow="Recruiting & HR"
         title="Hire better, by skills and personality"
         body="The built-in ATS scores candidates on skills and psychometrics, then moves the shortlist along a drag-and-drop pipeline. Rule-based matching in Postgres, with no per-token AI bill."
-        bullets={['Skills + Big-5 personality match scores', 'Drag-and-drop hiring pipeline & interviews', 'Talent Treasury to filter your whole pool']}
+        bullets={['Skills + Big-5 personality match scores', 'Drag-and-drop hiring pipeline & interviews', 'A talent pool to filter everyone who ever applied']}
         visual={<RecruitingMock />}
       />
     </section>

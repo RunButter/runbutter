@@ -1,72 +1,98 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
 import {
   PLANS, PLAN_ORDER, ALL_FEATURES, FEATURE_LABELS, formatLimit, normalizePlan, type SubscriptionPlan,
 } from '@/lib/plans';
-import { loadMyHrCompanies } from '@/lib/crm/data';
+import { rpc } from '@/lib/rpc';
+import { getWorkspace } from '@/lib/crm/data';
 import AppLoading from '@/components/ui/AppLoading';
 import PlanUsage from '@/components/crm/PlanUsage';
 
-// Maps a paid plan to its Stripe price id. Env var names keep the old
-// STARTER/PRO wording so existing Render config keeps working after the
-// Team/Business rename — these must be PER-SEAT (quantity) prices in Stripe.
-// Named for the plans that exist. The ATS-era names are read as a fallback so
-// an instance that has not moved its variables over keeps taking payments —
-// NEXT_PUBLIC_* are inlined at build time, so a rename is a redeploy for the
-// person running it, not a config edit.
+// The ONE billing screen. There used to be two — this one and /dashboard/billing
+// — and they disagreed: this one billed the OLDEST company you belong to and sent
+// neither the plan nor the seat count to checkout, the other billed the workspace
+// you were looking at. /dashboard/billing now redirects here, and Stripe's
+// success/cancel URLs land here too.
+//
+// Env var names keep the ATS-era STARTER/PRO wording as a fallback so an instance
+// that has not moved its variables over keeps taking payments — NEXT_PUBLIC_* are
+// inlined at build time. These must be PER-SEAT prices in Stripe.
 const PRICE_IDS: Partial<Record<SubscriptionPlan, string>> = {
   team: process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_TEAM_PLACEHOLDER',
   business: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_PRICE_ID || process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_BUSINESS_PLACEHOLDER',
 };
 
 export default function PlansPage() {
+  // useSearchParams needs a Suspense boundary or the static build bails out.
+  return <Suspense fallback={<AppLoading />}><Plans /></Suspense>;
+}
+
+function Plans() {
   const { ready, authenticated, user } = usePrivy();
-  const [company, setCompany] = useState<any>(null);
+  const params = useSearchParams();
+  const [company, setCompany] = useState<{ id: string; name: string; plan: string } | null>(null);
+  const [seats, setSeats] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!ready) return;
     if (!authenticated || !user) { setLoading(false); return; }
-    // Ordered oldest-first inside SQL, so [0] is stable — an arbitrary company
-    // here reads to the user as "my plan is wrong".
-    loadMyHrCompanies(user.id).then((rows) => {
-      const m = rows[0];
-      if (m) setCompany({ id: m.company_id, name: m.company_name, plan: m.plan } as any);
+    (async () => {
+      // The ACTIVE workspace, like every other screen — billing the company you
+      // are not looking at is its own kind of wrong.
+      const ws = await getWorkspace(user.id).catch(() => null);
+      if (ws?.id) {
+        setCompany({ id: ws.id, name: ws.name, plan: ws.plan });
+        const { data: members } = await rpc('get_members', { p_privy: user.id, p_workspace: ws.id });
+        const n = Array.isArray(members) ? members.length : 0;
+        if (n > 0) setSeats(n);
+      }
       setLoading(false);
-    });
+    })();
   }, [ready, authenticated, user]);
 
-  // normalizePlan maps legacy 'starter'/'professional' rows onto Team/Business.
   const current = normalizePlan(company?.plan);
   const currentIdx = PLAN_ORDER.indexOf(current);
+  const justPaid = params.get('success') === 'true';
+  const canceled = params.get('canceled') === 'true';
 
   return (
     <>
       <header className="h-16 shrink-0 flex items-center gap-3 page-x">
         <h1 className="text-md font-medium text-primary">Plans &amp; billing</h1>
         <span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-accent/10 text-accent capitalize">{current} plan</span>
-        <Link href="/dashboard/billing" className="ml-auto text-xs font-medium text-secondary hover:text-primary">Manage billing →</Link>
+        {company && (
+          <span className="ml-auto text-xs text-secondary tabular-nums">{seats} {seats === 1 ? 'seat' : 'seats'}</span>
+        )}
       </header>
 
       <div className="flex-1 overflow-auto page-pad">
         {loading ? (
           <AppLoading />
         ) : (
-          <div className="w-full">
-            <h2 className="text-xl font-semibold text-primary mb-1">One workspace, priced to grow with you</h2>
-            <p className="text-sm text-secondary mb-6">
-              Sales, finance, projects and recruiting in one place — upgrade for more seats, records, and modules.
-              {!company && ' Sign in to manage your subscription.'}
-            </p>
+          <div className="w-full space-y-6">
+            {justPaid && (
+              <div className="flex items-start gap-2.5 rounded-xl bg-success/10 ring-1 ring-success/30 px-4 py-3">
+                <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                <p className="text-sm text-success">Payment received. Your plan updates as soon as Stripe confirms it — refresh in a moment if it still shows the old one.</p>
+              </div>
+            )}
+            {canceled && (
+              <div className="flex items-start gap-2.5 rounded-xl bg-surface ring-1 ring-subtle px-4 py-3">
+                <XCircle className="w-4 h-4 text-tertiary shrink-0 mt-0.5" />
+                <p className="text-sm text-secondary">Checkout canceled. Nothing was charged.</p>
+              </div>
+            )}
+            {!company && <p className="text-sm text-secondary">Sign in to manage your subscription.</p>}
 
-            {/* Above the tiers, not below them: "am I outgrowing this" is the
-                question somebody opens this page with, and the answer belongs
-                before the thing they might buy rather than after it. */}
+            {/* Above the tiers: "am I outgrowing this" is the question somebody
+                opens this page with. */}
             {company?.id && user && (
               <PlanUsage privy={user.id} workspaceId={company.id} plan={company.plan} />
             )}
@@ -79,10 +105,11 @@ export default function PlansPage() {
                 const popular = key === 'business';
                 const prev = idx > 0 ? PLAN_ORDER[idx - 1] : null;
                 const newFeats = ALL_FEATURES.filter((f) => p.features[f] && !(prev && PLANS[prev].features[f]));
+                const priceId = PRICE_IDS[key];
 
                 return (
                   <div key={key}
-                    className={`relative rounded-2xl p-5 flex flex-col bg-surface ${popular ? 'ring-2 ring-accent/30 shadow-lg' : 'ring-1 ring-subtle'}`}>
+                    className={`relative rounded-2xl p-5 flex flex-col bg-surface shadow-card ${popular ? 'ring-2 ring-accent/30' : 'ring-1 ring-subtle'}`}>
                     {popular && (
                       <div className="absolute -top-2.5 left-5 inline-flex items-center gap-1 text-3xs font-medium uppercase tracking-widest text-accent-fg bg-accent rounded-full px-2 py-0.5">
                         <Sparkles className="w-3 h-3" /> Popular
@@ -92,30 +119,29 @@ export default function PlansPage() {
                       <div className="absolute -top-2.5 right-5 text-3xs font-medium uppercase tracking-widest text-success bg-success/10 rounded-full px-2 py-0.5">Current</div>
                     )}
 
-                    <h3 className="font-semibold text-primary">{p.name}</h3>
+                    <h3 className="text-base font-medium text-primary">{p.name}</h3>
                     <div className="mt-1.5 flex items-baseline gap-1">
-                      <span className="text-3xl font-semibold text-primary">{p.price}</span>
+                      <span className="text-3xl font-semibold text-primary tabular-nums">{p.price}</span>
                       {p.priceValue > 0 && (
                         <span className="text-xs font-semibold text-tertiary">{p.perSeat ? '/seat /mo' : '/mo'}</span>
                       )}
                     </div>
                     <p className="text-xs text-tertiary mb-4">{p.tagline}</p>
 
-                    {/* Hard limits — the Business-OS meters */}
                     <div className="space-y-1.5 mb-4 text-xs">
-                      <div className="flex justify-between"><span className="text-secondary">Seats</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxSeats)}</span></div>
-                      <div className="flex justify-between"><span className="text-secondary">Records / object</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxRecords)}</span></div>
-                      <div className="flex justify-between"><span className="text-secondary">Positions · candidates</span><span className="font-semibold text-primary tabular-nums">{formatLimit(p.limits.maxPositions)} · {formatLimit(p.limits.maxCandidates)}</span></div>
+                      <Row label="Seats" value={formatLimit(p.limits.maxSeats)} />
+                      <Row label="Records / object" value={formatLimit(p.limits.maxRecords)} />
+                      <Row label="Open positions" value={formatLimit(p.limits.maxPositions)} />
+                      <Row label="Candidates" value={formatLimit(p.limits.maxCandidates)} />
                     </div>
 
-                    {/* Feature deltas */}
                     <ul className="space-y-1.5 mb-5 flex-grow">
                       {idx === 0 ? (
                         <li className="flex items-start gap-2 text-xs text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Sales · Finance · Projects · HR core</li>
                       ) : (
                         <>
                           <li className="text-2xs font-semibold text-tertiary">Everything in {prev ? PLANS[prev].name : ''}, plus:</li>
-                          {newFeats.length === 0 && key === 'enterprise' && (
+                          {newFeats.length === 0 && (
                             <li className="flex items-start gap-2 text-xs text-secondary"><Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />Unlimited everything</li>
                           )}
                           {newFeats.map((f) => (
@@ -125,17 +151,20 @@ export default function PlansPage() {
                       )}
                     </ul>
 
-                    {/* CTA */}
                     {isCurrent ? (
                       <button disabled className="h-10 rounded-xl text-sm font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
                     ) : key === 'enterprise' ? (
-                      <Link href="/contact" className="h-10 rounded-xl text-sm font-semibold text-center inline-flex items-center justify-center bg-inverse text-inverse-fg hover:bg-inverse transition">Contact sales</Link>
-                    ) : isUpgrade && PRICE_IDS[key] ? (
+                      <Link href="/contact" className="h-10 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 bg-inverse text-inverse-fg hover:bg-inverse/90 transition">
+                        Contact sales <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    ) : isUpgrade && priceId ? (
                       <div className="[&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-sm">
                         <CheckoutButton
                           companyId={company?.id || ''}
-                          priceId={PRICE_IDS[key]!}
+                          priceId={priceId}
                           companyName={company?.name || 'Workspace'}
+                          plan={key}
+                          seats={seats}
                           text={`Upgrade to ${p.name}`}
                           variant={popular ? 'primary' : 'dark'}
                         />
@@ -148,10 +177,19 @@ export default function PlansPage() {
               })}
             </div>
 
-            <p className="mt-5 text-xs text-tertiary">Secure payments by Stripe · cancel anytime · prices in USD.</p>
+            <p className="text-xs text-tertiary">Secure payments by Stripe · cancel anytime · prices in USD. Seats come from your workspace and can be changed at checkout.</p>
           </div>
         )}
       </div>
     </>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-secondary">{label}</span>
+      <span className="font-semibold text-primary tabular-nums">{value}</span>
+    </div>
   );
 }

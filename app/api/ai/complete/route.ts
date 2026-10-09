@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   const admin = createAdminClient();
   const { data: secret, error } = await admin.rpc('get_ai_secret', { p_privy: privyUserId, p_workspace: workspaceId });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!secret) return NextResponse.json({ error: 'No AI provider configured. Add a key in Settings → AI keys.' }, { status: 400 });
+  if (!secret) return NextResponse.json({ error: 'No AI provider configured. Add a key in Settings → AI.' }, { status: 400 });
 
   let apiKey: string;
   try { apiKey = openSecret((secret as any).cipher, (secret as any).iv, (secret as any).tag); }

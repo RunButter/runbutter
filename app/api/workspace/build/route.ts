@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!secret) {
     return NextResponse.json({
-      error: 'No AI provider configured. Add a key in Account → AI keys, or start from one of the trade templates below.',
+      error: 'No AI provider configured. Add a key in Settings → AI, or start from one of the trade templates below.',
     }, { status: 400 });
   }
 
@@ -154,7 +154,7 @@ export async function POST(req: Request) {
       // parser could not read.
       error: reply.trim()
         ? 'The model replied, but not with a plan it could read. Try a different model — some are much better at returning strict JSON.'
-        : 'The model returned nothing at all. Check the key and model name in Account → AI keys.',
+        : 'The model returned nothing at all. Check the key and model name in Settings → AI.',
       detail: reply.slice(0, 300),
     }, { status: 422 });
   }
