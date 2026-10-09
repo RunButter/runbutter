@@ -121,12 +121,10 @@ export default function ConnectedApps({ privy }: { privy: string | null }) {
           </div>
         ))}
       </div>
-      <p className="text-2xs text-tertiary mt-2">
-        Anyone can register an app against this server — that is deliberate, because a self-hosted
-        deployment cannot pre-approve every client. What stops it mattering is that a registered app
-        can do nothing at all until somebody signs in and authorises it here, and this list is where
-        that gets taken back.
-      </p>
+      {/* Registration is open on purpose (a self-hosted server cannot pre-approve
+          every client); what makes that safe is that an app can do nothing until
+          a person authorises it, and this list is where that is taken back. */}
+      <p className="text-2xs text-tertiary mt-2">An app can do nothing until somebody here authorises it. Disconnect it to take that back.</p>
     </section>
   );
 }

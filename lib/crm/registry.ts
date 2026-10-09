@@ -303,6 +303,15 @@ export const NAV = [
     { slug: 'links', label: 'Short links', icon: 'Link2', href: '/marketing/links' },
     { slug: 'webanalytics', label: 'Web analytics', icon: 'Globe', href: '/marketing/analytics' },
   ]},
+  // Customers writing in (0131). Its own section rather than under Sales:
+  // support is somebody's whole job in a company of any size, and the person
+  // doing it should not have to open the sales pipeline to find their queue.
+  { group: 'Support', items: [
+    { slug: 'inbox', label: 'Inbox', icon: 'Inbox', href: '/inbox', tabs: [
+      { label: 'Inbox', href: '/inbox' },
+      { label: 'Chat widget', href: '/inbox/widget' },
+    ]},
+  ]},
   { group: 'HR', items: [
     { slug: 'hr-overview', label: 'Overview', icon: 'LayoutDashboard', href: '/dashboard/overview', tabs: [
       { label: 'Overview', href: '/dashboard/overview' },

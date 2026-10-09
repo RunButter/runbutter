@@ -308,7 +308,7 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
             </div>
           </Field>
 
-          {/* Grouped by module, and showing all 22 tools. The flat list here used
+          {/* Grouped by module, and showing EVERY tool (TOOL_GROUPS throws if one is left out). The flat list here used
               to render a stale 6-name copy of the catalogue, so finance, files,
               candidate and analytics tools were simply not grantable. */}
           <Field label="Tools" hint="✎ marks a tool that changes data.">

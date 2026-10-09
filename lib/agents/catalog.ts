@@ -31,7 +31,7 @@ export interface ToolInfo {
   alwaysPropose?: true;
 }
 
-export type ToolGroup = 'Records' | 'Docs' | 'Sales' | 'Team' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
+export type ToolGroup = 'Records' | 'Docs' | 'Sales' | 'Support' | 'Team' | 'Workspace' | 'Research' | 'Finance' | 'Compliance' | 'Files' | 'Marketing' | 'Hiring' | 'Connections';
 
 export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_objects', label: 'List record types', group: 'Records' },
@@ -109,6 +109,12 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // Delegation. Write, so a suggest-mode caller proposes the hand-off first.
   { name: 'run_agent', label: 'Hand a task to an agent', group: 'Workspace', write: true },
   { name: 'save_document', label: 'Write an invoice or offer', group: 'Finance', write: true },
+  // Support inbox (0131). Replying is WRITE: on suggest the reply is proposed,
+  // and either way it is stored as an 'agent' message so the customer-facing
+  // thread and the team both see a model wrote it.
+  { name: 'list_conversations', label: 'List support conversations', group: 'Support' },
+  { name: 'get_conversation', label: 'Read a support conversation', group: 'Support' },
+  { name: 'reply_conversation', label: 'Reply to a customer', group: 'Support', write: true },
   { name: 'list_orders', label: 'List orders', group: 'Sales' },
   { name: 'save_order', label: 'Draft an order', group: 'Sales', write: true },
   { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
@@ -134,7 +140,21 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'call_connection', label: 'Send to a connection', group: 'Connections', write: true },
 ];
 
-export const TOOL_GROUPS: ToolGroup[] = ['Records', 'Workspace', 'Research', 'Finance', 'Compliance', 'Files', 'Marketing', 'Hiring', 'Connections'];
+/**
+ * The order the agent builder draws its groups in — and the ONLY groups it
+ * draws. Docs, Sales and Team were missing from this list for months, so
+ * create_deal, save_order, save_doc, post_message and nine others existed, were
+ * documented and could NOT be granted to an agent: the picker never rendered
+ * them. The check below makes that impossible to repeat.
+ */
+export const TOOL_GROUPS: ToolGroup[] = [
+  'Records', 'Docs', 'Sales', 'Support', 'Finance', 'Marketing', 'Hiring', 'Team',
+  'Files', 'Research', 'Compliance', 'Workspace', 'Connections',
+];
+{
+  const ungrouped = TOOL_CATALOG.filter((t) => !TOOL_GROUPS.includes(t.group)).map((t) => t.name);
+  if (ungrouped.length) throw new Error(`catalog: no TOOL_GROUPS entry for ${ungrouped.join(', ')} — add the group or the builder cannot grant them.`);
+}
 
 /**
  * Read tools. screen_sanctions is here despite appending to its own audit trail:

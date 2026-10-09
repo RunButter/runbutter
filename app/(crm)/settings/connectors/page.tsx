@@ -251,11 +251,10 @@ export default function ConnectorsPage() {
                   </div>
                 ))}
             </div>
-            <p className="text-2xs text-tertiary mt-2">
-              Every POST carries <code className="bg-surface-hover rounded px-1">X-RunButter-Signature</code>{' '}
-              (<code className="bg-surface-hover rounded px-1">t=…,v1=…</code>), an HMAC of the body with the
-              secret above. Check it on your side and a leaked URL alone is not enough to send you anything.
-            </p>
+            {/* The signature format (X-RunButter-Signature: t=…,v1=…, an HMAC of
+                the body with the connection secret) is documented for developers
+                in docs/ and on API & webhooks — not in front of everybody here. */}
+            <p className="text-2xs text-tertiary mt-2">Every message we send is signed, so a leaked address alone cannot be used to fake one.</p>
           </section>
 
           <ConnectedApps privy={privy} />

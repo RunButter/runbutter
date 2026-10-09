@@ -36,7 +36,7 @@ export interface NavGroup { group: string; pinned?: boolean; items: NavItem[] }
  * records — putting Vehicles between "Members & roles" and "Plans & billing"
  * makes both harder to find.
  */
-export const CUSTOM_OBJECT_GROUPS = ['Workspace', 'Sales', 'Finance', 'Marketing', 'HR', 'Projects', 'Team'];
+export const CUSTOM_OBJECT_GROUPS = ['Workspace', 'Sales', 'Finance', 'Marketing', 'Support', 'HR', 'Projects', 'Team'];
 
 const norm = (s: string) => s.trim().toLowerCase();
 

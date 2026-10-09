@@ -82,7 +82,7 @@ const TIER_COPY: Record<SubscriptionPlan, { sub: string; features: string[]; cta
   },
   enterprise: {
     sub: 'for organizations',
-    features: ['Everything in Business', 'SSO / SAML and audit log', 'Unlimited everything', 'Dedicated support and SLA'],
+    features: ['Everything in Business', 'Unlimited everything', 'Dedicated support and SLA', 'SSO / SAML and audit log — on the roadmap'],
     cta: 'Contact sales', href: '/contact', highlight: false,
   },
 };

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
-import { Plus, Loader2, X } from 'lucide-react';
+import { Plus, Loader2, X, Columns3, CalendarDays } from 'lucide-react';
 import { MOCK_PIPELINES } from '@/lib/crm/mock';
 import { loadBoard, loadRecords, createDeal } from '@/lib/crm/data';
 import PipelineBoard from '@/components/crm/PipelineBoard';
+import DealCalendar from '@/components/crm/DealCalendar';
 import SearchSelect, { type SearchOption } from '@/components/crm/SearchSelect';
 import type { PipelineStage, PipelineRecord, PipelineKind, ObjectType } from '@/lib/crm/types';
 import DataBadge from '@/components/ui/DataBadge';
@@ -36,6 +37,13 @@ export default function BoardPage() {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reloads, setReloads] = useState(0);
+  // The view rides in the URL (`?view=calendar`) like every other list, so the
+  // company Calendar can link straight to it and a view is a link to hand on.
+  const router = useRouter();
+  const search = useSearchParams();
+  const pathname = usePathname();
+  const view = search?.get('view') === 'calendar' ? 'calendar' : 'board';
+  const setView = (v: 'board' | 'calendar') => router.replace(v === 'board' ? pathname : `${pathname}?view=calendar`, { scroll: false });
 
   useEffect(() => {
     if (!pipeline || !ready) return;
@@ -57,12 +65,29 @@ export default function BoardPage() {
         <h1 className="text-md font-medium text-primary">{pipeline.name}</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{board.records.length}</span>
         <DataBadge live={live} />
-        <NewDeal privy={privy} live={live} kind={pipeline.kind} target={pipeline.target}
-          stages={board.stages} onCreated={refresh} />
+        <div className="ml-auto flex items-center gap-2">
+          {/* Only the sales pipeline has close dates worth a month view; a
+              recruitment card is a person, not a date. */}
+          {pipeline.kind === 'sales' && (
+            <div className="flex items-center rounded-lg bg-surface-hover p-0.5">
+              {([['board', Columns3, 'Board'], ['calendar', CalendarDays, 'Calendar']] as const).map(([v, Icon, label]) => (
+                <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
+                  className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
+                    view === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
+                  <Icon className="w-3.5 h-3.5" /> {label}
+                </button>
+              ))}
+            </div>
+          )}
+          <NewDeal privy={privy} live={live} kind={pipeline.kind} target={pipeline.target}
+            stages={board.stages} onCreated={refresh} />
+        </div>
       </header>
       <div className="flex-1 overflow-hidden p-4">
         {loading ? (
           <AppLoading />
+        ) : view === 'calendar' && pipeline.kind === 'sales' ? (
+          <DealCalendar stages={board.stages} records={board.records} privy={privy} live={live} onChanged={refresh} />
         ) : (
           <PipelineBoard key={`${slug}-${live}`} stages={board.stages} records={board.records}
             privy={privy} live={live} onChanged={refresh} />
@@ -85,6 +110,7 @@ function NewDeal({ privy, live, kind, target, stages, onCreated }: {
   const [amount, setAmount] = useState('');
   const [stageId, setStageId] = useState('');
   const [subject, setSubject] = useState('');
+  const [closeDate, setCloseDate] = useState('');
   const [options, setOptions] = useState<SearchOption[] | null>(null);
 
   // Whatever this pipeline is about. Loaded once, when the panel first opens —
@@ -109,10 +135,11 @@ function NewDeal({ privy, live, kind, target, stages, onCreated }: {
       stageId: stageId || null,
       companyId: target === 'company' ? subject || null : null,
       personId: target === 'person' ? subject || null : null,
+      closeDate: closeDate || null,
     });
     setBusy(false);
-    if (error) { setError(error); return; }
-    setTitle(''); setAmount(''); setSubject(''); setOpen(false);
+    if (error) { setError(error); if (!/^Deal added/.test(error)) return; }
+    setTitle(''); setAmount(''); setSubject(''); setCloseDate(''); if (!error) setOpen(false);
     onCreated();
   };
 
@@ -120,14 +147,14 @@ function NewDeal({ privy, live, kind, target, stages, onCreated }: {
   // at does not exist in the database, so there is nothing to add it to.
   if (!privy || !live) {
     return (
-      <span className="ml-auto text-2xs text-tertiary">
+      <span className="text-2xs text-tertiary">
         {privy ? 'Sample board — sign-in workspace has no pipeline yet' : 'Sign in to add deals'}
       </span>
     );
   }
 
   return (
-    <div className="ml-auto relative">
+    <div className="relative">
       <button onClick={() => setOpen((o) => !o)}
         className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 transition-colors shadow-sm">
         <Plus className="w-3.5 h-3.5" /> New
@@ -172,6 +199,14 @@ function NewDeal({ privy, live, kind, target, stages, onCreated }: {
                 inputMode="decimal" placeholder="24000" className="input-field w-full !h-8 !text-xs font-mono" />
             </label>
           </div>
+
+          {kind === 'sales' && (
+            <label className="block">
+              <span className="block text-2xs text-tertiary mb-1">Expected close</span>
+              <input type="date" value={closeDate} onChange={(e) => setCloseDate(e.target.value)}
+                className="input-field w-full !h-8 !text-xs" />
+            </label>
+          )}
 
           {error && <p className="text-2xs text-danger">{error}</p>}
 

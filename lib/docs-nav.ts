@@ -31,6 +31,7 @@ export const DOCS_NAV: DocSection[] = [
       { slug: 'custom-objects', title: 'Custom objects', blurb: 'Track what your business actually has' },
       { slug: 'agents', title: 'Agents', blurb: 'Roles, tools, and what bounds them' },
       { slug: 'api', title: 'REST API & MCP', blurb: 'Keys, scopes, and the CSV feed' },
+      { slug: 'chat-widget', title: 'Chat widget & inbox', blurb: 'Support chat on your own site' },
       { slug: 'file-extraction', title: 'Files that become data', blurb: 'Extraction and full-text search' },
       { slug: 'vault', title: 'The team vault', blurb: 'Shared logins your own server cannot read' },
       { slug: 'design', title: 'The design spec', blurb: 'Your brand, in a shape an AI applies exactly' },

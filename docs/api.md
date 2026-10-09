@@ -92,6 +92,26 @@ requests and log every delivery. Outbound URLs pass an SSRF guard —
 `169.254.169.254` and friends are refused even when an owner saved them, because
 an owner-saved URL is not automatically a safe one.
 
+**Verifying a signature.** A connection with a secret sends
+
+```
+X-RunButter-Signature: t=1760000000,v1=<hex>
+```
+
+where `v1` is `HMAC-SHA256(secret, "<t>.<raw body>")` in hex. Recompute it over
+the raw body you received, compare in constant time, and reject a `t` more than
+five minutes old — that is what makes a leaked URL alone useless.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+function verify(header, rawBody, secret) {
+  const { t, v1 } = Object.fromEntries(header.split(',').map((p) => p.split('=')));
+  if (Math.abs(Date.now() / 1000 - Number(t)) > 300) return false;
+  const want = createHmac('sha256', secret).update(`${t}.${rawBody}`).digest('hex');
+  return want.length === v1.length && timingSafeEqual(Buffer.from(want), Buffer.from(v1));
+}
+```
+
 ## Rate limits and sizes
 
 Public endpoints are rate-limited per IP and body-capped. A limited request

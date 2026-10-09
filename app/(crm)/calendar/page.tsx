@@ -39,6 +39,7 @@ interface Ev {
 const KINDS: Record<string, { label: string; dot: string; chip: string }> = {
   invoice:    { label: 'Money in',   dot: 'bg-success',           chip: 'bg-success/10 text-success' },
   bill:       { label: 'Money out',  dot: 'bg-danger',            chip: 'bg-danger/10 text-danger' },
+  deal:       { label: 'Deals closing', dot: 'bg-accent',         chip: 'bg-accent/10 text-accent' },
   issue:      { label: 'Issues',     dot: 'bg-accent',            chip: 'bg-accent/10 text-accent' },
   meeting:    { label: 'Meetings',   dot: 'bg-warning',           chip: 'bg-warning/10 text-warning' },
   interview:  { label: 'Interviews', dot: 'bg-warning',           chip: 'bg-warning/10 text-warning' },
@@ -46,7 +47,7 @@ const KINDS: Record<string, { label: string; dot: string; chip: string }> = {
   newsletter: { label: 'Newsletters', dot: 'bg-secondary',        chip: 'bg-surface-hover text-secondary' },
   campaign:   { label: 'Campaigns',  dot: 'bg-tertiary',          chip: 'bg-surface-hover text-tertiary' },
 };
-const ORDER = ['invoice', 'bill', 'meeting', 'interview', 'issue', 'post', 'newsletter', 'campaign'];
+const ORDER = ['invoice', 'bill', 'deal', 'meeting', 'interview', 'issue', 'post', 'newsletter', 'campaign'];
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;

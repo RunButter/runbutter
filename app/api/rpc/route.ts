@@ -27,7 +27,7 @@ const ALLOWED = new Set([
   // workspace / CRM core
   'get_my_workspace', 'list_my_workspaces', 'set_active_workspace',
   'list_records', 'get_record', 'create_record', 'update_record',
-  'delete_record', 'import_records', 'get_pipeline_by_kind', 'move_pipeline_record',
+  'delete_record', 'import_records', 'get_pipeline_by_kind', 'move_pipeline_record', 'set_deal_close_date',
   // Deals (0092). pipeline_records had no create path at all until this — the
   // board could be read and reordered but never filled.
   'create_pipeline_record', 'update_pipeline_record', 'delete_pipeline_record',
@@ -118,6 +118,11 @@ const ALLOWED = new Set([
   // The design spec (0125). One jsonb document per workspace, written whole —
   // see the migration for why this one does not follow the partial-update rule.
   'get_design_tokens', 'save_design_tokens',
+  // Support inbox (0131). Team side only — the visitor functions are reached
+  // through /api/support/visitor, and replies through /api/support/reply
+  // (which can email), so reply_support is deliberately NOT here.
+  'get_support_widget', 'save_support_widget', 'get_support_inbox', 'get_support_thread',
+  'set_support_conversation',
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',

@@ -127,7 +127,7 @@ export const PLANS: Record<SubscriptionPlan, PlanDef> = {
     },
     enterprise: {
         name: 'Enterprise', price: 'Custom', priceValue: 0, perSeat: true,
-        tagline: 'SSO, audit and support',
+        tagline: 'Dedicated support, SSO on the roadmap',
         limits: {
             maxSeats: Infinity, maxRecords: Infinity, maxPositions: Infinity, maxCandidates: Infinity,
             maxAutomations: Infinity, maxESignPerMonth: Infinity,
@@ -182,9 +182,13 @@ export const FEATURE_LABELS: Record<PlanFeature, string> = {
     teamFit: 'Team Fit simulator',
     myTeam: 'My Team',
     gdprControls: 'GDPR controls',
-    sso: 'SSO / SAML',
-    auditLog: 'Audit log',
-    hrisExport: 'HRIS export',
+    // These three are SOLD on Enterprise and NOT BUILT — no SAML flow, no audit
+    // table, no HRIS export exists in the code (checked 2026-10). Enterprise is
+    // "contact sales", so saying "on the roadmap" is the honest version of the
+    // same row; drop the suffix in the commit that ships each one.
+    sso: 'SSO / SAML (on the roadmap)',
+    auditLog: 'Audit log (on the roadmap)',
+    hrisExport: 'HRIS export (on the roadmap)',
 };
 
 /**

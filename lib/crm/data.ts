@@ -825,7 +825,7 @@ function dealError(msg: string): string {
 
 export async function createDeal(privy: string, kind: PipelineKind, d: {
   title?: string; amount?: number | null; stageId?: string | null;
-  companyId?: string | null; personId?: string | null;
+  companyId?: string | null; personId?: string | null; closeDate?: string | null;
 }): Promise<{ id?: string; error?: string }> {
   const p = await pipelineOf(privy, kind);
   if (!p) return { error: 'Could not find that pipeline.' };
@@ -835,7 +835,20 @@ export async function createDeal(privy: string, kind: PipelineKind, d: {
     p_amount: d.amount ?? null, p_company: d.companyId ?? null, p_person: d.personId ?? null,
   });
   if (error) return { error: dealError(error.message) };
+  // The date has its own setter (0130) rather than a create parameter, so a
+  // database without 0130 still creates the deal — it just has no date yet.
+  if (d.closeDate) {
+    const r = await setDealCloseDate(privy, data as string, d.closeDate);
+    if (r.error) return { id: data as string, error: `Deal added, but the close date was not saved: ${r.error}` };
+  }
   return { id: data as string };
+}
+
+/** Expected close date (0130). `null` clears it. */
+export async function setDealCloseDate(privy: string, recordId: string, date: string | null): Promise<{ error?: string }> {
+  const { error } = await rpc('set_deal_close_date', { p_privy: privy, p_record: recordId, p_date: date });
+  if (!error) return {};
+  return { error: /set_deal_close_date/.test(error.message) ? 'Close dates need migration 0130 — run it in Supabase.' : dealError(error.message) };
 }
 
 export async function moveDeal(privy: string, recordId: string, stageId: string, position: number): Promise<{ error?: string }> {

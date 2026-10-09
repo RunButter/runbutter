@@ -27,7 +27,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
   owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
-  0128 (modules on/off) and 0129 (AI key is owner/admin only) are NEW and pending.** Do not take any of that on trust when
+  0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates) and 0131
+  (support inbox + chat widget) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -233,6 +234,55 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - UI: `components/crm/ObjectCards.tsx` (its own file because a page can only export a default, which
   makes anything in a page file unrenderable without signing in). Cards are **collapsed by default,
   one open at a time**.
+
+## Support inbox + website chat widget (0131) — `docs/chat-widget.md`
+- **Native, not Chatwoot.** Chatwoot is MIT outside `enterprise/` (checked against its LICENSE) and
+  was read as a feature spec only: running it alongside is Rails + Redis + Sidekiq per install and a
+  second copy of every customer. Here the person who writes in IS a row in People.
+- **Three states, set by who spoke last** (Plain's model): `open` = To do (customer waiting),
+  `pending` = Waiting (we replied), `closed` = Done. A visitor message → open; a team reply →
+  pending. Nobody files anything, which is the only way an inbox stays honest.
+- **The visitor has no account. Their key is DERIVED: `HMAC(server key, conversation id)`**
+  (`lib/support/token.ts`), and the DB stores only `sha256(token)`. Derived rather than random so a
+  reply EMAIL can link back into the thread without the secret ever being stored. That is why the
+  ROUTE mints the conversation id (`support_start(p_id, …)`). Rotating `SECRETS_MASTER_KEY` closes
+  every open visitor link — the right failure.
+- **The chat runs in an IFRAME on our origin** (`/support/<widget>?embed=1`), opened by
+  `public/support.js` on the customer's site. The host page never sees the conversation key (it is
+  in the iframe origin's localStorage) and no CSS crosses. **`/support/*` is the ONLY path exempt
+  from `X-Frame-Options`** (`next.config.js` headers use `'/((?!support/).*)'` for the rest). The
+  iframe calls `/api/support/visitor` SAME-ORIGIN, so that POST endpoint has no CORS surface; the
+  one cross-origin read is `GET ?widget=` (colour + title of an ENABLED widget), which is also what
+  makes "Turn off" remove the button from every site at once.
+- Visitor functions are service_role only and reached through the route (rate-limited per IP);
+  nothing was added to `keep_public`. **Internal notes are filtered in SQL** in `support_poll`, the
+  one function a visitor reads through. 500 visitor messages per conversation, 4000 chars each.
+- **A widget starts OFF** (`get_support_widget` creates it disabled). Nothing appears on anyone's
+  site until an owner/admin presses the switch.
+- **A visitor's email makes a person** (`support_link_person`, source `chat`) — the same promise a
+  form makes — inside `enforce_record_limit`; over the limit the chat still happens, unlinked.
+  Refusing a customer's message over a billing limit is the wrong failure.
+- **One reply path:** `lib/support/reply.ts` → `reply_support`, shared by `/api/support/reply` and
+  the `reply_conversation` agent tool, so the email to a visitor who left (not seen for 2 minutes)
+  goes out either way. A model's reply is stored as `author_kind = 'agent'` and shown as **AI**.
+  `/api/support/draft` returns a draft into the composer and NEVER sends — the visitor's words are
+  untrusted input to the model, so a person reads it first.
+- Team emails: new conversation, and a customer writing back to a thread that was pending/closed —
+  not every line of a live chat. All email is best-effort; no `RESEND_API_KEY`, no email.
+- The inbox POLLS (5s, visible tab only), same reason as team chat: Realtime needs anon RLS policies.
+
+## Deal close dates (0130)
+- `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a
+  parameter on `update_pipeline_record`, which would be an overload AND treats NULL as "not
+  mentioned", so a date could never be cleared. `createDeal` sets it after creating, so a DB without
+  0130 still creates the deal.
+- Sales → Deals has **Board | Calendar** (`?view=calendar`, `components/crm/DealCalendar.tsx`):
+  drag a deal to a day to set its date, onto the "No close date" tray to clear it. `get_calendar`
+  (redefined IN FULL from 0119) adds open sales deals as `kind: 'deal'`.
+- **The Copilot's `create_deal` never worked**: it read `.id` off `get_pipeline_by_kind`, which returns
+  a bare uuid, so every call answered "no sales pipeline yet". Same audit, second finding:
+  **`TOOL_GROUPS` omitted Docs, Sales and Team**, so 11 documented tools could not be granted to an
+  agent — the builder never drew their group. `catalog.ts` now THROWS if a tool's group is not listed.
 
 ## Deals / pipeline records (0092)
 - **`pipeline_records` existed from 0001 with no way to insert one.** The stages were seeded, the
@@ -1093,6 +1143,10 @@ Same rule as the cost rule above: prefer public/government data + local computat
   - **`npm run check:grants`** is the other half and is a CI gate: no SECURITY DEFINER function may be
     anon/authenticated-callable unless it is on the `keep_public` allowlist, which the script **parses
     out of the newest revoke migration** rather than keeping a second copy of.
+- **`npm run check:routes`** (CI, after the build) starts the built app and requests every NAV href,
+  every tab and the public pages with a dummy `privy-token` cookie — without the cookie the
+  middleware 307s every app route and a missing page hides behind the redirect. It exists because
+  `/insights` was "shipped" for two months with no page while types and build passed.
 - **CI runs the migrations from empty on every push**, twice (idempotency), and fails on a stale
   `supabase/schema.sql`. A green CI means the schema applies to a stranger's database, which is the
   thing nobody tests by hand twice.
@@ -1222,6 +1276,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0130 and 0131** too — 0130 is deal close dates (the Calendar view degrades to "No close
+  date" without it), 0131 is the support inbox (the Inbox screen says it needs 0131).
 - **Run 0128 and 0129** (and 0125–0127 below if still pending). 0128 is Settings → Modules; without
   it the switches say they could not save. **0129 is a security fix**: before it any member,
   `viewer` included, could replace the workspace's AI key — including with a `custom` provider
@@ -1358,7 +1414,9 @@ seat, and the landing page renders them straight from `lib/plans.ts`:
 
 Team adds automations, e-signatures, forms and short links; Business adds AI
 agents, the REST API + MCP, attribution and scheduled reports; Enterprise adds
-SSO/SAML and the audit log. Test with `UPDATE companies SET plan='business' WHERE …`.
+SSO/SAML and the audit log — **neither exists yet, nor HRIS export**, so all three are labelled
+"on the roadmap" in `FEATURE_LABELS` and on the landing page. Drop the suffix in the commit that
+ships each. Test with `UPDATE companies SET plan='business' WHERE …`.
 **Don't restate these numbers anywhere else** — that is how this drifted. The
 landing page reads `PLANS`; anything new should too.
 

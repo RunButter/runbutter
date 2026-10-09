@@ -16,7 +16,8 @@
     "check:plugin": "node scripts/check-plugin.mjs plugin --strict",
     "check:docker": "node scripts/check-docker-copy.mjs",
     "check:grants": "node scripts/check-grants.mjs",
-    "check:plans": "node scripts/check-plans.mjs"
+    "check:plans": "node scripts/check-plans.mjs",
+    "check:routes": "node scripts/check-routes.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

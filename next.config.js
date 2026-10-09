@@ -126,7 +126,21 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:path*',
+        /*
+         * The support chat is the ONE route that must render inside another
+         * site's iframe — the embed script's panel. Every other path keeps
+         * X-Frame-Options: SAMEORIGIN, so this source excludes /support/ and
+         * the rule below gives it the same headers minus framing.
+         */
+        source: '/support/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+      {
+        source: '/((?!support/).*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },

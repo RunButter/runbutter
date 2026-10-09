@@ -42,6 +42,10 @@ const PUBLIC_PREFIXES = [
   // so '/i' would also match '/insights' — the signed-in screen — and stop Privy
   // mounting on it. '/l/' carries one for the same reason.
   '/i/', '/r/', '/c/',
+  // The support chat (0131): the page a customer's visitors see, inside an
+  // iframe on somebody else's website. Loading the auth SDK there would cost
+  // every one of their visitors 600ms for a login nobody performs.
+  '/support/',
 ];
 
 /**

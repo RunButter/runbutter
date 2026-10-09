@@ -39,6 +39,7 @@ interface SurfaceNote {
 const NOTES: Record<string, SurfaceNote> = {
   docs: { what: 'documents, notes, to-do lists and simple tables', tool: 'save_doc' },
   insights: { what: 'a chart built from a question over any record type', tool: 'chart_records' },
+  inbox: { what: 'conversations from the chat widget on the company website', tool: 'list_conversations / get_conversation / reply_conversation' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },
   deals: { what: 'the sales pipeline board', tool: 'create_deal / update_deal / move_deal' },
   companies: { what: 'client and supplier organisations', tool: 'create_record(companies)' },

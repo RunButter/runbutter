@@ -167,6 +167,7 @@ export function describeCall(name: string, args: any): string {
     case 'propose_object': return `Create a new record type — ${args?.plural || args?.slug || 'object'}`;
     case 'propose_agent': return `${args?.id ? 'Change' : 'Create'} the agent “${args?.name || 'New agent'}”${Array.isArray(args?.tools) ? ` with ${args.tools.length} tools` : ''}`;
     case 'run_agent': return `Hand a task to an agent${args?.task ? ` — “${String(args.task).slice(0, 80)}”` : ''}`;
+    case 'reply_conversation': return args?.note ? 'Add an internal note to a support conversation' : `Reply to a customer: “${String(args?.body || '').slice(0, 80)}${String(args?.body || '').length > 80 ? '…' : ''}”`;
     case 'save_order': return `Draft an order${Array.isArray(args?.items) ? ` with ${args.items.length} line${args.items.length === 1 ? '' : 's'}` : ''}${args?.customer ? ` for ${args.customer}` : ''}`;
     case 'save_position': return `${args?.id ? 'Update' : 'Open'} the role “${args?.title || 'untitled'}”${args?.is_published ? ' and publish it on the careers page' : ''}`;
     case 'save_form': return `${args?.id ? 'Update' : 'Build'} the form “${args?.name || 'Form'}”`;

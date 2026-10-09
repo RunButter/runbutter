@@ -283,12 +283,19 @@ const STAGES: Record<string, PipelineStage[]> = {
   ],
 };
 
+// Relative to today, so the sample Calendar view always has something on it.
+// A local calendar day, not inDays' ISO timestamp — a close date is a date.
+const dayIn = (n: number) => {
+  const d = new Date(); d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const RECORDS: Record<string, PipelineRecord[]> = {
   sales: [
-    { id: 'd1', stage_id: 's-lead', title: 'Northwind — Platform', amount: 24000, status: 'active', position: 0, company: { id: 'c1', name: 'Northwind', domain: 'northwind.io' } },
-    { id: 'd2', stage_id: 's-disc', title: 'Lumen — Seats x40', amount: 12000, status: 'active', position: 0, company: { id: 'c2', name: 'Lumen', domain: 'lumen.dev' } },
+    { id: 'd1', stage_id: 's-lead', title: 'Northwind — Platform', amount: 24000, status: 'active', position: 0, close_date: dayIn(6), company: { id: 'c1', name: 'Northwind', domain: 'northwind.io' } },
+    { id: 'd2', stage_id: 's-disc', title: 'Lumen — Seats x40', amount: 12000, status: 'active', position: 0, close_date: dayIn(13), company: { id: 'c2', name: 'Lumen', domain: 'lumen.dev' } },
     { id: 'd3', stage_id: 's-prop', title: 'Vertex — Enterprise', amount: 60000, status: 'active', position: 0, company: { id: 'c4', name: 'Vertex', domain: 'vertex.co' } },
-    { id: 'd4', stage_id: 's-won', title: 'Pulse — Annual', amount: 36000, status: 'won', position: 0, company: { id: 'c3', name: 'Pulse', domain: 'pulse.app' } },
+    { id: 'd4', stage_id: 's-won', title: 'Pulse — Annual', amount: 36000, status: 'won', position: 0, close_date: dayIn(-4), company: { id: 'c3', name: 'Pulse', domain: 'pulse.app' } },
   ],
   recruitment: [
     { id: 'rr1', stage_id: 'r-app', title: 'Anna Kowalski', status: 'active', position: 0, person: { id: 'p1', name: 'Anna Kowalski', title: 'Senior Engineer' } },

@@ -54,6 +54,17 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
           SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
 
+      # Every menu entry, tab and public page answers on the build just made.
+      # Types and the build passed for two months while /insights did not
+      # exist; this is the check that would have said so.
+      - name: Every route answers
+        run: npm run check:routes
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: clbuildonlyfakeappid00000
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+
   schema:
     name: Schema applies, and the bundle matches
     runs-on: ubuntu-latest

@@ -86,6 +86,8 @@ export interface PipelineRecord {
   amount?: number | null;
   status: 'active' | 'won' | 'lost';
   position: number;
+  /** Expected close, `YYYY-MM-DD` (0130). Null = not set. */
+  close_date?: string | null;
   person?: { id: string; name: string; title?: string; avatar_url?: string | null } | null;
   company?: { id: string; name: string; domain?: string } | null;
 }

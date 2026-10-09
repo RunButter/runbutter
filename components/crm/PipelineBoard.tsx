@@ -10,6 +10,7 @@ import type { PipelineStage, PipelineRecord } from '@/lib/crm/types';
 import { moveDeal, deleteDeal } from '@/lib/crm/data';
 import { useDialog } from '@/components/ui/Dialog';
 import CompanyLogo from './CompanyLogo';
+import { fmtDay } from '@/lib/utils';
 
 /**
  * The deal board.
@@ -52,7 +53,12 @@ function CardBody({ rec, dragging = false, onDelete, busy }: {
           {sub && <div className="text-2xs text-tertiary truncate">{sub}</div>}
         </div>
       </div>
-      {rec.amount ? <div className="mt-2 text-2xs font-semibold text-success tabular-nums">${Number(rec.amount).toLocaleString()}</div> : null}
+      {(rec.amount || rec.close_date) ? (
+        <div className="mt-2 flex items-center gap-2 text-2xs">
+          {rec.amount ? <span className="font-semibold text-success tabular-nums">${Number(rec.amount).toLocaleString()}</span> : null}
+          {rec.close_date && <span className="ml-auto text-tertiary tabular-nums" title="Expected close">{fmtDay(rec.close_date)}</span>}
+        </div>
+      ) : null}
       {onDelete && (
         // Stops the pointer sensor claiming the press, or the button is
         // unclickable: a 4px move turns it into a drag.

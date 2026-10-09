@@ -40,6 +40,10 @@ export const FEATURE_LABEL: Record<string, string> = {
   workspace: 'Workspace builder',
   skill: 'Skill generator',
   automation: 'Automations',
+  insights: 'Insights',
+  extract: 'Document extraction',
+  investor: 'Investor updates',
+  support: 'Support replies',
 };
 
 /** A workspace's own model prices (0104). Empty when none are set, or when 0104 has not run. */
