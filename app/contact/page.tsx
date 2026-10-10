@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import SiteChat from '@/components/landing/SiteChat';
 
 const REPO_URL = 'https://github.com/RunButter/runbutter';
 
@@ -51,6 +52,7 @@ export default function ContactPage() {
     if (submitted) {
         return (
             <div className="min-h-screen bg-canvas flex items-center justify-center px-6">
+                <SiteChat />
                 <div className="max-w-md w-full card-surface p-8 text-center">
                     <div className="w-12 h-12 rounded-xl bg-success/10 ring-1 ring-success/30 flex items-center justify-center mx-auto mb-4">
                         <CheckCircle2 className="w-6 h-6 text-success" />
@@ -69,6 +71,7 @@ export default function ContactPage() {
 
     return (
         <div className="min-h-screen bg-canvas">
+            <SiteChat />
             <header className="sticky top-0 z-50 border-b border-subtle bg-canvas/80 backdrop-blur-md">
                 <div className="max-w-5xl mx-auto px-6 h-14 flex items-center gap-3">
                     <Link href="/" aria-label="Back" className="p-1.5 -ml-1.5 rounded-md text-secondary hover:bg-surface-hover transition-colors">

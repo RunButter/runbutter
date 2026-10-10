@@ -18,7 +18,14 @@ the thread.
    ```
 
    Optional: `data-position="left"`, or `data-open="true"` on a contact page.
-   From your own code: `RunButterChat.open()` / `RunButterChat.close()`.
+   From your own code: `RunButterChat.open()` / `RunButterChat.close()`, and in a
+   single-page app `RunButterChat.hide()` / `RunButterChat.show()` to keep the
+   button off screens where it does not belong (the script survives route changes).
+
+**On a self-hosted RunButter's own marketing pages**, set
+`NEXT_PUBLIC_SUPPORT_WIDGET_ID` to your widget id and the bubble appears on the
+landing page, docs and contact page — never on careers pages, public forms or
+inside the app. `off` hides it.
 
 No website? The same screen gives you a link (`/support/<widget id>`) that opens
 the chat as its own page — put it in an email signature or a QR code.

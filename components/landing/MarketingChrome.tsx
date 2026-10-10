@@ -3,6 +3,7 @@ import { Star, ArrowUpRight } from 'lucide-react';
 import { Github } from '@/components/ui/BrandIcons';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import SiteChat from '@/components/landing/SiteChat';
 
 export const REPO_URL = 'https://github.com/RunButter/runbutter';
 
@@ -177,6 +178,9 @@ export async function MarketingFooter({ home = false }: { home?: boolean }) {
 
   return (
     <footer className="relative overflow-hidden border-t border-subtle">
+      {/* The support bubble rides on the footer because every marketing page
+          has exactly one, and no customer-facing page has any. */}
+      <SiteChat />
       {/* The wordmark, oversized and mostly dissolved. It is decoration, so it
           is aria-hidden and cannot be selected — a screen reader announcing
           "RUNBUTTER" before every footer link is noise, and a stray drag

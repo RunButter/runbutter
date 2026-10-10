@@ -324,6 +324,12 @@ became a link.
 - Team emails: new conversation, and a customer writing back to a thread that was pending/closed —
   not every line of a live chat. All email is best-effort; no `RESEND_API_KEY`, no email.
 - The inbox POLLS (5s, visible tab only), same reason as team chat: Realtime needs anon RLS policies.
+- **Our own site runs it** (`components/landing/SiteChat.tsx`, mounted by `MarketingFooter` and
+  `/contact` ONLY — careers pages, public forms and apply belong to customers). The widget id is
+  `NEXT_PUBLIC_SUPPORT_WIDGET_ID`, else the hosted id **only on the runbutter.app hostname**, so a fork
+  deployed elsewhere never shows our chat. `lazyOnload` (TBT budget). The script survives client
+  navigation, so unmounting calls `RunButterChat.hide()` — otherwise the bubble followed visitors into
+  the app.
 
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a

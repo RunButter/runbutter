@@ -12,7 +12,9 @@
      data-position="left"   bottom-left instead of bottom-right
      data-open="true"       open the panel on load (a dedicated contact page)
    And from your own code:
-     RunButterChat.open()   RunButterChat.close()                              */
+     RunButterChat.open()   RunButterChat.close()
+     RunButterChat.hide()   RunButterChat.show()   for single-page apps: take
+                            the button off screens it does not belong on      */
 (function () {
   var s = document.currentScript;
   if (!s || window.RunButterChat) return;
@@ -23,7 +25,7 @@
   var FLAG = 'rb-support-active:' + id;
   var flag = function (v) { try { if (v === undefined) return localStorage.getItem(FLAG) === '1'; if (v) localStorage.setItem(FLAG, '1'); else localStorage.removeItem(FLAG); } catch (e) { return false; } };
 
-  var btn, panel, frame, badge, isOpen = false, frameReady = false, unread = 0, color = '#18181b';
+  var btn, panel, frame, badge, isOpen = false, frameReady = false, unread = 0, color = '#18181b', hidden = false;
 
   function css(el, o) { for (var k in o) el.style[k] = o[k]; }
   function textOn(hex) {
@@ -77,6 +79,17 @@
     tell();
   }
 
+  // A single-page app keeps this script alive across route changes, so it needs
+  // a way to take the button off a screen without losing the conversation.
+  function hide() { hidden = true; if (btn) btn.style.display = 'none'; if (panel) panel.style.display = 'none'; }
+  function show() {
+    hidden = false;
+    if (btn) btn.style.display = isOpen && small() ? 'none' : 'flex';
+    if (panel && isOpen) panel.style.display = 'block';
+  }
+  // Callable before the button exists (the widget's colour is still loading).
+  window.RunButterChat = window.RunButterChat || { open: function () {}, close: function () {}, hide: function () { hidden = true; }, show: function () { hidden = false; } };
+
   window.addEventListener('message', function (e) {
     if (e.origin !== origin || !frame || e.source !== frame.contentWindow) return;
     var d = e.data || {};
@@ -102,7 +115,8 @@
     // A visitor mid-conversation: load the chat hidden, so a reply can show.
     if (flag()) ensureFrame(true);
     if (s.getAttribute('data-open') === 'true') open();
-    window.RunButterChat = { open: open, close: close };
+    if (hidden) btn.style.display = 'none';
+    window.RunButterChat = { open: open, close: close, hide: hide, show: show };
   }
 
   // The widget's look comes from the server, so a colour changed in Settings
