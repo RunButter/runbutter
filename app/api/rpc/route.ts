@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { serverSupabaseUrl } from '@/lib/supabase';
 import { verifyPrivyToken } from '@/lib/auth/privy-verify';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
+import { kickDispatcher, isWrite } from '@/lib/automations/kick';
 
 // Authenticated RPC proxy.
 //
@@ -307,8 +308,12 @@ export async function POST(req: NextRequest) {
     console.warn('rpc proxy degraded (JWKS unreachable): passing claimed identity through');
   }
 
-  const { data, error } = await db().rpc(fn, args);
+  const client = db();
+  const { data, error } = await client.rpc(fn, args);
   if (error) return NextResponse.json({ data: null, error: rpcError(error) });
+  // A write may have queued an automation event; run it now rather than at
+  // the next tick (lib/automations/kick.ts).
+  if (isWrite(fn)) kickDispatcher(client);
   return NextResponse.json({ data: data ?? null, error: null });
 }
 

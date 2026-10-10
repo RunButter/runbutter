@@ -5,44 +5,25 @@ import { getAccessToken } from '@privy-io/react-auth';
 import { getWorkspace } from './data';
 import { rpc } from '@/lib/rpc';
 
-export type AutomationEvent = 'created' | 'updated';
+export type AutomationEvent = 'created' | 'updated' | 'schedule' | 'webhook';
 export type TriggerType = 'event' | 'webhook' | 'schedule';
-export interface Schedule { every: 'minute' | 'hour' | 'day'; at?: string }
+export type { Schedule } from '@/lib/automations/vocab';
+import type { Schedule } from '@/lib/automations/vocab';
 export interface Condition { field: string; op: string; value: string }
 export interface Action { type: string; config: Record<string, any> }
 export interface Automation {
   id: string; name: string; enabled: boolean; trigger_type: TriggerType;
   object: string; event: AutomationEvent; conditions: Condition[]; actions: Action[];
   webhook_token?: string | null; schedule?: Schedule | null; updated_at?: string;
+  /** 0132: the newest action run, and the last 7 days at a glance. */
+  last_run?: { status: string; detail: string | null; at: string } | null;
+  runs_7d?: number; errors_7d?: number;
 }
-export interface AutomationRun { id: string; automation_name: string | null; action_type: string | null; status: string; detail: string | null; created_at: string }
+export interface AutomationRun { id: string; automation_id?: string | null; automation_name: string | null; action_type: string | null; status: string; detail: string | null; created_at: string }
+export interface TestResult { action: string; ok: boolean; detail: string; skipped?: boolean }
 export interface Connection { id: string; label: string; kind: string; url: string; is_active: boolean; secret?: string }
 export interface WebhookDelivery { id: string; url: string | null; status: string; response_code: number | null; attempts: number; detail: string | null; created_at: string }
 export interface ApiKey { id: string; name: string; prefix: string; scope?: 'full' | 'read'; last_used_at: string | null; revoked: boolean; created_at: string }
-
-export interface Template { key: string; name: string; desc: string; tone: string; automation: Partial<Automation> }
-
-// Popular starter recipes (Activepieces/Zapier style). Cover event, incoming
-// webhook, and schedule triggers × webhook / email / create-record actions.
-export const TEMPLATES: Template[] = [
-  { key: 'new-person', name: 'New contact → Slack/Zapier', desc: 'When a person is added, POST them to a webhook.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'New contact → webhook', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'invoice-paid', name: 'Invoice paid → notify', desc: 'When an invoice is marked paid, ping your team.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'Invoice paid → notify', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'invoice-overdue', name: 'Overdue invoice → email', desc: 'Email a reminder when an invoice goes overdue.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'Overdue → email reminder', trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'overdue' }], actions: [{ type: 'send_email', config: { subject: 'Invoice {{number}} is overdue', body: 'Hi — invoice {{number}} for {{amount}} is now overdue.' } }] } },
-  { key: 'big-txn', name: 'Large transaction → alert', desc: 'Get pinged when a big transaction lands.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'Large transaction alert', trigger_type: 'event', object: 'transactions', event: 'created', conditions: [{ field: 'amount', op: 'gt', value: '10000' }], actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'inbound-lead', name: 'Incoming webhook → new contact', desc: 'Give a form or tool a URL that creates a person.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'Inbound lead → create contact', trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], actions: [{ type: 'create_record', config: { object: 'people', data: { first_name: '{{first_name}}', last_name: '{{last_name}}', email: '{{email}}' }, _data: '{\n  "first_name": "{{first_name}}",\n  "last_name": "{{last_name}}",\n  "email": "{{email}}"\n}' } }] } },
-  { key: 'daily-digest', name: 'Daily schedule → webhook', desc: 'Fire a webhook every day — e.g. a digest to Slack.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'Daily digest', trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] } },
-  { key: 'ai-brief', name: 'New contact → AI brief → Slack', desc: 'AI writes a two-line brief on each new contact, then posts it.', tone: 'text-secondary bg-surface-sunken',
-    automation: { name: 'AI brief on new contact', trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [
-      { type: 'ask_ai', config: { prompt: 'Write a two-sentence brief on {{first_name}} {{last_name}} ({{title}}, source: {{source}}) for the team.' } },
-      { type: 'send_webhook', config: {} },
-    ] } },
-];
 
 export function webhookUrl(token?: string | null): string {
   if (!token) return '';
@@ -51,10 +32,10 @@ export function webhookUrl(token?: string | null): string {
 }
 
 const SAMPLE_AUTOMATIONS: Automation[] = [
-  { id: 's1', name: 'Invoice paid → Slack', enabled: true, trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'eq', value: 'paid' }], actions: [{ type: 'send_webhook', config: { label: 'Slack #finance' } }] },
+  { id: 's1', name: 'Invoice paid → Slack', enabled: true, trigger_type: 'event', object: 'invoices', event: 'updated', conditions: [{ field: 'status', op: 'changed_to', value: 'paid' }], actions: [{ type: 'send_webhook', config: { label: 'Slack #finance' } }] },
   { id: 's2', name: 'New contact → notify Zapier', enabled: true, trigger_type: 'event', object: 'people', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: { label: 'Zapier' } }] },
-  { id: 's3', name: 'Inbound lead → create contact', enabled: true, trigger_type: 'webhook', object: 'people', event: 'created', conditions: [], webhook_token: 'hook_sampletoken', actions: [{ type: 'create_record', config: { object: 'people' } }] },
-  { id: 's4', name: 'Daily digest → webhook', enabled: false, trigger_type: 'schedule', object: 'people', event: 'created', conditions: [], schedule: { every: 'day' }, actions: [{ type: 'send_webhook', config: {} }] },
+  { id: 's3', name: 'Inbound lead → create contact', enabled: true, trigger_type: 'webhook', object: 'webhook', event: 'webhook', conditions: [], webhook_token: 'hook_sampletoken', actions: [{ type: 'create_record', config: { object: 'people' } }] },
+  { id: 's4', name: 'Daily digest → webhook', enabled: false, trigger_type: 'schedule', object: 'schedule', event: 'schedule', conditions: [], schedule: { every: 'day', at: '09:00' }, actions: [{ type: 'send_webhook', config: {} }] },
 ];
 const SAMPLE_RUNS: AutomationRun[] = [
   { id: 'r1', automation_name: 'New candidate → notify Slack', action_type: 'send_webhook', status: 'ok', detail: 'POST 200 · Zapier', created_at: '2026-07-05T09:12:00Z' },
@@ -100,11 +81,26 @@ export async function deleteAutomation(privy: string, id: string): Promise<{ err
   return error ? { error: error.message } : {};
 }
 
+/** Run one now against the latest real record (0132). Record writes are a dry run. */
+export async function testAutomation(privy: string, id: string): Promise<{ results?: TestResult[]; sample?: boolean; error?: string }> {
+  const wsId = await ws(privy);
+  if (!wsId) return { error: 'No workspace found for your account.' };
+  try {
+    const res = await fetch('/api/automations/test', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privyUserId: privy, workspaceId: wsId, automationId: id }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: /test_automation|claim_automation_event/.test(d.error || '') ? 'Testing needs migration 0132 — run it in Supabase.' : (d.error || 'The test could not run.') };
+    return { results: d.results || [], sample: d.sample };
+  } catch (e: any) { return { error: e?.message || 'The test could not run.' }; }
+}
+
 export async function loadAutomationRuns(privy: string | null): Promise<{ rows: AutomationRun[]; live: boolean }> {
   const fallback = { rows: SAMPLE_RUNS, live: false };
   const id = await ws(privy);
   if (!privy || !id) return fallback;
-  const { data, error } = await rpc('get_automation_runs', { p_privy: privy, p_workspace: id, p_limit: 30 });
+  const { data, error } = await rpc('get_automation_runs', { p_privy: privy, p_workspace: id, p_limit: 60 });
   if (error || !Array.isArray(data)) return fallback;
   return { rows: data as AutomationRun[], live: true };
 }

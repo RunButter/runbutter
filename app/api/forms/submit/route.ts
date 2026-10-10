@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { kickDispatcher } from '@/lib/automations/kick';
 import { createAdminClient } from '@/lib/supabase';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { verifyEmail } from '@/lib/marketing/email-hygiene';
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
   const { data: res, error } = await admin.rpc('submit_form', { p_slug: slug, p_data: clean, p_ip: clientIp(req) });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   if (!res?.ok) return NextResponse.json({ error: 'This form is no longer accepting responses.' }, { status: 400 });
+  kickDispatcher(admin); // "when a form submission is added" automations
 
   return NextResponse.json({ ok: true, message: res.message || 'Thanks — we\'ll be in touch.' });
 }

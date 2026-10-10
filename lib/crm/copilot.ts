@@ -1,5 +1,6 @@
 'use client';
 
+import { describeTrigger, actionLabel } from '@/lib/automations/vocab';
 import { getAccessToken } from '@privy-io/react-auth';
 import { rpc } from '@/lib/rpc';
 
@@ -156,14 +157,17 @@ export function singular(slug: string): string {
   return s.replace(/s$/i, '');
 }
 
+/** "an issue", "a deal" — the approval card is read by a person, and "a issue" reads like a bug. */
+const an = (w: string) => `${/^[aeiou]/i.test(w) ? 'an' : 'a'} ${w}`;
+
 export function describeCall(name: string, args: any): string {
   const obj = args?.object ? String(args.object).replace(/_/g, ' ') : '';
   const one = singular(args?.object || '');
   const label = (a: any) => a?.data?.name || a?.data?.title || a?.data?.number || a?.name || '';
   switch (name) {
-    case 'create_record': return `Create a ${one}${label(args) ? ` — ${label(args)}` : ''}`;
-    case 'update_record': return `Update a ${one}`;
-    case 'add_record_note': return `Add a note to a ${one || 'record'}`;
+    case 'create_record': return `Create ${an(one)}${label(args) ? ` — ${label(args)}` : ''}`;
+    case 'update_record': return `Update ${an(one)}`;
+    case 'add_record_note': return `Add a note to ${an(one || 'record')}`;
     case 'propose_object': return `Create a new record type — ${args?.plural || args?.slug || 'object'}`;
     case 'propose_agent': return `${args?.id ? 'Change' : 'Create'} the agent “${args?.name || 'New agent'}”${Array.isArray(args?.tools) ? ` with ${args.tools.length} tools` : ''}`;
     case 'run_agent': return `Hand a task to an agent${args?.task ? ` — “${String(args.task).slice(0, 80)}”` : ''}`;
@@ -180,7 +184,14 @@ export function describeCall(name: string, args: any): string {
       const parts = [args?.name && `rename to “${args.name}”`, args?.branding && `update branding (${Object.keys(args.branding).join(', ')})`, Array.isArray(args?.hidden_modules) && `hide ${args.hidden_modules.length} module${args.hidden_modules.length === 1 ? '' : 's'}`].filter(Boolean);
       return `Company settings: ${parts.join('; ') || 'no change'}`;
     }
-    case 'propose_automation': return `Automation “${args?.name || 'Untitled'}”: ${args?.trigger_type === 'schedule' ? `every ${args?.schedule?.every || 'day'}` : `when a ${singular(args?.object || 'record')} is ${args?.event || 'created'}`} → ${(args?.actions || []).map((a: any) => a.type.replace(/_/g, ' ')).join(', ')}`;
+    case 'propose_automation': {
+      // The approved card is the same sentence the Automations screen shows.
+      // Live steps carry the model's raw args (`trigger`, `every`); the stored
+      // proposal carries the normalised shape — read both.
+      const a = { trigger_type: args?.trigger_type || args?.trigger || 'event', object: args?.object || '', event: args?.event || 'created',
+        conditions: args?.conditions || [], schedule: args?.schedule || (args?.every ? { every: args.every, at: args.at, day: args.day } : null) };
+      return `Automation “${args?.name || 'Untitled'}”: ${describeTrigger(a)} → ${(args?.actions || []).map((x: any) => actionLabel(x?.type).toLowerCase()).join(', then ')}`;
+    }
     case 'propose_field': return `Add a ${args?.type || ''} field “${args?.label || ''}” to ${String(args?.object || '').replace(/_/g, ' ')}`;
     case 'save_document': {
       const n = Array.isArray(args?.lines) ? args.lines.length : 0;

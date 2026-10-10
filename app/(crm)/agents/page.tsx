@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import {
-  Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight,
+  Bot, Plus, Play, Loader2, Trash2, Pencil, X, Check, ShieldCheck, Zap, ChevronRight, ChevronDown, BookOpen, ArrowRight,
   Wallet, AlarmClock, TrendingUp, UserSearch, FileSearch, Handshake, Sunrise,
   type LucideIcon,
 } from 'lucide-react';
@@ -18,7 +18,8 @@ import { AGENT_TEMPLATES, type AgentTemplate } from '@/lib/agents/templates';
 import { listSkills, type Skill } from '@/lib/crm/skills';
 import { loadCustomObjects } from '@/lib/crm/custom';
 import { spendFor, fmtUSD, AS_OF } from '@/lib/ai/pricing';
-import SkillsSection from '@/components/crm/SkillsSection';
+import Link from 'next/link';
+import { describeCall } from '@/lib/crm/copilot';
 import { ThinkingLine } from '@/components/ui/Thinking';
 import PageHeader from '@/components/dashboard/PageHeader';
 import Button from '@/components/ui/Button';
@@ -60,6 +61,16 @@ function TemplateIcon({ name }: { name: string }) {
   );
 }
 
+function ago(iso?: string | null): string {
+  if (!iso) return '';
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  const d = Math.floor(s / 86400);
+  return d === 1 ? 'yesterday' : `${d} days ago`;
+}
+
 export default function AgentsPage() {
   const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
@@ -78,6 +89,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Agent> | null>(null);
   const [running, setRunning] = useState<Agent | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
 
   const reload = useCallback(async (w: WorkspaceContext, p: string) => {
     const [a, r, sk, co, u] = await Promise.all([
@@ -96,6 +108,7 @@ export default function AgentsPage() {
   }, [ready, privy, reload]);
 
   const refresh = () => { if (ws && privy) reload(ws, privy); };
+  const waiting = runs.filter((r) => r.status === 'awaiting_approval');
 
   if (!ready || loading) {
     return <AppLoading />;
@@ -121,9 +134,24 @@ export default function AgentsPage() {
             </div>
           )}
 
+          {/* Waiting on a person is the one state that needs somebody to act, so
+              it leads the page instead of hiding in a collapsed row below the fold. */}
+          {waiting.length > 0 && (
+            <section className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+              <div className="text-sm font-medium text-primary mb-1.5">
+                {waiting.length} run{waiting.length === 1 ? ' is' : 's are'} waiting for your approval
+              </div>
+              <div className="rounded-md border border-subtle divide-y divide-subtle overflow-hidden">
+                {waiting.slice(0, 5).map((r, i) => <RunRow key={r.id} run={r} ws={ws} privy={privy} onChange={refresh} defaultOpen={i === 0} />)}
+              </div>
+            </section>
+          )}
+
           {/* Agents list */}
           <section className="grid sm:grid-cols-2 gap-3">
-            {agents.map((a) => (
+            {agents.map((a) => {
+              const last = runs.find((r) => r.agent_id === a.id);
+              return (
               <div key={a.id} className="rounded-lg border border-subtle bg-surface p-4 flex flex-col">
                 <div className="flex items-start gap-2.5">
                   <div className="w-8 h-8 rounded-md bg-surface-hover flex items-center justify-center shrink-0">
@@ -151,64 +179,100 @@ export default function AgentsPage() {
                   )}
                   {a.model && <span className="text-2xs font-mono text-tertiary">{a.model}</span>}
                 </div>
+                <div className="mt-2.5 flex items-center gap-1.5 text-2xs text-tertiary min-w-0">
+                  {last ? (
+                    <>
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${last.status === 'done' ? 'bg-success' : last.status === 'error' ? 'bg-danger' : last.status === 'awaiting_approval' ? 'bg-warning' : 'bg-strong'}`} />
+                      <span className="shrink-0">Last ran {ago(last.created_at)}</span>
+                      {last.status === 'awaiting_approval' && <span className="text-warning shrink-0">· needs approval</span>}
+                      {last.status === 'error' && <span className="text-danger truncate">· {last.result || 'failed'}</span>}
+                    </>
+                  ) : <span>Hasn’t run yet</span>}
+                </div>
                 <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-subtle">
                   <Button size="sm" variant="primary" onClick={() => setRunning(a)} disabled={!a.enabled}><Play className="w-3.5 h-3.5" /> Run</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEditing(a)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditing(a)} aria-label={`Edit ${a.name}`}><Pencil className="w-3.5 h-3.5" /></Button>
                   <label className="ml-auto flex items-center gap-1.5 text-2xs text-tertiary cursor-pointer select-none">
                     <input type="checkbox" checked={a.enabled} onChange={(e) => ws && privy && setAgentEnabled(privy, ws.id, a.id, e.target.checked).then(refresh)} className="rounded border-strong accent-accent" />
                     enabled
                   </label>
-                  <Button size="sm" variant="ghost" onClick={async () => { if (ws && privy && await confirmDialog(`Delete agent "${a.name}"?`)) deleteAgent(privy, ws.id, a.id).then(refresh); }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
+                  <Button size="sm" variant="ghost" aria-label={`Delete ${a.name}`} onClick={async () => { if (ws && privy && await confirmDialog(`Delete agent "${a.name}"?`)) deleteAgent(privy, ws.id, a.id).then(refresh); }}><Trash2 className="w-3.5 h-3.5 text-danger" /></Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
             {agents.length === 0 && privy && (
-              <div className="sm:col-span-2 rounded-lg border border-dashed border-subtle p-10 text-center">
+              <div className="sm:col-span-2 rounded-lg border border-dashed border-subtle p-8 text-center">
                 <Bot className="w-6 h-6 text-tertiary mx-auto mb-2" />
-                <p className="text-sm text-secondary">No agents yet. Hire one below, or build your own.</p>
+                <p className="text-sm text-secondary">No agents yet. Hire a ready-made one below — it starts out asking before it changes anything.</p>
               </div>
             )}
           </section>
 
-          {privy && ws && <SkillsSection skills={skills} ws={ws.id} privy={privy} onChange={refresh} />}
-
           {/* Gallery. A blank form is the wrong first screen: knowing that a
               finance agent needs get_finance_summary + get_ledger and should stay
               in suggest mode is exactly what a new user doesn't know yet. Each
-              card opens the SAME editor, prefilled — not a second code path. */}
+              card opens the SAME editor, prefilled — not a second code path.
+              Open by default only until the first agent exists. */}
           {privy && (
             <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Hire an agent</h2>
-              <p className="text-xs text-secondary mb-3 max-w-2xl">
-                Ready-made agents. Each opens in the editor first, and starts out asking before it writes.
-              </p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {AGENT_TEMPLATES.map((t) => (
-                  <button key={t.key} onClick={() => setEditing(fromTemplate(t))}
-                    className="text-left rounded-lg border border-subtle bg-surface p-3.5 hover:border-strong hover:shadow-card transition-all">
-                    <div className="flex items-center gap-2">
-                      <TemplateIcon name={t.icon} />
-                      <h3 className="text-sm font-medium text-primary truncate">{t.name}</h3>
-                    </div>
-                    <p className="text-xs text-secondary mt-1.5 line-clamp-2">{t.summary}</p>
-                    <div className="flex items-center gap-1.5 mt-2.5">
-                      <Badge tone="neutral">{t.group}</Badge>
-                      <span className="text-3xs text-tertiary">{t.allowed_tools.length} tools</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              <button onClick={() => setShowGallery((v) => !v)} disabled={agents.length === 0}
+                className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-tertiary mb-2 hover:text-secondary disabled:hover:text-tertiary">
+                Hire an agent
+                {agents.length > 0 && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showGallery ? 'rotate-180' : ''}`} />}
+              </button>
+              {(agents.length === 0 || showGallery) && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {AGENT_TEMPLATES.map((t) => (
+                    <button key={t.key} onClick={() => setEditing(fromTemplate(t))}
+                      className="text-left rounded-lg border border-subtle bg-surface p-3.5 hover:border-strong hover:shadow-card transition-all">
+                      <div className="flex items-center gap-2">
+                        <TemplateIcon name={t.icon} />
+                        <h3 className="text-sm font-medium text-primary truncate">{t.name}</h3>
+                      </div>
+                      <p className="text-xs text-secondary mt-1.5 line-clamp-2">{t.summary}</p>
+                      <div className="flex items-center gap-1.5 mt-2.5">
+                        <Badge tone="neutral">{t.group}</Badge>
+                        <span className="text-3xs text-tertiary">{t.allowed_tools.length} tools</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
+          )}
+
+          {/* Skills have their own screen; this page used to embed the whole
+              library a second time, between the agents and the gallery. */}
+          {privy && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Link href="/skills" className="group rounded-lg border border-subtle bg-surface p-3.5 flex items-center gap-3 hover:border-strong transition-colors">
+                <BookOpen className="w-4 h-4 text-accent shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-primary">Skills{skills.length ? ` · ${skills.length}` : ''}</span>
+                  <span className="block text-2xs text-tertiary truncate">House rules and know-how any agent can apply</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-tertiary group-hover:text-primary" />
+              </Link>
+              <Link href="/settings/automations" className="group rounded-lg border border-subtle bg-surface p-3.5 flex items-center gap-3 hover:border-strong transition-colors">
+                <Zap className="w-4 h-4 text-accent shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-primary">Start an agent when something happens</span>
+                  <span className="block text-2xs text-tertiary truncate">An automation can hand a new deal, chat or form to an agent</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-tertiary group-hover:text-primary" />
+              </Link>
+            </div>
           )}
 
           {/* Run history */}
           {usage && <UsagePanel usage={usage} />}
 
-          {runs.length > 0 && (
+          {runs.some((r) => r.status !== 'awaiting_approval') && (
             <section>
               <h2 className="text-xs font-medium uppercase tracking-wider text-tertiary mb-2">Recent runs</h2>
               <div className="rounded-lg border border-subtle divide-y divide-subtle overflow-hidden">
-                {runs.slice(0, 12).map((r) => <RunRow key={r.id} run={r} ws={ws} privy={privy} onChange={refresh} />)}
+                {runs.filter((r) => r.status !== 'awaiting_approval').slice(0, 12).map((r) => <RunRow key={r.id} run={r} ws={ws} privy={privy} onChange={refresh} />)}
               </div>
             </section>
           )}
@@ -227,9 +291,9 @@ export default function AgentsPage() {
 }
 
 // ── Run history row (expandable) ──────────────────────────────────────────────
-function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceContext | null; privy: string | null; onChange: () => void }) {
+function RunRow({ run, ws, privy, onChange, defaultOpen = false }: { run: AgentRun; ws: WorkspaceContext | null; privy: string | null; onChange: () => void; defaultOpen?: boolean }) {
   const { notify } = useDialog();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [busy, setBusy] = useState(false);
   const tone = run.status === 'done' ? 'success' : run.status === 'error' ? 'danger' : run.status === 'awaiting_approval' ? 'warning' : 'neutral';
   const approve = async () => {
@@ -242,7 +306,8 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center gap-2.5 px-3 h-11 text-left hover:bg-surface-hover transition-colors">
         <ChevronRight className={`w-3.5 h-3.5 text-tertiary transition-transform ${open ? 'rotate-90' : ''}`} />
         <span className="text-sm text-primary truncate flex-1">{run.agent_name}: <span className="text-secondary">{run.task}</span></span>
-        <Badge tone={tone as any}>{run.status.replace('_', ' ')}</Badge>
+        <span className="text-2xs text-tertiary tabular-nums shrink-0 hidden sm:inline">{ago(run.created_at)}</span>
+        <Badge tone={tone as any}>{run.status === 'awaiting_approval' ? 'needs approval' : run.status.replace('_', ' ')}</Badge>
       </button>
       {open && (
         <div className="px-3 pb-3 pt-1 space-y-2 text-xs">
@@ -259,7 +324,7 @@ function RunRow({ run, ws, privy, onChange }: { run: AgentRun; ws: WorkspaceCont
             </div>
           )}
           {run.steps?.filter((s: any) => s.type === 'tool').map((s: any, i: number) => (
-            <div key={i} className="font-mono text-2xs text-tertiary truncate">→ {s.name}({s.args?.object || ''})</div>
+            <div key={i} className="text-2xs text-tertiary truncate">→ {describeCall(s.name || '', s.args)}</div>
           ))}
         </div>
       )}
@@ -284,13 +349,13 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
           <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
         </div>
         <div className="p-4 space-y-4">
-          <Field label="Name"><input value={a.name || ''} onChange={(e) => set('name', e.target.value)} className="input-field" placeholder="Collections assistant" /></Field>
-          <Field label="Role"><input value={a.role || ''} onChange={(e) => set('role', e.target.value)} className="input-field" placeholder="collections specialist" /></Field>
+          <Field label="Name"><input value={a.name || ''} onChange={(e) => set('name', e.target.value)} aria-label="Name" className="input-field" placeholder="Collections assistant" /></Field>
+          <Field label="Role"><input value={a.role || ''} onChange={(e) => set('role', e.target.value)} aria-label="Role" className="input-field" placeholder="collections specialist" /></Field>
           <Field label="Instructions" hint="What the agent should do, and how.">
-            <textarea value={a.instructions || ''} onChange={(e) => set('instructions', e.target.value)} rows={4} className="input-field !h-auto py-2 resize-y" placeholder="Find overdue invoices and draft a friendly reminder task for each." />
+            <textarea value={a.instructions || ''} onChange={(e) => set('instructions', e.target.value)} aria-label="Instructions" rows={4} className="input-field !h-auto py-2 resize-y" placeholder="Find overdue invoices and draft a friendly reminder task for each." />
           </Field>
           <Field label="Model" hint="Optional. Leave blank to use your default AI key's model.">
-            <input value={a.model || ''} onChange={(e) => set('model', e.target.value)} className="input-field font-mono" placeholder="claude-sonnet-5" />
+            <input value={a.model || ''} onChange={(e) => set('model', e.target.value)} aria-label="Model" className="input-field font-mono" placeholder="claude-sonnet-5" />
           </Field>
 
           <Field label="Autonomy">
@@ -399,13 +464,15 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
                         ))}
                       </select>
                       UTC
+                      <span className="text-tertiary">· {localHour(a.schedule_hour ?? 9)} your time</span>
                     </label>
                   )}
                   {/* Said plainly rather than discovered later: an unattended
                       run spends the workspace's own AI key. */}
                   <p className="text-2xs text-tertiary">
-                    Each run uses your own AI key. Needs a cron job on{' '}
-                    <span className="font-mono">/api/agents/dispatch</span>; without one, scheduled agents never fire.
+                    Each run uses your workspace AI key. To start it when something HAPPENS instead — a deal is won,
+                    a form comes in — use an <Link href="/settings/automations" className="text-accent hover:underline">automation</Link> with
+                    “Hand it to an agent”.
                   </p>
                 </>
               )}
@@ -413,7 +480,7 @@ function AgentEditor({ initial, skills, customObjects, onClose, onSave }: { init
           </Field>
 
           <Field label="Max steps" hint="Upper bound on tool calls per run (1-40).">
-            <input type="number" min={1} max={40} value={a.max_steps || 12} onChange={(e) => set('max_steps', Math.max(1, Math.min(40, Number(e.target.value) || 12)))} className="input-field w-24" />
+            <input type="number" min={1} max={40} value={a.max_steps || 12} onChange={(e) => set('max_steps', Math.max(1, Math.min(40, Number(e.target.value) || 12)))} aria-label="Max steps" className="input-field w-24" />
           </Field>
         </div>
         <div className="h-14 flex items-center justify-end gap-2 px-4 border-t border-subtle sticky bottom-0 bg-surface">
@@ -575,9 +642,17 @@ function UsagePanel({ usage }: { usage: AgentUsage }) {
  */
 function Proposal({ p }: { p: any }) {
   if (p?.name !== 'propose_object') {
+    // The same sentence the Copilot's approval card uses, so one change reads
+    // the same wherever somebody is asked to approve it.
+    const data = p.args?.data && typeof p.args.data === 'object' ? Object.entries(p.args.data).filter(([, v]) => v !== '' && v != null) : [];
     return (
-      <div className="font-mono text-2xs text-secondary truncate">
-        {p.name}({p.args?.object}) {JSON.stringify(p.args?.data || p.args?.id || {}).slice(0, 70)}
+      <div className="text-xs text-secondary">
+        · {describeCall(p.name, p.args)}
+        {data.length > 0 && (
+          <span className="block pl-3 text-2xs text-tertiary truncate">
+            {data.slice(0, 5).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ')}
+          </span>
+        )}
       </div>
     );
   }
@@ -651,8 +726,8 @@ function LiveSteps({ steps, name }: { steps: any[]; name: string }) {
                 : failed
                   ? <X className="w-3 h-3 text-danger shrink-0" />
                   : <Check className={`w-3 h-3 shrink-0 ${proposed ? 'text-warning' : 'text-success'}`} />}
-              <span className={running ? 'text-tertiary' : 'text-secondary'}>
-                {s.name}{s.args?.object ? `(${s.args.object})` : ''}
+              <span className={`font-sans ${running ? 'text-tertiary' : 'text-secondary'}`}>
+                {describeCall(s.name || '', s.args)}
               </span>
               {proposed && <span className="text-warning not-italic">proposed</span>}
             </div>
@@ -767,7 +842,7 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
               <details className="text-tertiary">
                 <summary className="cursor-pointer select-none">Steps ({out.steps?.length || 0})</summary>
                 {(out.steps || []).map((s: any, i: number) => (
-                  <div key={i} className="font-mono text-2xs mt-1 truncate">{s.type === 'tool' ? `→ ${s.name}(${s.args?.object || ''})` : s.type === 'thought' ? `· ${s.text?.slice(0, 90)}` : JSON.stringify(s).slice(0, 90)}</div>
+                  <div key={i} className="text-2xs mt-1 truncate">{s.type === 'tool' ? `→ ${describeCall(s.name || '', s.args)}` : s.type === 'thought' ? `· ${s.text?.slice(0, 90)}` : s.type === 'error' ? `✕ ${s.message || ''}` : JSON.stringify(s).slice(0, 90)}</div>
                 ))}
               </details>
             </div>
@@ -778,12 +853,24 @@ function RunModal({ agent, ws, privy, onClose }: { agent: Agent; ws: string; pri
   );
 }
 
+/**
+ * A div, not a <label>. Every group here holds BUTTONS (tool chips, autonomy
+ * cards, schedule options), and a label forwards any click inside it to its
+ * first labelable descendant — so clicking the "Tools" heading, its hint or the
+ * gap between two chips silently toggled the first tool. Inputs get aria-label.
+ */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <label className="block">
+    <div role="group" aria-label={label}>
       <div className="text-xs font-medium text-secondary mb-1">{label}</div>
       {children}
       {hint && <div className="text-2xs text-tertiary mt-1">{hint}</div>}
-    </label>
+    </div>
   );
+}
+
+/** A UTC hour, as the reader's wall clock — the schedule is stored in UTC. */
+function localHour(h: number): string {
+  const d = new Date(); d.setUTCHours(h, 0, 0, 0);
+  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }

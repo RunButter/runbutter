@@ -111,17 +111,25 @@ npm run dev          # or: npm run build && npm start
 
 ### e. Cron jobs (only for the features you use)
 
-Several features are inert without a scheduler — nothing breaks, nothing fires.
+**Automations and scheduled agents need no cron** on a long-lived server
+(`npm start`, Docker, Render, Fly, Railway, a VPS): the app runs a built-in
+scheduler that drains the automation queue every minute and wakes scheduled
+agents every ten. Edits made in the app, form submissions and new website chats
+also wake it immediately. Turn it off with `RUNBUTTER_INTERNAL_CRON=off`. It
+does not run on Vercel (no long-lived process) — add the two cron rows below
+there. Running both is safe: every claim underneath is `SKIP LOCKED`.
+
+Everything else is inert without a scheduler — nothing breaks, nothing fires.
 Add only the ones you need. On Render/Fly/Railway these are cron services; on a
 VPS, `crontab` with `curl`.
 
 | Endpoint | How often | Auth header | Drives |
 |---|---|---|---|
-| `POST /api/automations/dispatch` | every minute | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Scheduled automations (event and webhook triggers already fire instantly) |
+| `POST /api/automations/dispatch` | every minute | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Automations — **only needed on Vercel** or with the built-in scheduler off |
 | `POST /api/newsletters/send` | every minute | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Newsletter delivery — **nothing mails without it** |
 | `POST /api/sequences/run` | every minute | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Drip steps, enrolment, stale sweep, lead-score refresh |
 | `POST /api/posts/dispatch` | every minute | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Scheduled social posts |
-| `POST /api/agents/dispatch` | every 10 minutes | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Scheduled agents |
+| `POST /api/agents/dispatch` | every 10 minutes | `x-cron-secret: $SUPABASE_SERVICE_ROLE_KEY` | Scheduled agents — **only needed on Vercel** or with the built-in scheduler off |
 | `POST /api/finance/reminders/run` | daily | `Authorization: Bearer $CRON_SECRET` | Overdue-invoice reminders |
 | `GET /api/excel/sync` | every 15 minutes | `Authorization: Bearer $CRON_SECRET` | Two-way Excel sync |
 

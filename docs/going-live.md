@@ -51,12 +51,21 @@ secret would mean one leak opened both doors.
 |---|---|---|
 | Newsletters — **nothing mails without it** | `* * * * *` | `curl -fsS -X POST $SITE/api/newsletters/send -H "x-cron-secret: $SERVICE_KEY"` |
 | Sequences — drips, enrolment, stale sweep, lead scores | `* * * * *` | `curl -fsS -X POST $SITE/api/sequences/run -H "x-cron-secret: $SERVICE_KEY"` |
-| Automations — scheduled triggers only | `* * * * *` | `curl -fsS -X POST $SITE/api/automations/dispatch -H "x-cron-secret: $SERVICE_KEY"` |
+| Automations — only on Vercel, or with the built-in scheduler off | `* * * * *` | `curl -fsS -X POST $SITE/api/automations/dispatch -H "x-cron-secret: $SERVICE_KEY"` |
 | Social posts | `* * * * *` | `curl -fsS -X POST $SITE/api/posts/dispatch -H "x-cron-secret: $SERVICE_KEY"` |
-| Scheduled agents | `*/10 * * * *` | `curl -fsS -X POST $SITE/api/agents/dispatch -H "x-cron-secret: $SERVICE_KEY"` |
+| Scheduled agents — only on Vercel, or with the built-in scheduler off | `*/10 * * * *` | `curl -fsS -X POST $SITE/api/agents/dispatch -H "x-cron-secret: $SERVICE_KEY"` |
 
-Event and webhook automation triggers fire instantly and need no cron; only
-scheduled ones wait for the dispatcher.
+**Automations and scheduled agents run without a cron on any long-lived server**
+(Render web service, Docker, a VPS): the app starts a built-in scheduler that
+drains the automation queue every minute and wakes due agents every ten, and an
+edit made in the app, a form submission or a new website chat wakes it at once.
+Its first line in the log says it is on; `RUNBUTTER_INTERNAL_CRON=off` turns it
+off. It never runs on Vercel, so add those two rows there. Running a cron as
+well is harmless — the claims underneath are `SKIP LOCKED`.
+
+Until 0132 this table said event triggers "fire instantly". Only REST-API writes
+and incoming webhooks did; an edit made in the app queued its event and waited
+for a cron that most installs never configured.
 
 ### Group B — `Authorization: Bearer $CRON_SECRET`
 

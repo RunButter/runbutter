@@ -1,98 +1,162 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { Zap, Plus, Loader2, X, Trash2, Webhook, Mail, FilePlus, PencilLine, Bolt, Radio, Clock, Copy, Check, ArrowRight, List, Workflow, Sparkles } from 'lucide-react';
-import AutomationFlow from '@/components/crm/AutomationFlow';
 import {
-  loadAutomations, saveAutomation, setAutomationEnabled, deleteAutomation, loadAutomationRuns, loadConnections, webhookUrl, TEMPLATES,
-  type Automation, type AutomationRun, type Connection, type Condition, type Action, type TriggerType,
+  Zap, Plus, Trash2, Clock, Radio, Copy, Check, Play, Loader2, ChevronDown, ArrowRight, X,
+  Mail, MessageCircle, Sparkles, Bot, FilePlus, PencilLine, StickyNote, Webhook,
+} from 'lucide-react';
+import {
+  loadAutomations, setAutomationEnabled, deleteAutomation, loadAutomationRuns, loadConnections, testAutomation, webhookUrl,
+  type Automation, type AutomationRun, type TestResult,
 } from '@/lib/crm/automations';
+import { RECIPES, TRIGGER_OBJECTS, describeTrigger, actionLabel, type Recipe, type TriggerObject } from '@/lib/automations/vocab';
+import { getWorkspace } from '@/lib/crm/data';
+import { listChannels } from '@/lib/crm/chat';
+import { listAgents } from '@/lib/crm/agents';
+import { loadCustomObjects } from '@/lib/crm/custom';
+import AutomationEditor, { TestList, friendly, type EditorDeps } from '@/components/crm/AutomationEditor';
 import { useDialog } from '@/components/ui/Dialog';
 import DataBadge from '@/components/ui/DataBadge';
 import AppLoading from '@/components/ui/AppLoading';
 
-const OBJECTS = ['companies', 'people', 'invoices', 'expenses', 'transactions', 'products', 'campaigns', 'projects', 'issues', 'assets'];
-const OPS = [{ v: 'eq', l: 'equals' }, { v: 'neq', l: 'is not' }, { v: 'contains', l: 'contains' }, { v: 'gt', l: '>' }, { v: 'lt', l: '<' }, { v: 'not_empty', l: 'is set' }, { v: 'empty', l: 'is empty' }];
-const ACTION_TYPES = [
-  { v: 'ask_ai', l: 'Ask AI', icon: Sparkles },
-  { v: 'send_webhook', l: 'Send webhook', icon: Webhook },
-  { v: 'send_email', l: 'Send email', icon: Mail },
-  { v: 'create_record', l: 'Create record', icon: FilePlus },
-  { v: 'update_record', l: 'Update this record', icon: PencilLine },
-];
-const TRIGGERS: { v: TriggerType; l: string; icon: any; hint: string }[] = [
-  { v: 'event', l: 'Record event', icon: Bolt, hint: 'When a record is created or updated' },
-  { v: 'webhook', l: 'Incoming webhook', icon: Radio, hint: 'When an external tool POSTs to a URL' },
-  { v: 'schedule', l: 'Schedule', icon: Clock, hint: 'On a repeating timer' },
-];
-const actionIcon = (t: string) => ACTION_TYPES.find((a) => a.v === t)?.icon || Zap;
-const triggerIcon = (t: string) => TRIGGERS.find((x) => x.v === t)?.icon || Bolt;
+/**
+ * Automations — "when this happens, do that", written so anyone can read one.
+ *
+ * Each card is a sentence ("When an invoice's status changes to paid → Post in
+ * team chat") with its health beside it: when it last ran and whether that
+ * worked. That line is the point. An automation that has been failing quietly
+ * for a month looks exactly like one that works unless the screen says so, and
+ * the run log used to be the only place it did — below the fold, unfiltered.
+ *
+ * Test runs it once, now, against the newest real record: emails, chat posts,
+ * AI and agents really happen; record writes are simulated (0132).
+ */
 
-const blank = (): Automation => ({ id: '', name: '', enabled: true, trigger_type: 'event', object: 'companies', event: 'created', conditions: [], actions: [{ type: 'send_webhook', config: {} }] });
-
-// Deep-copy for editing, rebuilding the JSON textarea text (_data) from the
-// stored action data so re-opened create/update actions aren't shown empty.
-const forEditing = (a: Automation): Automation => {
-  const copy: Automation = JSON.parse(JSON.stringify(a));
-  for (const ac of copy.actions || []) {
-    if ((ac.type === 'create_record' || ac.type === 'update_record') && ac.config?.data && !ac.config._data) {
-      ac.config._data = JSON.stringify(ac.config.data, null, 2);
-    }
-  }
-  return copy;
+const ICONS: Record<string, any> = {
+  send_email: Mail, post_to_chat: MessageCircle, ask_ai: Sparkles, run_agent: Bot,
+  create_record: FilePlus, update_record: PencilLine, add_note: StickyNote, send_webhook: Webhook,
 };
-const fmtWhen = (s: string) => new Date(s).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const TRIGGER_ICON: Record<string, any> = { event: Zap, schedule: Clock, webhook: Radio };
+
+const blank = (): Automation => ({
+  id: '', name: '', enabled: true, trigger_type: 'event', object: 'deals', event: 'updated', conditions: [], actions: [],
+});
+
+function ago(iso: string): string {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  const d = Math.floor(s / 86400);
+  return d === 1 ? 'yesterday' : d < 30 ? `${d} days ago` : new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
 
 export default function AutomationsPage() {
-  const { confirm: confirmDialog } = useDialog();
+  const { confirm: confirmDialog, notify } = useDialog();
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
-  const canEdit = !!privy;
+  const myEmail = (user as any)?.email?.address || (user as any)?.google?.email || '';
 
   const [rows, setRows] = useState<Automation[]>([]);
   const [runs, setRuns] = useState<AutomationRun[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [deps, setDeps] = useState<EditorDeps>({ connections: [], channels: [], agents: [], customObjects: [] });
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Automation | null>(null);
-  const [view, setView] = useState<'board' | 'list'>('board');
+  const [showRecipes, setShowRecipes] = useState(false);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [tests, setTests] = useState<Record<string, { list?: TestResult[]; error?: string }>>({});
+  const [runFilter, setRunFilter] = useState<{ failed: boolean; id?: string }>({ failed: false });
 
-  const reload = useCallback(() => {
-    setLoading(true);
-    Promise.all([loadAutomations(privy), loadAutomationRuns(privy), loadConnections(privy)]).then(([a, r, c]) => {
-      setRows(a.rows); setLive(a.live); setRuns(r.rows); setConnections(c.rows); setLoading(false);
+  const reload = useCallback(async () => {
+    const [a, r] = await Promise.all([loadAutomations(privy), loadAutomationRuns(privy)]);
+    setRows(a.rows); setLive(a.live); setRuns(r.rows); setLoading(false);
+  }, [privy]);
+
+  // What the editor's pickers offer. Loaded once; none of it blocks the list.
+  const loadDeps = useCallback(async () => {
+    const c = await loadConnections(privy);
+    const w = privy ? await getWorkspace(privy) : null;
+    if (!privy || !w) { setDeps((d) => ({ ...d, connections: c.live ? c.rows : [] })); return; }
+    const [channels, agents, custom] = await Promise.all([
+      listChannels(privy, w.id), listAgents(privy, w.id), loadCustomObjects(privy, w.id),
+    ]);
+    setDeps({
+      connections: c.live ? c.rows : [],
+      channels: channels.map((ch) => ({ id: ch.id, name: ch.name })),
+      agents: agents.filter((g) => g.enabled !== false).map((g) => ({ id: g.id, name: g.name, role: g.role })),
+      customObjects: (custom.rows || []).map((o): TriggerObject => ({
+        slug: o.slug, one: `a ${o.singular.toLowerCase()}`, label: o.plural, group: 'Your objects', writable: true,
+        fields: o.fields.map((f) => ({
+          key: f.key, label: f.label, options: f.type === 'select' ? f.options : undefined,
+          type: f.type === 'number' || f.type === 'currency' ? 'number' : f.type === 'date' ? 'date' : 'text',
+        })),
+      })),
     });
   }, [privy]);
-  useEffect(() => { if (ready) reload(); }, [ready, reload]);
+
+  useEffect(() => { if (ready) { reload(); loadDeps(); } }, [ready, reload, loadDeps]);
+
+  const objects = useMemo(() => [...TRIGGER_OBJECTS, ...deps.customObjects], [deps.customObjects]);
+
+  // A recipe arrives with its gaps filled where there is an obvious answer —
+  // your email, the first channel, the first agent — so most work on Save.
+  const fromRecipe = (r: Recipe) => {
+    const a: Automation = { ...blank(), ...JSON.parse(JSON.stringify(r.automation)) };
+    a.actions = a.actions.map((s) => {
+      const cfg = { ...s.config };
+      if (s.type === 'send_email' && !cfg.to && myEmail) cfg.to = myEmail;
+      if (s.type === 'post_to_chat' && !cfg.channel_id && deps.channels[0]) cfg.channel_id = deps.channels[0].id;
+      if (s.type === 'run_agent' && !cfg.agent_id && deps.agents[0]) cfg.agent_id = deps.agents[0].id;
+      return { ...s, config: cfg };
+    });
+    setShowRecipes(false);
+    setEditing(a);
+  };
 
   const toggle = async (a: Automation) => {
-    if (!privy) return;
+    if (!privy || !live) return;
     setRows((rs) => rs.map((r) => (r.id === a.id ? { ...r, enabled: !r.enabled } : r)));
-    await setAutomationEnabled(privy, a.id, !a.enabled);
+    const res = await setAutomationEnabled(privy, a.id, !a.enabled);
+    if (res.error) {
+      setRows((rs) => rs.map((r) => (r.id === a.id ? { ...r, enabled: a.enabled } : r)));
+      notify(friendly(res.error));
+    }
   };
   const remove = async (a: Automation) => {
-    if (!privy || !await confirmDialog(`Delete "${a.name || 'this automation'}"?`)) return;
-    await deleteAutomation(privy, a.id); reload();
+    if (!privy || !await confirmDialog(`Delete “${a.name || 'this automation'}”? Its run history stays.`)) return;
+    const res = await deleteAutomation(privy, a.id);
+    if (res.error) { notify(friendly(res.error)); return; }
+    reload();
   };
-  const fromTemplate = (t: Partial<Automation>) => setEditing(forEditing({ ...blank(), ...t } as Automation));
+  const test = async (a: Automation) => {
+    if (!privy || !live) return;
+    setTesting(a.id);
+    const r = await testAutomation(privy, a.id);
+    setTesting(null);
+    setTests((t) => ({ ...t, [a.id]: r.error ? { error: r.error } : { list: r.results } }));
+    reload();
+  };
+
+  const shownRuns = runs.filter((r) => (!runFilter.failed || r.status === 'error') && (!runFilter.id || r.automation_id === runFilter.id));
+  const filteredName = runFilter.id ? rows.find((r) => r.id === runFilter.id)?.name : null;
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 page-x">
-        <h1 className="text-md font-medium text-primary">Automations</h1>
-        <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>
+      <header className="h-14 shrink-0 flex items-center gap-2.5 page-x">
+        <h1 className="text-base font-medium text-primary">Automations</h1>
+        {rows.length > 0 && <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{rows.length}</span>}
         <DataBadge live={live} />
         <div className="ml-auto flex items-center gap-1.5">
-          <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
-            {([['board', Workflow, 'Board'], ['list', List, 'List']] as const).map(([v, Icon, label]) => (
-              <button key={v} onClick={() => setView(v)}
-                className={`h-6 px-2 inline-flex items-center gap-1 rounded-md text-2xs font-semibold transition-colors ${view === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
-                <Icon className="w-3 h-3" /> {label}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => setEditing(blank())} disabled={!canEdit} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40" title={!canEdit ? 'Sign in to add' : ''}>
+          {rows.length > 0 && (
+            <button onClick={() => setShowRecipes((v) => !v)} disabled={!live}
+              className="h-8 px-3 hidden sm:inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
+              Recipes <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showRecipes ? 'rotate-180' : ''}`} />
+            </button>
+          )}
+          <button onClick={() => setEditing(blank())} disabled={!live}
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
             <Plus className="w-3.5 h-3.5" /> New automation
           </button>
         </div>
@@ -100,80 +164,161 @@ export default function AutomationsPage() {
 
       <div className="flex-1 overflow-auto page-pad">
         <div className="space-y-6">
-          {/* Templates */}
-          <div>
-            <div className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2">Start from a template</div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {TEMPLATES.map((t) => (
-                <button key={t.key} onClick={() => fromTemplate(t.automation)} disabled={!canEdit}
-                  className="group text-left card-surface p-3 hover:ring-strong hover:shadow-elevated transition-all disabled:opacity-50">
-                  <div className={`inline-flex text-3xs font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-md mb-1.5 ${t.tone}`}>{t.name}</div>
-                  <p className="text-xs text-secondary leading-snug">{t.desc}</p>
-                  <span className="mt-1.5 inline-flex items-center gap-0.5 text-2xs font-semibold text-accent opacity-0 group-hover:opacity-100 transition-opacity">Use template <ArrowRight className="w-3 h-3" /></span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Rules */}
-          {loading ? (
-            <AppLoading />
-          ) : rows.length === 0 ? (
-            <div className="rounded-xl ring-1 ring-subtle bg-surface px-6 py-10 text-center">
-              <Zap className="w-8 h-8 text-tertiary mx-auto mb-2" />
-              <p className="text-sm text-secondary">No automations yet — pick a template above or build one.</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {rows.map((a) => { const TI = triggerIcon(a.trigger_type); return (
-                <div key={a.id} className={`card-surface p-4 ${a.enabled ? '' : 'opacity-60'}`}>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => toggle(a)} disabled={!canEdit || !live} title={live ? 'Enable / disable' : 'Sign in'}
-                      className={`w-9 h-5 rounded-full shrink-0 relative transition-colors ${a.enabled ? 'bg-success' : 'bg-strong'} disabled:opacity-50`}>
-                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface shadow transition-all ${a.enabled ? 'left-4' : 'left-0.5'}`} />
+          {loading ? <AppLoading /> : rows.length === 0 || showRecipes ? (
+            <section>
+              {rows.length === 0 && (
+                <div className="mb-4">
+                  <h2 className="text-md font-medium text-primary">Let the routine work run itself</h2>
+                  <p className="text-sm text-secondary mt-1 max-w-2xl">
+                    An automation is a sentence: <em>when</em> something happens, <em>then</em> do this. Pick a recipe to start —
+                    it opens ready to save — or build your own.
+                  </p>
+                </div>
+              )}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {RECIPES.map((r) => {
+                  const TI = TRIGGER_ICON[r.automation.trigger_type] || Zap;
+                  return (
+                    <button key={r.key} onClick={() => fromRecipe(r)} disabled={!live}
+                      className="group text-left card-surface p-3.5 hover:ring-strong transition-all disabled:opacity-50 flex flex-col">
+                      <span className="flex items-center gap-1.5 text-2xs text-tertiary mb-1.5">
+                        <TI className="w-3.5 h-3.5" /> {describeTrigger(r.automation)}
+                      </span>
+                      <span className="text-sm font-medium text-primary">{r.name}</span>
+                      <span className="text-xs text-secondary leading-snug mt-0.5 flex-1">{r.desc}</span>
+                      <span className="mt-2 flex items-center gap-1 text-tertiary">
+                        {r.automation.actions.map((s: any, i: number) => { const I = ICONS[s.type] || Zap; return <I key={i} className="w-3.5 h-3.5" />; })}
+                        <span className="ml-auto inline-flex items-center gap-0.5 text-2xs font-semibold text-accent opacity-0 group-hover:opacity-100 transition-opacity">Use <ArrowRight className="w-3 h-3" /></span>
+                      </span>
                     </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-base font-medium text-primary truncate flex items-center gap-1.5"><TI className="w-3.5 h-3.5 text-tertiary" /> {a.name || 'Untitled automation'}</div>
-                      <div className="text-xs text-secondary truncate">
-                        {a.trigger_type === 'webhook' ? <>On <b className="text-secondary">incoming webhook</b></>
-                          : a.trigger_type === 'schedule' ? <>Every <b className="text-secondary">{a.schedule?.every || 'day'}</b></>
-                          : <>When <b className="text-secondary capitalize">{a.object}</b> is <b className="text-secondary">{a.event}</b></>}
-                        {a.conditions.length > 0 && <> · {a.conditions.length} filter{a.conditions.length > 1 ? 's' : ''}</>}
-                        {' → '}{(a.actions || []).map((ac) => ACTION_TYPES.find((t) => t.v === ac.type)?.l || ac.type).join(', ') || 'no action'}
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
+          {!loading && rows.length > 0 && (
+            <ul className="space-y-2.5">
+              {rows.map((a) => {
+                const TI = TRIGGER_ICON[a.trigger_type] || Zap;
+                const t = tests[a.id];
+                const lr = a.last_run;
+                return (
+                  <li key={a.id} className={`card-surface p-4 ${a.enabled ? '' : 'opacity-70'}`}>
+                    <div className="flex items-start gap-3">
+                      <button role="switch" aria-checked={a.enabled} aria-label={a.enabled ? 'Turn off' : 'Turn on'}
+                        onClick={() => toggle(a)} disabled={!live} title={a.enabled ? 'On — click to pause' : 'Paused — click to turn on'}
+                        className={`mt-0.5 w-9 h-5 rounded-full shrink-0 relative transition-colors ${a.enabled ? 'bg-success' : 'bg-strong'} disabled:opacity-50`}>
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-surface shadow transition-transform ${a.enabled ? 'translate-x-4' : ''}`} />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-2">
+                          <button onClick={() => live && setEditing(JSON.parse(JSON.stringify(a)))} className="min-w-0 flex-1 text-left pt-1">
+                            <span className="block text-sm font-medium text-primary truncate">{a.name || 'Untitled automation'}</span>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button onClick={() => test(a)} disabled={!live || testing === a.id} title="Run it once now against your latest record" aria-label="Test"
+                              className="h-8 px-2.5 inline-flex items-center gap-1.5 text-xs rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover disabled:opacity-40">
+                              {testing === a.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                              <span className="hidden sm:inline">Test</span>
+                            </button>
+                            <button onClick={() => setEditing(JSON.parse(JSON.stringify(a)))} disabled={!live}
+                              className="h-8 px-2.5 text-xs rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-hover disabled:opacity-40">Edit</button>
+                            <button onClick={() => remove(a)} disabled={!live} aria-label="Delete"
+                              className="p-2 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </div>
+                        <button onClick={() => live && setEditing(JSON.parse(JSON.stringify(a)))} className="block w-full text-left">
+                          <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-secondary">
+                            <TI className="hidden sm:block w-3.5 h-3.5 text-tertiary shrink-0" />
+                            <span>{describeTrigger(a, objects)}</span>
+                            <ArrowRight className="w-3 h-3 text-tertiary shrink-0" />
+                            {(a.actions || []).length === 0 ? <span className="text-warning">no steps</span>
+                              : (a.actions || []).map((s, i) => {
+                                const I = ICONS[s.type] || Zap;
+                                return <span key={i} className="inline-flex items-center gap-1">{i > 0 && <span className="text-tertiary">then</span>}<I className="w-3.5 h-3.5 text-tertiary" />{actionLabel(s.type)}</span>;
+                              })}
+                          </span>
+                        </button>
+                        <div className="mt-1.5 flex items-center gap-1.5 text-2xs min-w-0">
+                          {!lr ? <span className="text-tertiary">{a.enabled ? 'Hasn’t run yet' : 'Paused'}</span> : (
+                            <>
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${lr.status === 'ok' ? 'bg-success' : lr.status === 'error' ? 'bg-danger' : 'bg-strong'}`} />
+                              <span className="text-tertiary shrink-0">Last ran {ago(lr.at)}</span>
+                              {lr.status === 'error' && <span className="text-danger truncate">· {lr.detail}</span>}
+                            </>
+                          )}
+                          {(a.errors_7d ?? 0) > 0 && (
+                            <button onClick={() => { setRunFilter({ failed: true, id: a.id }); document.getElementById('runs')?.scrollIntoView({ behavior: 'smooth' }); }}
+                              className="text-danger hover:underline shrink-0">{a.errors_7d} failed this week</button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {(a.actions || []).slice(0, 3).map((ac, i) => { const I = actionIcon(ac.type); return <I key={i} className="w-3.5 h-3.5 text-tertiary" />; })}
-                      <button onClick={() => setEditing(forEditing(a))} disabled={!canEdit} className="ml-1 h-7 px-2.5 text-xs font-semibold rounded-md ring-1 ring-subtle text-secondary hover:bg-surface-sunken disabled:opacity-40">Edit</button>
-                      <button onClick={() => remove(a)} disabled={!canEdit} className="p-1.5 rounded-md text-tertiary hover:text-danger hover:bg-danger/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-                  {view === 'board' && <AutomationFlow automation={a} onEdit={canEdit ? () => setEditing(forEditing(a)) : undefined} />}
-                  {a.trigger_type === 'webhook' && a.webhook_token && <WebhookUrl token={a.webhook_token} />}
-                </div>
-              ); })}
-            </div>
+
+                    {a.trigger_type === 'webhook' && a.webhook_token && <WebhookUrl token={a.webhook_token} />}
+
+                    {t && (
+                      <div className="mt-3 rounded-lg bg-surface-sunken/60 ring-1 ring-subtle p-3 relative" aria-live="polite">
+                        <button onClick={() => setTests((x) => { const n = { ...x }; delete n[a.id]; return n; })} aria-label="Close"
+                          className="absolute top-2 right-2 p-1 rounded text-tertiary hover:text-secondary"><X className="w-3.5 h-3.5" /></button>
+                        <div className="text-xs font-medium text-primary mb-1.5">Test run</div>
+                        {t.error ? <p className="text-xs text-danger">{t.error}</p> : <TestList results={t.list || []} />}
+                        {!t.error && <p className="text-2xs text-tertiary mt-1.5">Creating or updating records was only simulated.</p>}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
-          {/* Run log */}
-          <div>
-            <div className="text-2xs font-medium uppercase tracking-widest text-tertiary mb-2">Recent runs</div>
-            <div className="card-surface overflow-hidden">
-              {runs.length === 0 ? <div className="px-5 py-8 text-center text-sm text-tertiary">No runs yet.</div>
-                : runs.map((r) => (
-                  <div key={r.id} className="flex items-center gap-3 px-4 h-11 border-b border-subtle last:border-0 text-xs">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.status === 'ok' ? 'bg-success' : 'bg-danger'}`} />
-                    <span className="font-semibold text-secondary truncate">{r.automation_name || '—'}</span>
-                    <span className="text-tertiary truncate">{r.detail}</span>
-                    <span className="ml-auto text-tertiary tabular-nums shrink-0">{fmtWhen(r.created_at)}</span>
+          {!loading && (rows.length > 0 || runs.length > 0) && (
+            <section id="runs">
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-sm font-medium text-primary">Recent runs</h2>
+                {filteredName && (
+                  <span className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded-md bg-surface-hover text-2xs text-secondary">
+                    {filteredName}
+                    <button onClick={() => setRunFilter((f) => ({ ...f, id: undefined }))} aria-label="Show all automations" className="p-0.5 rounded hover:text-primary"><X className="w-3 h-3" /></button>
+                  </span>
+                )}
+                <div className="ml-auto flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-hover ring-1 ring-subtle">
+                  {([[false, 'All'], [true, 'Failed']] as const).map(([v, l]) => (
+                    <button key={l} onClick={() => setRunFilter((f) => ({ ...f, failed: v }))}
+                      className={`h-6 px-2 rounded-md text-2xs font-semibold transition-colors ${runFilter.failed === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>{l}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="card-surface overflow-hidden">
+                {shownRuns.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-sm text-tertiary">
+                    {runFilter.failed ? 'Nothing failed. 🎉' : 'Nothing has run yet. Press Test on an automation to try it.'}
+                  </div>
+                ) : shownRuns.map((r) => (
+                  <div key={r.id} className="flex items-center gap-3 px-4 min-h-11 py-2 border-b border-subtle last:border-0 text-xs">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.status === 'ok' ? 'bg-success' : r.status === 'error' ? 'bg-danger' : 'bg-strong'}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className="font-medium text-secondary">{r.automation_name || '—'}</span>
+                      {r.action_type && <span className="text-tertiary"> · {actionLabel(r.action_type)}</span>}
+                      <span className={`block truncate ${r.status === 'error' ? 'text-danger' : 'text-tertiary'}`}>{r.detail}</span>
+                    </span>
+                    <span className="text-tertiary tabular-nums shrink-0">{ago(r.created_at)}</span>
                   </div>
                 ))}
-            </div>
-          </div>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
-      {editing && <Builder automation={editing} privy={privy} connections={connections} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); reload(); }} />}
+      {editing && (
+        <AutomationEditor
+          automation={editing} privy={privy} deps={deps}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); reload(); }}
+        />
+      )}
     </>
   );
 }
@@ -182,170 +327,13 @@ function WebhookUrl({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
   const url = webhookUrl(token);
   return (
-    <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-surface-sunken ring-1 ring-subtle px-2.5 py-1.5">
+    <div className="mt-3 flex items-center gap-2 rounded-lg bg-surface-sunken ring-1 ring-subtle px-2.5 py-1.5">
       <Radio className="w-3.5 h-3.5 text-tertiary shrink-0" />
       <code className="flex-1 text-2xs font-mono text-secondary truncate">{url}</code>
       <button onClick={() => { navigator.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1200); }}
-        className="h-6 px-2 rounded-md text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface inline-flex items-center gap-1">{copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy</button>
+        className="h-6 px-2 rounded-md text-2xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface inline-flex items-center gap-1">
+        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} Copy
+      </button>
     </div>
   );
-}
-
-// ── Step builder (Activepieces-style vertical flow) ───────────────────────────
-function Builder({ automation, privy, connections, onClose, onSaved }: {
-  automation: Automation; privy: string | null; connections: Connection[]; onClose: () => void; onSaved: () => void;
-}) {
-  const [a, setA] = useState<Automation>(automation);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const set = (patch: Partial<Automation>) => setA((s) => ({ ...s, ...patch }));
-
-  const setCond = (i: number, patch: Partial<Condition>) => set({ conditions: a.conditions.map((c, k) => (k === i ? { ...c, ...patch } : c)) });
-  const setAction = (i: number, patch: Partial<Action>) => set({ actions: a.actions.map((c, k) => (k === i ? { ...c, ...patch } : c)) });
-  const setCfg = (i: number, patch: Record<string, any>) => setAction(i, { config: { ...a.actions[i].config, ...patch } });
-
-  const save = async () => {
-    if (!privy) { setError('Sign in to save automations.'); return; }
-    if (!a.name.trim()) { setError('Give the automation a name.'); return; }
-    if (a.actions.length === 0) { setError('Add at least one action.'); return; }
-    setSaving(true); setError('');
-    const res = await saveAutomation(privy, a.id || null, { name: a.name, enabled: a.enabled, trigger_type: a.trigger_type, object: a.object, event: a.event, conditions: a.conditions, actions: a.actions, schedule: a.schedule });
-    setSaving(false);
-    if (res.error) { setError(res.error); return; }
-    onSaved();
-  };
-
-  const inputCls = 'w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none';
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-surface rounded-xl ring-1 ring-subtle shadow-popover animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
-        <div className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
-          <input autoFocus value={a.name} onChange={(e) => set({ name: e.target.value })} placeholder="Automation name" className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary" />
-          <button onClick={onClose} className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover" aria-label="Close"><X className="w-4 h-4" /></button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5 2xl:p-7">
-          <div className="relative pl-7">
-            <div className="absolute left-[11px] top-3 bottom-3 w-px bg-strong" />
-
-            {/* Trigger step */}
-            <Step badge="1" label="Trigger" tone="bg-warning">
-              <div className="grid grid-cols-3 gap-1.5 mb-3">
-                {TRIGGERS.map((t) => (
-                  <button key={t.v} onClick={() => set({ trigger_type: t.v })}
-                    className={`flex flex-col items-center gap-1 rounded-lg px-1.5 py-2 text-2xs font-semibold ring-1 transition-colors ${a.trigger_type === t.v ? 'bg-accent/10 ring-accent/30 text-accent' : 'ring-subtle text-secondary hover:bg-surface-sunken'}`}>
-                    <t.icon className="w-4 h-4" /> {t.l}
-                  </button>
-                ))}
-              </div>
-
-              {a.trigger_type === 'event' && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <select value={a.object} onChange={(e) => set({ object: e.target.value })} className={inputCls + ' capitalize'}>{OBJECTS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
-                    <select value={a.event} onChange={(e) => set({ event: e.target.value as any })} className={inputCls}><option value="created">is created</option><option value="updated">is updated</option></select>
-                  </div>
-                  {a.conditions.map((c, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <span className="text-2xs text-tertiary w-8 shrink-0">only if</span>
-                      <input value={c.field} onChange={(e) => setCond(i, { field: e.target.value })} placeholder="field" className={inputCls + ' flex-1'} />
-                      <select value={c.op} onChange={(e) => setCond(i, { op: e.target.value })} className={inputCls + ' w-24 shrink-0'}>{OPS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}</select>
-                      {!['empty', 'not_empty'].includes(c.op) && <input value={c.value} onChange={(e) => setCond(i, { value: e.target.value })} placeholder="value" className={inputCls + ' w-20 shrink-0'} />}
-                      <button onClick={() => set({ conditions: a.conditions.filter((_, k) => k !== i) })} className="p-1 rounded text-tertiary hover:text-danger"><X className="w-3.5 h-3.5" /></button>
-                    </div>
-                  ))}
-                  <button onClick={() => set({ conditions: [...a.conditions, { field: '', op: 'eq', value: '' }] })} className="text-xs font-medium text-secondary hover:text-primary transition-colors">+ Add filter</button>
-                </div>
-              )}
-              {a.trigger_type === 'webhook' && (
-                <div className="space-y-2">
-                  <p className="text-xs text-secondary">Any tool can POST JSON to this automation’s URL to trigger it. Reference fields in actions with <code className="bg-surface-hover rounded px-1">{'{{field}}'}</code>.</p>
-                  {a.webhook_token ? <WebhookUrl token={a.webhook_token} /> : <p className="text-xs text-warning bg-warning/10 rounded-md px-2.5 py-1.5 ring-1 ring-warning/30">A unique URL is generated when you save.</p>}
-                </div>
-              )}
-              {a.trigger_type === 'schedule' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-secondary">Run every</span>
-                  <select value={a.schedule?.every || 'day'} onChange={(e) => set({ schedule: { ...(a.schedule || {}), every: e.target.value as any } })} className={inputCls + ' w-28'}>
-                    <option value="minute">minute</option><option value="hour">hour</option><option value="day">day</option>
-                  </select>
-                </div>
-              )}
-            </Step>
-
-            {/* Action steps */}
-            {a.actions.map((ac, i) => (
-              <Step key={i} badge={String(i + 2)} label={`Action ${i + 1}`} tone="bg-accent">
-                <div className="flex items-center gap-2 mb-2">
-                  <select value={ac.type} onChange={(e) => setAction(i, { type: e.target.value, config: {} })} className={inputCls + ' flex-1'}>{ACTION_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}</select>
-                  <button onClick={() => set({ actions: a.actions.filter((_, k) => k !== i) })} className="p-1.5 rounded-md text-tertiary hover:text-danger"><Trash2 className="w-3.5 h-3.5" /></button>
-                </div>
-                {ac.type === 'ask_ai' && (
-                  <div className="space-y-1.5">
-                    <textarea value={ac.config.prompt || ''} onChange={(e) => setCfg(i, { prompt: e.target.value })} rows={3}
-                      placeholder="Write a two-sentence brief on {{first_name}} {{last_name}} for the team"
-                      className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                    <p className="text-2xs text-tertiary">Runs on your workspace AI key (Settings → AI). The answer becomes <code className="bg-surface-hover rounded px-1">{'{{ai_output}}'}</code> in every action below this one.</p>
-                  </div>
-                )}
-                {ac.type === 'send_webhook' && (
-                  <select value={ac.config.connection_id || ''} onChange={(e) => setCfg(i, { connection_id: e.target.value, label: connections.find((c) => c.id === e.target.value)?.label })} className={inputCls}>
-                    <option value="">— pick a connection (Integrations) —</option>
-                    {connections.map((c) => <option key={c.id} value={c.id}>{c.label || c.url}</option>)}
-                  </select>
-                )}
-                {ac.type === 'send_email' && (
-                  <div className="space-y-2">
-                    <input value={ac.config.to || ''} onChange={(e) => setCfg(i, { to: e.target.value })} placeholder="to ({{email}})" className={inputCls} />
-                    <input value={ac.config.subject || ''} onChange={(e) => setCfg(i, { subject: e.target.value })} placeholder="Subject" className={inputCls} />
-                    <textarea value={ac.config.body || ''} onChange={(e) => setCfg(i, { body: e.target.value })} rows={3} placeholder="Body — use {{field}}" className="w-full px-2.5 py-2 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                  </div>
-                )}
-                {ac.type === 'create_record' && (
-                  <div className="space-y-2">
-                    <select value={ac.config.object || 'invoices'} onChange={(e) => setCfg(i, { object: e.target.value })} className={inputCls + ' capitalize'}>{OBJECTS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
-                    <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={3} placeholder='{"number":"INV-{{id}}"}' className="w-full px-2.5 py-2 text-xs font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                  </div>
-                )}
-                {ac.type === 'update_record' && (
-                  <textarea value={ac.config._data || ''} onChange={(e) => setCfg(i, { _data: e.target.value, data: safeJson(e.target.value) })} rows={2} placeholder='{"status":"paid"}' className="w-full px-2.5 py-2 text-xs font-mono rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                )}
-              </Step>
-            ))}
-
-            <div className="relative">
-              <span className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-surface ring-2 ring-strong" />
-              <button onClick={() => set({ actions: [...a.actions, { type: 'send_webhook', config: {} }] })} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-accent ring-1 ring-dashed ring-accent/30 bg-accent/10 hover:bg-accent/10"><Plus className="w-3.5 h-3.5" /> Add action</button>
-            </div>
-          </div>
-          {error && <p className="mt-3 text-xs text-danger">{error}</p>}
-        </div>
-
-        <div className="shrink-0 flex items-center justify-between gap-2 p-3 border-t border-subtle">
-          <label className="flex items-center gap-1.5 text-xs font-medium text-secondary"><input type="checkbox" checked={a.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="rounded border-subtle accent-accent" /> Enabled</label>
-          <div className="flex items-center gap-2">
-            <button onClick={onClose} className="h-8 px-3 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover">Cancel</button>
-            <button onClick={save} disabled={saving} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-50">{saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Step({ badge, label, tone, children }: { badge: string; label: string; tone: string; children: React.ReactNode }) {
-  return (
-    <div className="relative pb-4">
-      <span className={`absolute -left-[22px] top-0 w-6 h-6 -translate-x-0 rounded-full ${tone} text-accent-fg text-2xs font-semibold flex items-center justify-center ring-4 ring-canvas`}>{badge}</span>
-      <div className="rounded-xl ring-1 ring-subtle bg-surface p-3">
-        <div className="text-3xs font-medium uppercase tracking-wider text-tertiary mb-2">{label}</div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function safeJson(s: string): Record<string, any> {
-  try { const o = JSON.parse(s); return o && typeof o === 'object' ? o : {}; } catch { return {}; }
 }

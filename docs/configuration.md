@@ -119,6 +119,13 @@ browser from a workspace passphrase and never reaches the server, so there is no
 variable to configure and `SECRETS_MASTER_KEY` is not involved. Apply migration
 `0118` and it works. See [The team vault](./vault.md).
 
+## Built-in scheduler — `RUNBUTTER_INTERNAL_CRON`
+
+On a long-lived server the app runs automations every minute and scheduled
+agents every ten minutes by itself, so neither needs a cron job. Leave the
+variable unset to keep it on, set `off` to rely on external crons only, or `on`
+to run it under `next dev` too. It never runs on Vercel.
+
 ## Cron jobs
 
 See the table in [Install](./install.md#e-cron-jobs-only-for-the-features-you-use).

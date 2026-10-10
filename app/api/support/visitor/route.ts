@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { createAdminClient } from '@/lib/supabase';
+import { kickDispatcher } from '@/lib/automations/kick';
 import { rateLimit, clientIp, tooMany } from '@/lib/security/http';
 import { visitorToken, tokenHash } from '@/lib/support/token';
 import { notifyTeam } from '@/lib/support/notify';
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
       const d = data as any;
       await notifyTeam({ to: d?.notify_email, company: d?.company || '', conversationId: id,
         name: b?.name, email: b?.email, body, isNew: true });
+      kickDispatcher(admin); // "when a chat conversation is added" automations
       return NextResponse.json({ conversation: id, token });
     }
 

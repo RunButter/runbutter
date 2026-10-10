@@ -38,6 +38,9 @@ const nextConfig = {
     return config;
   },
   experimental: {
+    // instrumentation.ts → the built-in scheduler, so automations and agent
+    // schedules run on a long-lived server with no cron job configured.
+    instrumentationHook: true,
     // pdfkit must stay unbundled: it reads its font metrics from node_modules at
     // runtime. @firecrawl/pdf-inspector is a native .node addon, which webpack
     // cannot bundle at all — it has to be required from node_modules.

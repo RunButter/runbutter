@@ -27,8 +27,8 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
   owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
-  0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates) and 0131
-  (support inbox + chat widget) are NEW and pending.** Do not take any of that on trust when
+  0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates), 0131
+  (support inbox + chat widget) and 0132 (automations v3) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -234,6 +234,60 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 - UI: `components/crm/ObjectCards.tsx` (its own file because a page can only export a default, which
   makes anything in a page file unrenderable without signing in). Cards are **collapsed by default,
   one open at a time**.
+
+## Automations v3 (0132) + the built-in scheduler — "check if automations works"
+**The answer was no, in five ways, all silent.** Each saved fine, showed in the list, and did nothing:
+- **Nothing drained the queue.** The SQL trigger only QUEUES an event; `runDispatcher` was called by
+  the REST API and incoming webhooks and by a cron nobody configured. An invoice marked paid IN THE
+  APP never fired its automation, while the docs said event triggers "fire instantly". Now:
+  `instrumentation.ts` → `lib/scheduler/internal-cron.ts` ticks every minute (agents every ten) on any
+  long-lived server, and `lib/automations/kick.ts` wakes it 1.5 s after any `/api/rpc` write, form
+  submit or new chat (coalesced). Off on Vercel and with `RUNBUTTER_INTERNAL_CRON=off`.
+  - **The import in `instrumentation.ts` MUST be inside `if (NEXT_RUNTIME === 'nodejs') { … }`.** An
+    early `return` is not dead code to webpack, so the edge compile bundled the dispatcher and the
+    build died on `crypto`.
+- **Half the product could not be a trigger.** Deals, orders, form submissions, chats, candidates and
+  custom objects had no `emit_automation_event` trigger. 0132 adds them; `automation_payload` flattens
+  what a person means (`{{company}}`, `{{stage}}`, a form's fields, a chat's first `{{message}}`).
+- **"Is paid" fired on every later edit of a paid invoice.** There was no way to say "BECOMES paid".
+  0132 stores `_previous` on updates and the dispatcher has `changed`/`changed_to`/`changed_from`;
+  no-op updates (only `updated_at`/`position` moved) emit nothing. The editor offers "changes to"
+  FIRST for updates — it is what people mean nine times out of ten.
+- **Schedules fired at boot time, not at a time.** `automation_schedule_due` now takes `at` + `day`
+  + an IANA `tz` (checked against `pg_timezone_names`); without `at` it keeps the old 24h/7d rule.
+- **Webhook/schedule rules carried a fake `object`** (`companies`) and fired on company inserts.
+  `save_automation` stores `object = event = trigger_type` for them; a one-off UPDATE repairs old rows.
+- Also: viewers can no longer edit (`automation_editor`); an edit re-assigns `owner_privy` to the editor
+  (whose identity the run uses); emails escape record values and drop invalid recipients (max 10).
+
+**New steps:** `post_to_chat` (via `post_agent_message`), `add_note` (`add_record_note`, source
+`automation: <name>`), `run_agent` (plan-gated, `executeAgentRun` at depth 1 — the agent keeps its
+own autonomy). `ask_ai` → `{{ai_output}}`, `run_agent` → `{{agent_output}}` for later steps.
+
+**Test is a real run with a seat belt.** `test_automation` inserts an event (source `test`) for the
+newest real record; `/api/automations/test` claims exactly that event and returns per-step results.
+Emails, chat, AI, agents and webhooks really run; record writes and notes are DRY RUNS; a disabled
+rule still runs; failing filters are reported and ignored; tests are never retried.
+
+**UI** = `components/crm/AutomationEditor.tsx` (a sentence: WHEN … only if … THEN steps) over
+`lib/automations/vocab.ts` — the ONE vocabulary of trigger objects, fields, ops, steps and the nine
+`RECIPES`, read by the editor, the cards (`describeTrigger`), the Copilot's approval card and
+`propose_automation`'s validation. A picker for every field; no JSON anywhere. Missing config
+(channel, agent, recipient) is refused at Save with "Step 2: pick an agent", not discovered in the
+run log. Cards show last run + "N failed this week" from `get_automations`.
+- **The base input class must not carry `w-full`.** It beat the `w-auto` appended after it and
+  stacked every picker of the sentence on its own row.
+- `propose_automation` validates against the same vocab: unknown objects refused, channels resolved
+  by name, a raw webhook URL still never carried, `changed_*` dropped on non-updates.
+- Verified end-to-end against a real database (`processEvent` + the real SQL, 26 checks): escaping,
+  signed webhooks, chat, notes, `changed_to` not re-firing, schedules once per day, an automation's
+  own write not triggering others (depth guard), dry-run tests, form triggers, Copilot proposals.
+
+**Agents screen (same pass):** its `Field` wrapper was a `<label>` around groups of BUTTONS, so a
+click on a heading, a hint or the gap between chips toggled the first tool — it is a `div
+role="group"` now. Runs awaiting approval lead the page; proposals and steps read as sentences
+(`describeCall`, shared with the Copilot); each card shows its last run; the duplicate Skills library
+became a link.
 
 ## Support inbox + website chat widget (0131) — `docs/chat-widget.md`
 - **Native, not Chatwoot.** Chatwoot is MIT outside `enterprise/` (checked against its LICENSE) and
@@ -1276,8 +1330,10 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0130 and 0131** too — 0130 is deal close dates (the Calendar view degrades to "No close
-  date" without it), 0131 is the support inbox (the Inbox screen says it needs 0131).
+- **Run 0130, 0131 and 0132** too — 0130 is deal close dates (the Calendar view degrades to "No close
+  date" without it), 0131 is the support inbox (the Inbox screen says it needs 0131), 0132 is
+  automations v3 (without it deals/orders/forms/chats never trigger anything, "changes to" never
+  matches, and Test says it needs 0132).
 - **Run 0128 and 0129** (and 0125–0127 below if still pending). 0128 is Settings → Modules; without
   it the switches say they could not save. **0129 is a security fix**: before it any member,
   `viewer` included, could replace the workspace's AI key — including with a `custom` provider
@@ -1387,7 +1443,9 @@ trailer. Standing rule: **commit + push after every finished task, don't ask.**
    membership + template + `accounts` row in ONE transaction behind a verified Privy token
    (`/api/onboarding/provision`), so it cannot half-succeed and leave someone with no workspace. It is
    also idempotent, so a double-submitted form no longer makes two companies.
-3. **Automations dispatcher needs a cron** for scheduled triggers (event/webhook triggers fire instantly).
+3. ~~Automations dispatcher needs a cron~~ — **the built-in scheduler (2026-10) runs it** on any
+   long-lived server; only Vercel still needs the cron. That line also claimed event triggers "fire
+   instantly", which was true only for REST writes and webhooks — see the 0132 section.
 4. **No cognitive test exists** — `cognitive_score`/`cognitive_data` are stored null and hidden in the UI.
    Market "skills + Big-5", never "cognitive/IQ".
 5. ~~RLS open on the legacy ATS tables~~ — **fixed by 0076 + 0077.** `company_users` was

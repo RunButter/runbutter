@@ -46,7 +46,7 @@ select * from (values
      and exists (
       select 1 from pg_proc p
        where p.proname = 'get_pipeline_board'
-         and pg_get_functiondef(p.oid) like '%organizations co%')))),
+         and pg_get_functiondef(p.oid) like '%organizations co%'))),
 
   ('0093 workspace can be renamed',
    -- And that the repair ran: no workspace should still disagree with its
@@ -54,7 +54,35 @@ select * from (values
    (select to_regprocedure('public.rename_workspace(text,uuid,text)') is not null
      and not exists (
       select 1 from workspaces w join companies c on c.id = w.id
-       where coalesce(nullif(btrim(c.name), ''), '') <> '' and w.name is distinct from c.name)))
+       where coalesce(nullif(btrim(c.name), ''), '') <> '' and w.name is distinct from c.name))),
+
+  ('0125 design spec',
+   (select to_regprocedure('public.save_design_tokens(text,uuid,jsonb)') is not null)),
+
+  ('0126 plan limits',
+   (select exists (select 1 from pg_proc where proname = 'get_plan_usage'))),
+
+  ('0127 public style library',
+   (select to_regclass('public.design_styles') is not null)),
+
+  ('0128 modules on/off',
+   (select to_regprocedure('public.set_workspace_nav(text,uuid,text[])') is not null)),
+
+  ('0129 AI key is owner/admin only',
+   -- A security fix: before it any member, viewer included, could replace the key.
+   (select exists (select 1 from pg_proc where proname = 'ai_keys_admin'))),
+
+  ('0130 deal close dates',
+   (select exists (select 1 from pg_proc where proname = 'set_deal_close_date'))),
+
+  ('0131 support inbox',
+   (select to_regclass('public.support_conversations') is not null)),
+
+  ('0132 automations v3',
+   -- The test function AND the deals trigger: without the trigger a "deal won"
+   -- automation saves fine, shows in the list, and never fires.
+   (select to_regprocedure('public.test_automation(text,uuid,uuid)') is not null
+     and exists (select 1 from pg_trigger where tgname = 'trg_autoevt_pipeline_records')))
 ) as t(migration, applied)
 order by migration;
 

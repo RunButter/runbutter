@@ -10,6 +10,7 @@
 // (`where ... workspace_id = any(my)`). Both are scoped — just at different
 // layers — so don't "fix" the ones without p_workspace by inventing an argument.
 import { runDispatcher, signWebhook } from '@/lib/automations/dispatcher';
+import { TRIGGER_OBJECTS, CREATABLE, describeTrigger } from '@/lib/automations/vocab';
 // run.ts imports nothing but its own types, so it is safe in a server module.
 import { runSpec } from '@/lib/insights/run';
 import { validateIban } from '@/lib/finance/iban';
@@ -270,9 +271,10 @@ export const TOOLS = [
   { name: 'update_workspace', description: 'Change company-wide settings: the workspace name, branding used on invoices, emails and the careers page (logo_url, accent_color #RRGGBB, legal_name, address, tax_id, vat_id, country, iban, bank_name, reg_no, email_from_name, email_footer, invoice_footer, document_footer, apply_intro), and which modules are hidden from the sidebar (hidden_modules: ["g:hr", "i:forecast", …] — the FULL list, replacing the old one). ALWAYS a proposal.', inputSchema: { type: 'object', properties: {
     name: { type: 'string' }, branding: { type: 'object' }, hidden_modules: { type: 'array', items: { type: 'string' } },
   } } },
-  { name: 'propose_automation', description: 'Propose an automation: when something happens (trigger "event": a record of `object` is created/updated, optionally matching conditions; or "schedule": every hour/day), do actions. Actions: send_email {to, subject, body} (use {{field}} placeholders), send_webhook {connection_id} (from list_connections — never a URL), create_record {object, data}, update_record {data}, ask_ai {prompt}. ALWAYS a proposal: it runs unattended once approved.', inputSchema: { type: 'object', properties: {
-    name: { type: 'string' }, trigger: { type: 'string', enum: ['event', 'schedule'] }, object: { type: 'string' }, event: { type: 'string', enum: ['created', 'updated'] },
-    conditions: { type: 'array', items: { type: 'object' } }, every: { type: 'string', enum: ['hour', 'day'] },
+  { name: 'propose_automation', description: 'Propose an automation: WHEN something happens, THEN do steps in order. Triggers: "event" (a record of `object` is created/updated — objects: deals, companies, people, products, orders, invoices, expenses, transactions, form_submissions, campaigns, conversations, candidates, projects, issues, assets, or one of this workspace\'s own objects), "schedule" (every hour/day/week, optionally `at` "HH:MM" and `day` 0-6 for weekly, in `tz`), or "webhook" (another app POSTs to a URL). Conditions: {field, op, value}; ops eq, neq, contains, gt, gte, lt, lte, empty, not_empty, and — on "updated" only — changed, changed_to, changed_from. Use changed_to for "when an invoice BECOMES paid": eq would fire again on every later edit. Steps: send_email {to, subject, body}, post_to_chat {channel (name or id), message}, ask_ai {prompt} (its answer is {{ai_output}} in later steps), run_agent {agent_id, task}, add_note {body}, create_record {object, data}, update_record {data}, send_webhook {connection_id} (from list_connections — never a URL). Text can use {{field}} from the record. ALWAYS a proposal: it runs unattended once approved.', inputSchema: { type: 'object', properties: {
+    name: { type: 'string' }, trigger: { type: 'string', enum: ['event', 'schedule', 'webhook'] }, object: { type: 'string' }, event: { type: 'string', enum: ['created', 'updated'] },
+    conditions: { type: 'array', items: { type: 'object' } },
+    every: { type: 'string', enum: ['hour', 'day', 'week'] }, at: { type: 'string', description: 'HH:MM, for day/week' }, day: { type: 'number', description: '0 = Sunday … 6 = Saturday, for week' }, tz: { type: 'string', description: 'IANA time zone, e.g. Europe/Warsaw' },
     actions: { type: 'array', items: { type: 'object' } },
   }, required: ['name', 'trigger', 'actions'] } },
   { name: 'propose_field', description: 'Propose a new field on a record type — built-in (companies, invoices…) or one of this workspace\'s own objects. ALWAYS a proposal: a field changes the table, the form, imports and every agent\'s view of the object.', inputSchema: { type: 'object', properties: {
@@ -456,8 +458,12 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     case 'list_automations': {
       const { data, error } = await ctx.admin.rpc('get_automations', { p_privy: ctx.privy, p_workspace: ctx.workspace });
       if (error) throw new Error(error.message);
+      // The sentence the screen shows, plus health — "are my automations
+      // working?" is the question this is usually called to answer.
       return (Array.isArray(data) ? data : []).map((a: any) => ({
-        id: a.id, name: a.name, enabled: a.enabled, trigger: a.trigger_type, actions: (a.actions || []).length,
+        id: a.id, name: a.name, enabled: a.enabled, when: describeTrigger(a),
+        steps: (a.actions || []).map((s: any) => s.type),
+        last_run: a.last_run ?? null, runs_7d: a.runs_7d ?? 0, errors_7d: a.errors_7d ?? 0,
       }));
     }
 
@@ -1225,39 +1231,88 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     }
 
     case 'propose_automation': {
-      const OPS = new Set(['eq', 'neq', 'contains', 'gt', 'lt', 'empty', 'not_empty']);
-      const trigger = args?.trigger === 'schedule' ? 'schedule' : 'event';
-      const conditions = (Array.isArray(args?.conditions) ? args.conditions : []).slice(0, 10)
-        .map((c: any) => ({ field: String(c?.field || ''), op: String(c?.op || 'eq'), value: String(c?.value ?? '') }))
-        .filter((c: any) => c.field && OPS.has(c.op));
-      const conns = new Set(((await rpc(ctx, 'get_connections', { p_privy: ctx.privy, p_workspace: ctx.workspace })) as any[] || []).map((c: any) => c.id));
-      const actions: any[] = [];
+      // Validated against the same vocabulary the editor offers and the
+      // dispatcher reads (lib/automations/vocab.ts), so an approved card is an
+      // automation that can actually run — not one that fails at 3 a.m.
+      const trigger = args?.trigger === 'schedule' ? 'schedule' : args?.trigger === 'webhook' ? 'webhook' : 'event';
       const warnings: string[] = [];
+      let object = trigger === 'event' ? String(args?.object || '').trim() : trigger;
+      let event: string = trigger === 'event' ? (args?.event === 'updated' ? 'updated' : 'created') : trigger;
+      if (trigger === 'event') {
+        const builtIn = TRIGGER_OBJECTS.find((o) => o.slug === object);
+        if (!builtIn) {
+          const objs = await rpc(ctx, 'get_custom_objects', { p_privy: ctx.privy, p_workspace: ctx.workspace }).catch(() => []);
+          const list = Array.isArray(objs) ? objs : (objs as any)?.objects || [];
+          if (!list.some((o: any) => o.slug === object)) {
+            throw new Error(`"${object}" is not something an automation can watch. Use one of: ${TRIGGER_OBJECTS.map((o) => o.slug).join(', ')}, or a custom object slug from list_objects.`);
+          }
+        } else if (builtIn.createdOnly && event === 'updated') { event = 'created'; warnings.push(`${object} are never edited — it runs when one is added`); }
+      }
+      const OPS = new Set(['eq', 'neq', 'contains', 'gt', 'gte', 'lt', 'lte', 'empty', 'not_empty', 'changed', 'changed_to', 'changed_from']);
+      const conditions = trigger !== 'event' ? [] : (Array.isArray(args?.conditions) ? args.conditions : []).slice(0, 10)
+        .map((c: any) => ({ field: String(c?.field || '').trim(), op: String(c?.op || 'eq'), value: String(c?.value ?? '') }))
+        .filter((c: any) => {
+          if (!c.field || !OPS.has(c.op)) { warnings.push(`condition on "${c.field}" with "${c.op}" dropped`); return false; }
+          if (c.op.startsWith('changed') && event !== 'updated') { warnings.push(`"${c.op}" only works on updates — dropped`); return false; }
+          return true;
+        });
+
+      const [connRows, chanRows, agentRows] = await Promise.all([
+        rpc(ctx, 'get_connections', { p_privy: ctx.privy, p_workspace: ctx.workspace }).catch(() => []),
+        rpc(ctx, 'get_channels', { p_privy: ctx.privy, p_workspace: ctx.workspace }).catch(() => []),
+        rpc(ctx, 'get_agents', { p_privy: ctx.privy, p_workspace: ctx.workspace }).catch(() => []),
+      ]);
+      const conns = new Set((Array.isArray(connRows) ? connRows : []).map((c: any) => c.id));
+      const channels: any[] = Array.isArray(chanRows) ? chanRows : [];
+      const agents: any[] = Array.isArray(agentRows) ? agentRows : [];
+      const hasRecord = trigger === 'event';
+      const txt = (v: any, n: number) => String(v ?? '').slice(0, n);
+
+      const actions: any[] = [];
       for (const a of (Array.isArray(args?.actions) ? args.actions : []).slice(0, 10)) {
         const type = String(a?.type || '');
         const cfg = a?.config && typeof a.config === 'object' ? a.config : a;
         if (type === 'send_email') {
           if (!cfg?.to) { warnings.push('send_email without "to" dropped'); continue; }
-          actions.push({ type, config: { to: String(cfg.to).slice(0, 300), subject: String(cfg.subject || '').slice(0, 300), body: String(cfg.body || '').slice(0, 8000) } });
+          actions.push({ type, config: { to: txt(cfg.to, 300), subject: txt(cfg.subject || 'Automation: {{name}}', 300), body: txt(cfg.body, 8000) } });
+        } else if (type === 'post_to_chat') {
+          const want = String(cfg?.channel_id || cfg?.channel || '').replace(/^#/, '').trim().toLowerCase();
+          const ch = channels.find((c) => c.id === want || String(c.name).toLowerCase() === want) || (!want ? channels.find((c) => c.name === 'general') || channels[0] : null);
+          if (!ch) { warnings.push(`post_to_chat: no channel "${want}" — dropped (list_channels shows what exists)`); continue; }
+          if (!cfg?.message) { warnings.push('post_to_chat without a message dropped'); continue; }
+          actions.push({ type, config: { channel_id: ch.id, message: txt(cfg.message, 4000) } });
         } else if (type === 'send_webhook') {
           // A saved connection only. A URL from a model is how an automation
           // becomes an exfiltration pipe, so `url` is never carried across.
           if (!conns.has(cfg?.connection_id)) { warnings.push('send_webhook needs a connection_id from list_connections — dropped'); continue; }
           actions.push({ type, config: { connection_id: cfg.connection_id } });
+        } else if (type === 'run_agent') {
+          const ag = agents.find((g) => g.id === cfg?.agent_id || String(g.name).toLowerCase() === String(cfg?.agent || cfg?.agent_id || '').toLowerCase());
+          if (!ag) { warnings.push('run_agent needs an agent_id from list_agents — dropped'); continue; }
+          actions.push({ type, config: { agent_id: ag.id, task: txt(cfg.task, 4000) } });
         } else if (type === 'create_record' && cfg?.object) {
+          if (!CREATABLE.includes(String(cfg.object))) { warnings.push(`create_record: an automation cannot create "${cfg.object}" — dropped`); continue; }
           actions.push({ type, config: { object: String(cfg.object), data: cfg.data && typeof cfg.data === 'object' ? cfg.data : {} } });
-        } else if (type === 'update_record') {
-          actions.push({ type, config: { data: cfg?.data && typeof cfg.data === 'object' ? cfg.data : {} } });
+        } else if (type === 'update_record' || type === 'add_note') {
+          const writable = TRIGGER_OBJECTS.find((o) => o.slug === object)?.writable ?? !TRIGGER_OBJECTS.some((o) => o.slug === object);
+          if (!hasRecord || !writable) { warnings.push(`${type} needs a record it can write to — dropped`); continue; }
+          if (type === 'add_note') { if (!cfg?.body) { warnings.push('add_note without a body dropped'); continue; } actions.push({ type, config: { body: txt(cfg.body, 4000) } }); }
+          else actions.push({ type, config: { data: cfg?.data && typeof cfg.data === 'object' ? cfg.data : {} } });
         } else if (type === 'ask_ai' && cfg?.prompt) {
-          actions.push({ type, config: { prompt: String(cfg.prompt).slice(0, 4000) } });
+          actions.push({ type, config: { prompt: txt(cfg.prompt, 4000) } });
         } else warnings.push(`Unknown action "${type}" dropped`);
       }
       if (!actions.length) throw new Error(`No usable actions. ${warnings.join('; ')}`);
+      const every = ['hour', 'day', 'week'].includes(args?.every) ? args.every : 'day';
+      const at = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(args?.at || '')) ? String(args.at) : undefined;
       const proposal = {
-        name: String(args?.name || 'Untitled automation').slice(0, 120), enabled: true, trigger_type: trigger,
-        object: String(args?.object || 'companies'), event: args?.event === 'updated' ? 'updated' : 'created',
-        conditions, actions,
-        ...(trigger === 'schedule' ? { schedule: { every: args?.every === 'hour' ? 'hour' : 'day' } } : {}),
+        name: txt(args?.name || 'Untitled automation', 120), enabled: true, trigger_type: trigger,
+        object, event, conditions, actions,
+        ...(trigger === 'schedule' ? { schedule: {
+          every, ...(every !== 'hour' && at ? { at } : {}),
+          ...(every === 'week' ? { day: Math.min(6, Math.max(0, Math.round(Number(args?.day ?? 1)) || 0)) } : {}),
+          ...(args?.tz ? { tz: txt(args.tz, 64) } : {}),
+        } } : {}),
       };
       return { proposal, ...(warnings.length ? { warnings } : {}), note: 'Not created. A person approves.' };
     }
