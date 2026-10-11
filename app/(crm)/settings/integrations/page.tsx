@@ -207,9 +207,11 @@ export default function IntegrationsPage() {
                 <span>{googleMsg.text}</span>
               </div>
             )}
-            <div className="card-surface p-4 flex items-center gap-4">
+            {/* On a phone the action drops under the text: beside it, the
+                description was squeezed into a two-word-wide column. */}
+            <div className="card-surface p-4 flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-3">
               <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0"><Calendar className="w-5 h-5" /></div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-[calc(100%-3.5rem)] sm:basis-auto">
                 <h3 className="text-base font-medium text-primary">Google Calendar</h3>
                 <p className="text-xs text-secondary leading-relaxed">Scheduling an interview creates a Google Meet link + calendar invite and emails it to the candidate. Connect the recruiter’s Google account.</p>
               </div>

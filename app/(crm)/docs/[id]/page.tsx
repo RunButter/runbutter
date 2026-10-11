@@ -156,7 +156,7 @@ export default function DocEditor() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle page-head">
         <button onClick={() => router.push('/docs')} className="p-1.5 -ml-1 rounded-md text-tertiary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></button>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Untitled" disabled={!canEdit} className="flex-1 text-sm font-semibold text-primary outline-none placeholder:text-tertiary bg-transparent" />
         {/* Switching kind is a VIEW change, not a conversion: every kind is

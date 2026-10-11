@@ -254,7 +254,7 @@ export default function ObjectPage() {
                 aria-pressed={activeView === v.k}
                 className={`h-6 px-2 inline-flex items-center gap-1 rounded text-2xs font-semibold transition-colors ${
                   activeView === v.k ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'}`}>
-                <v.icon className="w-3.5 h-3.5" /> {v.label}
+                <v.icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{v.label}</span>
               </button>
             ))}
           </div>
@@ -269,7 +269,7 @@ export default function ObjectPage() {
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…"
-            className="h-7 w-44 pl-7 pr-2 text-xs bg-surface-sunken border border-subtle rounded-md text-primary placeholder:text-tertiary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25" />
+            className="h-7 w-32 sm:w-44 pl-7 pr-2 text-xs bg-surface-sunken border border-subtle rounded-md text-primary placeholder:text-tertiary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25" />
         </div>
         {/* One menu for the occasional actions. Export, Import and Paste were
             three buttons beside New on every record screen — four equal-weight

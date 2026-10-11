@@ -96,12 +96,12 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
       <div>
         <label className="block text-xs font-semibold text-secondary mb-1">Address</label>
         <div className="flex items-stretch">
-          <span className="inline-flex items-center px-2.5 rounded-l-md bg-surface-sunken ring-1 ring-subtle text-xs text-tertiary">
+          <span className="inline-flex items-center px-2.5 rounded-l-md bg-surface-sunken ring-1 ring-subtle text-xs text-tertiary min-w-0 max-w-[60%] truncate">
             {origin.replace(/^https?:\/\//, '')}/careers/
           </span>
           <input value={slug} onChange={(e) => { setSlug(e.target.value.toLowerCase().trim()); setError(''); }}
             placeholder="your-company"
-            className={`flex-1 h-9 px-2.5 text-sm rounded-r-md bg-surface ring-1 shadow-sm outline-none focus:ring-2 ${
+            className={`flex-1 min-w-0 h-9 px-2.5 text-sm rounded-r-md bg-surface ring-1 shadow-sm outline-none focus:ring-2 ${
               problem ? 'ring-danger/40 focus:ring-danger/30' : 'ring-subtle focus:ring-accent/30'
             }`} />
         </div>

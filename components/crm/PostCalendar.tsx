@@ -118,9 +118,36 @@ export default function PostCalendar({ posts, onOpen, onReschedule }: {
         </div>
       </div>
 
+      {/* A phone gets an agenda: the days of this month that have posts, in
+          order. Seven columns at 390px either shrink past reading or scroll
+          sideways to Thursday, and a phone is where people check "what goes
+          out this week", not where they rearrange a month. */}
+      <div className="sm:hidden card-surface divide-y divide-subtle">
+        {(() => {
+          const monthDays = days.filter((d) => d.getMonth() === cursor.getMonth() && (byDay.get(dayKey(d)) ?? []).length > 0);
+          if (!monthDays.length) return <p className="p-4 text-sm text-tertiary">Nothing scheduled in {monthLabel}.</p>;
+          return monthDays.map((d) => {
+            const k = dayKey(d);
+            return (
+              <div key={k} className="flex gap-3 p-3">
+                <div className={`w-11 shrink-0 text-center ${k === todayKey ? 'text-accent' : 'text-secondary'}`}>
+                  <div className="text-3xs uppercase tracking-wider">{d.toLocaleDateString(undefined, { weekday: 'short' })}</div>
+                  <div className="text-base font-medium tabular-nums">{d.getDate()}</div>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  {(byDay.get(k) ?? []).map((p) => (
+                    <PostChip key={p.id} post={p} onOpen={() => onOpen(p.id)} onDragStart={() => setDragId(p.id)} />
+                  ))}
+                </div>
+              </div>
+            );
+          });
+        })()}
+      </div>
+
       {/* Scrolls rather than shrinking: seven columns at 360px would leave each
           day too narrow to show a single post title. */}
-      <div className="overflow-x-auto">
+      <div className="hidden sm:block overflow-x-auto">
         <div className="min-w-[680px] card-surface overflow-hidden">
           <div className="grid grid-cols-7 border-b border-subtle">
             {DAY_NAMES.map((d) => (

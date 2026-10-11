@@ -80,7 +80,7 @@ export default function MindMapPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8 page-head">
         <Link href="/maps" aria-label="Back to maps"
           className="h-8 w-8 -ml-1 inline-flex items-center justify-center rounded-lg text-tertiary hover:text-primary hover:bg-surface-hover transition-colors">
           <ArrowLeft className="w-4 h-4" />

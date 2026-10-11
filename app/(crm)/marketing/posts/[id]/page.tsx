@@ -110,7 +110,7 @@ export default function PostStudio() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle">
+      <header className="h-16 shrink-0 flex items-center gap-2 px-6 border-b border-subtle page-head">
         <button onClick={() => router.push('/marketing/posts')} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-3.5 h-3.5" /> Posts</button>
         <h1 className="text-md font-medium text-primary">Post studio</h1>
         <DataBadge live={post.live} />

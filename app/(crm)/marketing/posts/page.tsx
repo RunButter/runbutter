@@ -89,7 +89,7 @@ export default function PostsPage() {
                 className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-medium transition-colors ${
                   view === v ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
                 }`}>
-                <Icon className="w-3.5 h-3.5" /> {label}
+                <Icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>

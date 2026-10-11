@@ -85,7 +85,9 @@ export default function StatCard({
 
   const inner = (
     <>
-      <div className="flex items-center justify-between gap-2">
+      {/* Wraps: on a half-width phone card the trend badge took the label's
+          room and "Net profit" read "Net pro…". Now the badge drops a line. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         {/* Icon inline with the label as a quiet glyph — it used to be a boxed
             chip floating top-right, carrying no information the label didn't
             already give, and it shared that slot with the trend badge so a row
@@ -121,7 +123,9 @@ export default function StatCard({
         {value}
       </div>
       {(sub || (spark && spark.length >= 2)) && (
-        <div className="mt-1 flex items-center justify-between gap-2 min-h-[22px]">
+        // Wraps rather than truncates: on a half-width phone card the sparkline
+        // squeezed the sub-line to "Paid i…"; now it drops beneath it instead.
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 min-h-[22px]">
           <div className="min-w-0 text-xs font-medium text-tertiary truncate">{sub}</div>
           {spark && spark.length >= 2 && (
             <span className={cn('shrink-0', tone || 'text-tertiary')}><Sparkline data={spark} /></span>

@@ -41,13 +41,17 @@ export default function FilterBar({ object, rows, value, onChange }: {
         </select>
       ))}
       {dateField && (
-        <div className="flex items-center gap-1 text-xs text-secondary ml-0.5">
-          <span>{dateField.label}</span>
+        // A phone gives the range its own full-width row with the two dates
+        // sharing it; two fixed-width date boxes beside a label ran off the edge.
+        <div className="flex items-center gap-1 text-xs text-secondary w-full sm:w-auto sm:ml-0.5">
+          <span className="shrink-0">{dateField.label}</span>
           <input type="date" value={value.from} onChange={(e) => onChange({ ...value, from: e.target.value })}
-            className="h-7 px-1.5 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
-          <span className="text-tertiary">→</span>
+            aria-label={`${dateField.label} from`}
+            className="h-7 min-w-0 flex-1 sm:flex-none px-1.5 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+          <span className="text-tertiary shrink-0">→</span>
           <input type="date" value={value.to} onChange={(e) => onChange({ ...value, to: e.target.value })}
-            className="h-7 px-1.5 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+            aria-label={`${dateField.label} to`}
+            className="h-7 min-w-0 flex-1 sm:flex-none px-1.5 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
         </div>
       )}
       {hasActiveFilters(value) && (

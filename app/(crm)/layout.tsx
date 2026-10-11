@@ -73,9 +73,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   const booting = !ready;
 
   return (
-    <div className="app-glass flex h-screen overflow-hidden bg-canvas text-primary">
+    <div className="app-glass flex h-screen h-dvh overflow-hidden bg-canvas text-primary">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
+      <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50 app-sheet`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
       {/* One surface, not two. This was bg-surface with a left border, so the

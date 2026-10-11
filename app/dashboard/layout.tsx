@@ -61,7 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // between navigation and auth-ready reads as a broken page.
   if (!ready || !authenticated) {
     return (
-      <div className="app-glass flex h-screen overflow-hidden bg-canvas">
+      <div className="app-glass flex h-screen h-dvh overflow-hidden bg-canvas">
         <div className="hidden lg:flex"><NavRail /></div>
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-tertiary animate-spin" />
@@ -73,9 +73,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const requiredFeature = ROUTE_FEATURE.find(([p]) => pathname.startsWith(p))?.[1];
 
   return (
-    <div className="app-glass flex h-screen overflow-hidden bg-canvas text-primary">
+    <div className="app-glass flex h-screen h-dvh overflow-hidden bg-canvas text-primary">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50`}>
+      <div className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex fixed lg:static inset-y-0 left-0 z-50 app-sheet`}>
         <NavRail onNavigate={() => setMobileOpen(false)} />
       </div>
 

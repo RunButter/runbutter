@@ -87,6 +87,13 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
     clear();
   };
 
+  // A phone gets a list of cards rather than a table to swipe sideways: on a
+  // 390px screen a five-column table showed two columns and cut the second
+  // mid-word ("Senic…"). Rendered INSTEAD of the table, not beside it, so a
+  // long list is not in the DOM twice.
+  const phone = usePhone();
+  if (phone) return <RecordCards object={object} rows={rows} onRowClick={onRowClick} />;
+
   return (
     <div className="h-full overflow-auto card-surface">
       <table className="w-full text-sm border-separate border-spacing-0">
@@ -167,5 +174,67 @@ export default function RecordTable({ object, rows, onRowClick, canDelete, onDel
         </div>
       )}
     </div>
+  );
+}
+
+/** Below Tailwind's `sm` (640px). Starts false so the server and the first paint agree. */
+function usePhone(): boolean {
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const update = () => setPhone(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return phone;
+}
+
+/**
+ * One card per record: the name on top, then up to three fields that have a
+ * value, each with its label — a bare "PL5260…" means nothing without
+ * "Tax ID" beside it. Bulk select stays a desktop task: there is no hover on
+ * a phone, so the table's fade-in checkboxes were invisible there anyway.
+ */
+function RecordCards({ object, rows, onRowClick }: { object: ObjectDef; rows: any[]; onRowClick?: (row: any) => void }) {
+  const primary = object.fields.find((f) => f.primary) || object.fields[0];
+  const rest = object.fields.filter((f) => f !== primary && f.type !== 'image');
+  if (rows.length === 0) {
+    return (
+      <div className="card-surface">
+        <EmptyState icon={Inbox} title={`No ${object.plural.toLowerCase()} yet`}
+          description={`Add your first ${object.singular.toLowerCase()} with the New button above — or import an existing list.`} />
+      </div>
+    );
+  }
+  return (
+    // Its own scroll box: the page gives the table a fixed-height area, and the
+    // bottom padding keeps the last card clear of the floating Copilot button.
+    <ul className="h-full overflow-auto space-y-2 pb-24">
+      {rows.map((r) => {
+        const shown = rest.filter((f) => r[f.key] !== null && r[f.key] !== undefined && r[f.key] !== '').slice(0, 3);
+        return (
+          <li key={r.id}>
+            <button type="button" onClick={() => onRowClick?.(r)} disabled={!onRowClick}
+              className="w-full text-left card-surface px-3.5 py-3 active:bg-surface-hover transition-colors">
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="min-w-0 flex-1 text-sm"><FieldValue field={primary} row={r} /></span>
+                {onRowClick && <ChevronRight className="w-4 h-4 text-tertiary shrink-0" />}
+              </span>
+              {shown.length > 0 && (
+                <span className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                  {shown.map((f) => (
+                    <span key={f.key} className="contents">
+                      <span className="text-tertiary">{f.label}</span>
+                      <span className="min-w-0 truncate"><FieldValue field={f} row={r} /></span>
+                    </span>
+                  ))}
+                </span>
+              )}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

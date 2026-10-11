@@ -20,9 +20,13 @@ export default function PageHeader({ title, subtitle, count, badge, children }: 
   // items-center`, so the title jumped six pixels and the actions changed
   // height depending on which tab you opened. The subtitle sits on the same
   // line, quieter, rather than adding a second row that only some pages have.
+  //
+  // On a phone the row WRAPS (globals.css › header.page-x): the title keeps its
+  // line and the actions drop below it, right-aligned, instead of the title
+  // shrinking to nothing beside buttons that run off the screen.
   return (
     <header className="h-16 shrink-0 flex items-center gap-3 page-x">
-      <div className="min-w-0 flex items-center gap-2">
+      <div className="min-w-0 max-w-full flex items-center gap-2">
         <h1 className="text-md font-medium text-primary truncate">{title}</h1>
         {count !== undefined && (
           <span className="text-2xs font-medium text-tertiary tabular-nums">{count}</span>
@@ -30,7 +34,7 @@ export default function PageHeader({ title, subtitle, count, badge, children }: 
         {badge}
         {subtitle && <p className="hidden md:block text-xs text-tertiary truncate ml-1">{subtitle}</p>}
       </div>
-      {children && <div className="ml-auto flex items-center gap-1.5 shrink-0">{children}</div>}
+      {children && <div className="ml-auto flex flex-wrap sm:flex-nowrap items-center justify-end gap-1.5 max-w-full sm:shrink-0">{children}</div>}
     </header>
   );
 }

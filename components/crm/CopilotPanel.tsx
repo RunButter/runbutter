@@ -40,6 +40,10 @@ const MAX_W = 640;
 const KEY_W = 'rb-copilot-w';
 const KEY_OPEN = 'rb-copilot-open';
 
+/** lg and up: the copilot is a dock beside the page. Below it, a sheet over it. */
+const WIDE = '(min-width: 1024px)';
+const wideNow = () => typeof window !== 'undefined' && window.matchMedia(WIDE).matches;
+
 export default function CopilotPanel() {
   const { ready, authenticated, user } = usePrivy();
   const privy = authenticated && user ? user.id : null;
@@ -49,6 +53,14 @@ export default function CopilotPanel() {
   const [ws, setWs] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(400);
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia(WIDE);
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
   const [threads, setThreads] = useState<CopilotThreadRow[] | null>(null);
   const [thread, setThread_] = useState<CopilotThread | null>(null);
   const [showThreads, setShowThreads] = useState(false);
@@ -68,8 +80,14 @@ export default function CopilotPanel() {
     const w = Number(localStorage.getItem(KEY_W));
     if (w >= MIN_W && w <= MAX_W) setWidth(w);
     const o = localStorage.getItem(KEY_OPEN);
-    setOpen(o === null ? window.innerWidth >= 1536 : o === '1');
+    // Below lg the panel is a full-screen sheet, so "open" is never restored
+    // there: a dock left open on a laptop must not cover a phone's every page.
+    setOpen(wideNow() && (o === null ? window.innerWidth >= 1536 : o === '1'));
   }, []);
+
+  // Following a link out of the conversation on a phone should show the page,
+  // not leave the sheet over it.
+  useEffect(() => { if (!wideNow()) setOpen(false); }, [pathname]);
 
   useEffect(() => { if (privy) getWorkspace(privy).then((w) => setWs(w?.id ?? null)).catch(() => {}); }, [privy]);
 
@@ -218,7 +236,7 @@ export default function CopilotPanel() {
     window.addEventListener('pointerup', up);
   };
 
-  const toggle = (v: boolean) => { setOpen(v); localStorage.setItem(KEY_OPEN, v ? '1' : '0'); };
+  const toggle = (v: boolean) => { setOpen(v); if (wideNow()) localStorage.setItem(KEY_OPEN, v ? '1' : '0'); };
 
   if (!ready || !privy) return null;
 
@@ -235,14 +253,18 @@ export default function CopilotPanel() {
   }
 
   return (
+    // Below lg this is a full-screen sheet. It used to be `hidden lg:flex`, and
+    // the button that opens it hid itself once open — so on a phone or tablet
+    // tapping the copilot made the button vanish and showed nothing, and a dock
+    // remembered as open on a laptop meant no button there at all.
     <aside
-      className="hidden lg:flex shrink-0 h-full flex-col bg-surface/60 border-l border-subtle relative"
-      style={{ width }}
+      className="app-sheet fixed inset-0 z-50 flex flex-col lg:static lg:inset-auto lg:z-auto lg:shrink-0 lg:h-full lg:bg-surface/60 lg:border-l border-subtle lg:relative"
+      style={{ width: wide ? width : undefined }}
     >
       <div
         onPointerDown={startResize}
         title="Drag to resize"
-        className="absolute left-0 top-0 bottom-0 w-1 -ml-0.5 cursor-col-resize hover:bg-accent/40 z-10"
+        className="hidden lg:block absolute left-0 top-0 bottom-0 w-1 -ml-0.5 cursor-col-resize hover:bg-accent/40 z-10"
       />
 
       <header className="h-12 shrink-0 flex items-center gap-1.5 px-3 border-b border-subtle">
@@ -258,7 +280,7 @@ export default function CopilotPanel() {
           <Plus className="w-3.5 h-3.5" />
         </button>
         <button onClick={() => toggle(false)} title="Hide copilot" aria-label="Hide copilot" className="p-1.5 rounded-md text-tertiary hover:bg-surface-hover hover:text-secondary">
-          <PanelRightClose className="w-3.5 h-3.5" />
+          <X className="w-4 h-4 lg:hidden" /><PanelRightClose className="w-3.5 h-3.5 hidden lg:block" />
         </button>
       </header>
 

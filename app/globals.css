@@ -118,6 +118,23 @@
   }
 
   html { scroll-behavior: smooth; }
+  /* Form fields may shrink. A browser gives an <input> a built-in minimum width
+     (about 20 characters) that `flex-1` cannot override, so any field sharing a
+     row with a label or a prefix pushed past the edge of a phone — the careers
+     address field ran off-screen this way. `min-width: 0` is the standard fix;
+     widths set with classes are untouched. */
+  input, select, textarea { min-width: 0; }
+
+  /* iOS Safari zooms the whole page into any field whose text is under 16px,
+     and does not zoom back out — every compact input in the app (13–15px)
+     turned a tap into a sideways-scrolled screen. 16px on phones is the fix
+     that keeps pinch-zoom; `maximum-scale=1` would stop it, and that is an
+     accessibility failure. Larger fields keep their size. */
+  @media (max-width: 639px) {
+    input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=file]), select, textarea {
+      font-size: max(16px, 1em) !important;
+    }
+  }
 
   /* The app reads one step larger than a document. Everything in the product
      is rem — type scale, spacing, icons, control heights — so raising the root
@@ -212,6 +229,35 @@
     padding-right: max(1.5rem, calc((100% - 72rem) / 2));
   }
   .page-pad { @apply page-x pt-2 pb-12; }
+
+  /* PHONES (2026-10 mobile pass). Three rules that fixed most of the app at
+     once, because the screens share these classes rather than each needing a
+     fix:
+     - A 24px gutter is 13% of a 390px screen before any content; 16px there.
+     - A page header is one row on a desk and MAY WRAP on a phone. It was a
+       fixed-height flex row whose title block could shrink to nothing while
+       the actions could not shrink at all, so on ~20 screens the title
+       vanished ("4 Search… New" with no "Companies") and the last button was
+       cut off. `header.page-x` covers the hand-rolled headers; `.page-head`
+       is the same rule for the few that pad themselves.
+     - The floating Copilot button sits over the last 56px of every page, so
+       the bottom padding leaves room for it. */
+  @media (max-width: 639px) {
+    .page-x {
+      padding-left: max(1rem, calc((100% - 72rem) / 2));
+      padding-right: max(1rem, calc((100% - 72rem) / 2));
+    }
+    .page-pad { padding-bottom: 6rem; }
+    header.page-x, header.page-head {
+      height: auto;
+      min-height: 3.5rem;
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
+    }
+    header.page-head { padding-left: 1rem; padding-right: 1rem; }
+  }
 
   /* Buttons: compact (h-10), flat, medium weight. The primary action is the
      monochrome inverse fill — the same confident near-black/near-white the
@@ -632,6 +678,16 @@
     0 0 0 1px hsl(0 0% 100% / 0.1),
     0 20px 48px -16px hsl(0 0% 0% / 0.7);
   background-color: hsl(228 12% 7%);
+}
+
+/* A drawer or sheet that covers the page below lg (the menu, the copilot).
+   Inside the glass scope the canvas token is CLEAR — the shell paints the
+   colour — so a fixed panel saying bg-canvas showed the page straight through:
+   the menu read as nav items printed over company cards. These take the
+   shell's own colour instead. */
+@media (max-width: 1023px) {
+  .app-glass .app-sheet { background-color: hsl(225 22% 95%); }
+  .dark .app-glass .app-sheet { background-color: hsl(228 12% 7%); }
 }
 
 /* Frost ONLY what floats over moving content and is small or short-lived:

@@ -648,6 +648,35 @@ PIECES did. Photo/video/audio/launcher: nothing for us.
   `new Date('2026-09-30').toLocaleDateString()` parses a date-only string as UTC midnight, so every
   due date showed a day early west of Greenwich, and 03/04 is March or April depending on who reads it.
 
+## Mobile (2026-10)
+Audited every app screen at 390px (72 routes + the overlays). No page scrolled sideways; the
+breakage was all INSIDE containers — clipped titles, cut-off buttons, hidden table columns — which
+a `scrollWidth` check never sees. "Phone" = `max-width: 639px` (below Tailwind `sm`).
+- **Phone gutters are 16px** and **headers wrap** (`globals.css`): `header.page-x` and
+  `header.page-head` get `height: auto` + `flex-wrap` on phones. A hand-rolled full-bleed header
+  (boards, maps, doc editor, post editor, roadmap) takes `page-head` to join in. `PageHeader`'s
+  actions wrap under the title instead of pushing it off-screen.
+- **`RecordTable` renders CARDS on phones** (`usePhone()` → `RecordCards`): the primary field plus
+  three labelled values. Every object, built-in and custom, gets it free. No bulk select on phones.
+- **`input, select, textarea { min-width: 0 }`** globally — a browser's intrinsic input width
+  (~20ch) beats `flex-1`, which is what pushed the careers address off-screen.
+- **Inputs are 16px on phones**, or iOS Safari zooms into every compact field and never zooms back.
+  Never "fix" it with `maximum-scale=1` — that disables pinch-zoom (and Lighthouse flags it).
+- **`.app-sheet`** gives a fixed drawer/sheet the shell's colour below `lg`. Inside `.app-glass` the
+  canvas token is CLEAR, so the menu drawer saying `bg-canvas` showed the page through itself.
+- **The Copilot was unreachable below `lg`**: the panel was `hidden lg:flex` and its button hid
+  itself once open — tapping it made the button vanish. It is a full-screen sheet there now, never
+  restored as open on a phone, and closes when a link in it navigates.
+- Shells are `h-screen h-dvh` — iOS's `100vh` includes the area behind the toolbar.
+- Also: `SectionTabs` scrolls the active tab into view; the posts calendar is an agenda list on
+  phones (a 7-column month cannot fit); `StatCard`'s label row wraps so the trend badge cannot
+  truncate the label; view-switch labels collapse to icons; the New-deal panel pins to the screen.
+- **Re-running the audit**: a production build with `@privy-io/react-auth$` aliased to a local stub
+  (not ready during SSR, signed in after mount — otherwise prerender breaks), `next start`, a
+  `privy-token` cookie, `/api/rpc` mocked, Playwright at 390×844. Per route, collect elements whose
+  right edge passes their clipping ancestor. **Remove the alias before committing.**
+- Not done: the HR positions table still scrolls sideways; date inputs are tight at 16px.
+
 ## OAuth for the MCP server (0099)
 - **Why it exists:** `/api/mcp` authenticated only with `Authorization: Bearer hb_…`. That is fine for
   Claude Code / Desktop / Cursor, which read a config file and can send any header. **claude.ai's

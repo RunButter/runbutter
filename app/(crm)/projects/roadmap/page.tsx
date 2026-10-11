@@ -27,7 +27,7 @@ export default function RoadmapPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8 page-head">
         <h1 className="text-md font-medium text-primary">Roadmap</h1>
         <DataBadge live={live} />
         <div className="ml-auto hidden sm:flex items-center gap-3 text-2xs font-semibold">

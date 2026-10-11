@@ -61,7 +61,7 @@ export default function BoardPage() {
 
   return (
     <>
-      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8">
+      <header className="h-16 shrink-0 flex items-center gap-3 px-6 2xl:px-8 page-head">
         <h1 className="text-md font-medium text-primary">{pipeline.name}</h1>
         <span className="text-2xs font-semibold text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{board.records.length}</span>
         <DataBadge live={live} />
@@ -161,7 +161,7 @@ function NewDeal({ privy, live, kind, target, stages, onCreated }: {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 z-30 w-80 rounded-xl bg-surface ring-1 ring-subtle shadow-popover p-3 space-y-2.5">
+        <div className="absolute right-0 top-9 z-30 w-80 max-sm:fixed max-sm:inset-x-4 max-sm:top-16 max-sm:w-auto rounded-xl bg-surface ring-1 ring-subtle shadow-popover p-3 space-y-2.5">
           <div className="flex items-center">
             <span className="text-xs font-medium text-primary">New {target === 'person' ? 'candidate' : 'deal'}</span>
             <button onClick={() => setOpen(false)} aria-label="Close"
