@@ -237,9 +237,11 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
 
 ## Automations v3 (0132) + the built-in scheduler — "check if automations works"
 **The answer was no, in five ways, all silent.** Each saved fine, showed in the list, and did nothing:
-- **Nothing drained the queue.** The SQL trigger only QUEUES an event; `runDispatcher` was called by
-  the REST API and incoming webhooks and by a cron nobody configured. An invoice marked paid IN THE
-  APP never fired its automation, while the docs said event triggers "fire instantly". Now:
+- **Most writes never drained the queue.** The SQL trigger only QUEUES an event. The generic record
+  form pinged a public `/api/automations/tick`, but its 15 s throttle SKIPS rather than defers, so the
+  second edit in a burst waited for the next nudge (on a quiet day, the cron nobody configured); deals,
+  orders, forms and chats never nudged at all, and schedules had only the cron. The docs said event
+  triggers "fire instantly". Now:
   `instrumentation.ts` → `lib/scheduler/internal-cron.ts` ticks every minute (agents every ten) on any
   long-lived server, and `lib/automations/kick.ts` wakes it 1.5 s after any `/api/rpc` write, form
   submit or new chat (coalesced). Off on Vercel and with `RUNBUTTER_INTERNAL_CRON=off`.
@@ -288,6 +290,45 @@ click on a heading, a hint or the gap between chips toggled the first tool — i
 role="group"` now. Runs awaiting approval lead the page; proposals and steps read as sentences
 (`describeCall`, shared with the Copilot); each card shows its last run; the duplicate Skills library
 became a link.
+
+## Sheets calculate + mail merge (2026-10) — from the ArtCraft "Craft" apps
+Reviewed `storytold/gridcraft`, `wordcraft`, `craft-launcher` (all MIT OR Apache-2.0, Rust/egui). The
+APPS do not fit (desktop/canvas UIs, alpha, no embed API, an office suite is not a company OS); two
+PIECES did. Photo/video/audio/launcher: nothing for us.
+- **GridCraft's formula engine → `public/sheetcalc.wasm`.** Its engine crates (core, formula,
+  functions, model, calc, numfmt) have NO UI, thread or fs dependencies, so they compile to
+  wasm32 cleanly. `wasm/sheetcalc/` is the bridge: ONE JSON-in/JSON-out call over a raw C ABI (no
+  wasm-bindgen, zero imports, ~620 KB gzipped), stateless — the workbook is rebuilt per call because a
+  sheet is small and a stateless engine cannot drift from the markdown. Pinned by git `rev`; the
+  compiled file is COMMITTED so neither CI nor the host needs Rust. `npm run build:sheetcalc` rebuilds
+  it, runs the bridge's tests and writes `lib/sheets/sheetcalc-meta.json` (sha → cache-busting `?v=`).
+  - **GridCraft's own web build has no clock**: `now_serial()` returns a hard-coded 46302.5 on wasm,
+    so TODAY() is frozen there. We pass the reader's local now through `Calc.fixed_now`.
+  - **Amount formats carry into formulas** (`carried_formats`): `=B2*C2` over "$1,250.00" shows
+    "$3,750.00", a SUM of "8,500"s shows "50,900"; percentages and dates do not travel. Excel does
+    this; without it every total read "3750".
+  - **CSP needs `'wasm-unsafe-eval'`** (added; the CSP is report-only today) or enforcing it later
+    breaks every sheet with a formula.
+- **The markdown stays the document.** A cell stores what was typed (`=B2*C2`, `$2.50`); values are
+  derived on render and never stored. Header row = row 1, so data starts at row 2 exactly as on screen.
+  The engine loads only when a sheet contains `=`. Exports (PDF/Word/CSV) write VALUES
+  (`sheetWithValues`) — a CSV carrying live formulas into someone's Excel is the classic CSV injection;
+  Markdown export keeps the formulas. `get_doc` adds `values` for sheets (`lib/sheets/calc-server.ts`,
+  same wasm via fs) so an agent never does arithmetic over a table, and `save_doc` tells models to write
+  formulas. **Doc cards compute only when the 1,200-char preview is the whole sheet** — otherwise a
+  `=SUM()` over cut-off rows would show a confident wrong number; they show "ƒx" instead.
+- Editor: column letters + row numbers, formula bar, click a cell while typing a formula to insert it
+  (shift-click = range), autocomplete ranked by what people actually use (alphabetical offered
+  SUBSTITUTE for "=SU"). Not done: references do NOT shift when a row/column is deleted (GridCraft has
+  `formula::adjust` for it — expose it through the bridge if this bites).
+- **Mail merge** (`lib/docs/merge.ts`, `components/docs/MailMerge.tsx`) — WordCraft's idea, more at home
+  here because the records ARE the data. `{{first_name}}` etc. filled per selected person/company/
+  invoice/custom record (fields read from the rows, so custom fields come too; `{{today}}`, `{{name}}`),
+  unknown fields warned about BEFORE generating, max 200. Outputs: one PDF (pdf-lib page copy), a zip of
+  PDFs, one Word file with page breaks, or "Save as documents" through save_doc. All in the browser.
+  Candidates are not a source yet (HR is not a CRUD object).
+- Also from WordCraft: word count + reading time, and find & replace on the markdown (plain text,
+  never a user regex; `rb-file:` ids are never rewritten).
 
 ## Support inbox + website chat widget (0131) — `docs/chat-widget.md`
 - **Native, not Chatwoot.** Chatwoot is MIT outside `enterprise/` (checked against its LICENSE) and
@@ -912,8 +953,8 @@ became a link.
   keeps every kind openable in every editor, exportable by one path, and found by one query, and it
   is why adding a kind is a CHECK change rather than a schema change. Switching kind is a VIEW
   change, not a conversion. A kind the editor cannot render is a bug waiting, so `DOC_KINDS` and
-  `docs_kind_check` move together. **`sheet` is a table, NOT a spreadsheet** — no formulas; live
-  data in a real spreadsheet is 0078/0079, and a half-built formula engine here would be worse.
+  `docs_kind_check` move together. **`sheet` calculates (2026-10) but is still a markdown table** —
+  see "Sheets calculate" below; the rule against a HOME-GROWN formula engine still stands.
   Export (`lib/crm/doc-export.ts`) is PDF/Word/Markdown **entirely in the browser**, same rule as
   `/pdf`: a contract never goes to a conversion service. The PDF renderer maps non-WinAnsi
   characters rather than stripping them (pdf-lib THROWS on them, so one curly quote would fail the

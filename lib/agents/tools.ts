@@ -11,6 +11,7 @@
 // layers — so don't "fix" the ones without p_workspace by inventing an argument.
 import { runDispatcher, signWebhook } from '@/lib/automations/dispatcher';
 import { TRIGGER_OBJECTS, CREATABLE, describeTrigger } from '@/lib/automations/vocab';
+import { sheetValues } from '@/lib/sheets/calc-server';
 // run.ts imports nothing but its own types, so it is safe in a server module.
 import { runSpec } from '@/lib/insights/run';
 import { validateIban } from '@/lib/finance/iban';
@@ -151,8 +152,8 @@ export const TOOLS = [
   // could see was `issues`, so that is what it made. The model was right and
   // its hands were tied.
   { name: 'list_docs', description: 'List documents, notes, to-do lists and tables in this workspace (title, kind and tags; not the body).', inputSchema: { type: 'object', properties: {} } },
-  { name: 'get_doc', description: 'Read one document in full, including its markdown body.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
-  { name: 'save_doc', description: "Create or update a document. `kind` is doc | note | todo | sheet — every kind stores markdown in the same body, so a to-do list is lines of '- [ ] item' and a table is a markdown table. Omit `id` to create. Omitting `kind` on an update leaves the kind alone.", inputSchema: { type: 'object', properties: { id: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' }, kind: { type: 'string', enum: ['doc', 'note', 'todo', 'sheet'] }, tags: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
+  { name: 'get_doc', description: 'Read one document in full, including its markdown body. For a sheet with formulas, `values` holds what every cell computes (header row first) — read numbers from there rather than adding them up yourself.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'save_doc', description: "Create or update a document. `kind` is doc | note | todo | sheet — every kind stores markdown in the same body, so a to-do list is lines of '- [ ] item' and a table is a markdown table. A sheet calculates like Excel: a cell may hold a formula such as =SUM(C2:C9) or =B2*C2, where the header row is row 1, data starts at row 2 and columns are A, B, C… — prefer a formula over a number you worked out. Omit `id` to create. Omitting `kind` on an update leaves the kind alone.", inputSchema: { type: 'object', properties: { id: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' }, kind: { type: 'string', enum: ['doc', 'note', 'todo', 'sheet'] }, tags: { type: 'array', items: { type: 'string' } } }, required: ['title'] } },
   { name: 'toggle_doc_item', description: 'Tick or untick one checklist item in a to-do document, by its zero-based index among the checkboxes.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, index: { type: 'number' }, done: { type: 'boolean' } }, required: ['id', 'index', 'done'] } },
 
   // ── Beyond CRUD ───────────────────────────────────────────────────────────
@@ -598,7 +599,14 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     case 'get_doc': {
       const { data, error } = await ctx.admin.rpc('get_doc', { p_privy: ctx.privy, p_id: String(args?.id || '') });
       if (error) throw new Error(error.message);
-      return data ?? { error: 'No document with that id in this workspace.' };
+      if (!data) return { error: 'No document with that id in this workspace.' };
+      // A sheet's body holds formulas; the engine (the same one the screen
+      // uses) says what they come to, so a model never does the arithmetic.
+      if ((data as any).kind === 'sheet' && typeof (data as any).body === 'string') {
+        const values = await sheetValues((data as any).body);
+        if (values) return { ...(data as any), values };
+      }
+      return data;
     }
 
     case 'save_doc': {

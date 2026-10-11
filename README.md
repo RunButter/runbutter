@@ -104,7 +104,7 @@ are useful, and because they are the honest way to show what the rest is like.
 | **Marketing** | Campaigns, newsletters, live segments and lead scoring, drip sequences, a post studio that publishes to LinkedIn and X, forms, short links, cookieless analytics |
 | **Projects** | Projects, issues, board, roadmap, mind maps |
 | **HR (a full ATS)** | Positions and a public careers page, candidate pipeline, Big-5 and work-style assessments, interviews via Google Calendar, onboarding, GDPR tooling |
-| **Docs & Files** | Documents, notes, checklists and tables in one editor; export to PDF/Word in the browser; uploads are text-extracted and full-text searchable **next to the ledger** |
+| **Docs & Files** | Documents, notes, checklists and sheets that calculate like Excel (501 functions); mail merge a letter into one copy per person or company; export to PDF/Word in the browser; uploads are text-extracted and full-text searchable **next to the ledger** |
 | **Agents** | Every tool behind one executor (the list is generated from [`lib/agents/catalog.ts`](lib/agents/catalog.ts) and published at [`/.well-known/mcp.json`](https://runbutter.app/.well-known/mcp.json) — read one of those rather than a number typed into a README), reusable skill packs, notes written back onto records, scheduled unattended runs |
 | **Automate** | Trigger → filter → action, incoming webhooks, signed and retried outgoing webhooks |
 | **Integrations** | REST API, MCP server, and Excel — a read-only CSV feed or a real two-way Microsoft Graph sync |

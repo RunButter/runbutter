@@ -37,7 +37,7 @@ interface SurfaceNote {
  * not exist.
  */
 const NOTES: Record<string, SurfaceNote> = {
-  docs: { what: 'documents, notes, to-do lists and simple tables', tool: 'save_doc' },
+  docs: { what: 'documents, notes, to-do lists and sheets that calculate like Excel (=SUM, =VLOOKUP…); a document can be mail-merged into one copy per person or company from its header (a person does that)', tool: 'save_doc' },
   insights: { what: 'a chart built from a question over any record type', tool: 'chart_records' },
   inbox: { what: 'conversations from the chat widget on the company website', tool: 'list_conversations / get_conversation / reply_conversation' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },

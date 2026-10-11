@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
-import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check, Download, ChevronDown, FileText, StickyNote, ListChecks, Table2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Sparkles, Wand2, ListTree, CornerDownRight, SpellCheck, Code2, Pencil, Check, Download, ChevronDown, FileText, StickyNote, ListChecks, Table2, X, Files, Search } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { loadDoc, saveDoc, runAI, kindOf, tagDot, DOC_KINDS, KIND_META, type Doc, type DocKind } from '@/lib/crm/docs';
 import { downloadPdf, downloadWord, downloadMarkdown, downloadCsv } from '@/lib/crm/doc-export';
+import { sheetWithValues } from '@/lib/sheets/calc';
 import { getWorkspace } from '@/lib/crm/data';
 import { EmbedResolver, uploadEmbed, MAX_EMBED_BYTES } from '@/lib/files/embeds';
 import AppLoading from '@/components/ui/AppLoading';
@@ -26,16 +27,21 @@ const RichEditor = dynamic(() => import('@/components/crm/RichEditor'), {
 // document, so loading all three up front is waste on every route.
 const TodoEditor = dynamic(() => import('@/components/crm/TodoEditor'), { ssr: false, loading: () => <AppLoading label="Opening the list" /> });
 const SheetEditor = dynamic(() => import('@/components/crm/SheetEditor'), { ssr: false, loading: () => <AppLoading label="Opening the table" /> });
+// Only mounted when somebody opens it.
+const MailMerge = dynamic(() => import('@/components/docs/MailMerge'), { ssr: false });
 
 const KIND_ICON: Record<DocKind, typeof FileText> = {
   doc: FileText, note: StickyNote, todo: ListChecks, sheet: Table2,
 };
 
-const EXPORTS: { label: string; hint: string; only?: DocKind; run: (t: string, b: string) => void }[] = [
-  { label: 'PDF', hint: 'Print-ready', run: (t, b) => { void downloadPdf(t, b); } },
-  { label: 'Word (.doc)', hint: 'Opens in Word, Pages or Docs', run: downloadWord },
+// `values`: a sheet's formulas are replaced by what they compute before the
+// export runs (lib/sheets/calc.ts › sheetWithValues). Markdown is the source and
+// keeps them.
+const EXPORTS: { label: string; hint: string; only?: DocKind; values?: boolean; run: (t: string, b: string) => void }[] = [
+  { label: 'PDF', hint: 'Print-ready', values: true, run: (t, b) => { void downloadPdf(t, b); } },
+  { label: 'Word (.doc)', hint: 'Opens in Word, Pages or Docs', values: true, run: downloadWord },
   { label: 'Markdown', hint: 'The raw source', run: downloadMarkdown },
-  { label: 'CSV', hint: 'For Excel or Sheets', only: 'sheet', run: downloadCsv },
+  { label: 'CSV', hint: 'For Excel or Sheets — values', only: 'sheet', values: true, run: downloadCsv },
 ];
 
 const AI_ACTIONS = [
@@ -70,6 +76,8 @@ export default function DocEditor() {
   const [exportOpen, setExportOpen] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState('');
+  const [merging, setMerging] = useState(false);
+  const [finding, setFinding] = useState(false);
 
   // Turns the `rb-file:<uuid>` references stored in the body into signed URLs
   // for the editor, and back again on save. Per-document, and it must outlive
@@ -175,6 +183,14 @@ export default function DocEditor() {
           <span className="hidden md:inline">{preview ? 'Editor' : 'Markdown'}</span>
         </button>
 
+        {/* Mail merge: prose only — a checklist or a table filled in per record is not a letter. */}
+        {(kind === 'doc' || kind === 'note') && canEdit && (
+          <button onClick={() => setMerging(true)} title="Fill this document in for every person, company or record"
+            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+            <Files className="w-3.5 h-3.5" /><span className="hidden md:inline">Mail merge</span>
+          </button>
+        )}
+
         {/* Export. Every format is produced in the browser — see
             lib/crm/doc-export.ts for why a document never goes to a converter. */}
         <div className="relative">
@@ -188,7 +204,11 @@ export default function DocEditor() {
               <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
               <div className="absolute right-0 top-9 z-20 w-56 rounded-lg bg-surface ring-1 ring-subtle shadow-popover p-1">
                 {EXPORTS.filter((x) => !x.only || x.only === kind).map((x) => (
-                  <button key={x.label} onClick={() => { x.run(title || 'Untitled', body); setExportOpen(false); }}
+                  <button key={x.label} onClick={async () => {
+                    setExportOpen(false);
+                    const b = x.values && kind === 'sheet' ? await sheetWithValues(body) : body;
+                    x.run(title || 'Untitled', b);
+                  }}
                     className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-surface-hover">
                     <span className="block text-xs font-medium text-primary">{x.label}</span>
                     <span className="block text-3xs text-tertiary">{x.hint}</span>
@@ -263,8 +283,24 @@ export default function DocEditor() {
             placeholder={tags.length ? 'Add tag' : 'Add a tag…'}
             className="h-6 px-1.5 text-2xs bg-transparent outline-none text-primary placeholder:text-tertiary w-24" />
         )}
-        <span className="ml-auto text-3xs text-tertiary">Tags save with the document</span>
+        <span className="ml-auto text-3xs text-tertiary tabular-nums">
+          {(kind === 'doc' || kind === 'note') ? `${countWords(body).toLocaleString()} words · ${Math.max(1, Math.round(countWords(body) / 230))} min read` : 'Tags save with the document'}
+        </span>
+        {(kind === 'doc' || kind === 'note') && canEdit && (
+          <button onClick={() => setFinding((f) => !f)} aria-pressed={finding} title="Find and replace"
+            className={`h-6 px-2 inline-flex items-center gap-1 rounded-md text-2xs ring-1 ${finding ? 'ring-accent/40 bg-accent/10 text-primary' : 'ring-subtle text-secondary hover:text-primary'}`}>
+            <Search className="w-3 h-3" /> Find
+          </button>
+        )}
       </div>
+
+      {finding && (kind === 'doc' || kind === 'note') && (
+        <FindReplace body={body} onReplace={(next) => setBody(next)} onClose={() => setFinding(false)} />
+      )}
+
+      {merging && privy && (
+        <MailMerge privy={privy} title={title} body={embeds.collapse(body)} onClose={() => setMerging(false)} />
+      )}
 
       {/* Editor / raw-markdown view */}
       <div className="flex-1 overflow-hidden">
@@ -287,5 +323,54 @@ export default function DocEditor() {
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * Words as a reader counts them: markdown syntax, image references and link
+ * targets are not words. "6 min read" at 230 words a minute.
+ */
+function countWords(md: string): number {
+  const text = md
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`~|\-]+/g, ' ')
+    .replace(/\[[ xX]\]/g, ' ');
+  return (text.match(/[\p{L}\p{N}][\p{L}\p{N}'’.-]*/gu) || []).length;
+}
+
+/**
+ * Find and replace over the document's text. It works on the markdown body —
+ * the same text every editor reads — so a replacement shows up in the rich
+ * editor at once. Plain text, never a regex typed by the user: "$5.00" must
+ * mean five dollars, not a capture group.
+ */
+function FindReplace({ body, onReplace, onClose }: { body: string; onReplace: (next: string) => void; onClose: () => void }) {
+  const [find, setFind] = useState('');
+  const [repl, setRepl] = useState('');
+  const [matchCase, setMatchCase] = useState(false);
+  const [done, setDone] = useState('');
+  const pattern = useMemo(() => find ? new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), matchCase ? 'g' : 'gi') : null, [find, matchCase]);
+  // rb-file:<uuid> references are file ids, not words — never rewrite one.
+  const count = pattern ? (body.replace(/rb-file:[0-9a-f-]{36}/gi, '').match(pattern) || []).length : 0;
+  const replaceAll = () => {
+    if (!pattern || !count) return;
+    const parts = body.split(/(rb-file:[0-9a-f-]{36})/i);
+    onReplace(parts.map((p) => (/^rb-file:/i.test(p) ? p : p.replace(pattern, () => repl))).join(''));
+    setDone(`Replaced ${count}`);
+  };
+  return (
+    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-4 py-2 border-b border-subtle bg-surface-sunken/50">
+      <input autoFocus value={find} onChange={(e) => { setFind(e.target.value); setDone(''); }} placeholder="Find" aria-label="Find"
+        className="h-7 w-44 px-2 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+      <input value={repl} onChange={(e) => setRepl(e.target.value)} placeholder="Replace with" aria-label="Replace with"
+        onKeyDown={(e) => { if (e.key === 'Enter') replaceAll(); }}
+        className="h-7 w-44 px-2 text-xs rounded-md bg-surface ring-1 ring-subtle outline-none focus:ring-2 focus:ring-accent/30" />
+      <label className="inline-flex items-center gap-1 text-2xs text-secondary"><input type="checkbox" checked={matchCase} onChange={(e) => setMatchCase(e.target.checked)} className="accent-accent" /> Match case</label>
+      <span className="text-2xs text-tertiary tabular-nums">{done || (find ? `${count} found` : '')}</span>
+      <button onClick={replaceAll} disabled={!count}
+        className="h-7 px-2.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Replace all</button>
+      <button onClick={onClose} aria-label="Close find" className="ml-auto p-1 rounded text-tertiary hover:text-primary"><X className="w-3.5 h-3.5" /></button>
+    </div>
   );
 }

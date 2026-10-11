@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { toggleDocItem, tagDot, kindOf, KIND_META, type DocMeta } from '@/lib/crm/docs';
 import { parseTodo, parseSheet } from '@/lib/crm/doc-formats';
@@ -65,7 +65,27 @@ export default function DocCard({ doc, privy, onOpen, onDelete, canEdit }: {
     }
   };
 
-  const sheet = kind === 'sheet' ? parseSheet(body) : null;
+  const parsedSheet = useMemo(() => (kind === 'sheet' ? parseSheet(body) : null), [kind, body]);
+  // A card shows what the sheet COMPUTES, not "=B2*C2". The engine loads only
+  // if some visible sheet has a formula, and one load serves every card.
+  // BUT the preview is truncated (1,200 characters, 0086): a =SUM() over rows
+  // that were cut off would show a confident wrong number. So it computes only
+  // when the preview is the whole sheet; otherwise a formula cell says "ƒx".
+  const truncated = body.length >= 1200;
+  const [values, setValues] = useState<string[][] | null>(null);
+  useEffect(() => {
+    if (!parsedSheet) return;
+    const grid = [parsedSheet.headers, ...parsedSheet.rows.slice(0, 3)];
+    if (truncated || !grid.some((r) => r.some((c) => c.startsWith('=')))) { setValues(null); return; }
+    let live = true;
+    import('@/lib/sheets/calc').then(({ computeSheet }) => computeSheet([parsedSheet.headers, ...parsedSheet.rows]))
+      .then((out) => { if (live) setValues(out.map((r) => r.map((c) => c.text))); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [parsedSheet, truncated]);
+  const fx = (c: string) => (c.startsWith('=') && c.length > 1 ? 'ƒx' : c);
+  const sheet = parsedSheet && values ? { headers: values[0], rows: values.slice(1) }
+    : parsedSheet ? { headers: parsedSheet.headers.map(fx), rows: parsedSheet.rows.map((r) => r.map(fx)) } : null;
 
   return (
     <div

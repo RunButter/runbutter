@@ -1,0 +1,36 @@
+# The spreadsheet engine behind formulas in Docs sheets.
+#
+# The engine itself is GridCraft's (github.com/storytold/gridcraft, MIT OR Apache-2.0):
+# its parser, 500+ worksheet functions, number formats and dependency-driven recalc.
+# This crate is only the bridge — a JSON-in/JSON-out function the browser calls.
+# Pinned to one commit so a rebuild is reproducible; bump `rev` deliberately and
+# re-run `npm run build:sheetcalc`, which rewrites public/sheetcalc.wasm.
+[package]
+name = "rb-sheetcalc"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gridcraft-core = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+gridcraft-formula = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+gridcraft-functions = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+gridcraft-model = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+gridcraft-calc = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+gridcraft-numfmt = { git = "https://github.com/storytold/gridcraft", rev = "9f896c1249f40d18bf182199dc03042959be5f3f" }
+serde_json = "1"
+regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Not part of any workspace above it.
+[workspace]

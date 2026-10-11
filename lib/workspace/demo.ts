@@ -127,9 +127,11 @@ export const DEMO_DOCS = [
   },
   {
     kind: 'sheet' as const,
-    title: 'Rate card',
+    title: 'Rate card & Northwind quote',
     tags: ['Finance'],
-    body: `| Service | Rate | Unit | Currency |\n| --- | --- | --- | --- |\n| Discovery sprint | 8500 | sprint | PLN |\n| Monthly retainer | 6000 | month | PLN |\n| Integration build | 14000 | project | PLN |\n| Ad-hoc support | 320 | hour | PLN |`,
+    // It calculates (Docs sheets run GridCraft's formula engine): change a rate
+    // or a quantity and the totals follow, the way the quote would in Excel.
+    body: `| Service | Rate (PLN) | Unit | Qty | Total (PLN) |\n| --- | --- | --- | --- | --- |\n| Discovery sprint | 8,500 | sprint | 1 | =B2*D2 |\n| Monthly retainer | 6,000 | month | 6 | =B3*D3 |\n| Integration build | 14,000 | project | 1 | =B4*D4 |\n| Ad-hoc support | 2,400 | day | 3 | =B5*D5 |\n| Net total |  |  |  | =SUM(E2:E5) |\n| VAT | 23% |  |  | =E6*B7 |\n| Gross total |  |  |  | =E6+E7 |`,
   },
 ];
 

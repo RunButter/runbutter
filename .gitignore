@@ -28,3 +28,6 @@ tsconfig.tsbuildinfo
 # Agent working files — context notes and session scratch, not project files.
 .claude/
 HANDOFF.md
+
+# Rust build output for the sheet engine (public/sheetcalc.wasm is the committed artifact)
+/wasm/sheetcalc/target/

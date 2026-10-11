@@ -91,9 +91,11 @@ Kept here because "why doesn't it do X" deserves an answer that is not silence:
   key means a platform bill, a platform rate limit and a platform blast radius.
 - **Metered third-party APIs** for search, enrichment, OCR or sanctions
   screening. Public data plus local computation, every time.
-- **A formula engine in `sheet` docs.** A sheet is a markdown table on purpose.
-  Live data in a real spreadsheet is what the Excel sync is for, and a
-  half-built formula engine here would be worse than either.
+- **A home-grown formula engine in `sheet` docs.** Still declined — a
+  half-built one is worse than none. Sheets calculate now because GridCraft's
+  engine is not half-built: 501 Excel functions, number formats and dynamic
+  arrays, compiled to WebAssembly (`wasm/sheetcalc/README.md`). The sheet is
+  still a markdown table; a cell just holds `=SUM(B2:B9)`.
 - **Two-way delete in the Excel sync.** A filter, a sort and a cleared row are
   indistinguishable from a deletion over Microsoft's API. Deleting stays
   something you do deliberately, in the app.

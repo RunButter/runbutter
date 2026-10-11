@@ -338,3 +338,46 @@ export function downloadMarkdown(title: string, body: string) {
 export function downloadCsv(title: string, body: string) {
   download(new Blob([sheetToCsv(parseSheet(body))], { type: 'text/csv;charset=utf-8' }), `${safeName(title)}.csv`);
 }
+
+// ── Many documents at once (mail merge) ─────────────────────────────────────
+
+/** The Word export's markdown → HTML, for previews. Escapes everything it is given. */
+export const docToHtml = (body: string) => markdownToHtml(body);
+
+/** One .doc, a page per document — what someone printing forty letters wants. */
+export function downloadWordMany(title: string, docs: { title: string; body: string }[]) {
+  const pages = docs.map((d, i) =>
+    `<div${i ? ' style="page-break-before:always"' : ''}>${markdownToHtml(d.body)}</div>`).join('\n');
+  const html = `<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">
+<title>${htmlEscape(title)}</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.45}
+h1{font-size:20pt}h2{font-size:15pt}h3{font-size:13pt}</style>
+</head><body>${pages}</body></html>`;
+  download(new Blob([html], { type: 'application/msword' }), `${safeName(title)}.doc`);
+}
+
+/** One PDF with every document after the other, each starting on a new page. */
+export async function downloadPdfMany(title: string, docs: { title: string; body: string }[]) {
+  const out = await PDFDocument.create();
+  for (const d of docs) {
+    const one = await PDFDocument.load(await markdownToPdf(d.title, d.body));
+    const pages = await out.copyPages(one, one.getPageIndices());
+    pages.forEach((p) => out.addPage(p));
+  }
+  downloadBytes(await out.save(), `${safeName(title)}.pdf`);
+}
+
+/** A .zip with one PDF per document, named after each one. */
+export async function downloadPdfZip(title: string, docs: { title: string; body: string }[]) {
+  const { zipSync } = await import('@/lib/plugins/zip');
+  const used = new Set<string>();
+  const entries = [];
+  for (const d of docs) {
+    let name = safeName(d.title), n = 2;
+    while (used.has(name)) name = `${safeName(d.title)}-${n++}`;
+    used.add(name);
+    entries.push({ path: `${name}.pdf`, content: await markdownToPdf(d.title, d.body) });
+  }
+  download(new Blob([zipSync(entries) as BlobPart], { type: 'application/zip' }), `${safeName(title)}.zip`);
+}
