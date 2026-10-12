@@ -76,6 +76,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'get_finance_trends', label: 'Monthly trends', group: 'Finance' },
   { name: 'get_ledger', label: 'Bank ledger', group: 'Finance' },
   { name: 'validate_iban', label: 'Validate an IBAN', group: 'Finance' },
+  { name: 'lookup_company', label: 'Look up a company by tax number', group: 'Research' },
   { name: 'parse_invoice_text', label: 'Parse invoice text', group: 'Finance' },
 
   { name: 'screen_sanctions', label: 'Screen against sanctions', group: 'Compliance' },

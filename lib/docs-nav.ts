@@ -33,6 +33,7 @@ export const DOCS_NAV: DocSection[] = [
       { slug: 'api', title: 'REST API & MCP', blurb: 'Keys, scopes, and the CSV feed' },
       { slug: 'chat-widget', title: 'Chat widget & inbox', blurb: 'Support chat on your own site' },
       { slug: 'lead-finder', title: 'Find leads', blurb: 'Businesses to sell to, from the open map' },
+      { slug: 'company-lookup', title: 'Company from a tax number', blurb: 'NIP or VAT number in, everything public out' },
       { slug: 'file-extraction', title: 'Files that become data', blurb: 'Extraction and full-text search' },
       { slug: 'vault', title: 'The team vault', blurb: 'Shared logins your own server cannot read' },
       { slug: 'design', title: 'The design spec', blurb: 'Your brand, in a shape an AI applies exactly' },

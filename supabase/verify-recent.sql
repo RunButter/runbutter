@@ -82,7 +82,14 @@ select * from (values
    -- The test function AND the deals trigger: without the trigger a "deal won"
    -- automation saves fine, shows in the list, and never fires.
    (select to_regprocedure('public.test_automation(text,uuid,uuid)') is not null
-     and exists (select 1 from pg_trigger where tgname = 'trg_autoevt_pipeline_records')))
+     and exists (select 1 from pg_trigger where tgname = 'trg_autoevt_pipeline_records'))),
+
+  ('0133 company phone, email, website',
+   -- The column AND the function that writes it: a column with the old
+   -- create_record behind it accepts nothing, silently.
+   (select exists (select 1 from information_schema.columns
+                    where table_name = 'organizations' and column_name = 'website')
+     and to_regprocedure('public.company_website(text)') is not null))
 ) as t(migration, applied)
 order by migration;
 

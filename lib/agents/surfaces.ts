@@ -42,7 +42,7 @@ const NOTES: Record<string, SurfaceNote> = {
   inbox: { what: 'conversations from the chat widget on the company website', tool: 'list_conversations / get_conversation / reply_conversation' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },
   deals: { what: 'the sales pipeline board', tool: 'create_deal / update_deal / move_deal' },
-  companies: { what: 'client and supplier organisations', tool: 'create_record(companies)' },
+  companies: { what: 'client and supplier organisations', tool: 'lookup_company to fill one from its tax number, then create_record(companies)' },
   people: { what: 'contacts and candidates', tool: 'create_record(people)' },
   products: { what: 'products and services with prices', tool: 'create_record(products)' },
   offers: { what: 'quotes and proposals, with line items', tool: 'save_document(kind: offer)' },

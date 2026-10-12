@@ -15,7 +15,8 @@ interface Props {
 }
 
 export default function ImportModal({ object, privyUserId, onClose, onImported }: Props) {
-  const fields = object.form || [];
+  // Only fields a CSV column can fill: the lookup button and image uploads are not data.
+  const fields = (object.form || []).filter((f) => f.input !== 'lookup' && f.input !== 'image');
   const [step, setStep] = useState<'source' | 'map' | 'done'>('source');
   const [text, setText] = useState('');
   const [url, setUrl] = useState('');

@@ -34,18 +34,29 @@ export const OBJECTS: Record<string, ObjectDef> = {
     fields: [
       { key: 'name', label: 'Name', type: 'avatar', primary: true, width: 220 },
       { key: 'tax_id', label: 'Tax ID', type: 'text', width: 150 },
+      { key: 'phone', label: 'Phone', type: 'text', width: 150 },
+      { key: 'email', label: 'Email', type: 'text', width: 200 },
       { key: 'domain', label: 'Domain', type: 'text', width: 180 },
       { key: 'industry', label: 'Industry', type: 'text', width: 160 },
       { key: 'employee_count', label: 'Employees', type: 'number', align: 'right', width: 110 },
     ],
+    // Tax number first: typing it (and pressing Enter or the button) fills the
+    // rest from the registers and the company's own website (lib/company/lookup.ts).
+    // There is no Domain input — it is derived from Website on save, because two
+    // boxes for one address is how they end up disagreeing.
     form: [
-      { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT'] },
+      { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'CH', 'NO', 'UA'] },
       { key: 'tax_id', label: 'Tax / VAT ID', input: 'text' },
-      { key: 'lookup', label: 'Fetch company details', input: 'lookup' },
+      { key: 'lookup', label: 'Fill in from the tax number', input: 'lookup' },
       { key: 'name', label: 'Name', input: 'text', required: true },
       { key: 'address', label: 'Address', input: 'textarea' },
-      { key: 'domain', label: 'Domain', input: 'text' },
+      { key: 'email', label: 'Email', input: 'text' },
+      { key: 'phone', label: 'Phone', input: 'text' },
+      { key: 'website', label: 'Website', input: 'text' },
       { key: 'industry', label: 'Industry', input: 'text' },
+      { key: 'regon', label: 'REGON', input: 'text' },
+      { key: 'krs', label: 'KRS', input: 'text' },
+      { key: 'bank_account', label: 'Bank account', input: 'text' },
       { key: 'employee_count', label: 'Employees', input: 'number' },
     ],
   },

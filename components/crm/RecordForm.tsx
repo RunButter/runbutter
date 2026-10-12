@@ -11,6 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import CompanyLookupSummary from './CompanyLookupSummary';
+import {
+  fetchCompany, valuesFromFacts, addBoardAsPeople, companyColumnsMissing, hostOf, type CompanyFacts,
+} from '@/lib/company/client';
 
 interface Props {
   object: ObjectDef;
@@ -23,11 +27,13 @@ interface Props {
 }
 
 export default function RecordForm({ object, privyUserId, recordId, initial, suggestions, onClose, onSaved }: Props) {
-  const { confirm: confirmDialog } = useDialog();
+  const { confirm: confirmDialog, notify } = useDialog();
   const fields = object.form || [];
   const [values, setValues] = useState<Record<string, any>>(() => {
     const v: Record<string, any> = {};
     for (const f of fields) v[f.key] = initial?.[f.key] ?? '';
+    // A company saved before it had a Website field still has its domain.
+    if (object.slug === 'companies' && 'website' in v && !v.website && initial?.domain) v.website = `https://${initial.domain}`;
     return v;
   });
   const [saving, setSaving] = useState(false);
@@ -35,34 +41,25 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const [uploading, setUploading] = useState<string | null>(null);
   const [lookupBusy, setLookupBusy] = useState(false);
-  const [lookupNote, setLookupNote] = useState('');
+  const [facts, setFacts] = useState<CompanyFacts | null>(null);
+  const [addBoard, setAddBoard] = useState(true);
+  const hasLookup = fields.some((f) => f.input === 'lookup');
   const editing = !!recordId;
 
   const set = (k: string, val: any) => setValues((s) => ({ ...s, [k]: val }));
   const setMany = (patch: Record<string, any>) => setValues((s) => ({ ...s, ...patch }));
 
-  // Enrich a company from its tax/VAT id (PL NIP via MF, EU VAT via VIES).
+  // Fill a company in from its tax number: registers first, then its own
+  // website (lib/company/lookup.ts). The country may be left blank — a valid
+  // NIP is Polish, and "DE123…" says so itself.
   const runLookup = async () => {
-    const country = values.country, taxId = values.tax_id;
-    if (!country || !String(taxId || '').trim()) { setError('Pick a country and enter a tax/VAT ID first.'); return; }
-    setLookupBusy(true); setError(''); setLookupNote('');
-    try {
-      const res = await fetch('/api/company-lookup', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country, taxId }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Lookup failed'); setLookupBusy(false); return; }
-      const c = data.company || {};
-      setMany({
-        name: c.name || values.name, address: c.address || values.address,
-        tax_id: c.tax_id || values.tax_id, country: c.country || values.country,
-      });
-      setLookupNote(c.note || '');
-    } catch (e: any) {
-      setError(e?.message || 'Lookup failed');
-    }
+    if (!String(values.tax_id || '').trim()) { setError('Enter a tax or VAT number first.'); return; }
+    setLookupBusy(true); setError(''); setFacts(null);
+    const r = await fetchCompany(values.country || '', values.tax_id);
     setLookupBusy(false);
+    if (r.error || !r.company) { setError(r.error || 'Nothing found for that number.'); return; }
+    setMany(valuesFromFacts(r.company, values));
+    setFacts(r.company);
   };
 
   // Upload via the server route (service role + auto-created bucket).
@@ -93,12 +90,35 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
     if (!privyUserId) { setError('Sign in to save records.'); return; }
     for (const f of fields) if (f.required && !String(values[f.key] ?? '').trim()) { setError(`${f.label} is required.`); return; }
     setSaving(true); setError('');
+    // The lookup button is a field of the form, not of the record.
+    const payload: Record<string, any> = Object.fromEntries(
+      Object.entries(values).filter(([k]) => fields.find((f) => f.key === k)?.input !== 'lookup'),
+    );
+    // Domain follows the website (SQL does this too from 0133; sending it keeps
+    // logos working on a database that has not run it yet).
+    if (object.slug === 'companies' && payload.website) {
+      const host = hostOf(/^https?:\/\//i.test(payload.website) ? payload.website : `https://${payload.website}`);
+      if (host) payload.domain = host;
+    }
     const res = editing
-      ? await updateRecord(privyUserId, object.slug, recordId!, values)
-      : await createRecord(privyUserId, object.slug, values);
+      ? await updateRecord(privyUserId, object.slug, recordId!, payload)
+      : await createRecord(privyUserId, object.slug, payload);
+    if (res.error) { setSaving(false); setError(res.error); return; }
+    const id = editing ? recordId! : (res as any).id as string;
+
+    if (object.slug === 'companies' && id) {
+      const notes: string[] = [];
+      if (!editing && facts?.people.length && addBoard) {
+        const b = await addBoardAsPeople(privyUserId, id, facts.people);
+        if (b.error) notes.push(`Added ${b.added} of ${facts.people.length} people: ${b.error}`);
+      }
+      if (await companyColumnsMissing(privyUserId, id, payload)) {
+        notes.push('Phone, email, website, REGON, KRS and bank account were not kept: this database needs migration 0133. Everything else was saved.');
+      }
+      if (notes.length) await notify({ title: 'Saved, with something to know', body: notes.join('\n\n') });
+    }
     setSaving(false);
-    if (res.error) { setError(res.error); return; }
-    onSaved(editing ? undefined : (res as any).id);
+    onSaved(editing ? undefined : id);
   };
 
   const remove = async () => {
@@ -127,10 +147,18 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
               <div key={f.key} className={`block ${f.input === 'textarea' || f.input === 'image' || f.input === 'lookup' ? 'sm:col-span-2' : ''}`}>
                 {f.input !== 'lookup' && <Label required={f.required}>{f.label}</Label>}
                 {f.input === 'lookup' ? (
-                  <button type="button" onClick={runLookup} disabled={lookupBusy}
-                    className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
-                    {lookupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />} {f.label || 'Fetch company details'}
-                  </button>
+                  <>
+                    <button type="button" onClick={runLookup} disabled={lookupBusy}
+                      className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
+                      {lookupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                      {lookupBusy ? 'Checking the registers and the company website…' : (f.label || 'Fill in from the tax number')}
+                    </button>
+                    {facts && (
+                      <div className="mt-2">
+                        <CompanyLookupSummary facts={facts} addBoard={addBoard} onAddBoard={setAddBoard} canAddBoard={!editing} />
+                      </div>
+                    )}
+                  </>
                 ) : f.input === 'image' ? (
                   <div className="flex items-center gap-2.5">
                     {values[f.key]
@@ -160,13 +188,14 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                   </>
                 ) : (
                   <Input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
-                    value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)} />
+                    value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
+                    onKeyDown={hasLookup && f.key === 'tax_id' ? (e) => { if (e.key === 'Enter') { e.preventDefault(); runLookup(); } } : undefined}
+                    placeholder={hasLookup && f.key === 'tax_id' ? 'NIP or EU VAT number — press Enter' : undefined} />
                 )}
               </div>
             ))}
           </div>
           {error && <p className="mt-3 text-xs text-danger">{error}</p>}
-          {lookupNote && <p className="mt-3 text-xs text-warning">{lookupNote}</p>}
         </div>
 
         <div className="shrink-0 flex items-center gap-2 p-3 border-t border-subtle">

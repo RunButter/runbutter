@@ -28,7 +28,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
   owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
   0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates), 0131
-  (support inbox + chat widget) and 0132 (automations v3) are NEW and pending.** Do not take any of that on trust when
+  (support inbox + chat widget), 0132 (automations v3) and 0133 (company phone/email/website) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -416,6 +416,36 @@ public email → save as **Leads**. No migration.
 - The "Before you contact them" panel is deliberate: cold email/calls to businesses need PRIOR
   CONSENT in Poland (and elsewhere in the EU); US/UK-limited-company B2B email is opt-out. Do not
   turn this into a bulk cold-email sender without per-country consent handling.
+
+## Company from a tax number (0133) — `docs/company-lookup.md`
+NIP / EU VAT in → the form fills itself, with a SOURCE per field (`lib/company/lookup.ts`, shared by
+`/api/company-lookup`, the form and the Copilot's `lookup_company`). Before this it filled name,
+address and country only — and companies had no phone/email/website column to fill.
+- **Each register for what it is the authority on:** MF white list (name, address, REGON, KRS no.,
+  VAT status, bank account — the account a payer may safely use above 15k PLN) → KRS API (email,
+  website, legal form, main PKD, the BOARD) → CEIDG for sole traders (phone/email/www, optional
+  `CEIDG_API_TOKEN`, parsed with `deepFind` because its shape moves) → the company's own website via
+  `lib/leads/enrich.ts` (phone, contact email; robots.txt obeyed). VIES for other EU numbers
+  (`GR` is `EL` in VIES — the old code sent GR and failed every Greek number).
+- **Registers REPLACE typed values for official fields; contact details only fill BLANKS.** A
+  website guessed from a non-freemail email domain is kept only if it answers. Nothing is invented.
+- NIP checksum before any call; country inferred from a prefix or a valid NIP; MF missing → VIES +
+  CEIDG with a note that says WHICH (not on the list vs register unreachable/limit). 24 h cache.
+- **0133** adds `phone, email, website, regon, krs, bank_account` to `organizations`, redefines the
+  CRUD monolith IN FULL from 0124 (0088 partial-update rule kept), moves same-named 0097 extras into
+  the columns, reserves the keys, and `company_website()` refuses non-http(s) (it is rendered as a
+  link). **`domain` now follows `website` in SQL for every writer** (`company_domain()`); an
+  explicit domain wins. The form has no Domain box any more.
+- The form notices a database without 0133 (`companyColumnsMissing` → the read-back lacks
+  `website`) and SAYS which fields were not kept, instead of dropping them silently.
+- The board can be added as People (`primary_company_id`, title = role, source `KRS`) — ticked by
+  default on create only.
+- `/api/company-lookup` was **unauthenticated**; it now needs a verified Privy token (it reads
+  websites now) and is rate-limited per account. CSV import listed the lookup BUTTON as a mappable
+  column — `ImportModal` now drops `lookup`/`image` inputs.
+- Verified: 29 fixture checks on the engine, the SQL on a real Postgres (create/partial/clear/
+  tenancy/extras move/idempotent), and the form driven in a browser. NOT against the live registers
+  — this sandbox cannot reach them; try one real NIP after deploy.
 
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a
@@ -1451,6 +1481,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0133** (company phone/email/website/REGON/KRS/bank account — without it the form says those
+  fields were not kept). Optional: a free **`CEIDG_API_TOKEN`** so sole traders fill in too.
 - **Run 0130, 0131 and 0132** too — 0130 is deal close dates (the Calendar view degrades to "No close
   date" without it), 0131 is the support inbox (the Inbox screen says it needs 0131), 0132 is
   automations v3 (without it deals/orders/forms/chats never trigger anything, "changes to" never
