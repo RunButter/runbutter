@@ -89,7 +89,9 @@ select * from (values
    -- create_record behind it accepts nothing, silently.
    (select exists (select 1 from information_schema.columns
                     where table_name = 'organizations' and column_name = 'website')
-     and to_regprocedure('public.company_website(text)') is not null))
+     and to_regprocedure('public.company_website(text)') is not null)),
+  ('0134 data source keys (Google Places for Find leads)',
+   to_regprocedure('public.get_data_source_secret(text,uuid,text)') is not null)
 ) as t(migration, applied)
 order by migration;
 

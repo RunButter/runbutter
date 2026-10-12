@@ -5,11 +5,24 @@ Kraków, restaurants within 2 km of an address, every accountant in a postcode �
 and saves the ones you choose as **Leads**, ready to call, write to or send an
 offer.
 
+## Three sources
+
+| | Open map | Google · live | Google scraper |
+|---|---|---|---|
+| Data | OpenStreetMap, volunteer-mapped | Google Maps, through Google's official Places API | Google Maps, through a scraper you run |
+| Cost | Free | Your Google key; each month's first searches are free | Free, your server |
+| Phone, website, hours | Where mapped | Almost always | Almost always |
+| Rating and reviews | — | Yes | Yes |
+| Any kind of business | The list | Anything you type | Anything you type |
+| Speed | Seconds | Seconds (a whole city: under a minute) | Minutes |
+| Set up | Nothing | Paste a key once | Run a container |
+
 ## How it works
 
-1. **Search.** Pick a kind of business (from cafés to roofers) and a
-   place. Results come from [OpenStreetMap](https://www.openstreetmap.org): name,
-   category, address, phone, website, opening hours and, where mapped, email.
+1. **Search.** Pick a kind of business (from cafés to roofers) — or, with a
+   Google source, type any kind (*solar panel installer*, *wedding
+   photographer*) — and a place. You get name, category, address, phone,
+   website, opening hours, and from Google a rating and review count.
 2. **Check websites.** Select results and press *Check websites*. RunButter
    reads up to three pages of each business's **own** website — the homepage and
    its Contact page — for a published email address, phone number and social
@@ -35,7 +48,42 @@ The Copilot can search too: *"find dentists in Kraków and save the ones with a
 phone number as leads"* uses the `find_businesses` tool and then creates the
 records. Reading websites for emails stays a button a person presses.
 
-## Why OpenStreetMap, not Google Maps
+## Google · live (the official Places API)
+
+The most complete, current data there is — and because it is an official API
+called with a key, no server gets blocked for using it. Each workspace connects
+its **own** Google key (owners and admins, on the Find leads screen), and Google
+bills that key directly:
+
+1. In [Google Cloud console](https://console.cloud.google.com/apis/library/places.googleapis.com),
+   turn on **Places API (New)**. Google asks for a billing account even for the
+   free monthly allowance.
+2. Create an API key under *Credentials* and restrict it to the Places API.
+   Don't restrict it to websites — the search runs on the server.
+3. Paste it into Find leads → *Google · live*. RunButter checks it with one
+   cheap call before saving it, encrypted. Nobody sees it again; the screen
+   shows its last four characters.
+
+**Getting past 60.** Google returns at most 60 places per search. *How far to
+go* decides what happens when an area has more: **Top 60** is one search (up to
+3 billed calls); **Whole area** and **Every street** split any area that comes
+back full into quarters and search each one again, up to 30 or 90 calls. The
+result says how many calls it used. Google's price list is at
+[Google Maps Platform pricing](https://mapsplatform.google.com/pricing/) — the
+phone and website fields put these calls in the *Text Search Enterprise* tier.
+
+Google's terms let you show Places results to the person searching, and limit
+**storing** them beyond the place id. Saving a lead is your decision; the screen
+says so next to the choice.
+
+A self-hoster can also set `GOOGLE_PLACES_API_KEY` on the server, which every
+workspace without its own key then uses — and the server's owner pays for.
+
+The **Copilot** uses Google too when the workspace has a key: *"find solar
+installers in Lagos"* runs one *Top 60* search. Going wider stays a button a
+person presses.
+
+## Why OpenStreetMap is the default
 
 Google's terms forbid scraping Maps, and its Places API forbids storing what it
 returns beyond a place id — so a lead list built from Google is a breach of
@@ -62,6 +110,10 @@ for you.
 **Scraping Google Maps is against Google's terms of service.** That is why this
 is off unless the operator switches it on, and why the screen says so next to
 the choice. Whoever runs the scraper takes that on.
+
+With the bundled `docker-compose.yml` it is one profile — set
+`GMAPS_SCRAPER_URL=http://gmaps:8080` in `.env`, then
+`docker compose --profile gmaps up`. Anywhere else:
 
 ```
 # gosom's own web-mode command (its README, "Web UI"):

@@ -43,6 +43,44 @@ export const searchLeads = (b: { category: string; where: string; radiusKm: numb
 export const enrichSites = (websites: string[]) =>
   post<{ results: SiteContacts[] }>('/api/leads/enrich', { websites });
 
+// ── Google, through the official Places API on the workspace's key ──────────
+
+export interface SourcesStatus {
+  google: { connected: boolean; hint: string; from: 'workspace' | 'server' | null; migrated: boolean };
+  scraper: boolean;
+}
+
+export async function loadSources(ws: string): Promise<SourcesStatus | { error: string }> {
+  try {
+    const res = await fetch(`/api/leads/sources?${new URLSearchParams({ workspace: ws })}`, { headers: await authHeaders() });
+    const j = await res.json().catch(() => null);
+    if (!res.ok) return { error: j?.error || `Something went wrong (${res.status}).` };
+    return j as SourcesStatus;
+  } catch {
+    return { error: 'Could not reach the server.' };
+  }
+}
+
+export const connectGoogleKey = (ws: string, key: string) =>
+  post<{ ok: true; hint: string }>('/api/leads/sources', { workspace: ws, key });
+
+export async function disconnectGoogleKey(ws: string): Promise<{ error?: string }> {
+  try {
+    const res = await fetch(`/api/leads/sources?${new URLSearchParams({ workspace: ws })}`, { method: 'DELETE', headers: await authHeaders() });
+    const j = await res.json().catch(() => null);
+    return res.ok ? {} : { error: j?.error || `Something went wrong (${res.status}).` };
+  } catch {
+    return { error: 'Could not reach the server.' };
+  }
+}
+
+export type PlacesSearchResult = SearchResult & { calls: number; keyFrom: 'workspace' | 'server'; query: string };
+
+export const searchGooglePlaces = (b: {
+  workspace: string; category?: string; query?: string; where: string; name?: string;
+  place?: GeoPlace | null; radiusKm?: number; depth: 'quick' | 'city' | 'deep';
+}) => post<PlacesSearchResult>('/api/leads/places', b);
+
 // ── Google Maps, through the operator's own scraper (lib/leads/gmaps.ts) ────
 
 /** Whether this server has a scraper. Asked once; no sign-in needed to know. */
@@ -53,7 +91,7 @@ export async function gmapsAvailable(): Promise<boolean> {
   } catch { return false; }
 }
 
-export const startGmapsSearch = (b: { category: string; where: string; name?: string; place?: GeoPlace | null }) =>
+export const startGmapsSearch = (b: { category: string; query?: string; where: string; name?: string; place?: GeoPlace | null }) =>
   post<{ job: string; place: GeoPlace; query: string }>('/api/leads/gmaps', b);
 
 export type GmapsPoll =

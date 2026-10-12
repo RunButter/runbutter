@@ -71,7 +71,7 @@ const NOTES: Record<string, SurfaceNote> = {
   automations: { what: 'rules that run on a trigger, unattended once approved', tool: 'propose_automation (a person approves)' },
   'my-team': { what: 'the people who work here', tool: null },
   orders: { what: 'sales orders with line items; stock moves when one is marked paid', tool: 'save_order' },
-  'find-leads': { what: 'new prospects: businesses of one kind in one place, from OpenStreetMap; saved ones become Leads records', tool: 'find_businesses to search, then create_record(leads) to save' },
+  'find-leads': { what: 'new prospects: businesses of one kind in one place — live from Google Maps when the workspace has connected a Google key, else OpenStreetMap; saved ones become Leads records', tool: 'find_businesses to search, then create_record(leads) to save' },
   'cap-table': { what: 'who owns the company', tool: 'save_cap_holder' },
   interviews: { what: 'scheduled interviews — booking one sends a calendar invite, so it stays a person\'s click', tool: null },
   members: { what: 'who is in the workspace and their roles', tool: 'invite_member / set_member_role (a person approves)' },

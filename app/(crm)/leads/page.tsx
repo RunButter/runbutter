@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   Radar, Search, Loader2, Phone, Mail, Globe, ExternalLink, Check, Download, MailSearch,
-  ChevronDown, AlertCircle, Plus, Star,
+  ChevronDown, AlertCircle, Plus, Star, KeyRound,
 } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
@@ -16,7 +16,8 @@ import { LEAD_CATEGORIES, CATEGORY_BY_KEY } from '@/lib/leads/categories';
 import { LEAD_FIELDS, leadValues, needsWebsite, type Enrichment } from '@/lib/leads/fields';
 import {
   searchLeads, enrichSites, findLeadsObject, setUpLeads, loadSavedIndex, isSaved,
-  saveLead, noteProvenance, toCsv, gmapsAvailable, startGmapsSearch, pollGmapsSearch, listedOn,
+  saveLead, noteProvenance, toCsv, startGmapsSearch, pollGmapsSearch, listedOn,
+  loadSources, connectGoogleKey, disconnectGoogleKey, searchGooglePlaces, type SourcesStatus,
 } from '@/lib/leads/client';
 import type { FoundPlace, GeoPlace, SearchResult } from '@/lib/leads/osm';
 
@@ -28,8 +29,8 @@ import type { FoundPlace, GeoPlace, SearchResult } from '@/lib/leads/osm';
  * Leads, an ordinary custom object in Sales. Everything after saving — the
  * board by status, mail merge for an offer letter, automations, the Copilot —
  * is the product that already exists. See lib/leads/osm.ts for why the source
- * is OpenStreetMap and not Google, and lib/leads/gmaps.ts for the one way
- * Google Maps can be a source: a scraper the OPERATOR runs and switches on.
+ * is the free default, lib/leads/places.ts for Google's official API on the
+ * workspace's own key, and lib/leads/gmaps.ts for a scraper the OPERATOR runs.
  */
 
 const RADII = [
@@ -44,7 +45,16 @@ const JOB = 'rb-leads-gmaps-job';
 const JOB_TTL_MS = 30 * 60_000;
 const POLL_MS = 8_000;
 
-type Source = 'osm' | 'google';
+/** Free map · Google's official API (the workspace's key) · the operator's own scraper. */
+type Source = 'osm' | 'places' | 'scraper';
+type Depth = 'quick' | 'city' | 'deep';
+const DEPTHS: { key: Depth; label: string; hint: string }[] = [
+  { key: 'quick', label: 'Top 60', hint: '≤ 3 searches' },
+  { key: 'city', label: 'Whole area', hint: '≤ 30 searches' },
+  { key: 'deep', label: 'Every street', hint: '≤ 90 searches' },
+];
+/** "Something else": a free-text business type, for the Google sources only. */
+const OTHER = '__other';
 type PendingJob = { id: string; place: GeoPlace; query: string; category: string; startedAt: number };
 const ENRICH_BATCH = 10;
 const SAVE_CONCURRENCY = 3;
@@ -72,8 +82,14 @@ export default function FindLeadsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<SearchResult | null>(null);
-  const [gmaps, setGmaps] = useState(false);
+  const [sources, setSources] = useState<SourcesStatus | null>(null);
   const [source, setSource] = useState<Source>('osm');
+  const [query, setQuery] = useState('');
+  const [depth, setDepth] = useState<Depth>('quick');
+  const [calls, setCalls] = useState<number | null>(null);
+  const [keyInput, setKeyInput] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [keyErr, setKeyErr] = useState('');
   const [job, setJob] = useState<PendingJob | null>(null);
   const [now, setNow] = useState(Date.now());
 
@@ -88,15 +104,17 @@ export default function FindLeadsPage() {
   useEffect(() => {
     try {
       const l = JSON.parse(localStorage.getItem(LAST) || 'null');
-      if (l?.category && CATEGORY_BY_KEY[l.category]) setCategory(l.category);
+      if (l?.category && (CATEGORY_BY_KEY[l.category] || l.category === OTHER)) setCategory(l.category);
+      if (typeof l?.query === 'string') setQuery(l.query);
+      if (l?.depth === 'city' || l?.depth === 'deep') setDepth(l.depth);
       if (typeof l?.where === 'string') setWhere(l.where);
       if (Number.isFinite(l?.radius)) setRadius(l.radius);
-      if (l?.source === 'google') setSource('google');
+      if (l?.source === 'places' || l?.source === 'scraper') setSource(l.source);
+      else if (l?.source === 'google') setSource('scraper'); // the name before Places existed
       const j: PendingJob | null = JSON.parse(localStorage.getItem(JOB) || 'null');
       if (j?.id && Date.now() - j.startedAt < JOB_TTL_MS) setJob(j);
       else localStorage.removeItem(JOB);
     } catch { /* first visit */ }
-    gmapsAvailable().then(setGmaps);
   }, []);
 
   const keepJob = (j: PendingJob | null) => {
@@ -145,6 +163,7 @@ export default function FindLeadsPage() {
     getWorkspace(privy).then(async (w) => {
       if (!w || dead) return;
       setWs({ id: w.id, role: w.role });
+      loadSources(w.id).then((r) => { if (!dead && !('error' in r)) setSources(r); });
       const { obj: o } = await findLeadsObject(privy, w.id);
       if (dead) return;
       setObj(o);
@@ -155,6 +174,9 @@ export default function FindLeadsPage() {
   }, [privy, refreshIndex]);
 
   const canSetUp = ws?.role === 'owner' || ws?.role === 'admin';
+  // The source actually in force: a remembered choice the server no longer
+  // offers (the scraper switched off) falls back to the free map.
+  const src: Source = source === 'scraper' && !sources?.scraper ? 'osm' : source;
   // Leads set up before a field existed (rating, reviews, website check) gets
   // it from the same button — setUpLeads only adds what is missing.
   const missingFields = obj ? LEAD_FIELDS.filter((f) => !obj.fields.some((x) => x.key === f.key)) : [];
@@ -169,17 +191,48 @@ export default function FindLeadsPage() {
     refreshIndex(privy, ws.id);
   };
 
+  const connectKey = async () => {
+    if (!ws || !keyInput.trim()) return;
+    setKeyBusy(true); setKeyErr('');
+    const r = await connectGoogleKey(ws.id, keyInput.trim());
+    setKeyBusy(false);
+    if ('error' in r) { setKeyErr(r.error); return; }
+    setKeyInput('');
+    setSources((s) => s && { ...s, google: { connected: true, hint: r.hint, from: 'workspace', migrated: true } });
+  };
+  const disconnectKey = async () => {
+    if (!ws) return;
+    setKeyBusy(true); setKeyErr('');
+    const r = await disconnectGoogleKey(ws.id);
+    setKeyBusy(false);
+    if (r.error) { setKeyErr(r.error); return; }
+    const again = await loadSources(ws.id);
+    if (!('error' in again)) setSources(again);
+  };
+
   const run = async (place?: GeoPlace | null) => {
-    if (!category) { setError('Pick what kind of business to look for.'); return; }
+    const other = category === OTHER;
+    if (!category || (other && !query.trim())) { setError(other ? 'Type what kind of business to look for.' : 'Pick what kind of business to look for.'); return; }
+    if (other && src === 'osm') { setError('The open map searches the kinds in the list. Pick one, or search Google for anything.'); return; }
     if (!place && !where.trim()) { setError('Say where to look — a city, a district or a postcode.'); return; }
-    setBusy(true); setError(''); setSaveMsg(null);
-    try { localStorage.setItem(LAST, JSON.stringify({ category, where, radius, source })); } catch { /* private mode */ }
-    if (source === 'google' && gmaps) {
-      const g = await startGmapsSearch({ category, where, name, place: place ?? null });
+    if (src === 'places' && !sources?.google.connected) { setError('Connect a Google API key first — the box above.'); return; }
+    setBusy(true); setError(''); setSaveMsg(null); setCalls(null);
+    try { localStorage.setItem(LAST, JSON.stringify({ category, query, where, radius, source, depth })); } catch { /* private mode */ }
+    const what = other ? { query: query.trim() } : { category };
+    if (src === 'places' && ws) {
+      const g = await searchGooglePlaces({ workspace: ws.id, ...what, where, name, place: place ?? null, radiusKm: radius, depth });
+      setBusy(false);
+      if ('error' in g) { setError(g.error); return; }
+      if (place && result) g.alternatives = [result.place, ...result.alternatives].filter((x) => x.osmId !== place.osmId);
+      setResult(g); setCalls(g.calls); setSelected(new Set()); setEnrich({});
+      return;
+    }
+    if (src === 'scraper') {
+      const g = await startGmapsSearch({ ...what, category, where, name, place: place ?? null });
       setBusy(false);
       if ('error' in g) { setError(g.error); return; }
       setResult(null);
-      keepJob({ id: g.job, place: g.place, query: g.query, category, startedAt: Date.now() });
+      keepJob({ id: g.job, place: g.place, query: g.query, category: other ? query.trim() : category, startedAt: Date.now() });
       return;
     }
     const r = await searchLeads({ category, where, radiusKm: radius, name, place: place ?? null });
@@ -299,7 +352,7 @@ export default function FindLeadsPage() {
 
   const cat = CATEGORY_BY_KEY[category];
   const working = !!enriching || !!saving;
-  const google = source === 'google' && gmaps;
+  const google = src !== 'osm';
   const fromGoogle = !!result?.results.some((p) => p.ref.startsWith('google/'));
   const elapsed = job ? Math.max(0, Math.round((now - job.startedAt) / 1000)) : 0;
 
@@ -352,33 +405,44 @@ export default function FindLeadsPage() {
         {/* ── Search ────────────────────────────────────────────────────── */}
         <form onSubmit={(e) => { e.preventDefault(); run(); }}
           className="card-surface p-3 sm:p-4 grid gap-2.5 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,0.8fr)_auto] sm:items-end">
-          {gmaps && (
-            <div className="sm:col-span-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <div role="radiogroup" aria-label="Where to search" className="inline-flex rounded-lg ring-1 ring-subtle p-0.5 bg-surface-sunken">
-                {([['osm', 'Open map', 'instant'], ['google', 'Google Maps', 'a few minutes']] as const).map(([k, label, hint]) => (
-                  <button key={k} type="button" role="radio" aria-checked={source === k} onClick={() => setSource(k)}
-                    className={`h-7 px-2.5 rounded-md text-xs ${source === k ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}`}>
-                    {label} <span className="text-tertiary">· {hint}</span>
-                  </button>
-                ))}
-              </div>
-              {source === 'google' && (
-                <p className="text-2xs text-tertiary min-w-0 flex-1">
-                  Uses the Google Maps scraper this server’s operator runs. Scraping Google Maps is against Google’s terms — whoever runs the scraper takes that on.
-                </p>
-              )}
+          <div className="sm:col-span-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <div role="radiogroup" aria-label="Where to search" className="inline-flex flex-wrap rounded-lg ring-1 ring-subtle p-0.5 bg-surface-sunken">
+              {([
+                ['osm', 'Open map', 'free'],
+                ['places', 'Google', 'live'],
+                ...(sources?.scraper ? [['scraper', 'Google scraper', 'minutes']] : []),
+              ] as [Source, string, string][]).map(([k, label, hint]) => (
+                <button key={k} type="button" role="radio" aria-checked={src === k} onClick={() => setSource(k)}
+                  className={`h-7 px-2.5 rounded-md text-xs ${src === k ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}`}>
+                  {label} <span className="text-tertiary">· {hint}</span>
+                </button>
+              ))}
             </div>
+            <p className="text-2xs text-tertiary min-w-0 basis-full sm:basis-0 sm:flex-1">
+              {src === 'osm' && 'OpenStreetMap: free, and yours to keep. Coverage depends on the place.'}
+              {src === 'places' && <>Live Google Maps data through Google’s official API, on your workspace’s own key — Google gives every key a free monthly allowance. Google’s terms limit storing its data beyond the place id; saving a lead is your call.</>}
+              {src === 'scraper' && 'Uses the Google Maps scraper this server’s operator runs. Scraping Google Maps is against Google’s terms — whoever runs the scraper takes that on.'}
+            </p>
+          </div>
+          {src === 'places' && (
+            <GoogleKeyPanel status={sources?.google ?? null} canEdit={canSetUp} busy={keyBusy} error={keyErr}
+              value={keyInput} onChange={setKeyInput} onConnect={connectKey} onDisconnect={disconnectKey} />
           )}
           <label className="block min-w-0">
             <span className="block text-2xs text-tertiary mb-1">What</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field" aria-label="Kind of business">
               <option value="">Kind of business…</option>
+              {google && <option value={OTHER}>Something else — type it…</option>}
               {GROUPS.map((g) => (
                 <optgroup key={g} label={g}>
                   {LEAD_CATEGORIES.filter((c) => c.group === g).map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </optgroup>
               ))}
             </select>
+            {category === OTHER && google && (
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. solar panel installer" autoFocus
+                className="input-field mt-1.5" aria-label="Kind of business, in your words" />
+            )}
           </label>
           <label className="block min-w-0">
             <span className="block text-2xs text-tertiary mb-1">Where</span>
@@ -387,19 +451,28 @@ export default function FindLeadsPage() {
           </label>
           <label className="block min-w-0">
             <span className="block text-2xs text-tertiary mb-1">Area</span>
-            <select value={google ? 0 : radius} onChange={(e) => setRadius(Number(e.target.value))} className="input-field" aria-label="Search area"
-              disabled={google} title={google ? 'Google Maps searches around the centre of the place' : undefined}>
-              {google ? <option value={0}>Around the centre</option> : RADII.map((r) => <option key={r.km} value={r.km}>{r.label}</option>)}
+            <select value={src === 'scraper' ? 0 : radius} onChange={(e) => setRadius(Number(e.target.value))} className="input-field" aria-label="Search area"
+              disabled={src === 'scraper'} title={src === 'scraper' ? 'The scraper searches around the centre of the place' : undefined}>
+              {src === 'scraper' ? <option value={0}>Around the centre</option> : RADII.map((r) => <option key={r.km} value={r.km}>{r.label}</option>)}
             </select>
           </label>
+          {src === 'places' && (
+            <label className="block min-w-0 sm:order-2">
+              <span className="block text-2xs text-tertiary mb-1">How far to go</span>
+              <select value={depth} onChange={(e) => setDepth(e.target.value as Depth)} className="input-field !h-9" aria-label="How far to go"
+                title="Google shows at most 60 per search; going further splits the area into smaller pieces and searches each">
+                {DEPTHS.map((d) => <option key={d.key} value={d.key}>{d.label} · {d.hint}</option>)}
+              </select>
+            </label>
+          )}
           <label className="block min-w-0 sm:col-span-2 sm:order-2">
             <span className="block text-2xs text-tertiary mb-1">Name contains <span className="text-tertiary/70">(optional)</span></span>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. dental"
               className="input-field !h-9" aria-label="Name contains" />
           </label>
-          <button type="submit" disabled={busy || !privy || (google && !!job)}
+          <button type="submit" disabled={busy || !privy || (src === 'scraper' && !!job) || (src === 'places' && !sources?.google.connected)}
             className="sm:order-1 h-10 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Search
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} {busy && src === 'places' && depth !== 'quick' ? 'Searching…' : 'Search'}
           </button>
           {!privy && <p className="sm:order-3 sm:col-span-4 text-xs text-tertiary">Sign in to search.</p>}
           {error && <p className="sm:order-3 sm:col-span-4 text-xs text-danger flex items-start gap-1.5"><AlertCircle className="w-3.5 h-3.5 mt-px shrink-0" />{error}</p>}
@@ -440,7 +513,8 @@ export default function FindLeadsPage() {
                 {stats.website} with a website · {stats.phone} with a phone · {stats.email} with an email
                 {stats.checked > 0 ? <> · {stats.needsSite} need a better website</> : stats.total - stats.website > 0 && <> · {stats.total - stats.website} with no website</>}
                 {stats.saved > 0 && <> · {stats.saved} already in your leads</>}
-                {result.truncated && <> · showing the first {stats.total} — choose a distance to narrow it</>}
+                {result.truncated && !fromGoogle && <> · showing the first {stats.total} — choose a distance to narrow it</>}
+                {calls !== null && <> · {calls} Google search{calls === 1 ? '' : 'es'} used</>}
               </p>
               {result.note && <p className="text-xs text-warning">{result.note}</p>}
               {result.alternatives.length > 0 && (
@@ -528,7 +602,9 @@ export default function FindLeadsPage() {
 
         <p className="text-2xs text-tertiary">
           {fromGoogle ? (
-            <>Results from Google Maps, through the scraper this server’s operator runs — Google’s terms forbid scraping, and the operator takes that on.</>
+            calls !== null
+              ? <>Results from Google Maps through the Places API, on your workspace’s key.</>
+              : <>Results from Google Maps, through the scraper this server’s operator runs — Google’s terms forbid scraping, and the operator takes that on.</>
           ) : (
             <>
               Business data ©{' '}
@@ -591,6 +667,56 @@ function ResultRow({ p, e, saved, checked, onToggle }: {
         <ExternalLink className="w-3.5 h-3.5" />
       </a>
     </li>
+  );
+}
+
+/**
+ * Connecting the workspace's Google key. Owners and admins paste it; everyone
+ * else is told who can. The key is checked against Google BEFORE it is saved,
+ * so a key with the API switched off says so here, not on the first search.
+ */
+function GoogleKeyPanel({ status, canEdit, busy, error, value, onChange, onConnect, onDisconnect }: {
+  status: SourcesStatus['google'] | null; canEdit: boolean; busy: boolean; error: string;
+  value: string; onChange: (v: string) => void; onConnect: () => void; onDisconnect: () => void;
+}) {
+  if (!status) return <p className="sm:col-span-4 text-2xs text-tertiary flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" />Checking for a Google key…</p>;
+  if (status.connected) {
+    return (
+      <p className="sm:col-span-4 text-2xs text-secondary flex flex-wrap items-center gap-x-2 gap-y-1">
+        <KeyRound className="w-3.5 h-3.5 text-success" />
+        {status.from === 'server' ? 'Google key provided by this server.' : <>Google key connected <span className="font-mono text-tertiary">{status.hint}</span></>}
+        {status.from === 'workspace' && canEdit && (
+          <button type="button" onClick={onDisconnect} disabled={busy} className="text-tertiary hover:text-danger underline disabled:opacity-40">Remove</button>
+        )}
+        {error && <span className="text-danger">{error}</span>}
+      </p>
+    );
+  }
+  return (
+    <div className="sm:col-span-4 rounded-lg ring-1 ring-subtle bg-surface-sunken/60 p-3 space-y-2">
+      <p className="text-xs text-primary flex items-center gap-1.5"><KeyRound className="w-3.5 h-3.5 text-tertiary" />Connect a Google API key</p>
+      {canEdit ? (
+        <>
+          <ol className="text-2xs text-secondary list-decimal pl-4 space-y-0.5">
+            <li>In <a href="https://console.cloud.google.com/apis/library/places.googleapis.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google Cloud console</a>, turn on <span className="text-primary">Places API (New)</span> (it needs a billing account; each month’s first searches are free).</li>
+            <li>Under Credentials, create an API key and restrict it to the Places API.</li>
+            <li>Paste it here. It is encrypted, and only ever used for your workspace’s searches.</li>
+          </ol>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="AIza…" autoComplete="off" spellCheck={false}
+              className="input-field !h-9 font-mono flex-1" aria-label="Google API key" />
+            <button type="button" onClick={onConnect} disabled={busy || !value.trim()}
+              className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Check and connect
+            </button>
+          </div>
+          {!status.migrated && <p className="text-2xs text-warning">This server’s database is missing migration 0134, so a key cannot be saved yet.</p>}
+        </>
+      ) : (
+        <p className="text-2xs text-secondary">Ask an owner or admin of this workspace to connect one. The free open map works meanwhile.</p>
+      )}
+      {error && <p className="text-2xs text-danger">{error}</p>}
+    </div>
   );
 }
 

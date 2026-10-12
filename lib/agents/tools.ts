@@ -17,8 +17,10 @@ import { runSpec } from '@/lib/insights/run';
 import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
 import { isSafeOutboundUrl } from '@/lib/security/http';
-import { searchBusinesses, LeadSearchError } from '@/lib/leads/osm';
-import { LEAD_CATEGORIES } from '@/lib/leads/categories';
+import { searchBusinesses, geocode, LeadSearchError } from '@/lib/leads/osm';
+import { LEAD_CATEGORIES, CATEGORY_BY_KEY } from '@/lib/leads/categories';
+import { searchPlaces, rectAround, PlacesError } from '@/lib/leads/places';
+import { placesKeyFor } from '@/lib/leads/places-key';
 import { lookupCompany, LookupError } from '@/lib/company/lookup';
 // blueprint.ts has ZERO imports on purpose (it is read by a route handler that
 // must not pull in the browser Supabase client), which is exactly what makes it
@@ -252,7 +254,7 @@ export const TOOLS = [
   // screen. There is deliberately NO website-reading tool beside it: that one
   // takes a URL, and a URL a model chooses is an exfiltration channel (see
   // call_connection) — finding emails on websites stays a button a person presses.
-  { name: 'find_businesses', description: `Find businesses of one kind in one place, from OpenStreetMap — names, addresses, phones, websites and sometimes emails. Use it for "find dentists in Kraków" or "get me restaurants near Długa 5". It saves nothing: to keep some, create records in the \`leads\` object (list_objects shows whether it exists; its fields are name, status, category, city, phone, email, website, address, country, source — put each result's \`source\` link in source). Emails on businesses' own websites are found by the person on the Find leads screen (/leads), not by you. Categories: ${LEAD_CATEGORIES.map((c) => c.key).join(', ')}.`, inputSchema: { type: 'object', properties: { category: { type: 'string', enum: LEAD_CATEGORIES.map((c) => c.key) }, where: { type: 'string', description: 'A city, district, street or postcode, with the country if it could be ambiguous.' }, radius_km: { type: 'number', description: 'Optional: search within this distance of the place instead of the whole place.' }, name_contains: { type: 'string' }, limit: { type: 'number', description: 'Most results to return, default 50, max 100.' } }, required: ['category', 'where'] } },
+  { name: 'find_businesses', description: `Find businesses of one kind in one place — names, addresses, phones, websites, and for Google results ratings and review counts. Use it for "find dentists in Kraków" or "get me solar installers near Lagos". Source: Google Maps (live, through the official Places API) when this workspace has connected a Google key, otherwise OpenStreetMap; the result says which. Google takes any kind of business in \`query\`; OpenStreetMap only the listed categories. It saves nothing: to keep some, create records in the \`leads\` object (list_objects shows whether it exists; its fields are name, status, category, city, phone, email, website, address, country, rating, reviews, source — put each result's \`source\` link in source). Emails on businesses' own websites are found by the person on the Find leads screen (/leads), not by you. Categories: ${LEAD_CATEGORIES.map((c) => c.key).join(', ')}.`, inputSchema: { type: 'object', properties: { category: { type: 'string', enum: LEAD_CATEGORIES.map((c) => c.key) }, query: { type: 'string', description: 'Any kind of business in words ("wedding photographer"), instead of a category. Google only.' }, where: { type: 'string', description: 'A city, district, street or postcode, with the country if it could be ambiguous.' }, radius_km: { type: 'number', description: 'Optional: search within this distance of the place instead of the whole place.' }, name_contains: { type: 'string' }, source: { type: 'string', enum: ['auto', 'google', 'open_map'], description: 'auto (default) = Google when a key is connected, else the open map.' }, limit: { type: 'number', description: 'Most results to return, default 50, max 100.' } }, required: ['where'] } },
   { name: 'save_order', description: 'Create a draft order from products. Lines may name a product_id from list_records(products) or just a name and price. Stock moves only when a person marks it paid — never here.', inputSchema: { type: 'object', properties: {
     customer: { type: 'string', description: 'Who it is for / where it ships.' }, company_id: { type: 'string' }, notes: { type: 'string' },
     items: { type: 'array', items: { type: 'object', properties: { product_id: { type: 'string' }, name: { type: 'string' }, quantity: { type: 'number' }, unit_price: { type: 'number' } } } },
@@ -1094,12 +1096,44 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
     }
 
     case 'find_businesses': {
+      const limit = Math.min(100, Math.max(1, Number(args?.limit) || 50));
+      const want = String(args?.source || 'auto');
+      const typed = String(args?.query || '').replace(/[^\p{L}\p{N}&'’ .,-]+/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+      const cat = CATEGORY_BY_KEY[String(args?.category || '')];
       try {
+        // Google first when the workspace has a key: live, complete, and
+        // billed to the workspace that connected it. One "Top 60" search — at
+        // most three billed calls — whatever the model asks for; going wider
+        // is a person's decision on the Find leads screen.
+        const key = want === 'open_map' ? null : await placesKeyFor(ctx.privy, ctx.workspace);
+        if (key && !('error' in key)) {
+          const what = typed || cat?.one.toLowerCase();
+          if (!what) return { results: [], warning: 'Say what kind of business: a category or a query.' };
+          const where = String(args?.where || '').trim();
+          const name = String(args?.name_contains || '').replace(/[^\p{L}\p{N} ]+/gu, ' ').trim().slice(0, 60);
+          const place = (await geocode(where, 'en').catch(() => []))[0];
+          const radius = Number(args?.radius_km) || 0;
+          const g = await searchPlaces({
+            key: key.key, query: [name, what].filter(Boolean).join(' '), where, depth: 'quick', lang: 'en',
+            region: place?.country || undefined, fallbackCategory: cat?.one || typed,
+            rect: place ? (radius > 0 ? rectAround(place.lat, place.lon, radius) : { s: place.bbox[0], n: place.bbox[1], w: place.bbox[2], e: place.bbox[3] }) : null,
+          });
+          const rows = g.results.slice(0, limit).map((p) => ({
+            name: p.name, category: p.category, address: p.address, city: p.city, country: p.country,
+            phone: p.phone || undefined, website: p.website || undefined, rating: p.rating, reviews: p.reviews, source: p.url,
+          }));
+          return {
+            source: 'Google Maps (Places API)', place: place?.label || where, found: g.results.length, returned: rows.length, results: rows,
+            google_calls: g.calls,
+            ...(g.saturated ? { note: 'Google has more here. The person can search the whole area on the Find leads screen.' } : {}),
+          };
+        }
+        if (want === 'google') return { results: [], warning: 'This workspace has not connected a Google key. An owner or admin can, on the Find leads screen.' };
+        if (!cat) return { results: [], warning: typed ? 'The open map only searches the listed categories. Pick the closest one, or connect a Google key for anything else.' : 'Pick a category.' };
         const r = await searchBusinesses({
-          category: String(args?.category || ''), where: String(args?.where || ''),
+          category: cat.key, where: String(args?.where || ''),
           radiusKm: Number(args?.radius_km) || 0, name: String(args?.name_contains || ''),
         });
-        const limit = Math.min(100, Math.max(1, Number(args?.limit) || 50));
         // Compact rows: a city's four hundred cafés at full width would spend
         // the context window on opening hours nobody asked about.
         const rows = r.results.slice(0, limit).map((p) => ({
@@ -1107,12 +1141,12 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
           phone: p.phone || undefined, email: p.email || undefined, website: p.website || undefined, source: p.url,
         }));
         return {
-          place: r.place.label, found: r.results.length, returned: rows.length, results: rows,
+          source: 'OpenStreetMap', place: r.place.label, found: r.results.length, returned: rows.length, results: rows,
           ...(r.results.length > rows.length ? { note: `${r.results.length - rows.length} more not shown — raise limit or narrow the area.` } : {}),
           attribution: 'Data © OpenStreetMap contributors (ODbL).',
         };
       } catch (e: any) {
-        if (e instanceof LeadSearchError) return { results: [], warning: e.message };
+        if (e instanceof LeadSearchError || e instanceof PlacesError) return { results: [], warning: e.message };
         throw e;
       }
     }

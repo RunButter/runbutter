@@ -166,9 +166,35 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       CRON_SECRET: ${CRON_SECRET:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_not_configured}
+      # Find leads → Google (official API), for every workspace that has not
+      # connected its own key. Leave empty to make each workspace bring one.
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      # Find leads → Google scraper. Empty unless you start the `gmaps` profile
+      # below; set GMAPS_SCRAPER_URL=http://gmaps:8080 in .env when you do.
+      GMAPS_SCRAPER_URL: ${GMAPS_SCRAPER_URL:-}
     ports:
       - '${APP_PORT:-3000}:3000'
+
+  # OPTIONAL — Google Maps scraper (gosom/google-maps-scraper, MIT) for Find
+  # leads. Off unless you ask for it:
+  #
+  #   GMAPS_SCRAPER_URL=http://gmaps:8080   (in .env)
+  #   docker compose --profile gmaps up
+  #
+  # Scraping Google Maps is against Google's terms of service; running this is
+  # your decision. Its API has no authentication, so it is NOT published to the
+  # host — only the app can reach it, over the compose network.
+  gmaps:
+    image: gosom/google-maps-scraper:latest
+    profiles: ['gmaps']
+    restart: unless-stopped
+    command: ['-data-folder', '/gmapsdata']
+    volumes:
+      - gmaps-data:/gmapsdata
+    expose:
+      - '8080'
 
 volumes:
   db-data:
   storage-data:
+  gmaps-data:

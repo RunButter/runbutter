@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * choice only when this says it is on.
  *
  *   GET                       → { enabled }
- *   POST { category, where, name?, place? } → { job, place }   (starts a search)
+ *   POST { category | query, where, name?, place? } → { job, place }   (starts a search)
  *   GET  ?job=<id>&country=XX → { status, results? , error? } (comes back for it)
  *
  * Like the OpenStreetMap search it writes nothing: saving is the browser's own
@@ -55,7 +55,8 @@ export async function POST(req: Request) {
 
   try {
     const cat = CATEGORY_BY_KEY[String(b.category || '')];
-    if (!cat) throw new LeadSearchError('Pick what kind of business to look for.');
+    const typed = String(b.query || '').replace(/[^\p{L}\p{N}&'’ .,-]+/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+    if (!cat && !typed) throw new LeadSearchError('Say what kind of business to look for.');
     let place: GeoPlace | null = b.place && typeof b.place === 'object' ? sanitizePlace(b.place) : null;
     if (!place) {
       const where = String(b.where || '').trim();
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
     // it becomes a search box entry on the scraper, never anything else.
     const name = String(b.name || '').replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
     const town = place.label.split(',').slice(0, 2).map((s) => s.trim()).filter(Boolean).join(', ');
-    const query = `${name ? `${name} ` : ''}${cat.one.toLowerCase()} in ${town}`;
+    const query = `${name ? `${name} ` : ''}${typed || cat!.one.toLowerCase()} in ${town}`;
     const job = await startGmapsJob(who.user, { query, lang, lat: place.lat, lon: place.lon });
     return NextResponse.json({ job, place, query });
   } catch (e: any) {

@@ -28,7 +28,7 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
   owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
   0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates), 0131
-  (support inbox + chat widget), 0132 (automations v3) and 0133 (company phone/email/website) are NEW and pending.** Do not take any of that on trust when
+  (support inbox + chat widget), 0132 (automations v3), 0133 (company phone/email/website) and 0134 (data source keys) are NEW and pending.** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -439,6 +439,31 @@ public email → save as **Leads**. No migration.
     included; the scraper's own email crawler does neither.
   - `parseGmapsCsv` reads the documented 36 columns BY NAME, skips "permanently closed", dedupes by
     place_id/cid, refuses non-Google `link`s and non-http websites (`cleanWebsite`), sorts by reviews.
+- **Google · live = the official Places API (New) on the WORKSPACE'S key** (`lib/leads/places.ts`,
+  `/api/leads/places`, `/api/leads/sources`, migration **0134**). Asked "really get leads, real and
+  live": OSM is free but patchy and its public servers refused Render; the scraper needs a container
+  someone runs. An API call with a key is not a bot, so nothing blocks it, and it returns phone,
+  website, hours, rating and review count worldwide. Same cost rule as AI: BYO key, billed by Google
+  to whoever connected it; `GOOGLE_PLACES_API_KEY` is only the server-wide fallback.
+  - **0134 `data_source_keys`**: sealed (`sealSecret`) per (workspace, source); save/delete are
+    owner/admin (`data_source_admin`); members see a hint (`get_data_source_keys`);
+    `get_data_source_secret` is service_role only AND checks membership in SQL. A key is CHECKED with
+    one ids-only call (cheapest SKU) before it is saved, so "Places API (New) is not enabled" shows at
+    connect time, not on the first search. `placesErrorMessage` turns Google's errors into actions.
+  - **60 is Google's cap per query**, so `searchPlaces` is a quadtree over `locationRestriction`
+    rectangles: a tile that comes back FULL is quartered, down to ~300 m, within a CALL budget
+    (Top 60 = 3, Whole area = 30, Every street = 90). Every page is a billed call and the response
+    says how many were used. A budget cut or a full minimum tile = `truncated`, never silence.
+  - The field mask asks for phone/website/hours/rating together on purpose: any one of them puts the
+    call in the Text Search Enterprise SKU, so asking for all costs nothing more.
+  - Free-text business types ("solar panel installer") work for both Google sources; the open map
+    still takes only `LEAD_CATEGORIES` (tags must be fixed strings).
+  - **The Copilot's `find_businesses` uses Google when a key is connected** (one Top-60 search, ≤3
+    calls, whatever the model asks); `source: open_map` forces OSM. Going wider is a person's button.
+  - Google's terms restrict STORING Places content beyond the place id; the screen says so next to
+    the choice and saving stays the person's decision.
+  - `docker-compose.yml` has the scraper as an opt-in `gmaps` profile, not published to the host
+    (its API has no auth).
 - **Check websites** (was "Find emails") returns a `SiteCheck` per site: down / invalid SSL / HTTP
   error / no HTTPS / not mobile-friendly (no viewport meta) / slow (>4 s) + the builder (Wix,
   WordPress…, regexes over the HTML). A robots.txt 5xx is reported as "Website broken", not as "asks
@@ -1526,6 +1551,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0134** (Find leads → Google key storage; without it "Check and connect" says 0134 is
+  missing) and connect a Google Places key on Find leads to get live Google results.
 - **Run 0133** (company phone/email/website/REGON/KRS/bank account — without it the form says those
   fields were not kept). Optional: a free **`CEIDG_API_TOKEN`** so sole traders fill in too.
 - **Run 0130, 0131 and 0132** too — 0130 is deal close dates (the Calendar view degrades to "No close
