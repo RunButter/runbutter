@@ -387,6 +387,13 @@ public email → save as **Leads**. No migration.
   busy" remark as the server's problem (next server) and "timed out" as the query's (fail once),
   and logs the reason per server. Geocoding falls back Nominatim → Photon. A city wider than 1.2° is
   searched 15 km round its centre WITH a note; only countries/regions are refused.
+  **All three Overpass servers then refused production too** ("map servers are busy") while
+  Nominatim, in the same request, answered. So when Overpass is unavailable the search falls back
+  to **Nominatim POI search** (`nominatimPlaces`): the category's type word inside a bounded
+  viewbox, `extratags=1` for phone/website/hours, ≤40 a page × 2 pages per word, results kept only
+  when their class/type is one of the category's tag pairs (a street called "Dentist" is not a
+  lead), and a note saying it was the smaller backup. If both fail, the error carries the REASON
+  per server (`HTTP 429`, `no answer in 15 s`, `ECONNRESET`…) so a screenshot is a diagnosis.
 - **This sandbox's egress policy blocks both hosts** (and arbitrary websites), so the code is
   verified against fixtures (`toFoundPlace`, `buildQuery`, `extractContacts`, robots, redirects) and
   a mocked browser run — not against the live services. Check the first real search after deploy.

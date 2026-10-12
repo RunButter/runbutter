@@ -37,7 +37,7 @@ const OVERPASS_URLS = (process.env.OSM_OVERPASS_URL || [
   'https://overpass.private.coffee/api/interpreter',
 ].join(',')).split(',').map((u) => u.trim()).filter(Boolean);
 /** Per server. A healthy one answers a city search in a few seconds. */
-const OVERPASS_ATTEMPT_MS = 20_000;
+const OVERPASS_ATTEMPT_MS = 15_000;
 const UA = 'RunButter/1.0 (+https://runbutter.app; lead finder)';
 
 /** Most results one search returns. Enough for a city's dentists; a city's shops needs a smaller area. */
@@ -104,6 +104,10 @@ export interface SearchResult {
 }
 
 export class LeadSearchError extends Error {}
+/** Every Overpass server refused; `reasons` says how each one did. */
+export class OverpassUnavailable extends LeadSearchError {
+  constructor(public reasons: string[]) { super('The map servers did not answer.'); }
+}
 
 // ── Small caches ─────────────────────────────────────────────────────────────
 
@@ -302,7 +306,7 @@ async function runOverpass(ql: string): Promise<{ elements: any[] }> {
         signal: AbortSignal.timeout(OVERPASS_ATTEMPT_MS),
       });
     } catch (e: any) {
-      tried.push(`${host}: ${e?.name === 'TimeoutError' ? 'no answer in 20 s' : e?.cause?.code || e?.message || 'unreachable'}`);
+      tried.push(`${host}: ${e?.name === 'TimeoutError' ? `no answer in ${OVERPASS_ATTEMPT_MS / 1000} s` : e?.cause?.code || e?.message || 'unreachable'}`);
       continue;
     }
     // Busy, rate-limited, or down: the next server may well be fine.
@@ -326,7 +330,7 @@ async function runOverpass(ql: string): Promise<{ elements: any[] }> {
   // Said in the server log with the reason per server, because "did not
   // answer" alone is what made this hard to diagnose the first time.
   console.error('leads/overpass: every server failed —', tried.join('; '));
-  throw new LeadSearchError('The map servers are busy right now. Try again in a minute — or choose a distance to make the search smaller.');
+  throw new OverpassUnavailable(tried);
 }
 
 // ── Turning OSM tags into a lead ─────────────────────────────────────────────
@@ -432,6 +436,87 @@ const pick = (p: FoundPlace): Partial<FoundPlace> =>
 
 // ── The whole search ─────────────────────────────────────────────────────────
 
+// ── When Overpass is out of reach: the same map, through Nominatim ─────────────
+//
+// In production EVERY public Overpass server refused the hosting provider's
+// shared IPs ("map servers are busy"), while Nominatim — which geocoded the
+// place in the same request — answered. Nominatim also searches businesses: a
+// type word ("dentist") inside a bounding box returns the dentists there, and
+// `extratags` carries their phone, website and opening hours. It returns at
+// most 40 a page, so this is a smaller search than Overpass, said as such, and
+// it is spaced like every other Nominatim call. Results are kept only when
+// their OSM class/type is one of the category's own tag pairs, so a street
+// called "Dentist" never becomes a lead.
+
+const NOMINATIM_PAGES = 2;
+
+function viewboxFor(place: GeoPlace, scope: Scope): string {
+  if (scope.kind === 'around') {
+    const dLat = scope.m / 111_320;
+    const dLon = scope.m / (111_320 * Math.max(0.2, Math.cos((scope.lat * Math.PI) / 180)));
+    return [scope.lon - dLon, scope.lat + dLat, scope.lon + dLon, scope.lat - dLat].map((x) => x.toFixed(6)).join(',');
+  }
+  const [s, n, w, e] = place.bbox;
+  return [w, n, e, s].map((x) => x.toFixed(6)).join(',');
+}
+
+/** A Nominatim search hit, as the Overpass element toFoundPlace already reads. */
+export function nominatimToElement(r: any): any | null {
+  const type = r?.osm_type, id = Number(r?.osm_id);
+  if (!['node', 'way', 'relation'].includes(type) || !Number.isFinite(id)) return null;
+  const a = r.address || {};
+  const cls = r.category || r.class;
+  return {
+    type, id, lat: Number(r.lat), lon: Number(r.lon),
+    tags: {
+      ...(r.extratags || {}),
+      ...(cls && r.type ? { [cls]: r.type } : {}),
+      name: r.name || r.namedetails?.name || '',
+      'addr:street': a.road || a.pedestrian || '', 'addr:housenumber': a.house_number || '',
+      'addr:postcode': a.postcode || '', 'addr:city': a.city || a.town || a.village || a.municipality || '',
+      'addr:country': String(a.country_code || '').toUpperCase(),
+    },
+  };
+}
+
+async function nominatimPlaces(cat: LeadCategory, place: GeoPlace, scope: Scope, name: string, lang: string): Promise<any[]> {
+  const phrases = [...new Set(cat.tags.map(([, v]) => v.replace(/_/g, ' ')))].slice(0, 2);
+  const wanted = (r: any) => cat.tags.some(([k, v]) => (r.category || r.class) === k && r.type === v);
+  const nm = safeNameFilter(name).toLowerCase();
+  const out: any[] = [];
+  const seen = new Set<string>();
+  for (const phrase of phrases) {
+    const exclude: string[] = [];
+    for (let page = 0; page < NOMINATIM_PAGES; page++) {
+      await nominatimSlot();
+      const params = new URLSearchParams({
+        q: phrase, format: 'jsonv2', limit: '40', addressdetails: '1', extratags: '1',
+        viewbox: viewboxFor(place, scope), bounded: '1',
+        ...(exclude.length ? { exclude_place_ids: exclude.join(',') } : {}),
+      });
+      let rows: any[] = [];
+      try {
+        const res = await fetch(`${NOMINATIM}/search?${params}`, {
+          headers: { 'user-agent': UA, accept: 'application/json', 'accept-language': lang },
+          signal: AbortSignal.timeout(10_000),
+        });
+        rows = res.ok ? await res.json().catch(() => []) : [];
+      } catch { rows = []; }
+      if (!Array.isArray(rows) || !rows.length) break;
+      for (const r of rows) {
+        if (r.place_id) exclude.push(String(r.place_id));
+        if (!wanted(r)) continue;
+        if (nm && !String(r.name || '').toLowerCase().includes(nm)) continue;
+        const el = nominatimToElement(r);
+        const key = el ? `${el.type}/${el.id}` : '';
+        if (el && !seen.has(key)) { seen.add(key); out.push(el); }
+      }
+      if (rows.length < 40) break;
+    }
+  }
+  return out;
+}
+
 export async function searchBusinesses(input: SearchInput): Promise<SearchResult> {
   const cat = CATEGORY_BY_KEY[input.category];
   if (!cat) throw new LeadSearchError('Pick what kind of business to look for.');
@@ -447,23 +532,40 @@ export async function searchBusinesses(input: SearchInput): Promise<SearchResult
   }
 
   const scope = scopeFor(place, input.radiusKm);
-  let { elements } = await runOverpass(buildQuery(cat, scope, input.name));
-  // A boundary Overpass has no area for answers EMPTY rather than an error, so
-  // an empty area search is retried over the bounding box before it is
-  // believed. Rare, but "no dentists in Kraków" is the sort of answer that gets
-  // a feature abandoned.
-  if (!elements.length && scope.kind === 'area') {
-    const [s, n, w, e] = place.bbox;
-    ({ elements } = await runOverpass(buildQuery(cat, { kind: 'bbox', s, n, w, e }, input.name)));
+  let elements: any[] = [];
+  let fallbackNote = '';
+  try {
+    ({ elements } = await runOverpass(buildQuery(cat, scope, input.name)));
+    // A boundary Overpass has no area for answers EMPTY rather than an error, so
+    // an empty area search is retried over the bounding box before it is
+    // believed. Rare, but "no dentists in Kraków" is the sort of answer that
+    // gets a feature abandoned.
+    if (!elements.length && scope.kind === 'area') {
+      const [s, n, w, e] = place.bbox;
+      ({ elements } = await runOverpass(buildQuery(cat, { kind: 'bbox', s, n, w, e }, input.name)));
+    }
+  } catch (err) {
+    if (!(err instanceof OverpassUnavailable)) throw err;
+    elements = await nominatimPlaces(cat, place, scope, input.name || '', input.lang || 'en');
+    if (!elements.length) {
+      // Say exactly what each server did: "busy" alone is what made this hard
+      // to diagnose from a screenshot.
+      throw new LeadSearchError(`The map servers did not answer (${err.reasons.join('; ')}), and the backup search found nothing. Try again in a few minutes.`);
+    }
+    fallbackNote = `The main map servers were busy, so this is a smaller search (up to ${NOMINATIM_PAGES * 40} per kind of business). Search again later for the full list.`;
   }
 
   const results = dedupePlaces(
     elements.map((el) => toFoundPlace(el, place!, cat.one)).filter(Boolean) as FoundPlace[],
   );
   const narrowed = scope.kind === 'around' && !(Number(input.radiusKm) > 0) && scope.m === BIG_CITY_KM * 1000;
+  const notes = [
+    narrowed ? `${place.label.split(',')[0]} is large, so this searched within ${BIG_CITY_KM} km of its centre. Pick a district, or a distance from an address, to search elsewhere in it.` : '',
+    fallbackNote,
+  ].filter(Boolean);
   return {
     place, alternatives, results, truncated: elements.length >= MAX_RESULTS,
-    ...(narrowed ? { note: `${place.label.split(',')[0]} is large, so this searched within ${BIG_CITY_KM} km of its centre. Pick a district, or a distance from an address, to search elsewhere in it.` } : {}),
+    ...(notes.length ? { note: notes.join(' ') } : {}),
   };
 }
 
