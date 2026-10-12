@@ -35,6 +35,52 @@ export interface SiteContacts {
   checked: string[];
   /** Why nothing could be read, when nothing could. */
   note?: string;
+  /** What is wrong with the site itself, for anyone who sells websites. */
+  check?: SiteCheck;
+}
+
+export interface SiteCheck {
+  /** Plain-language problems: "No HTTPS", "Not mobile-friendly", "Website down"… Empty = looks fine. */
+  issues: string[];
+  /** The site builder it was made with, when recognisable (Wix, Squarespace…). */
+  builder?: string;
+  https: boolean;
+  mobile: boolean;
+  ms?: number;
+}
+
+// ── The site itself (ProspectOS's idea: a bad website is a lead too) ─────────
+// Facts read off the homepage, never a judgement call: HTTPS is the final URL's
+// scheme, mobile-friendly is a viewport meta tag, slow is the measured time to
+// the full homepage, a builder is its own unmistakable asset host.
+
+const BUILDERS: [string, RegExp][] = [
+  ['Wix', /static\.wixstatic\.com|static\.parastorage\.com|\bwix\.com\/|_wixCssImports|wix-code|content=["']Wix\.com/i],
+  ['Squarespace', /static1\.squarespace\.com|squarespace\.com\/|Squarespace\.Constants/i],
+  ['Webflow', /data-wf-site|website-files\.com|webflow\.com\//i],
+  ['Shopify', /cdn\.shopify\.com|Shopify\.theme/i],
+  ['Jimdo', /jimstatic\.com|jimdo(?:site)?\.com/i],
+  ['GoDaddy', /img1\.wsimg\.com/i],
+  ['Weebly', /editmysite\.com|weebly\.com/i],
+  ['Framer', /framerusercontent\.com/i],
+  ['Canva', /canva\.site|_assets\/canva/i],
+  ['Tilda', /tildacdn\.com|tilda\.ws/i],
+  ['Site123', /site123\.(?:me|com)/i],
+  ['Strikingly', /strikingly(?:cdn)?\.com/i],
+  ['Carrd', /carrd\.co/i],
+  ['Google Sites', /sites\.google\.com|gstatic\.com\/atari/i],
+  ['WordPress', /\/wp-content\/|\/wp-includes\/|content=["']WordPress/i],
+];
+
+export function siteCheck(html: string, finalUrl: string, ms?: number): SiteCheck {
+  const https = /^https:/i.test(finalUrl);
+  const mobile = /<meta[^>]+name\s*=\s*["']viewport["']/i.test(html);
+  const builder = BUILDERS.find(([, rx]) => rx.test(html))?.[0];
+  const issues: string[] = [];
+  if (!https) issues.push('No HTTPS');
+  if (!mobile) issues.push('Not mobile-friendly');
+  if (ms !== undefined && ms > 4000) issues.push(`Slow (${(ms / 1000).toFixed(1)} s)`);
+  return { issues, builder, https, mobile, ms };
 }
 
 // ── Pure extraction (tested against fixtures; no network) ──────────────────
@@ -202,11 +248,11 @@ async function resolvesPublic(hostname: string): Promise<boolean> {
   } catch { return false; }
 }
 
-async function safeGet(url: string, maxBytes: number, timeoutMs: number): Promise<{ status: number; body: string; url: string; type: string } | null> {
+async function safeGet(url: string, maxBytes: number, timeoutMs: number, err?: { code?: string }): Promise<{ status: number; body: string; url: string; type: string } | null> {
   let current = url;
   for (let hop = 0; hop < 4; hop++) {
     if (!isSafeOutboundUrl(current)) return null;
-    if (!(await resolvesPublic(new URL(current).hostname))) return null;
+    if (!(await resolvesPublic(new URL(current).hostname))) { if (err) err.code = 'DNS'; return null; }
     let res: Response;
     try {
       res = await fetch(current, {
@@ -214,7 +260,10 @@ async function safeGet(url: string, maxBytes: number, timeoutMs: number): Promis
         headers: { 'user-agent': UA, accept: 'text/html,text/plain;q=0.9,*/*;q=0.5', 'accept-language': 'en,pl;q=0.8,de;q=0.6' },
         signal: AbortSignal.timeout(timeoutMs),
       });
-    } catch { return null; }
+    } catch (e: any) {
+      if (err) err.code = e?.name === 'TimeoutError' ? 'TIMEOUT' : String(e?.cause?.code || e?.code || 'FETCH');
+      return null;
+    }
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get('location');
       if (!loc) return null;
@@ -266,13 +315,31 @@ export async function findContacts(website: string): Promise<SiteContacts> {
   if (!isSafeOutboundUrl(start.toString())) return { ...out, note: 'Not a public website.' };
 
   const rules = await robotsFor(start.origin);
+  // 'all' only ever means robots.txt answered 5xx: the server is failing, which
+  // is a finding about the site, not a request to be left alone.
+  if (rules === 'all') {
+    return { ...out, note: 'The website is returning server errors.', check: { issues: ['Website broken (server error)'], https: start.protocol === 'https:', mobile: false } };
+  }
   if (!allowed(rules, start.toString())) return { ...out, note: 'This site asks not to be read by bots.' };
 
-  const home = await safeGet(start.toString(), PAGE_BYTES, PAGE_TIMEOUT);
-  if (!home) return { ...out, note: 'The website did not answer.' };
-  if (home.status >= 400) return { ...out, note: `The website answered ${home.status}.` };
+  const err: { code?: string } = {};
+  const t0 = Date.now();
+  const home = await safeGet(start.toString(), PAGE_BYTES, PAGE_TIMEOUT, err);
+  const ms = Date.now() - t0;
+  if (!home) {
+    const ssl = /CERT|SSL|TLS|SELF_SIGNED/i.test(err.code || '');
+    return {
+      ...out,
+      note: ssl ? 'The website has an invalid security certificate.' : err.code === 'DNS' ? 'The website address does not exist.' : 'The website did not answer.',
+      check: { issues: [ssl ? 'Invalid SSL certificate' : 'Website down'], https: false, mobile: false },
+    };
+  }
+  if (home.status >= 400) {
+    return { ...out, note: `The website answered ${home.status}.`, check: { issues: [`Website broken (HTTP ${home.status})`], https: /^https:/i.test(home.url), mobile: false } };
+  }
   if (home.type && !/html|text\/plain/i.test(home.type)) return { ...out, note: 'The website is not a web page.' };
   out.checked.push(home.url);
+  out.check = siteCheck(home.body, home.url, ms);
 
   const merge = (x: ReturnType<typeof extractContacts>) => {
     for (const e of x.emails) if (!out.emails.includes(e)) out.emails.push(e);

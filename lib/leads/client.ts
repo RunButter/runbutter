@@ -43,6 +43,39 @@ export const searchLeads = (b: { category: string; where: string; radiusKm: numb
 export const enrichSites = (websites: string[]) =>
   post<{ results: SiteContacts[] }>('/api/leads/enrich', { websites });
 
+// ── Google Maps, through the operator's own scraper (lib/leads/gmaps.ts) ────
+
+/** Whether this server has a scraper. Asked once; no sign-in needed to know. */
+export async function gmapsAvailable(): Promise<boolean> {
+  try {
+    const j = await fetch('/api/leads/gmaps').then((r) => r.json());
+    return !!j?.enabled;
+  } catch { return false; }
+}
+
+export const startGmapsSearch = (b: { category: string; where: string; name?: string; place?: GeoPlace | null }) =>
+  post<{ job: string; place: GeoPlace; query: string }>('/api/leads/gmaps', b);
+
+export type GmapsPoll =
+  | { status: 'pending' | 'working' }
+  | { status: 'ok'; results: FoundPlace[] }
+  | { status: 'failed'; error: string }
+  | { error: string };
+
+export async function pollGmapsSearch(job: string, country: string): Promise<GmapsPoll> {
+  try {
+    const res = await fetch(`/api/leads/gmaps?${new URLSearchParams({ job, country })}`, { headers: await authHeaders() });
+    const j = await res.json().catch(() => null);
+    if (!res.ok) return { error: j?.error || `Something went wrong (${res.status}).` };
+    return j as GmapsPoll;
+  } catch {
+    return { error: 'Could not reach the server. Check your connection.' };
+  }
+}
+
+/** Where a found business was listed, by name. */
+export const listedOn = (p: Pick<FoundPlace, 'ref'>) => (p.ref.startsWith('google/') ? 'Google Maps' : 'OpenStreetMap');
+
 // ── The Leads object ─────────────────────────────────────────────────────────
 
 export async function findLeadsObject(privy: string, ws: string): Promise<{ obj: CustomObject | null; error?: string }> {
@@ -128,11 +161,11 @@ export async function saveLead(
  * the answer — and in the EU it is a question people are entitled to ask.
  */
 export async function noteProvenance(privy: string, ws: string, id: string, p: FoundPlace, e?: Enrichment | null) {
-  const lines = [`Found with Find leads: ${p.category || 'business'}${p.city ? ` in ${p.city}` : ''}, listed on OpenStreetMap.`];
+  const lines = [`Found with Find leads: ${p.category || 'business'}${p.city ? ` in ${p.city}` : ''}, listed on ${listedOn(p)}.`];
   if (!p.email && e?.emails?.[0]) lines.push(`Email ${e.emails[0]} is published on ${e.checked.join(' and ') || p.website}.`);
   await rpc('add_record_note', {
     p_privy: privy, p_workspace: ws, p_object: LEAD_SLUG, p_record: id,
-    p_body: lines.join(' '), p_source: 'Find leads (OpenStreetMap)', p_source_url: p.url,
+    p_body: lines.join(' '), p_source: `Find leads (${listedOn(p)})`, p_source_url: p.url,
   }, { quiet: true });
 }
 

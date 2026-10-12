@@ -423,6 +423,34 @@ public email → save as **Leads**. No migration.
 - The "Before you contact them" panel is deliberate: cold email/calls to businesses need PRIOR
   CONSENT in Poland (and elsewhere in the EU); US/UK-limited-company B2B email is opt-out. Do not
   turn this into a bulk cold-email sender without per-country consent handling.
+- **Google Maps only through the OPERATOR'S OWN scraper** (`lib/leads/gmaps.ts`,
+  `/api/leads/gmaps`). Reviewed four repos for this (2026-10): `gosom/google-maps-scraper` (MIT, Go +
+  headless browser, REST API) is the integration target; ProspectOS (MIT) is a Windows wrapper around
+  that same binary; LeadGenerationTools/google-maps-extractor (Apache-2.0) is a freemium Chrome
+  extension; SuiteCRM is AGPL — ideas only. RunButter never scrapes Google itself: off unless
+  `GMAPS_SCRAPER_URL` is set, the screen says scraping is against Google's terms next to the choice,
+  and the operator who runs the container takes that on. Do not move scraping into this process.
+  - A job takes minutes, so the browser starts one (POST) and polls (GET `?job=`, every 8 s); the
+    pending job lives in localStorage so leaving the page does not lose it, and three missed polls in
+    a row (not one) end it. **Jobs are owned by NAME**: `rb-<HMAC(server key, privy id)>-<ts>`, and
+    a job whose name lacks the caller's prefix is answered exactly like a missing one — the scraper
+    has no auth and no notion of users, so this is the only thing tying a job to a person.
+  - `email: false` on the job: our `findContacts` does that, robots.txt and private-address checks
+    included; the scraper's own email crawler does neither.
+  - `parseGmapsCsv` reads the documented 36 columns BY NAME, skips "permanently closed", dedupes by
+    place_id/cid, refuses non-Google `link`s and non-http websites (`cleanWebsite`), sorts by reviews.
+- **Check websites** (was "Find emails") returns a `SiteCheck` per site: down / invalid SSL / HTTP
+  error / no HTTPS / not mobile-friendly (no viewport meta) / slow (>4 s) + the builder (Wix,
+  WordPress…, regexes over the HTML). A robots.txt 5xx is reported as "Website broken", not as "asks
+  not to be read" — it was the server failing, not a request. *Needs a website* = no site, or any
+  issue. Leads gained `rating`, `reviews` (number) and `website_check` (text); an existing Leads
+  object gets them from an "Add them" banner (`setUpLeads` only adds what is missing). An unchecked
+  site saves `website_check` BLANK, never "Looks fine".
+- **CSV import maps scraper exports** (`matchColumns`/`cleanImportValue` in `lib/crm/csv.ts`): exact
+  names first, synonyms only for fields still unmatched and columns still unclaimed — so People's
+  `title` stays Title. A select takes only its own options and blanks anything else, because a
+  rejected option made `import_records` skip the WHOLE row (gosom's `status: Open` would have
+  skipped every row); a list of emails keeps the first valid one; `4,6`/`1.234,5` are parsed.
 
 ## Company from a tax number (0133) — `docs/company-lookup.md`
 NIP / EU VAT in → the form fills itself, with a SOURCE per field (`lib/company/lookup.ts`, shared by

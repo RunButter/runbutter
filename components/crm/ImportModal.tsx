@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Loader2, Upload, FileSpreadsheet, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import type { ObjectDef } from '@/lib/crm/types';
-import { parseCSV, autoMatch } from '@/lib/crm/csv';
+import { parseCSV, matchColumns, cleanImportValue } from '@/lib/crm/csv';
 import { importRecords, fetchSheetCsv } from '@/lib/crm/data';
 import Thinking from '@/components/ui/Thinking';
 
@@ -48,9 +48,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
     const { headers: h, rows: r } = parseCSV(text);
     if (h.length === 0 || r.length === 0) { setError('Could not find a header row and data. Paste CSV or upload a file.'); return; }
     setHeaders(h); setRows(r);
-    const m: Record<string, number> = {};
-    for (const f of fields) m[f.key] = autoMatch(f.key, f.label, h);
-    setMapping(m);
+    setMapping(matchColumns(fields, h));
     setStep('map');
   };
 
@@ -59,7 +57,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
     setBusy(true); setError('');
     const data = rows.map((r) => {
       const obj: Record<string, any> = {};
-      for (const f of fields) { const idx = mapping[f.key]; if (idx >= 0) obj[f.key] = (r[idx] ?? '').trim(); }
+      for (const f of fields) { const idx = mapping[f.key]; if (idx >= 0) obj[f.key] = cleanImportValue(f, r[idx] ?? ''); }
       return obj;
     });
     const res = await importRecords(privyUserId, object.slug, data);
@@ -126,7 +124,7 @@ export default function ImportModal({ object, privyUserId, onClose, onImported }
             <div className="py-8 text-center">
               <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-3" />
               <p className="text-sm font-semibold text-primary">Imported {count} {object.plural.toLowerCase()}</p>
-              <p className="text-xs text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} rows were skipped (missing required fields).` : 'All rows imported.'}</p>
+              <p className="text-xs text-secondary mt-1">{rows.length - count > 0 ? `${rows.length - count} row${rows.length - count === 1 ? ' was' : 's were'} skipped — a required field was empty, or a value did not fit its field.` : 'All rows imported.'}</p>
             </div>
           )}
         </div>

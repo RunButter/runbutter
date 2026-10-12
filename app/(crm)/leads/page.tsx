@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   Radar, Search, Loader2, Phone, Mail, Globe, ExternalLink, Check, Download, MailSearch,
-  ChevronDown, AlertCircle, Plus,
+  ChevronDown, AlertCircle, Plus, Star,
 } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
@@ -13,10 +13,10 @@ import EmptyState from '@/components/ui/EmptyState';
 import { getWorkspace } from '@/lib/crm/data';
 import type { CustomObject } from '@/lib/crm/custom';
 import { LEAD_CATEGORIES, CATEGORY_BY_KEY } from '@/lib/leads/categories';
-import { leadValues, type Enrichment } from '@/lib/leads/fields';
+import { LEAD_FIELDS, leadValues, needsWebsite, type Enrichment } from '@/lib/leads/fields';
 import {
   searchLeads, enrichSites, findLeadsObject, setUpLeads, loadSavedIndex, isSaved,
-  saveLead, noteProvenance, toCsv,
+  saveLead, noteProvenance, toCsv, gmapsAvailable, startGmapsSearch, pollGmapsSearch, listedOn,
 } from '@/lib/leads/client';
 import type { FoundPlace, GeoPlace, SearchResult } from '@/lib/leads/osm';
 
@@ -24,10 +24,12 @@ import type { FoundPlace, GeoPlace, SearchResult } from '@/lib/leads/osm';
  * Find leads — businesses of one kind in one place, ready to save and contact.
  *
  * Search (OpenStreetMap) → optionally read each business's own website for a
- * public email → save the chosen ones into Leads, an ordinary custom object in
- * Sales. Everything after saving — the board by status, mail merge for an
- * offer letter, automations, the Copilot — is the product that already exists.
- * See lib/leads/osm.ts for why the source is OpenStreetMap and not Google.
+ * public email and what is wrong with the site → save the chosen ones into
+ * Leads, an ordinary custom object in Sales. Everything after saving — the
+ * board by status, mail merge for an offer letter, automations, the Copilot —
+ * is the product that already exists. See lib/leads/osm.ts for why the source
+ * is OpenStreetMap and not Google, and lib/leads/gmaps.ts for the one way
+ * Google Maps can be a source: a scraper the OPERATOR runs and switches on.
  */
 
 const RADII = [
@@ -37,6 +39,13 @@ const RADII = [
 ];
 const GROUPS = [...new Set(LEAD_CATEGORIES.map((c) => c.group))];
 const LAST = 'rb-leads-last';
+/** A Google Maps search still running on the scraper, so leaving the page does not lose it. */
+const JOB = 'rb-leads-gmaps-job';
+const JOB_TTL_MS = 30 * 60_000;
+const POLL_MS = 8_000;
+
+type Source = 'osm' | 'google';
+type PendingJob = { id: string; place: GeoPlace; query: string; category: string; startedAt: number };
 const ENRICH_BATCH = 10;
 const SAVE_CONCURRENCY = 3;
 
@@ -63,11 +72,15 @@ export default function FindLeadsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<SearchResult | null>(null);
+  const [gmaps, setGmaps] = useState(false);
+  const [source, setSource] = useState<Source>('osm');
+  const [job, setJob] = useState<PendingJob | null>(null);
+  const [now, setNow] = useState(Date.now());
 
   const [enrich, setEnrich] = useState<Record<string, Enrichment>>({});
   const [enriching, setEnriching] = useState<{ done: number; total: number } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [only, setOnly] = useState({ website: false, phone: false, email: false, hideSaved: false });
+  const [only, setOnly] = useState({ website: false, phone: false, email: false, needsSite: false, hideSaved: false });
   const [saving, setSaving] = useState<{ done: number; total: number } | null>(null);
   const [saveMsg, setSaveMsg] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
 
@@ -78,8 +91,51 @@ export default function FindLeadsPage() {
       if (l?.category && CATEGORY_BY_KEY[l.category]) setCategory(l.category);
       if (typeof l?.where === 'string') setWhere(l.where);
       if (Number.isFinite(l?.radius)) setRadius(l.radius);
+      if (l?.source === 'google') setSource('google');
+      const j: PendingJob | null = JSON.parse(localStorage.getItem(JOB) || 'null');
+      if (j?.id && Date.now() - j.startedAt < JOB_TTL_MS) setJob(j);
+      else localStorage.removeItem(JOB);
     } catch { /* first visit */ }
+    gmapsAvailable().then(setGmaps);
   }, []);
+
+  const keepJob = (j: PendingJob | null) => {
+    setJob(j);
+    try { j ? localStorage.setItem(JOB, JSON.stringify(j)) : localStorage.removeItem(JOB); } catch { /* private mode */ }
+  };
+
+  // A Google Maps search runs for minutes on the scraper; come back for it.
+  const polling = useRef(false);
+  const misses = useRef(0);
+  useEffect(() => {
+    if (!job || !privy) return;
+    let dead = false;
+    const tick = async () => {
+      if (dead || polling.current) return;
+      polling.current = true;
+      const r = await pollGmapsSearch(job.id, job.place.country);
+      polling.current = false;
+      if (dead) return;
+      // One missed poll is a blip (a deploy, a dropped connection); three in a
+      // row is an answer.
+      if (!('status' in r)) {
+        if (++misses.current >= 3) { keepJob(null); setError(r.error); }
+        return;
+      }
+      misses.current = 0;
+      if (r.status === 'failed') { keepJob(null); setError(r.error); return; }
+      if (r.status === 'ok') {
+        keepJob(null);
+        setResult({ place: job.place, alternatives: [], results: r.results, truncated: false });
+        setSelected(new Set()); setEnrich({});
+      }
+    };
+    const first = setTimeout(tick, 1500);
+    const every = setInterval(tick, POLL_MS);
+    const clock = setInterval(() => setNow(Date.now()), 1000);
+    return () => { dead = true; clearTimeout(first); clearInterval(every); clearInterval(clock); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job?.id, privy]);
 
   const refreshIndex = useCallback(async (p: string, w: string) => setIndex(await loadSavedIndex(p, w)), []);
 
@@ -99,6 +155,9 @@ export default function FindLeadsPage() {
   }, [privy, refreshIndex]);
 
   const canSetUp = ws?.role === 'owner' || ws?.role === 'admin';
+  // Leads set up before a field existed (rating, reviews, website check) gets
+  // it from the same button — setUpLeads only adds what is missing.
+  const missingFields = obj ? LEAD_FIELDS.filter((f) => !obj.fields.some((x) => x.key === f.key)) : [];
 
   const setUp = async () => {
     if (!privy || !ws) return;
@@ -114,7 +173,15 @@ export default function FindLeadsPage() {
     if (!category) { setError('Pick what kind of business to look for.'); return; }
     if (!place && !where.trim()) { setError('Say where to look — a city, a district or a postcode.'); return; }
     setBusy(true); setError(''); setSaveMsg(null);
-    try { localStorage.setItem(LAST, JSON.stringify({ category, where, radius })); } catch { /* private mode */ }
+    try { localStorage.setItem(LAST, JSON.stringify({ category, where, radius, source })); } catch { /* private mode */ }
+    if (source === 'google' && gmaps) {
+      const g = await startGmapsSearch({ category, where, name, place: place ?? null });
+      setBusy(false);
+      if ('error' in g) { setError(g.error); return; }
+      setResult(null);
+      keepJob({ id: g.job, place: g.place, query: g.query, category, startedAt: Date.now() });
+      return;
+    }
     const r = await searchLeads({ category, where, radiusKm: radius, name, place: place ?? null });
     setBusy(false);
     if ('error' in r) { setError(r.error); return; }
@@ -132,7 +199,8 @@ export default function FindLeadsPage() {
   const saved = useCallback((p: FoundPlace) => isSaved(index, p), [index]);
 
   const rows = useMemo(() => (result?.results || []).filter((p) =>
-    (!only.website || p.website) && (!only.phone || phoneOf(p)) && (!only.email || emailOf(p)) && (!only.hideSaved || !saved(p)),
+    (!only.website || p.website) && (!only.phone || phoneOf(p)) && (!only.email || emailOf(p))
+    && (!only.needsSite || needsWebsite(p, enrich[p.ref])) && (!only.hideSaved || !saved(p)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [result, only, enrich, saved]);
 
@@ -143,6 +211,8 @@ export default function FindLeadsPage() {
       website: all.filter((p) => p.website).length,
       phone: all.filter((p) => phoneOf(p)).length,
       email: all.filter((p) => emailOf(p)).length,
+      needsSite: all.filter((p) => needsWebsite(p, enrich[p.ref])).length,
+      checked: all.filter((p) => enrich[p.ref]?.check).length,
       saved: all.filter((p) => saved(p)).length,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,8 +223,10 @@ export default function FindLeadsPage() {
   const toggleAll = () => setSelected(allChosen ? new Set() : new Set(rows.map((p) => p.ref)));
   const toggle = (ref: string) => setSelected((s) => { const n = new Set(s); n.has(ref) ? n.delete(ref) : n.add(ref); return n; });
 
-  // ── Read websites for emails ───────────────────────────────────────────────
-  const canEnrich = chosen.filter((p) => p.website && !p.email && !enrich[p.ref]);
+  // ── Read websites: emails, and what is wrong with the site ─────────────────
+  // Every selected site, not only the ones missing an email: the check (down,
+  // no HTTPS, not mobile-friendly, slow) is half the reason to read it.
+  const canEnrich = chosen.filter((p) => p.website && !enrich[p.ref]);
   const findEmails = async () => {
     const targets = canEnrich;
     if (!targets.length) return;
@@ -172,7 +244,7 @@ export default function FindLeadsPage() {
         batch.forEach((p, k) => {
           const got = 'error' in r ? null : r.results[k];
           n[p.ref] = got
-            ? { state: 'done', emails: got.emails, phones: got.phones, facebook: got.facebook, instagram: got.instagram, checked: got.checked, note: got.note }
+            ? { state: 'done', emails: got.emails, phones: got.phones, facebook: got.facebook, instagram: got.instagram, checked: got.checked, note: got.note, check: got.check }
             : { state: 'done', emails: [], phones: [], facebook: '', instagram: '', checked: [], note: 'error' in r ? r.error : 'Could not read this site.' };
         });
         return n;
@@ -227,6 +299,9 @@ export default function FindLeadsPage() {
 
   const cat = CATEGORY_BY_KEY[category];
   const working = !!enriching || !!saving;
+  const google = source === 'google' && gmaps;
+  const fromGoogle = !!result?.results.some((p) => p.ref.startsWith('google/'));
+  const elapsed = job ? Math.max(0, Math.round((now - job.startedAt) / 1000)) : 0;
 
   return (
     <>
@@ -260,9 +335,40 @@ export default function FindLeadsPage() {
           </div>
         )}
 
+        {privy && obj && canSetUp && missingFields.length > 0 && (
+          <div className="card-surface p-3 flex flex-col sm:flex-row sm:items-center gap-2.5">
+            <p className="min-w-0 flex-1 text-xs text-secondary">
+              Your Leads list has no {missingFields.map((f) => f.label.toLowerCase()).join(', ')} field{missingFields.length === 1 ? '' : 's'} yet,
+              so {missingFields.length === 1 ? 'that is' : 'those are'} not saved with a lead.
+              {setupErr && <span className="block text-danger mt-1">{setupErr}</span>}
+            </p>
+            <button onClick={setUp} disabled={setupBusy}
+              className="h-8 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
+              {setupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add {missingFields.length === 1 ? 'it' : 'them'}
+            </button>
+          </div>
+        )}
+
         {/* ── Search ────────────────────────────────────────────────────── */}
         <form onSubmit={(e) => { e.preventDefault(); run(); }}
           className="card-surface p-3 sm:p-4 grid gap-2.5 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,0.8fr)_auto] sm:items-end">
+          {gmaps && (
+            <div className="sm:col-span-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <div role="radiogroup" aria-label="Where to search" className="inline-flex rounded-lg ring-1 ring-subtle p-0.5 bg-surface-sunken">
+                {([['osm', 'Open map', 'instant'], ['google', 'Google Maps', 'a few minutes']] as const).map(([k, label, hint]) => (
+                  <button key={k} type="button" role="radio" aria-checked={source === k} onClick={() => setSource(k)}
+                    className={`h-7 px-2.5 rounded-md text-xs ${source === k ? 'bg-surface text-primary shadow-sm' : 'text-secondary hover:text-primary'}`}>
+                    {label} <span className="text-tertiary">· {hint}</span>
+                  </button>
+                ))}
+              </div>
+              {source === 'google' && (
+                <p className="text-2xs text-tertiary min-w-0 flex-1">
+                  Uses the Google Maps scraper this server’s operator runs. Scraping Google Maps is against Google’s terms — whoever runs the scraper takes that on.
+                </p>
+              )}
+            </div>
+          )}
           <label className="block min-w-0">
             <span className="block text-2xs text-tertiary mb-1">What</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field" aria-label="Kind of business">
@@ -281,8 +387,9 @@ export default function FindLeadsPage() {
           </label>
           <label className="block min-w-0">
             <span className="block text-2xs text-tertiary mb-1">Area</span>
-            <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="input-field" aria-label="Search area">
-              {RADII.map((r) => <option key={r.km} value={r.km}>{r.label}</option>)}
+            <select value={google ? 0 : radius} onChange={(e) => setRadius(Number(e.target.value))} className="input-field" aria-label="Search area"
+              disabled={google} title={google ? 'Google Maps searches around the centre of the place' : undefined}>
+              {google ? <option value={0}>Around the centre</option> : RADII.map((r) => <option key={r.km} value={r.km}>{r.label}</option>)}
             </select>
           </label>
           <label className="block min-w-0 sm:col-span-2 sm:order-2">
@@ -290,7 +397,7 @@ export default function FindLeadsPage() {
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. dental"
               className="input-field !h-9" aria-label="Name contains" />
           </label>
-          <button type="submit" disabled={busy || !privy}
+          <button type="submit" disabled={busy || !privy || (google && !!job)}
             className="sm:order-1 h-10 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Search
           </button>
@@ -299,10 +406,26 @@ export default function FindLeadsPage() {
         </form>
 
         {/* ── Results ───────────────────────────────────────────────────── */}
-        {!result && !busy && (
+        {job && (
+          <div className="card-surface p-4 flex items-start gap-3" role="status">
+            <Loader2 className="w-4 h-4 mt-0.5 animate-spin text-tertiary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-primary">
+                Searching Google Maps for <span className="font-medium">{job.query}</span>
+                <span className="text-tertiary tabular-nums"> · {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</span>
+              </p>
+              <p className="text-xs text-tertiary mt-0.5">This usually takes two to five minutes. You can leave this page — the results wait here for you.</p>
+            </div>
+            <button onClick={() => keepJob(null)} className="h-7 px-2 rounded-md text-2xs text-secondary ring-1 ring-subtle hover:bg-surface-hover shrink-0">
+              Stop waiting
+            </button>
+          </div>
+        )}
+
+        {!result && !busy && !job && (
           <div className="card-surface">
             <EmptyState icon={Radar} title="Find businesses to sell to"
-              description="Pick a kind of business and a place. You get names, addresses, phones and websites, can find emails on each business’s own website, and save the ones you want as leads." />
+              description="Pick a kind of business and a place. You get names, addresses, phones and websites, can check each business’s own website for an email and for problems worth fixing, and save the ones you want as leads." />
           </div>
         )}
 
@@ -315,6 +438,7 @@ export default function FindLeadsPage() {
               </p>
               <p className="text-xs text-tertiary">
                 {stats.website} with a website · {stats.phone} with a phone · {stats.email} with an email
+                {stats.checked > 0 ? <> · {stats.needsSite} need a better website</> : stats.total - stats.website > 0 && <> · {stats.total - stats.website} with no website</>}
                 {stats.saved > 0 && <> · {stats.saved} already in your leads</>}
                 {result.truncated && <> · showing the first {stats.total} — choose a distance to narrow it</>}
               </p>
@@ -352,19 +476,20 @@ export default function FindLeadsPage() {
                   {selected.size ? `${chosen.length} selected` : 'Select all'}
                 </label>
                 <div className="flex flex-wrap items-center gap-1">
-                  {([['website', 'Website'], ['phone', 'Phone'], ['email', 'Email'], ['hideSaved', 'Not saved']] as const).map(([k, label]) => (
+                  {([['website', 'Has website'], ['phone', 'Has phone'], ['email', 'Has email'], ['needsSite', 'Needs a website'], ['hideSaved', 'Not saved']] as const).map(([k, label]) => (
                     <button key={k} onClick={() => setOnly((o) => ({ ...o, [k]: !o[k] }))} aria-pressed={only[k]}
+                      title={k === 'needsSite' ? 'No website, or one that Check websites found a problem with' : undefined}
                       className={`h-6 px-2 rounded-md text-2xs ring-1 ${only[k] ? 'bg-inverse text-inverse-fg ring-transparent' : 'text-secondary ring-subtle hover:bg-surface-hover'}`}>
-                      {k === 'hideSaved' ? label : `Has ${label.toLowerCase()}`}
+                      {label}
                     </button>
                   ))}
                 </div>
                 <div className="ml-auto flex flex-wrap items-center gap-1.5">
                   <button onClick={findEmails} disabled={!canEnrich.length || working}
-                    title="Reads each selected business’s own website for a public email address"
+                    title="Reads each selected business’s own website for a public email, and checks whether the site is down, insecure, not mobile-friendly or slow"
                     className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
                     {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MailSearch className="w-3.5 h-3.5" />}
-                    {enriching ? `Reading websites ${enriching.done}/${enriching.total}` : `Find emails${canEnrich.length ? ` (${canEnrich.length})` : ''}`}
+                    {enriching ? `Reading websites ${enriching.done}/${enriching.total}` : `Check websites${canEnrich.length ? ` (${canEnrich.length})` : ''}`}
                   </button>
                   <button onClick={download} disabled={!rows.length}
                     className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
@@ -384,7 +509,9 @@ export default function FindLeadsPage() {
                   title={stats.total ? 'Nothing matches these filters' : `No ${(cat?.label || 'businesses').toLowerCase()} found here`}
                   description={stats.total
                     ? 'Turn a filter off to see more.'
-                    : 'OpenStreetMap is mapped by volunteers, so coverage varies by place. Try a larger area, a nearby city, or a related kind of business.'} />
+                    : fromGoogle || google
+                      ? 'Google Maps returned nothing for this search. Try a nearby city or a related kind of business.'
+                      : 'OpenStreetMap is mapped by volunteers, so coverage varies by place. Try a larger area, a nearby city, or a related kind of business.'} />
               ) : (
                 <ul className="divide-y divide-subtle">
                   {rows.map((p) => (
@@ -400,10 +527,17 @@ export default function FindLeadsPage() {
         <BeforeYouContact />
 
         <p className="text-2xs text-tertiary">
-          Business data ©{' '}
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-secondary">
-            OpenStreetMap contributors
-          </a>, available under the Open Database License. Emails are read only from each business’s own website, and only where its robots.txt allows.
+          {fromGoogle ? (
+            <>Results from Google Maps, through the scraper this server’s operator runs — Google’s terms forbid scraping, and the operator takes that on.</>
+          ) : (
+            <>
+              Business data ©{' '}
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-secondary">
+                OpenStreetMap contributors
+              </a>, available under the Open Database License.
+            </>
+          )}{' '}
+          Emails are read only from each business’s own website, and only where its robots.txt allows.
         </p>
       </div>
     </>
@@ -423,6 +557,12 @@ function ResultRow({ p, e, saved, checked, onToggle }: {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium text-primary truncate">{p.name}</span>
+          {p.rating !== undefined && (
+            <span className="shrink-0 inline-flex items-center gap-0.5 text-2xs text-secondary tabular-nums" title={`${p.rating} out of 5 from ${p.reviews ?? 0} reviews`}>
+              <Star className="w-3 h-3 text-warning fill-current" />{p.rating.toFixed(1)}
+              {p.reviews !== undefined && <span className="text-tertiary">({p.reviews})</span>}
+            </span>
+          )}
           {saved && <span className="shrink-0 text-3xs font-semibold text-success bg-success/10 rounded px-1.5 py-0.5">Saved</span>}
         </div>
         <p className="text-xs text-tertiary truncate">{[p.category, p.address].filter(Boolean).join(' · ')}</p>
@@ -441,15 +581,36 @@ function ResultRow({ p, e, saved, checked, onToggle }: {
             </a>
           )}
           {e?.state === 'loading' && <span className="inline-flex items-center gap-1 text-tertiary"><Loader2 className="w-3 h-3 animate-spin" />Reading website…</span>}
-          {e?.state === 'done' && !e.emails.length && e.note && <span className="text-tertiary">{e.note}</span>}
+          {e?.state === 'done' && !e.emails.length && e.note && !e.check?.issues.length && <span className="text-tertiary">{e.note}</span>}
           {!phone && !email && !p.website && <span className="text-tertiary">No contact details on the map</span>}
         </div>
+        <SiteBadges p={p} e={e} />
       </div>
-      <a href={p.url} target="_blank" rel="noopener noreferrer" title="View on OpenStreetMap" aria-label={`View ${p.name} on OpenStreetMap`}
+      <a href={p.url} target="_blank" rel="noopener noreferrer" title={`View on ${listedOn(p)}`} aria-label={`View ${p.name} on ${listedOn(p)}`}
         className="p-1.5 -m-1 rounded-md text-tertiary hover:text-secondary hover:bg-surface-hover shrink-0">
         <ExternalLink className="w-3.5 h-3.5" />
       </a>
     </li>
+  );
+}
+
+/**
+ * What Check websites found, as chips. "No website" shows without a check —
+ * it is a fact from the listing — and a site nobody checked shows nothing,
+ * because an unchecked site is not a fine one.
+ */
+function SiteBadges({ p, e }: { p: FoundPlace; e?: Enrichment }) {
+  const chip = 'text-3xs rounded px-1.5 py-0.5';
+  if (!p.website) return <div className="mt-1.5"><span className={`${chip} font-semibold text-warning bg-warning/10`}>No website</span></div>;
+  const c = e?.check;
+  if (!c) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+      {c.issues.length === 0
+        ? <span className={`${chip} text-success bg-success/10`}>Website looks fine</span>
+        : c.issues.map((i) => <span key={i} className={`${chip} font-semibold text-warning bg-warning/10`}>{i}</span>)}
+      {c.builder && <span className={`${chip} text-secondary ring-1 ring-subtle`} title="What the site was built with">{c.builder}</span>}
+    </div>
   );
 }
 

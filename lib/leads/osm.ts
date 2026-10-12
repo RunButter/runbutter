@@ -79,6 +79,9 @@ export interface FoundPlace {
   instagram: string;
   lat: number;
   lon: number;
+  /** Google results carry these; OpenStreetMap has no reviews. */
+  rating?: number;
+  reviews?: number;
 }
 
 export interface SearchInput {
@@ -570,7 +573,7 @@ export async function searchBusinesses(input: SearchInput): Promise<SearchResult
 }
 
 /** A place sent back by the browser is re-validated, never trusted as-is. */
-function sanitizePlace(p: GeoPlace): GeoPlace | null {
+export function sanitizePlace(p: GeoPlace): GeoPlace | null {
   const n = (x: any) => (Number.isFinite(Number(x)) ? Number(x) : NaN);
   const lat = n(p.lat), lon = n(p.lon), id = n(p.osmId);
   if (![lat, lon, id].every(Number.isFinite)) return null;
