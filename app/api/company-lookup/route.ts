@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 /**
- * POST /api/company-lookup  { country?, taxId, website? }
+ * POST /api/company-lookup  { country?, taxId?, website?, name? }  (at least one)
  *
  * Everything public about a company from its tax number — see
  * lib/company/lookup.ts for which register answers what. Returns the facts
@@ -28,10 +28,13 @@ export async function POST(req: Request) {
 
   const body = await readJsonCapped(req, 4_000);
   if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
-  const { country, taxId, website } = body.data || {};
+  const { country, taxId, website, name } = body.data || {};
 
   try {
-    const company = await lookupCompany(String(country || ''), String(taxId || ''), { website: website !== false });
+    const company = await lookupCompany({
+      country: String(country || ''), taxId: String(taxId || ''),
+      website: typeof website === 'string' ? website : '', name: typeof name === 'string' ? name : '',
+    });
     return NextResponse.json({ ok: true, company });
   } catch (e: any) {
     if (e instanceof LookupError) return NextResponse.json({ error: e.message }, { status: 404 });

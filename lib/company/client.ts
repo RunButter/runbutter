@@ -9,14 +9,14 @@ import type { CompanyFacts, CompanyPerson } from './lookup';
 
 export type { CompanyFacts, CompanyPerson };
 
-export async function fetchCompany(country: string, taxId: string): Promise<{ company?: CompanyFacts; error?: string }> {
+export async function fetchCompany(input: { country?: string; taxId?: string; website?: string; name?: string }): Promise<{ company?: CompanyFacts; error?: string }> {
   try {
     const { getAccessToken } = await import('@privy-io/react-auth');
     const token = await getAccessToken().catch(() => null);
     const res = await fetch('/api/company-lookup', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(token ? { 'x-privy-token': token } : {}) },
-      body: JSON.stringify({ country, taxId }),
+      body: JSON.stringify(input),
     });
     const j = await res.json().catch(() => null);
     if (!res.ok) return { error: j?.error || `The lookup failed (${res.status}).` };
@@ -47,12 +47,13 @@ export async function companyColumnsMissing(privy: string, id: string, values: R
 }
 
 /** The board, as people at this company. Their role becomes the title; the source says where they came from. */
-export async function addBoardAsPeople(privy: string, companyId: string, people: CompanyPerson[]): Promise<{ added: number; error?: string }> {
+export async function addBoardAsPeople(privy: string, companyId: string, people: CompanyPerson[], source = 'KRS'): Promise<{ added: number; error?: string }> {
   let added = 0;
   for (const p of people) {
     const r = await createRecord(privy, 'people', {
       first_name: p.first_name, last_name: p.last_name, title: p.role,
-      primary_company_id: companyId, source: 'KRS',
+      // Where they came from: the court register, or the company's own legal notice.
+      primary_company_id: companyId, source: /website/i.test(source) ? 'Company website' : source.split(' (')[0],
     });
     if (r.error) return { added, error: r.error };
     added++;

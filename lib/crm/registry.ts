@@ -42,20 +42,24 @@ export const OBJECTS: Record<string, ObjectDef> = {
     ],
     // Tax number first: typing it (and pressing Enter or the button) fills the
     // rest from the registers and the company's own website (lib/company/lookup.ts).
+    // A website or a name works too — for a German company the website is the
+    // route, because VIES confirms a DE number without saying whose it is.
     // There is no Domain input — it is derived from Website on save, because two
     // boxes for one address is how they end up disagreeing.
     form: [
       { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'CH', 'NO', 'UA'] },
       { key: 'tax_id', label: 'Tax / VAT ID', input: 'text' },
-      { key: 'lookup', label: 'Fill in from the tax number', input: 'lookup' },
+      // The three things the lookup can start from sit above its button.
       { key: 'name', label: 'Name', input: 'text', required: true },
+      { key: 'website', label: 'Website', input: 'text' },
+      { key: 'lookup', label: 'Fill in from tax number, website or name', input: 'lookup' },
       { key: 'address', label: 'Address', input: 'textarea' },
       { key: 'email', label: 'Email', input: 'text' },
       { key: 'phone', label: 'Phone', input: 'text' },
-      { key: 'website', label: 'Website', input: 'text' },
       { key: 'industry', label: 'Industry', input: 'text' },
       { key: 'regon', label: 'REGON', input: 'text' },
-      { key: 'krs', label: 'KRS', input: 'text' },
+      // The court register number: KRS in Poland, HRB/HRA in Germany.
+      { key: 'krs', label: 'Register no. (KRS / HRB)', input: 'text' },
       { key: 'bank_account', label: 'Bank account', input: 'text' },
       { key: 'employee_count', label: 'Employees', input: 'number' },
     ],

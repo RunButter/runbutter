@@ -446,6 +446,16 @@ address and country only — and companies had no phone/email/website column to 
 - Verified: 29 fixture checks on the engine, the SQL on a real Postgres (create/partial/clear/
   tenancy/extras move/idempotent), and the form driven in a browser. NOT against the live registers
   — this sandbox cannot reach them; try one real NIP after deploy.
+- **"German doesn't work" (2026-10): VIES confirms a DE number and never says whose it is** — there
+  is no free register from `DE…` to a name. `lookupCompany({ taxId, website, name })` now starts
+  from any of the three: the website's LEGAL NOTICE (`lib/company/impressum.ts` — Impressum is
+  mandatory in DE/AT: name, address, HRB + court, VAT ID, phone, email, Geschäftsführer) and GLEIF
+  by name (`lib/company/gleif.ts`, CC0, worldwide, EXACT matches only — the wrong company's
+  address is worse than none). A VAT ID found on the site goes back through the registers, which
+  then win; a VAT ID on the site that differs from the one typed is WARNED. `readSite()` in
+  `lib/leads/enrich.ts` is the one site reader (robots, private-address checks per hop).
+  `krs` holds the court register number generally (KRS or "HRB 123456 (Amtsgericht München)").
+  The Copilot's `lookup_company` takes tax_id/name but NOT a website (model-chosen URL = exfil).
 
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a

@@ -14,9 +14,9 @@ import type { CompanyFacts } from '@/lib/company/client';
  */
 
 const LABEL: Record<string, string> = {
-  name: 'name', address: 'address', regon: 'REGON', krs: 'KRS', bank_account: 'bank account',
+  name: 'name', address: 'address', regon: 'REGON', krs: 'register no.', bank_account: 'bank account',
   vat_status: 'VAT status', email: 'email', phone: 'phone', website: 'website', industry: 'industry',
-  legal_form: 'legal form', people: 'board',
+  legal_form: 'legal form', people: 'board', tax_id: 'VAT ID',
 };
 
 export default function CompanyLookupSummary({ facts, addBoard, onAddBoard, canAddBoard }: {

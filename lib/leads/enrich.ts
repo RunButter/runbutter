@@ -301,3 +301,52 @@ export async function findContacts(website: string): Promise<SiteContacts> {
   if (!out.emails.length && !out.phones.length) out.note = 'No email or phone on the pages read.';
   return out;
 }
+
+// ── Reading a few pages of one site (shared with the company lookup) ──────────
+
+export interface SitePage { url: string; html: string }
+
+/** Same-site links whose path or text matches `pick`, best match first, deduplicated. */
+export function sameSiteLinks(html: string, pageUrl: string, pick: RegExp): string[] {
+  const self = host(pageUrl);
+  const out: string[] = [];
+  for (const m of decodeEntities(html).matchAll(/<a\b[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    let abs: URL;
+    try { abs = new URL(m[1].trim(), pageUrl); } catch { continue; }
+    if ((abs.protocol !== 'https:' && abs.protocol !== 'http:') || abs.hostname.replace(/^www\./, '').toLowerCase() !== self) continue;
+    const label = m[2].replace(/<[^>]+>/g, ' ');
+    if (!pick.test(`${abs.pathname} ${label}`)) continue;
+    abs.hash = '';
+    const u = abs.toString();
+    if (u !== pageUrl && !out.includes(u)) out.push(u);
+  }
+  return out;
+}
+
+/**
+ * The homepage and up to `maxPages - 1` pages it links to that match `pick`
+ * (or, when it links to none, the conventional `paths`). Same rules as
+ * findContacts: robots.txt obeyed, every hop checked against private addresses,
+ * a size cap per page. Returns HTML for the caller to parse — never sent on.
+ */
+export async function readSite(website: string, opts: { pick: RegExp; paths?: string[]; maxPages?: number }): Promise<{ pages: SitePage[]; note?: string }> {
+  let start: URL;
+  try { start = new URL(/^https?:\/\//i.test(website) ? website : `https://${website}`); } catch { return { pages: [], note: 'Not a valid website address.' }; }
+  if (!isSafeOutboundUrl(start.toString())) return { pages: [], note: 'Not a public website.' };
+  const rules = await robotsFor(start.origin);
+  if (!allowed(rules, start.toString())) return { pages: [], note: 'This site asks not to be read by bots.' };
+  const home = await safeGet(start.toString(), PAGE_BYTES, PAGE_TIMEOUT);
+  if (!home) return { pages: [], note: 'The website did not answer.' };
+  if (home.status >= 400) return { pages: [], note: `The website answered ${home.status}.` };
+  const pages: SitePage[] = [{ url: home.url, html: home.body }];
+
+  let next = sameSiteLinks(home.body, home.url, opts.pick);
+  if (!next.length && opts.paths?.length) next = opts.paths.map((p) => new URL(p, home.url).toString());
+  for (const link of next.slice(0, Math.max(0, (opts.maxPages ?? 3) - 1))) {
+    if (!allowed(rules, link)) continue;
+    const page = await safeGet(link, PAGE_BYTES, PAGE_TIMEOUT);
+    if (!page || page.status >= 400 || (page.type && !/html|text\/plain/i.test(page.type))) continue;
+    pages.push({ url: page.url, html: page.body });
+  }
+  return { pages };
+}

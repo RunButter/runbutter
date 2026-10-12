@@ -1,8 +1,9 @@
-# Fill in a company from its tax number
+# Fill in a company from its tax number, website or name
 
-When you add a company, type its **tax number** — a Polish NIP, or an EU VAT
-number like `DE123456789` — and press **Enter** (or *Fill in from the tax
-number*). The form fills itself, and says where each value came from.
+When you add a company, type what you know — its **tax number** (a Polish NIP,
+or an EU VAT number like `DE123456789`), its **website**, or its **name** — and
+press **Enter** (or *Fill in*). The form fills itself, and says where each
+value came from.
 
 Spaces, dashes and a country prefix are all fine (`PL 526-025-09-95`). Leave
 Country empty for a NIP — a valid NIP is Polish — or type the prefix and the
@@ -23,6 +24,19 @@ is looked up.
 | Phone, email, website, industry | **CEIDG** (sole traders) | Free token |
 | Phone, contact email | the company's **own website** | No |
 | Name, address (other EU) | **VIES** | No |
+| Legal name, address, VAT ID, register no. (HRB), phone, email, managing directors | the company website's **legal notice** (Impressum, mentions légales, aviso legal…) | No |
+| Legal name, registered address, register no. — by name, any country | **GLEIF**, the global LEI register | No |
+
+## Germany (and Spain)
+
+Germany's tax office confirms a VAT number through VIES but never says whose
+it is, and there is no free register that turns `DE123456789` into a name. The
+company's own website will, by law: every German commercial site must carry an
+**Impressum** with the legal name, address, register court and number, VAT ID
+and a way to reach them. So for a German company, enter its **website** (with
+or without the VAT number) — the Impressum fills the rest, and a VAT ID printed
+there is checked against VIES. With only a name, the LEI register finds larger
+companies (anything with an LEI); small ones are found by their website.
 
 Registers decide the **official** values (name, address, REGON, KRS, bank
 account) and replace what was typed. Contact details only fill **empty** boxes,
