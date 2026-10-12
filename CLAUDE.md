@@ -372,6 +372,44 @@ PIECES did. Photo/video/audio/launcher: nothing for us.
   navigation, so unmounting calls `RunButterChat.hide()` — otherwise the bubble followed visitors into
   the app.
 
+## Find leads (2026-10) — `docs/lead-finder.md`
+Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
+public email → save as **Leads**. No migration.
+- **OpenStreetMap, never Google.** Scraping Maps breaks Google's terms and gets the server blocked;
+  the Places API forbids STORING results beyond a place id, so a saved lead list is a breach either
+  way. OSM is ODbL — storable with attribution (shown on the screen). Nominatim (place → area) and
+  Overpass (businesses) are public and keyless; `OSM_NOMINATIM_URL` / `OSM_OVERPASS_URL` override.
+  Nominatim is spaced to 1 req/s per process and cached; never call it per keystroke (its policy).
+- **This sandbox's egress policy blocks both hosts** (and arbitrary websites), so the code is
+  verified against fixtures (`toFoundPlace`, `buildQuery`, `extractContacts`, robots, redirects) and
+  a mocked browser run — not against the live services. Check the first real search after deploy.
+- **Leads is a CUSTOM OBJECT** (`lib/leads/fields.ts`), created by "Set up Leads" (owner/admin —
+  `save_custom_object` enforces it) through the same calls as the manual builder. Companies have no
+  phone/email/website columns; a custom object gets table, board-by-status, mail merge, CSV,
+  automations (0132) and agent tools for free. Saving is plain `create_record` from the browser, so
+  plan limits apply; values a field type rejects are dropped and retried rather than losing the lead.
+  Dedupe = the `source` link (OSM url), else name+city. Each saved lead gets a `record_notes` entry
+  saying where it was found and which PAGE its email came from — the GDPR "where did you get my
+  details" answer.
+- Categories are fixed tag pairs (`lib/leads/categories.ts`, zero imports); the only typed input in
+  the Overpass query is the name filter, reduced to letters/digits/spaces. A city boundary is
+  searched as an AREA; an empty area result is retried over the bbox before it is believed; a span
+  over 1.2° without a radius is refused ("too big"); an Overpass `remark` timeout is an ERROR, not a
+  short list.
+- **The website reader (`lib/leads/enrich.ts`) treats every URL as hostile** — anyone can edit OSM:
+  `isSafeOutboundUrl` + a DNS check against private ranges on EVERY hop, redirects followed by hand,
+  robots.txt obeyed (our group, else `*`; 5xx = disallow), ≤3 pages, 1.5 MB cap, only extracted
+  emails/phones/socials leave the module. Routes require a VERIFIED Privy token (not an open proxy)
+  and are rate-limited per account (searches 30/10 min, sites 200/h).
+- **`find_businesses` is the Copilot's tool; there is deliberately NO website-reading tool.** A URL a
+  model chooses is an exfiltration channel (same reason as `call_connection`), so reading websites
+  stays a button a person presses.
+- `useNav` now reloads custom objects on `NAV_PREFS_EVENT`, which setup dispatches so "Leads" appears
+  in the rail (right after "Find leads" — custom objects append to their group) without a reload.
+- The "Before you contact them" panel is deliberate: cold email/calls to businesses need PRIOR
+  CONSENT in Poland (and elsewhere in the EU); US/UK-limited-company B2B email is opt-out. Do not
+  turn this into a bulk cold-email sender without per-country consent handling.
+
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a
   parameter on `update_pipeline_record`, which would be an overload AND treats NULL as "not

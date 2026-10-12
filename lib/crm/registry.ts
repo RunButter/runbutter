@@ -268,6 +268,10 @@ export const NAV = [
     // than /objects/orders because an order has line items, and the generic
     // RecordTable is flat.
     { slug: 'orders', label: 'Orders', icon: 'ShoppingCart', href: '/orders' },
+    // Last in Sales on purpose: the Leads list it saves into is a custom object
+    // filed under Sales, and custom objects append to the end of their group —
+    // so "Find leads" and "Leads" sit together.
+    { slug: 'find-leads', label: 'Find leads', icon: 'Radar', href: '/leads' },
   ]},
   { group: 'Finance', items: [
     // Three views of the same numbers — where we are, how we are doing, where

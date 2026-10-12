@@ -185,7 +185,7 @@ export function useNav(privy: string | null, enabled = true): NavGroup[] {
       // report.
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [privy, enabled]);
+  }, [privy, enabled, prefsTick]);
 
   return applyNavPrefs(navWithCustomObjects(objects, navWithOverrides(settings)), hidden);
 }

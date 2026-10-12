@@ -117,6 +117,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'reply_conversation', label: 'Reply to a customer', group: 'Support', write: true },
   { name: 'list_orders', label: 'List orders', group: 'Sales' },
   { name: 'save_order', label: 'Draft an order', group: 'Sales', write: true },
+  { name: 'find_businesses', label: 'Find businesses to sell to', group: 'Sales' },
   { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
   { name: 'list_interviews', label: 'List interviews', group: 'Hiring' },
   { name: 'list_forms', label: 'List forms', group: 'Marketing' },
