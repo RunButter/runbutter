@@ -380,6 +380,13 @@ public email → save as **Leads**. No migration.
   way. OSM is ODbL — storable with attribution (shown on the screen). Nominatim (place → area) and
   Overpass (businesses) are public and keyless; `OSM_NOMINATIM_URL` / `OSM_OVERPASS_URL` override.
   Nominatim is spaced to 1 req/s per process and cached; never call it per keystroke (its policy).
+  **ONE Overpass server failed in production** ("did not answer in time"): overpass-api.de throttles
+  per client IP and Render sends everyone's traffic from shared IPs. `runOverpass` now tries three
+  public servers in turn (the one that answered goes first next time), declares
+  `[timeout:18][maxsize:64MB]` because Overpass ADMITS a query by what it declares, treats a "too
+  busy" remark as the server's problem (next server) and "timed out" as the query's (fail once),
+  and logs the reason per server. Geocoding falls back Nominatim → Photon. A city wider than 1.2° is
+  searched 15 km round its centre WITH a note; only countries/regions are refused.
 - **This sandbox's egress policy blocks both hosts** (and arbitrary websites), so the code is
   verified against fixtures (`toFoundPlace`, `buildQuery`, `extractContacts`, robots, redirects) and
   a mocked browser run — not against the live services. Check the first real search after deploy.

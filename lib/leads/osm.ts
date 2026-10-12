@@ -23,7 +23,21 @@
 import { CATEGORY_BY_KEY, categoryLabelFor, type LeadCategory } from './categories';
 
 const NOMINATIM = (process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org').replace(/\/$/, '');
-const OVERPASS = process.env.OSM_OVERPASS_URL || 'https://overpass-api.de/api/interpreter';
+const PHOTON = (process.env.OSM_PHOTON_URL || 'https://photon.komoot.io').replace(/\/$/, '');
+// Overpass mirrors, tried in order until one answers. ONE public server was not
+// enough: overpass-api.de queues and refuses by client IP, and a host like
+// Render sends every customer's traffic from a few shared IPs — so other
+// people's map apps used up our slots and every search "did not answer in
+// time". These instances are listed on the OSM wiki as public and keyless.
+// OSM_OVERPASS_URL replaces the list (comma-separated) for a deployment with
+// its own server.
+const OVERPASS_URLS = (process.env.OSM_OVERPASS_URL || [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+].join(',')).split(',').map((u) => u.trim()).filter(Boolean);
+/** Per server. A healthy one answers a city search in a few seconds. */
+const OVERPASS_ATTEMPT_MS = 20_000;
 const UA = 'RunButter/1.0 (+https://runbutter.app; lead finder)';
 
 /** Most results one search returns. Enough for a city's dentists; a city's shops needs a smaller area. */
@@ -85,6 +99,8 @@ export interface SearchResult {
   alternatives: GeoPlace[];
   results: FoundPlace[];
   truncated: boolean;
+  /** Said when the search was narrowed for the person (a large city searched round its centre). */
+  note?: string;
 }
 
 export class LeadSearchError extends Error {}
@@ -139,6 +155,59 @@ export function toGeoPlace(r: any): GeoPlace | null {
   };
 }
 
+/** Photon (komoot) answers in GeoJSON; the same OSM objects, a different shape. */
+export function photonToGeoPlace(f: any): GeoPlace | null {
+  const p = f?.properties || {};
+  const [lon, lat] = Array.isArray(f?.geometry?.coordinates) ? f.geometry.coordinates.map(Number) : [NaN, NaN];
+  const osmType = p.osm_type === 'R' ? 'relation' : p.osm_type === 'W' ? 'way' : p.osm_type === 'N' ? 'node' : null;
+  if (!osmType || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  // extent is [minLon, maxLat, maxLon, minLat]
+  const ex = Array.isArray(p.extent) ? p.extent.map(Number) : null;
+  const bbox: [number, number, number, number] = ex && ex.length === 4 ? [ex[3], ex[1], ex[0], ex[2]] : [lat, lat, lon, lon];
+  const label = [p.name, p.city && p.city !== p.name ? p.city : '', p.state, p.country].filter(Boolean).join(', ');
+  return {
+    label, lat, lon, osmType, osmId: Number(p.osm_id),
+    country: String(p.countrycode || '').toUpperCase(),
+    city: String(p.city || (/^(city|town|village)$/.test(p.type || '') ? p.name : '') || p.name || ''),
+    bbox, kind: String(p.type || p.osm_value || ''),
+  };
+}
+
+async function nominatim(query: string, lang: string): Promise<GeoPlace[] | null> {
+  await nominatimSlot();
+  const url = `${NOMINATIM}/search?${new URLSearchParams({ q: query, format: 'jsonv2', limit: '5', addressdetails: '1' })}`;
+  try {
+    const res = await fetch(url, {
+      headers: { 'user-agent': UA, accept: 'application/json', 'accept-language': lang },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) { console.error(`leads/geocode: Nominatim answered ${res.status}`); return null; }
+    const rows = await res.json().catch(() => null);
+    return Array.isArray(rows) ? (rows.map(toGeoPlace).filter(Boolean) as GeoPlace[]) : null;
+  } catch (e: any) {
+    console.error('leads/geocode: Nominatim unreachable —', e?.cause?.code || e?.message);
+    return null;
+  }
+}
+
+async function photon(query: string, lang: string): Promise<GeoPlace[] | null> {
+  // Photon speaks a handful of languages; anything else falls back to default.
+  const l = /^(en|de|fr|it)$/.test(lang.slice(0, 2)) ? lang.slice(0, 2) : 'default';
+  const url = `${PHOTON}/api/?${new URLSearchParams({ q: query, limit: '5', ...(l !== 'default' ? { lang: l } : {}) })}`;
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const j = await res.json().catch(() => null);
+    return Array.isArray(j?.features) ? (j.features.map(photonToGeoPlace).filter(Boolean) as GeoPlace[]) : null;
+  } catch { return null; }
+}
+
+/**
+ * Place name → place, anywhere in the world. Nominatim first; Photon (the same
+ * OpenStreetMap data, served by komoot) when Nominatim is unreachable or
+ * refuses — a shared hosting IP can be throttled by one service and not the
+ * other, and a search that cannot even find "Lagos" is not a global feature.
+ */
 export async function geocode(q: string, lang = 'en'): Promise<GeoPlace[]> {
   const query = q.trim().slice(0, 200);
   if (!query) return [];
@@ -146,22 +215,8 @@ export async function geocode(q: string, lang = 'en'): Promise<GeoPlace[]> {
   const cached = geoCache.get(key);
   if (cached) return cached;
 
-  await nominatimSlot();
-  const url = `${NOMINATIM}/search?${new URLSearchParams({
-    q: query, format: 'jsonv2', limit: '5', addressdetails: '1',
-  })}`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      headers: { 'user-agent': UA, accept: 'application/json', 'accept-language': lang },
-      signal: AbortSignal.timeout(10_000),
-    });
-  } catch {
-    throw new LeadSearchError('Could not reach the place search. Try again in a moment.');
-  }
-  if (!res.ok) throw new LeadSearchError(`The place search answered ${res.status}. Try again in a moment.`);
-  const rows = await res.json().catch(() => []);
-  const places = (Array.isArray(rows) ? rows : []).map(toGeoPlace).filter(Boolean) as GeoPlace[];
+  const places = (await nominatim(query, lang)) ?? (await photon(query, lang));
+  if (!places) throw new LeadSearchError('Could not reach the place search. Try again in a moment.');
   geoCache.set(key, places);
   return places;
 }
@@ -185,12 +240,25 @@ export type Scope =
  * point) becomes a 2 km circle, because "the whole of a street" is not an
  * answer anybody wants.
  */
+/** Kinds of place that are a region, not somewhere to prospect street by street. */
+const REGION = /^(country|state|region|province|county|state_district|archipelago|continent)$/i;
+/** How far round the centre a city too large to search whole is searched. */
+export const BIG_CITY_KM = 15;
+
 export function scopeFor(place: GeoPlace, radiusKm?: number): Scope {
   const km = Number(radiusKm) || 0;
   if (km > 0) return { kind: 'around', lat: place.lat, lon: place.lon, m: Math.round(Math.min(km, 50) * 1000) };
   const [s, n, w, e] = place.bbox;
   if (n - s > MAX_SPAN_DEG || e - w > MAX_SPAN_DEG) {
-    throw new LeadSearchError(`${place.label.split(',')[0]} is too big to search whole. Pick a city or district, or choose a distance.`);
+    // Istanbul, Sydney, Chongqing and Tokyo are each one "city" wider than a
+    // whole country's worth of queries; refusing them made the feature useless
+    // for exactly the markets with the most businesses. A city becomes a
+    // circle round its centre (and says so); a country or region still asks
+    // for something smaller, because its centre is not a place.
+    if (REGION.test(place.kind)) {
+      throw new LeadSearchError(`${place.label.split(',')[0]} is a whole region. Pick a city or district in it, or choose a distance.`);
+    }
+    return { kind: 'around', lat: place.lat, lon: place.lon, m: BIG_CITY_KM * 1000 };
   }
   if (place.osmType === 'relation') return { kind: 'area', id: 3_600_000_000 + place.osmId };
   if (place.osmType === 'way' && n - s > 0.002) return { kind: 'area', id: 2_400_000_000 + place.osmId };
@@ -207,38 +275,58 @@ export function buildQuery(cat: LeadCategory, scope: Scope, name?: string, limit
   const nameFilter = nm ? `["name"~"${nm}",i]` : '["name"]';
   const where = scopeQL(scope);
   const parts = cat.tags.map(([k, v]) => `  nwr["${k}"="${v}"]${nameFilter}${where};`).join('\n');
-  return `[out:json][timeout:25];\n(\n${parts}\n);\nout center tags ${limit};`;
+  // A small timeout and maxsize are not just limits: Overpass admits a query
+  // only if the server has room for what it DECLARES, so a modest declaration
+  // gets in on a busy server where the defaults (180 s, 512 MB) are refused.
+  return `[out:json][timeout:18][maxsize:67108864];\n(\n${parts}\n);\nout center tags ${limit};`;
 }
+
+/** The server that answered last is asked first next time. */
+let preferred = 0;
 
 async function runOverpass(ql: string): Promise<{ elements: any[] }> {
   const cached = queryCache.get(ql);
   if (cached) return cached;
-  let res: Response;
-  try {
-    res = await fetch(OVERPASS, {
-      method: 'POST',
-      headers: { 'user-agent': UA, 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
-      body: new URLSearchParams({ data: ql }).toString(),
-      signal: AbortSignal.timeout(35_000),
-    });
-  } catch {
-    throw new LeadSearchError('The map database did not answer in time. Try a smaller area.');
+
+  const tried: string[] = [];
+  for (let i = 0; i < OVERPASS_URLS.length; i++) {
+    const idx = (preferred + i) % OVERPASS_URLS.length;
+    const url = OVERPASS_URLS[idx];
+    const host = (() => { try { return new URL(url).host; } catch { return url; } })();
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'user-agent': UA, 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+        body: new URLSearchParams({ data: ql }).toString(),
+        signal: AbortSignal.timeout(OVERPASS_ATTEMPT_MS),
+      });
+    } catch (e: any) {
+      tried.push(`${host}: ${e?.name === 'TimeoutError' ? 'no answer in 20 s' : e?.cause?.code || e?.message || 'unreachable'}`);
+      continue;
+    }
+    // Busy, rate-limited, or down: the next server may well be fine.
+    if (res.status === 429 || res.status >= 500) { tried.push(`${host}: HTTP ${res.status}`); continue; }
+    if (!res.ok) { tried.push(`${host}: HTTP ${res.status}`); continue; }
+    const j = await res.json().catch(() => null);
+    if (!j || !Array.isArray(j.elements)) { tried.push(`${host}: unreadable answer`); continue; }
+    // Overpass reports its own failures inside a 200, with a remark. "Too
+    // busy" is the server's problem, so try another; a query that ran out of
+    // time or memory is the query's, and would fail everywhere. Either way a
+    // partial list is never shown as the whole.
+    if (typeof j.remark === 'string' && /runtime error|timed out|out of memory|too busy/i.test(j.remark)) {
+      if (/too busy|Dispatcher_Client|rate_limited/i.test(j.remark)) { tried.push(`${host}: busy`); continue; }
+      throw new LeadSearchError('That search was too big to finish. Choose a distance or a smaller place.');
+    }
+    preferred = idx;
+    const out = { elements: j.elements as any[] };
+    queryCache.set(ql, out);
+    return out;
   }
-  if (res.status === 429 || res.status === 504) {
-    throw new LeadSearchError('The map database is busy right now. Try again in a minute.');
-  }
-  if (!res.ok) throw new LeadSearchError(`The map database answered ${res.status}. Try again in a moment.`);
-  const j = await res.json().catch(() => null);
-  if (!j || !Array.isArray(j.elements)) throw new LeadSearchError('The map database sent something unreadable. Try again.');
-  // A timeout or memory limit inside Overpass still answers 200, with a remark
-  // and whatever it managed — a partial list presented as the whole would be
-  // the quiet kind of wrong.
-  if (typeof j.remark === 'string' && /runtime error|timed out|out of memory/i.test(j.remark)) {
-    throw new LeadSearchError('That search was too big to finish. Choose a distance or a smaller place.');
-  }
-  const out = { elements: j.elements as any[] };
-  queryCache.set(ql, out);
-  return out;
+  // Said in the server log with the reason per server, because "did not
+  // answer" alone is what made this hard to diagnose the first time.
+  console.error('leads/overpass: every server failed —', tried.join('; '));
+  throw new LeadSearchError('The map servers are busy right now. Try again in a minute — or choose a distance to make the search smaller.');
 }
 
 // ── Turning OSM tags into a lead ─────────────────────────────────────────────
@@ -372,7 +460,11 @@ export async function searchBusinesses(input: SearchInput): Promise<SearchResult
   const results = dedupePlaces(
     elements.map((el) => toFoundPlace(el, place!, cat.one)).filter(Boolean) as FoundPlace[],
   );
-  return { place, alternatives, results, truncated: elements.length >= MAX_RESULTS };
+  const narrowed = scope.kind === 'around' && !(Number(input.radiusKm) > 0) && scope.m === BIG_CITY_KM * 1000;
+  return {
+    place, alternatives, results, truncated: elements.length >= MAX_RESULTS,
+    ...(narrowed ? { note: `${place.label.split(',')[0]} is large, so this searched within ${BIG_CITY_KM} km of its centre. Pick a district, or a distance from an address, to search elsewhere in it.` } : {}),
+  };
 }
 
 /** A place sent back by the browser is re-validated, never trusted as-is. */

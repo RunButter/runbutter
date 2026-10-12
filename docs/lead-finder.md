@@ -70,14 +70,27 @@ was published on, so *"where did you get my details?"* has an answer.
 
 This is a summary, not legal advice.
 
+## Anywhere in the world
+
+OpenStreetMap covers every country, and the search takes a place in any
+language — *Kraków*, *Lagos*, *İstanbul*, a district, a street or a postcode. A
+city too large to search whole in one go (Istanbul, Sydney, Tokyo) is searched
+within 15 km of its centre, and the screen says so; pick a district, or a
+distance from an address, to search elsewhere in it. A whole country or region
+asks for something smaller.
+
 ## Self-hosting
 
-Nothing to configure: the public Nominatim and Overpass services need no key.
-They do have fair-use rules (one Nominatim request a second; under about 10,000
-Overpass queries a day), so a busy deployment should run its own or use a
-provider, and point at it with:
+Nothing to configure: the public services need no key. Place names go to
+Nominatim, with Photon as the fallback; businesses come from Overpass, tried
+across three public servers in turn (overpass-api.de, Kumi Systems,
+private.coffee), so one busy server no longer fails a search. They have
+fair-use rules (one Nominatim request a second; under about 10,000 Overpass
+queries a day), so a busy deployment should run its own or use a provider:
 
 ```
 OSM_NOMINATIM_URL=https://nominatim.example.com
+OSM_PHOTON_URL=https://photon.example.com
+# One or more, comma-separated, tried in order:
 OSM_OVERPASS_URL=https://overpass.example.com/api/interpreter
 ```

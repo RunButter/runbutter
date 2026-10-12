@@ -318,6 +318,7 @@ export default function FindLeadsPage() {
                 {stats.saved > 0 && <> · {stats.saved} already in your leads</>}
                 {result.truncated && <> · showing the first {stats.total} — choose a distance to narrow it</>}
               </p>
+              {result.note && <p className="text-xs text-warning">{result.note}</p>}
               {result.alternatives.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                   <span className="text-2xs text-tertiary">Not this place?</span>
