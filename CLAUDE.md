@@ -374,8 +374,9 @@ PIECES did. Photo/video/audio/launcher: nothing for us.
 
 ## Find leads (2026-10) — `docs/lead-finder.md`
 Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
-public email → save as **Leads**. No migration.
-- **OpenStreetMap, never Google.** Scraping Maps breaks Google's terms and gets the server blocked;
+public email → save as **Leads**. Sources: **Free (Overture Maps open data, OSM as backup — the
+default)**, Google · live (Places API, the workspace's key, 0134), the operator's Google scraper.
+- **The history below is why the free source is Overture now.** It began as OpenStreetMap only, because scraping Maps breaks Google's terms and gets the server blocked;
   the Places API forbids STORING results beyond a place id, so a saved lead list is a breach either
   way. OSM is ODbL — storable with attribution (shown on the screen). Nominatim (place → area) and
   Overpass (businesses) are public and keyless; `OSM_NOMINATIM_URL` / `OSM_OVERPASS_URL` override.
@@ -439,6 +440,36 @@ public email → save as **Leads**. No migration.
     included; the scraper's own email crawler does neither.
   - `parseGmapsCsv` reads the documented 36 columns BY NAME, skips "permanently closed", dedupes by
     place_id/cid, refuses non-Google `link`s and non-http websites (`cleanWebsite`), sorts by reviews.
+- **THE FREE SOURCE IS OVERTURE MAPS** (`lib/leads/overture.ts`, `lib/leads/free.ts`), asked for as
+  "no costs, and it must work". ~70M places, monthly, CDLA-Permissive-2.0 (storable with attribution),
+  mostly Meta + Microsoft listings, so phone/website/email/Facebook are the NORM, not the exception
+  (Kraków dentists 280: phone 274, web 247, email 218). It is GeoParquet on a public S3 bucket, not a
+  service — nothing rations it by IP, which is what killed Overpass for us. Order: Overture → OSM backup
+  (outage, or a listed category with nothing there) with a note; free text works on Overture only.
+  - **Read with `hyparquet` (MIT, pure JS) + `fzstd` (MIT) for ZSTD.** Not `hyparquet-compressors` — it
+    loads hysnappy's WebAssembly and Overture only uses ZSTD. Not DuckDB — reading S3 needs its httpfs
+    extension downloaded at RUN time from extensions.duckdb.org (unreachable here, untestable) plus
+    70 MB of native binaries.
+  - **Memory is the constraint, measured, not guessed.** A parsed footer is ~17 MB; one row group read
+    as whole rows is ~200 MB (names carry every translation); the first prototype peaked at 3.5 GB RSS.
+    So: the index keeps only each row group's bbox stats (~4,900 rows, cached in memory 24 h AND in
+    `os.tmpdir()` per release); footers are parsed two at a time; rows are read ONE COLUMN AT A TIME
+    (`column()`), bbox first, so a row group whose box met the area but none of whose places do costs
+    one column; the detail columns are read only for the rows shown. Verified under
+    `--max-old-space-size=256`: ~50 MB live heap, Kraków 3–7 s, New York 10 s, first search +7 s.
+  - `hyparquet` takes TOP-LEVEL column names only (no `names.primary`), and skips pages before
+    `rowStart` only for FLAT columns — nested ones decode the whole chunk. That is why the detail read
+    is per column and per row group, not per row.
+  - **More matches than the limit (400): the row groups with the MOST matches are read first.** Fewer
+    groups is less memory and time; the note says "Showing 400 of 6,405 — choose a distance".
+  - `OVERTURE_SEGMENTS` (categories.ts) maps every `LEAD_CATEGORIES` key to taxonomy segments read off
+    the real 2026-09 data; a place matches when ANY segment of its hierarchy (or an alternate category)
+    is listed, so `dental_clinic` takes orthodontics too. Free text: the LAST word is the head noun and
+    must start a word of a category; other words add score and only the best tier is kept ("solar
+    installer" returned installment-loan offices until that). Word-START, so "dent" ≠ student_union.
+  - A result's link is a Google Maps SEARCH url (`maps/search/?api=1&query=name, address`) — a public,
+    keyless link to check reviews before calling. It is also the dedupe key when saved.
+  - >80 row groups (a country) is `OvertureAreaTooBig` → said to the person, never fallen back from.
 - **Google · live = the official Places API (New) on the WORKSPACE'S key** (`lib/leads/places.ts`,
   `/api/leads/places`, `/api/leads/sources`, migration **0134**). Asked "really get leads, real and
   live": OSM is free but patchy and its public servers refused Render; the scraper needs a container

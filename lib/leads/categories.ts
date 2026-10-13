@@ -91,6 +91,38 @@ export const LEAD_CATEGORIES: LeadCategory[] = [
   c('kindergarten', 'Kindergartens', 'Kindergarten', 'Education', [['amenity', 'kindergarten']]),
 ];
 
+/**
+ * The same kinds of business in Overture Maps' taxonomy (lib/leads/overture.ts).
+ * A place matches when ANY segment of its taxonomy hierarchy is in the list, so
+ * `dental_clinic` also takes orthodontics, pediatric_dentistry and the rest
+ * beneath it. Names read off the 2026-09 release's real data, not guessed.
+ */
+export const OVERTURE_SEGMENTS: Record<string, string[]> = {
+  restaurant: ['restaurant'], cafe: ['cafe', 'coffee_shop'], bar: ['alcoholic_beverage_venue'],
+  fast_food: ['fast_food_restaurant'], bakery: ['bakery'],
+  dentist: ['dental_clinic'], doctor: ['doctors_office', 'walk_in_clinic', 'urgent_care_clinic'],
+  pharmacy: ['pharmacy', 'drugstore'], physio: ['physical_therapy'], vet: ['veterinary_care', 'veterinarian', 'animal_hospital'],
+  optician: ['eyewear_store', 'optometry', 'vision_or_eye_care_clinic'],
+  hairdresser: ['hair_salon', 'barber'], beauty: ['beauty_salon', 'nail_salon'], massage: ['massage_therapy', 'spa'],
+  tattoo: ['tattoo_and_piercing'], gym: ['gym', 'fitness_studio'],
+  hotel: ['hotel', 'motel'], guest_house: ['guest_house', 'hostel', 'bed_and_breakfast'],
+  travel_agency: ['travel_service', 'travel_company'],
+  car_repair: ['automotive_repair', 'auto_body_shop'], car_dealer: ['auto_dealer', 'used_auto_dealer'],
+  car_wash: ['car_wash', 'auto_detailing'], tyres: ['tire_shop', 'tire_dealer_and_repair'],
+  lawyer: ['attorney_or_law_firm'], notary: ['notary_public'], accountant: ['accountant', 'bookkeeper', 'tax_service'],
+  estate_agent: ['real_estate_agent'], insurance: ['insurance_agency'],
+  it: ['information_technology_company', 'software_development', 'it_service_and_computer_repair', 'it_consultant'],
+  architect: ['architect', 'architectural_designer'], marketing: ['marketing_agency', 'advertising_agency', 'internet_marketing_service'],
+  recruitment: ['employment_agency'], coworking: ['coworking_space'], company: ['corporate_or_business_office'],
+  plumber: ['plumbing'], electrician: ['electrician'], builder: ['builder', 'building_or_construction_service'],
+  carpenter: ['carpenter'], painter: ['painting'], roofer: ['roofing'], hvac: ['hvac_service'],
+  photographer: ['photography_service'], printer: ['printing_service'],
+  clothes: ['clothing_store', 'shoe_store'], florist: ['florist'], furniture: ['furniture_store'],
+  electronics: ['electronics_store'], hardware: ['hardware_store', 'home_improvement_store'], grocery: ['grocery_store', 'convenience_store'],
+  jewellery: ['jewelry_store'], pet_shop: ['pet_store'], bookshop: ['bookstore'], cleaning: ['laundry_service'],
+  language_school: ['language_school'], driving_school: ['driving_school'], kindergarten: ['preschool', 'child_care_and_day_care'],
+};
+
 export const CATEGORY_BY_KEY: Record<string, LeadCategory> =
   Object.fromEntries(LEAD_CATEGORIES.map((x) => [x.key, x]));
 

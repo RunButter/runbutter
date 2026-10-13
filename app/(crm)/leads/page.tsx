@@ -16,7 +16,7 @@ import { LEAD_CATEGORIES, CATEGORY_BY_KEY } from '@/lib/leads/categories';
 import { LEAD_FIELDS, leadValues, needsWebsite, type Enrichment } from '@/lib/leads/fields';
 import {
   searchLeads, enrichSites, findLeadsObject, setUpLeads, loadSavedIndex, isSaved,
-  saveLead, noteProvenance, toCsv, startGmapsSearch, pollGmapsSearch, listedOn,
+  saveLead, noteProvenance, toCsv, startGmapsSearch, pollGmapsSearch,
   loadSources, connectGoogleKey, disconnectGoogleKey, searchGooglePlaces, type SourcesStatus,
 } from '@/lib/leads/client';
 import type { FoundPlace, GeoPlace, SearchResult } from '@/lib/leads/osm';
@@ -45,8 +45,8 @@ const JOB = 'rb-leads-gmaps-job';
 const JOB_TTL_MS = 30 * 60_000;
 const POLL_MS = 8_000;
 
-/** Free map · Google's official API (the workspace's key) · the operator's own scraper. */
-type Source = 'osm' | 'places' | 'scraper';
+/** Free open data (Overture, OSM as backup) · Google's official API (the workspace's key) · the operator's own scraper. */
+type Source = 'free' | 'places' | 'scraper';
 type Depth = 'quick' | 'city' | 'deep';
 const DEPTHS: { key: Depth; label: string; hint: string }[] = [
   { key: 'quick', label: 'Top 60', hint: '≤ 3 searches' },
@@ -63,6 +63,8 @@ type Index = { sources: Set<string>; names: Set<string>; count: number };
 const EMPTY_INDEX: Index = { sources: new Set(), names: new Set(), count: 0 };
 
 const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+/** Where a result's link goes — open-data results link to Google Maps for a quick look at reviews. */
+const linkHost = (u: string) => (/google\.[a-z.]+\/maps|maps\.google\./i.test(u) ? 'Google Maps' : 'OpenStreetMap');
 
 export default function FindLeadsPage() {
   const { ready, authenticated, user } = usePrivy();
@@ -83,7 +85,7 @@ export default function FindLeadsPage() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<SearchResult | null>(null);
   const [sources, setSources] = useState<SourcesStatus | null>(null);
-  const [source, setSource] = useState<Source>('osm');
+  const [source, setSource] = useState<Source>('free');
   const [query, setQuery] = useState('');
   const [depth, setDepth] = useState<Depth>('quick');
   const [calls, setCalls] = useState<number | null>(null);
@@ -176,7 +178,7 @@ export default function FindLeadsPage() {
   const canSetUp = ws?.role === 'owner' || ws?.role === 'admin';
   // The source actually in force: a remembered choice the server no longer
   // offers (the scraper switched off) falls back to the free map.
-  const src: Source = source === 'scraper' && !sources?.scraper ? 'osm' : source;
+  const src: Source = source === 'scraper' && !sources?.scraper ? 'free' : source;
   // Leads set up before a field existed (rating, reviews, website check) gets
   // it from the same button — setUpLeads only adds what is missing.
   const missingFields = obj ? LEAD_FIELDS.filter((f) => !obj.fields.some((x) => x.key === f.key)) : [];
@@ -213,7 +215,6 @@ export default function FindLeadsPage() {
   const run = async (place?: GeoPlace | null) => {
     const other = category === OTHER;
     if (!category || (other && !query.trim())) { setError(other ? 'Type what kind of business to look for.' : 'Pick what kind of business to look for.'); return; }
-    if (other && src === 'osm') { setError('The open map searches the kinds in the list. Pick one, or search Google for anything.'); return; }
     if (!place && !where.trim()) { setError('Say where to look — a city, a district or a postcode.'); return; }
     if (src === 'places' && !sources?.google.connected) { setError('Connect a Google API key first — the box above.'); return; }
     setBusy(true); setError(''); setSaveMsg(null); setCalls(null);
@@ -235,7 +236,7 @@ export default function FindLeadsPage() {
       keepJob({ id: g.job, place: g.place, query: g.query, category: other ? query.trim() : category, startedAt: Date.now() });
       return;
     }
-    const r = await searchLeads({ category, where, radiusKm: radius, name, place: place ?? null });
+    const r = await searchLeads({ ...what, where, radiusKm: radius, name, place: place ?? null });
     setBusy(false);
     if ('error' in r) { setError(r.error); return; }
     // Picking an alternative keeps the others on offer, the first guess included.
@@ -352,8 +353,9 @@ export default function FindLeadsPage() {
 
   const cat = CATEGORY_BY_KEY[category];
   const working = !!enriching || !!saving;
-  const google = src !== 'osm';
+  const google = src !== 'free';
   const fromGoogle = !!result?.results.some((p) => p.ref.startsWith('google/'));
+  const fromOverture = !!result?.results.some((p) => p.ref.startsWith('overture/'));
   const elapsed = job ? Math.max(0, Math.round((now - job.startedAt) / 1000)) : 0;
 
   return (
@@ -408,7 +410,7 @@ export default function FindLeadsPage() {
           <div className="sm:col-span-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <div role="radiogroup" aria-label="Where to search" className="inline-flex flex-wrap rounded-lg ring-1 ring-subtle p-0.5 bg-surface-sunken">
               {([
-                ['osm', 'Open map', 'free'],
+                ['free', 'Free', 'open data'],
                 ['places', 'Google', 'live'],
                 ...(sources?.scraper ? [['scraper', 'Google scraper', 'minutes']] : []),
               ] as [Source, string, string][]).map(([k, label, hint]) => (
@@ -419,7 +421,7 @@ export default function FindLeadsPage() {
               ))}
             </div>
             <p className="text-2xs text-tertiary min-w-0 basis-full sm:basis-0 sm:flex-1">
-              {src === 'osm' && 'OpenStreetMap: free, and yours to keep. Coverage depends on the place.'}
+              {src === 'free' && 'About 70 million businesses worldwide from Overture Maps — listings from Meta, Microsoft and others, refreshed monthly — with OpenStreetMap as the backup. Free, no key, yours to keep.'}
               {src === 'places' && <>Live Google Maps data through Google’s official API, on your workspace’s own key — Google gives every key a free monthly allowance. Google’s terms limit storing its data beyond the place id; saving a lead is your call.</>}
               {src === 'scraper' && 'Uses the Google Maps scraper this server’s operator runs. Scraping Google Maps is against Google’s terms — whoever runs the scraper takes that on.'}
             </p>
@@ -432,14 +434,14 @@ export default function FindLeadsPage() {
             <span className="block text-2xs text-tertiary mb-1">What</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field" aria-label="Kind of business">
               <option value="">Kind of business…</option>
-              {google && <option value={OTHER}>Something else — type it…</option>}
+              <option value={OTHER}>Something else — type it…</option>
               {GROUPS.map((g) => (
                 <optgroup key={g} label={g}>
                   {LEAD_CATEGORIES.filter((c) => c.group === g).map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </optgroup>
               ))}
             </select>
-            {category === OTHER && google && (
+            {category === OTHER && (
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. solar panel installer" autoFocus
                 className="input-field mt-1.5" aria-label="Kind of business, in your words" />
             )}
@@ -585,7 +587,7 @@ export default function FindLeadsPage() {
                     ? 'Turn a filter off to see more.'
                     : fromGoogle || google
                       ? 'Google Maps returned nothing for this search. Try a nearby city or a related kind of business.'
-                      : 'OpenStreetMap is mapped by volunteers, so coverage varies by place. Try a larger area, a nearby city, or a related kind of business.'} />
+                      : 'Nothing of that kind is listed here. Try a larger area, a nearby city, or a related kind of business — or type it in your own words.'} />
               ) : (
                 <ul className="divide-y divide-subtle">
                   {rows.map((p) => (
@@ -605,6 +607,12 @@ export default function FindLeadsPage() {
             calls !== null
               ? <>Results from Google Maps through the Places API, on your workspace’s key.</>
               : <>Results from Google Maps, through the scraper this server’s operator runs — Google’s terms forbid scraping, and the operator takes that on.</>
+          ) : fromOverture ? (
+            <>
+              Business data from{' '}
+              <a href="https://overturemaps.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-secondary">Overture Maps Foundation</a>
+              {' '}(sources include Meta and Microsoft), under the Community Data License Agreement – Permissive 2.0.
+            </>
           ) : (
             <>
               Business data ©{' '}
@@ -662,7 +670,7 @@ function ResultRow({ p, e, saved, checked, onToggle }: {
         </div>
         <SiteBadges p={p} e={e} />
       </div>
-      <a href={p.url} target="_blank" rel="noopener noreferrer" title={`View on ${listedOn(p)}`} aria-label={`View ${p.name} on ${listedOn(p)}`}
+      <a href={p.url} target="_blank" rel="noopener noreferrer" title={`View on ${linkHost(p.url)}`} aria-label={`View ${p.name} on ${linkHost(p.url)}`}
         className="p-1.5 -m-1 rounded-md text-tertiary hover:text-secondary hover:bg-surface-hover shrink-0">
         <ExternalLink className="w-3.5 h-3.5" />
       </a>

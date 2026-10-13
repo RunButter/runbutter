@@ -37,8 +37,8 @@ async function post<T>(url: string, body: unknown): Promise<T | { error: string 
   }
 }
 
-export const searchLeads = (b: { category: string; where: string; radiusKm: number; name?: string; place?: GeoPlace | null }) =>
-  post<SearchResult>('/api/leads/search', b);
+export const searchLeads = (b: { category?: string; query?: string; where: string; radiusKm: number; name?: string; place?: GeoPlace | null }) =>
+  post<SearchResult & { source?: 'overture' | 'osm' }>('/api/leads/search', b);
 
 export const enrichSites = (websites: string[]) =>
   post<{ results: SiteContacts[] }>('/api/leads/enrich', { websites });
@@ -112,7 +112,8 @@ export async function pollGmapsSearch(job: string, country: string): Promise<Gma
 }
 
 /** Where a found business was listed, by name. */
-export const listedOn = (p: Pick<FoundPlace, 'ref'>) => (p.ref.startsWith('google/') ? 'Google Maps' : 'OpenStreetMap');
+export const listedOn = (p: Pick<FoundPlace, 'ref'>) =>
+  p.ref.startsWith('google/') ? 'Google Maps' : p.ref.startsWith('overture/') ? 'Overture Maps (open data)' : 'OpenStreetMap';
 
 // ── The Leads object ─────────────────────────────────────────────────────────
 

@@ -7,15 +7,26 @@ offer.
 
 ## Three sources
 
-| | Open map | Google · live | Google scraper |
+| | Free · open data (default) | Google · live | Google scraper |
 |---|---|---|---|
-| Data | OpenStreetMap, volunteer-mapped | Google Maps, through Google's official Places API | Google Maps, through a scraper you run |
-| Cost | Free | Your Google key; each month's first searches are free | Free, your server |
-| Phone, website, hours | Where mapped | Almost always | Almost always |
+| Data | [Overture Maps](https://overturemaps.org) — business listings from Meta, Microsoft and others; OpenStreetMap as the backup | Google Maps, through Google's official Places API | Google Maps, through a scraper you run |
+| Cost | **Free, no key** | Your Google key; each month's first searches are free | Free, your server |
+| Phone, website | Most businesses (see below) | Almost always | Almost always |
+| Email, Facebook page | Often | — (Check websites finds emails) | — |
 | Rating and reviews | — | Yes | Yes |
-| Any kind of business | The list | Anything you type | Anything you type |
-| Speed | Seconds | Seconds (a whole city: under a minute) | Minutes |
+| Any kind of business | Anything you type | Anything you type | Anything you type |
+| Speed | Seconds; the first search after a restart ~10 s | Seconds (a whole city: under a minute) | Minutes |
+| Fresh | Monthly release | Live | Live |
 | Set up | Nothing | Paste a key once | Run a container |
+
+**How complete the free data is** — measured on the 2026-09 release:
+
+| Search | Found | With phone | With website | With email |
+|---|---|---|---|---|
+| Dentists, Kraków | 280 | 274 | 247 | 218 |
+| Dentists, New York (first 400 shown of 6,405) | 400 | 399 | 356 | 150 |
+| Plumbers, Manhattan (3 km) | 62 | 61 | 51 | 7 |
+| "Solar panel installer", Lagos | 89 | 88 | 68 | 79 |
 
 ## How it works
 
@@ -83,18 +94,31 @@ The **Copilot** uses Google too when the workspace has a key: *"find solar
 installers in Lagos"* runs one *Top 60* search. Going wider stays a button a
 person presses.
 
-## Why OpenStreetMap is the default
+## Free · open data (Overture Maps)
 
-Google's terms forbid scraping Maps, and its Places API forbids storing what it
-returns beyond a place id — so a lead list built from Google is a breach of
-those terms the moment it is saved, and a scraper is blocked within days.
-OpenStreetMap's data is published under the
-[Open Database License](https://www.openstreetmap.org/copyright): free, no key,
-and you may keep it, provided the attribution is shown (the screen shows it).
+The [Overture Maps Foundation](https://overturemaps.org) — Amazon, Meta,
+Microsoft, TomTom and others — publishes about 70 million places worldwide as
+open data, refreshed monthly, under the
+[CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/) licence: **free, no key,
+and yours to keep** with attribution (the screen shows it). Most of it comes
+from Meta's and Microsoft's business listings, so it carries a phone, a website,
+an email and a Facebook page far more often than a volunteer-made map.
 
-Coverage is good in most of Europe and in cities, thinner in rural areas and in
-some countries, because the map is made by volunteers. A business missing from
-the results can always be added to Leads by hand.
+It is published as files on a public Amazon S3 bucket, not as a service. There
+is nothing to be throttled by — the reason the OpenStreetMap servers kept
+refusing a busy host. RunButter reads the files directly, fetching only the
+part that covers the place you searched: Kraków is 5 of about 4,900 blocks,
+New York 37. The first search after a restart reads the files' index (~7 s);
+after that a city takes a few seconds. A whole country is too big and asks for
+a city or a distance.
+
+Each result links to the same business on **Google Maps** — one click to look
+at its reviews and photos before you call. Nothing is sent to Google to make
+that link.
+
+If the open data cannot be reached, or has nothing of that kind in that place,
+the search falls back to **OpenStreetMap** and says so. OpenStreetMap is ODbL —
+free and storable with attribution — and strongest in Europe and in cities.
 
 ## Google Maps, through your own scraper (optional)
 
@@ -170,7 +194,7 @@ This is a summary, not legal advice.
 
 ## Anywhere in the world
 
-OpenStreetMap covers every country, and the search takes a place in any
+Overture and OpenStreetMap cover every country, and the search takes a place in any
 language — *Kraków*, *Lagos*, *İstanbul*, a district, a street or a postcode. A
 city too large to search whole in one go (Istanbul, Sydney, Tokyo) is searched
 within 15 km of its centre, and the screen says so; pick a district, or a
@@ -179,7 +203,19 @@ asks for something smaller.
 
 ## Self-hosting
 
-Nothing to configure: the public services need no key. Place names go to
+Nothing to configure: none of the free sources needs a key. Overture's files
+are read from its public S3 bucket; to read them from a mirror (another region,
+Azure, your own copy) or to pin a release:
+
+```
+OVERTURE_BASE_URL=https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com
+OVERTURE_RELEASE=2026-09-23.1   # default: the newest, re-checked daily
+```
+
+The search reads one column of one block at a time, so it stays at roughly
+50 MB of memory however big the city.
+
+Place names go to
 Nominatim, with Photon as the fallback; businesses come from Overpass, tried
 across three public servers in turn (overpass-api.de, Kumi Systems,
 private.coffee), so one busy server no longer fails a search. They have
