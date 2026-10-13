@@ -104,13 +104,23 @@ and yours to keep** with attribution (the screen shows it). Most of it comes
 from Meta's and Microsoft's business listings, so it carries a phone, a website,
 an email and a Facebook page far more often than a volunteer-made map.
 
-It is published as files on a public Amazon S3 bucket, not as a service. There
-is nothing to be throttled by — the reason the OpenStreetMap servers kept
-refusing a busy host. RunButter reads the files directly, fetching only the
-part that covers the place you searched: Kraków is 5 of about 4,900 blocks,
-New York 37. The first search after a restart reads the files' index (~7 s);
-after that a city takes a few seconds. A whole country is too big and asks for
-a city or a distance.
+It is published as files on a public Amazon S3 bucket, not as a service, and
+the bucket allows browsers to read it directly. So **the search runs in your
+own browser**: it fetches only the part of the files that covers the place
+you searched (Kraków is 5 of about 4,900 blocks, New York 37) — typically
+5–15 MB and 5–10 seconds per city. Nothing of the server's is in the way: not
+its network (public map servers refuse shared hosting IPs), not its memory,
+not its region. If your browser cannot reach the data (a strict company
+firewall), the server runs the same search instead and the screen says why.
+
+To find the right blocks, the browser needs a small index (~100 KB): it asks
+the server for it (`/api/leads/overture-index`, public, cached), and if the
+server cannot answer, uses the copy shipped with the app
+(`public/overture/places-index.json`). After a new monthly Overture release,
+refresh that copy with `npm run overture:index`; until then it keeps pointing at
+the previous release, which Overture keeps online for a few months.
+
+A whole country is too big and asks for a city or a distance.
 
 Each result links to the same business on **Google Maps** — one click to look
 at its reviews and photos before you call. Nothing is sent to Google to make

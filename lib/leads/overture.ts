@@ -64,22 +64,60 @@ export class OvertureAreaTooBig extends OvertureError {}
 
 export interface Box { w: number; s: number; e: number; n: number }
 
-interface Group { key: string; rg: number; rowStart: number; rowEnd: number; x0: number; x1: number; y0: number; y1: number }
-interface Index { release: string; builtAt: number; groups: Group[] }
+export interface Group { key: string; rg: number; rowStart: number; rowEnd: number; x0: number; x1: number; y0: number; y1: number }
+export interface OvertureIndex { release: string; groups: Group[] }
 
-let index: Index | null = null;
-let building: Promise<Index> | null = null;
+let index: (OvertureIndex & { at: number }) | null = null;
+let building: Promise<OvertureIndex> | null = null;
+
+/**
+ * Where the index comes from, set by whoever runs this file. The server reads
+ * it from disk or builds it from S3 (lib/leads/overture-server.ts); a browser
+ * asks the server, then a copy shipped with the app, and builds it only as a
+ * last resort (lib/leads/overture-browser.ts) — building means ~30 MB of
+ * footers, which is fine once on a server and too much for every phone.
+ */
+let loader: () => Promise<OvertureIndex> = () => buildIndexFromS3();
+export function setIndexLoader(fn: () => Promise<OvertureIndex>) { loader = fn; index = null; }
+/** Drop the held index — after the store says a file of it is gone (a release was retired). */
+export function forgetIndex() { index = null; }
+
+const onServer = typeof window === 'undefined';
+
+/**
+ * fetch for the open data. Two guards that matter more than they look:
+ *  - a byte-RANGE request answered 200 instead of 206 means the whole 700 MB
+ *    file is on its way; hyparquet would buffer all of it. Refused instead.
+ *  - every request gets its own timeout, and on the server opts out of Next's
+ *    fetch cache (a range read is not something to store).
+ */
+export const dataFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  const ranged = headers.has('Range');
+  const res = await fetch(input, {
+    ...init,
+    headers,
+    signal: init?.signal ?? AbortSignal.timeout(30_000),
+    ...(onServer ? { cache: 'no-store' as RequestCache } : {}),
+  });
+  if (ranged && res.status === 200) {
+    res.body?.cancel().catch(() => {});
+    throw new OvertureError('the data store ignored a partial read');
+  }
+  if (res.status === 404 || res.status === 403) forgetIndex();
+  return res;
+};
 
 async function s3List(prefix: string, delimiter = ''): Promise<{ keys: string[]; prefixes: string[] }> {
   const keys: string[] = [], prefixes: string[] = [];
   let token = '';
   for (let page = 0; page < 20; page++) {
     const q = new URLSearchParams({ 'list-type': '2', prefix, ...(delimiter ? { delimiter } : {}), ...(token ? { 'continuation-token': token } : {}) });
-    const res = await fetch(`${BASE}/?${q}`, { signal: AbortSignal.timeout(15_000) });
-    if (!res.ok) throw new OvertureError(`The open data store answered ${res.status}.`);
+    const res = await dataFetch(`${BASE}/?${q}`, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) throw new OvertureError(`the data store answered HTTP ${res.status}`);
     const xml = await res.text();
     for (const m of xml.matchAll(/<Key>([^<]+)<\/Key>/g)) keys.push(m[1]);
-    for (const m of xml.matchAll(/<CommonPrefixes><Prefix>([^<]+)<\/Prefix><\/CommonPrefixes>/g)) prefixes.push(m[1]);
+    for (const m of xml.matchAll(/<CommonPrefixes>\s*<Prefix>([^<]+)<\/Prefix>\s*<\/CommonPrefixes>/g)) prefixes.push(m[1]);
     const next = /<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml);
     if (!/<IsTruncated>true<\/IsTruncated>/.test(xml) || !next) break;
     token = next[1];
@@ -91,6 +129,14 @@ async function s3List(prefix: string, delimiter = ''): Promise<{ keys: string[];
 export function newestRelease(prefixes: string[]): string | null {
   const names = prefixes.map((p) => /^release\/([^/]+)\/$/.exec(p)?.[1]).filter((x): x is string => !!x && /^\d{4}-\d{2}-\d{2}/.test(x));
   return names.sort().pop() ?? null;
+}
+
+/** The release to use: the pinned one, else the newest on S3. */
+export async function currentRelease(): Promise<string> {
+  if (PINNED) return PINNED;
+  const r = newestRelease((await s3List('release/', '/')).prefixes);
+  if (!r) throw new OvertureError('no release was found in the data store');
+  return r;
 }
 
 const num = (v: unknown) => (typeof v === 'bigint' ? Number(v) : Number(v));
@@ -115,57 +161,82 @@ export function groupsOf(key: string, md: Pick<FileMetaData, 'row_groups'>): Gro
   return out;
 }
 
-/** The index survives a restart: ~5,000 rows of numbers, written beside the OS temp files. */
-async function diskCache(release: string): Promise<{ read: () => Promise<Group[] | null>; write: (g: Group[]) => Promise<void> }> {
-  const [{ readFile, writeFile }, { tmpdir }, { join }] = await Promise.all([import('node:fs/promises'), import('node:os'), import('node:path')]);
-  const path = join(tmpdir(), `runbutter-overture-places-${release.replace(/[^\w.-]/g, '')}.json`);
-  return {
-    read: async () => {
-      try {
-        const g = JSON.parse(await readFile(path, 'utf8'));
-        return Array.isArray(g) && g.length && typeof g[0]?.key === 'string' ? g : null;
-      } catch { return null; }
-    },
-    write: async (g) => { try { await writeFile(path, JSON.stringify(g)); } catch { /* read-only disk: rebuild next time */ } },
-  };
-}
+const fileUrl = (key: string) => `${BASE}/${key}`;
+const openBuffer = (key: string) => asyncBufferFromUrl({ url: fileUrl(key), fetch: dataFetch });
 
-async function buildIndex(): Promise<Index> {
-  const release = PINNED || newestRelease((await s3List('release/', '/')).prefixes);
-  if (!release) throw new OvertureError('Could not find an Overture release.');
-  const cache = await diskCache(release);
-  const cached = await cache.read();
-  if (cached) return { release, builtAt: Date.now(), groups: cached };
-  const { keys } = await s3List(`release/${release}/theme=places/type=place/`);
+/** Read every footer of a release (~30 MB) and keep only the boxes. */
+export async function buildIndexFromS3(release?: string): Promise<OvertureIndex> {
+  const rel = release || await currentRelease();
+  const { keys } = await s3List(`release/${rel}/theme=places/type=place/`);
   const files = keys.filter((k) => k.endsWith('.parquet'));
-  if (!files.length) throw new OvertureError('This Overture release has no places files.');
+  if (!files.length) throw new OvertureError(`release ${rel} has no places files`);
   const groups: Group[] = [];
   let i = 0;
   await Promise.all(Array.from({ length: 2 }, async () => {
     while (i < files.length) {
       const key = files[i++];
       // Parsed, reduced to its box statistics, and dropped — not cached.
-      const md = await parquetMetadataAsync(await asyncBufferFromUrl({ url: `${BASE}/${key}` }));
+      const md = await parquetMetadataAsync(await openBuffer(key));
       groups.push(...groupsOf(key, md));
     }
   }));
-  await cache.write(groups);
-  return { release, builtAt: Date.now(), groups };
+  return { release: rel, groups };
 }
 
-async function getIndex(): Promise<Index> {
-  if (index && Date.now() - index.builtAt < INDEX_TTL_MS) return index;
+// ── The index on the wire: ~5,000 rows of numbers, ~100 KB gzipped ─────────
+
+export interface PackedIndex { v: 1; release: string; files: string[]; groups: number[][] }
+
+/** Boxes rounded OUTWARD to 1e-4°, so rounding can only include a row group, never wrongly skip one. */
+export function packIndex(i: OvertureIndex): PackedIndex {
+  const files = [...new Set(i.groups.map((g) => g.key))];
+  const at = new Map(files.map((f, k) => [f, k]));
+  const lo = (x: number) => Math.floor(x * 1e4) / 1e4, hi = (x: number) => Math.ceil(x * 1e4) / 1e4;
+  return {
+    v: 1, release: i.release, files,
+    groups: i.groups.map((g) => [at.get(g.key)!, g.rg, g.rowStart, g.rowEnd, lo(g.x0), hi(g.x1), lo(g.y0), hi(g.y1)]),
+  };
+}
+
+export function unpackIndex(p: any): OvertureIndex | null {
+  if (!p || p.v !== 1 || typeof p.release !== 'string' || !Array.isArray(p.files) || !Array.isArray(p.groups)) return null;
+  const groups: Group[] = [];
+  for (const r of p.groups) {
+    if (!Array.isArray(r) || r.length !== 8 || !r.every((x: unknown) => Number.isFinite(x))) return null;
+    const key = p.files[r[0]];
+    if (typeof key !== 'string' || !key.startsWith(`release/${p.release}/`)) return null;
+    groups.push({ key, rg: r[1], rowStart: r[2], rowEnd: r[3], x0: r[4], x1: r[5], y0: r[6], y1: r[7] });
+  }
+  return groups.length ? { release: p.release, groups } : null;
+}
+
+async function getIndex(): Promise<OvertureIndex> {
+  if (index && Date.now() - index.at < INDEX_TTL_MS) return index;
   if (!building) {
-    building = buildIndex()
-      .then((x) => { index = x; return x; })
+    building = loader()
+      .then((x) => { index = { ...x, at: Date.now() }; return x; })
       .finally(() => { building = null; });
   }
   try { return await building; }
   catch (e) {
     // A stale index still answers; better than none while S3 hiccups.
     if (index) return index;
-    throw e instanceof OvertureError ? e : new OvertureError('The open business data could not be reached. Try again in a moment.');
+    throw e instanceof OvertureError ? e : new OvertureError(reasonOf(e));
   }
+}
+
+/** The index in its wire format, for /api/leads/overture-index. */
+export async function packedIndex(): Promise<PackedIndex> {
+  return packIndex(await getIndex());
+}
+
+/** Why something failed, in a few words a screenshot can carry. */
+export function reasonOf(e: unknown): string {
+  const err = e as any;
+  if (err instanceof OvertureError) return err.message;
+  if (err?.name === 'TimeoutError' || err?.name === 'AbortError') return 'no answer in time';
+  const code = err?.cause?.code || err?.code;
+  return String(code ? `${err?.message || 'error'} (${code})` : err?.message || err || 'unknown error').slice(0, 160);
 }
 
 // Two parsed footers at most — each is ~17 MB of objects.
@@ -173,7 +244,7 @@ const footers = new Map<string, { file: AsyncBuffer; md: FileMetaData }>();
 async function open(key: string): Promise<{ file: AsyncBuffer; md: FileMetaData }> {
   const hit = footers.get(key);
   if (hit) { footers.delete(key); footers.set(key, hit); return hit; }
-  const file = await asyncBufferFromUrl({ url: `${BASE}/${key}` });
+  const file = await openBuffer(key);
   const md = await parquetMetadataAsync(file);
   footers.set(key, { file, md });
   while (footers.size > 2) footers.delete(footers.keys().next().value as string);

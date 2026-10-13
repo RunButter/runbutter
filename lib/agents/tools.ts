@@ -18,6 +18,7 @@ import { validateIban } from '@/lib/finance/iban';
 import { parseReceiptText, suggestCategory } from '@/lib/finance/receipt-parse';
 import { isSafeOutboundUrl } from '@/lib/security/http';
 import { geocode, LeadSearchError } from '@/lib/leads/osm';
+import '@/lib/leads/overture-server';
 import { searchFree } from '@/lib/leads/free';
 import { LEAD_CATEGORIES, CATEGORY_BY_KEY } from '@/lib/leads/categories';
 import { searchPlaces, rectAround, PlacesError } from '@/lib/leads/places';

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readJsonCapped, rateLimit, tooMany } from '@/lib/security/http';
 import { LeadSearchError } from '@/lib/leads/osm';
+import '@/lib/leads/overture-server';
 import { searchFree } from '@/lib/leads/free';
 import { leadsCaller } from '@/lib/leads/route-auth';
 

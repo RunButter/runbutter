@@ -236,7 +236,21 @@ export default function FindLeadsPage() {
       keepJob({ id: g.job, place: g.place, query: g.query, category: other ? query.trim() : category, startedAt: Date.now() });
       return;
     }
-    const r = await searchLeads({ ...what, where, radiusKm: radius, name, place: place ?? null });
+    // Free: searched IN THIS BROWSER, straight against the open data
+    // (lib/leads/overture-browser.ts) — nothing of ours in the way. The
+    // server's search is the fallback, for a browser that cannot reach it.
+    let r: (SearchResult & { source?: string }) | { error: string };
+    try {
+      const { searchFreeHere } = await import('@/lib/leads/overture-browser');
+      r = await searchFreeHere({ ...what, where, radiusKm: radius, name, place: place ?? null });
+    } catch (e: any) {
+      const here = String(e?.message || e || 'the search failed');
+      if (e?.name === 'LeadInputError') r = { error: here };
+      else {
+        const there = await searchLeads({ ...what, where, radiusKm: radius, name, place: place ?? null });
+        r = 'error' in there ? { error: `${there.error} (In your browser: ${here})` } : there;
+      }
+    }
     setBusy(false);
     if ('error' in r) { setError(r.error); return; }
     // Picking an alternative keeps the others on offer, the first guess included.
@@ -477,6 +491,11 @@ export default function FindLeadsPage() {
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} {busy && src === 'places' && depth !== 'quick' ? 'Searching…' : 'Search'}
           </button>
           {!privy && <p className="sm:order-3 sm:col-span-4 text-xs text-tertiary">Sign in to search.</p>}
+          {busy && src === 'free' && (
+            <p className="sm:order-3 sm:col-span-4 text-xs text-tertiary flex items-center gap-1.5" role="status">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Reading the open business data — a few seconds, a little longer the first time.
+            </p>
+          )}
           {error && <p className="sm:order-3 sm:col-span-4 text-xs text-danger flex items-start gap-1.5"><AlertCircle className="w-3.5 h-3.5 mt-px shrink-0" />{error}</p>}
         </form>
 

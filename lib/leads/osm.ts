@@ -39,6 +39,10 @@ const OVERPASS_URLS = (process.env.OSM_OVERPASS_URL || [
 /** Per server. A healthy one answers a city search in a few seconds. */
 const OVERPASS_ATTEMPT_MS = 15_000;
 const UA = 'RunButter/1.0 (+https://runbutter.app; lead finder)';
+// Identify ourselves from the server. A BROWSER must not set User-Agent: some
+// browsers then send a CORS preflight these public services may not answer,
+// and the browser already identifies the site through its Referer.
+const ID: Record<string, string> = typeof window === 'undefined' ? { 'user-agent': UA } : {};
 
 /** Most results one search returns. Enough for a city's dentists; a city's shops needs a smaller area. */
 export const MAX_RESULTS = 400;
@@ -107,6 +111,8 @@ export interface SearchResult {
 }
 
 export class LeadSearchError extends Error {}
+/** A question for the person (too big, a whole region, say what) — the answer, never a reason to try elsewhere. */
+export class LeadInputError extends LeadSearchError { name = 'LeadInputError'; }
 /** Every Overpass server refused; `reasons` says how each one did. */
 export class OverpassUnavailable extends LeadSearchError {
   constructor(public reasons: string[]) { super('The map servers did not answer.'); }
@@ -185,7 +191,7 @@ async function nominatim(query: string, lang: string): Promise<GeoPlace[] | null
   const url = `${NOMINATIM}/search?${new URLSearchParams({ q: query, format: 'jsonv2', limit: '5', addressdetails: '1' })}`;
   try {
     const res = await fetch(url, {
-      headers: { 'user-agent': UA, accept: 'application/json', 'accept-language': lang },
+      headers: { ...ID, accept: 'application/json', 'accept-language': lang },
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) { console.error(`leads/geocode: Nominatim answered ${res.status}`); return null; }
@@ -202,7 +208,7 @@ async function photon(query: string, lang: string): Promise<GeoPlace[] | null> {
   const l = /^(en|de|fr|it)$/.test(lang.slice(0, 2)) ? lang.slice(0, 2) : 'default';
   const url = `${PHOTON}/api/?${new URLSearchParams({ q: query, limit: '5', ...(l !== 'default' ? { lang: l } : {}) })}`;
   try {
-    const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
+    const res = await fetch(url, { headers: { ...ID, accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return null;
     const j = await res.json().catch(() => null);
     return Array.isArray(j?.features) ? (j.features.map(photonToGeoPlace).filter(Boolean) as GeoPlace[]) : null;
@@ -263,7 +269,7 @@ export function scopeFor(place: GeoPlace, radiusKm?: number): Scope {
     // circle round its centre (and says so); a country or region still asks
     // for something smaller, because its centre is not a place.
     if (REGION.test(place.kind)) {
-      throw new LeadSearchError(`${place.label.split(',')[0]} is a whole region. Pick a city or district in it, or choose a distance.`);
+      throw new LeadInputError(`${place.label.split(',')[0]} is a whole region. Pick a city or district in it, or choose a distance.`);
     }
     return { kind: 'around', lat: place.lat, lon: place.lon, m: BIG_CITY_KM * 1000 };
   }
@@ -304,7 +310,7 @@ async function runOverpass(ql: string): Promise<{ elements: any[] }> {
     try {
       res = await fetch(url, {
         method: 'POST',
-        headers: { 'user-agent': UA, 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+        headers: { ...ID, 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
         body: new URLSearchParams({ data: ql }).toString(),
         signal: AbortSignal.timeout(OVERPASS_ATTEMPT_MS),
       });
@@ -500,7 +506,7 @@ async function nominatimPlaces(cat: LeadCategory, place: GeoPlace, scope: Scope,
       let rows: any[] = [];
       try {
         const res = await fetch(`${NOMINATIM}/search?${params}`, {
-          headers: { 'user-agent': UA, accept: 'application/json', 'accept-language': lang },
+          headers: { ...ID, accept: 'application/json', 'accept-language': lang },
           signal: AbortSignal.timeout(10_000),
         });
         rows = res.ok ? await res.json().catch(() => []) : [];

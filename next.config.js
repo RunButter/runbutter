@@ -102,7 +102,8 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://auth.privy.io https://*.privy.io",
+      // Find leads reads the open data from the browser (lib/leads/overture-browser.ts).
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://auth.privy.io https://*.privy.io https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com https://nominatim.openstreetmap.org https://photon.komoot.io https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee",
       "frame-src https://auth.privy.io https://challenges.cloudflare.com",
       "worker-src 'self' blob:",
       "object-src 'none'",

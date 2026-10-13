@@ -18,7 +18,8 @@
     "check:grants": "node scripts/check-grants.mjs",
     "check:plans": "node scripts/check-plans.mjs",
     "check:routes": "node scripts/check-routes.mjs",
-    "build:sheetcalc": "node scripts/build-sheetcalc.mjs"
+    "build:sheetcalc": "node scripts/build-sheetcalc.mjs",
+    "overture:index": "node scripts/overture-index.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

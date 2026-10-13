@@ -470,6 +470,28 @@ default)**, Google · live (Places API, the workspace's key, 0134), the operator
   - A result's link is a Google Maps SEARCH url (`maps/search/?api=1&query=name, address`) — a public,
     keyless link to check reviews before calling. It is also the dedupe key when saved.
   - >80 row groups (a country) is `OvertureAreaTooBig` → said to the person, never fallen back from.
+  - **IT RUNS IN THE BROWSER** (`lib/leads/overture-browser.ts`, dynamic-imported by the page). The
+    server path failed in production with "could not be reached" and NO reason (undiagnosable — the
+    connector was signed out and there are no logs here). The bucket allows CORS GET/HEAD/Range from
+    any origin (checked), so the browser reads it directly: no server network, memory or region in
+    the way; each person on their own connection. Verified in a real Chromium against live S3:
+    Kraków dentists 278 rows in 6.9 s / 9.6 MB, server search called ZERO times.
+    `/api/leads/search` is the FALLBACK (page catches any non-`LeadInputError` and retries there,
+    showing both reasons). `LeadInputError` (too big, a region, say what) is the answer, never retried.
+  - **`overture.ts` is isomorphic**: no `node:` imports. The index LOADER is injected —
+    `overture-server.ts` (disk cache in tmpdir → S3 build → shipped copy) is imported by the search
+    route, the index route and `tools.ts`; `overture-browser.ts` (localStorage 24 h →
+    `/api/leads/overture-index` → `public/overture/places-index.json` → S3 build as last resort,
+    30 MB) by the page. Wire format = `PackedIndex` (~277 KB, 91 KB gzipped), boxes rounded OUTWARD
+    so rounding can only include a row group. `npm run overture:index` regenerates the shipped copy;
+    its format must match `packIndex`/`unpackIndex`.
+  - **`dataFetch` guards**: a ranged request answered 200 means hyparquet would buffer the whole
+    700 MB file — refused; per-request timeout; `cache: 'no-store'` on the server (Next's fetch
+    cache); a 403/404 drops the held index (release retired). Errors now carry the REASON
+    (`reasonOf`) all the way to the screen.
+  - Browser fetches must NOT set User-Agent (`osm.ts` `ID` is server-only) — some browsers preflight
+    it and the public map services may not answer a preflight. CSP connect-src lists the hosts (the
+    CSP is report-only today).
 - **Google · live = the official Places API (New) on the WORKSPACE'S key** (`lib/leads/places.ts`,
   `/api/leads/places`, `/api/leads/sources`, migration **0134**). Asked "really get leads, real and
   live": OSM is free but patchy and its public servers refused Render; the scraper needs a container

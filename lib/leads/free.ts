@@ -7,10 +7,10 @@
 // our host's shared IPs in production. OSM still answers when Overture cannot
 // — an outage, or a category it has nothing for in that place.
 import {
-  geocode, sanitizePlace, scopeFor, searchBusinesses, BIG_CITY_KM, LeadSearchError,
+  geocode, sanitizePlace, scopeFor, searchBusinesses, BIG_CITY_KM, LeadSearchError, LeadInputError,
   type GeoPlace, type SearchResult,
 } from './osm';
-import { searchOverture, categoryMatcher, textMatcher, OvertureAreaTooBig, type Box } from './overture';
+import { searchOverture, categoryMatcher, textMatcher, reasonOf, OvertureAreaTooBig, type Box } from './overture';
 import { rectAround } from './places';
 import { CATEGORY_BY_KEY } from './categories';
 
@@ -34,12 +34,12 @@ export const cleanQuery = (s: unknown) => String(s || '').replace(/[^\p{L}\p{N}&
 export async function searchFree(input: FreeSearchInput): Promise<FreeSearchResult> {
   const cat = CATEGORY_BY_KEY[String(input.category || '')];
   const typed = cleanQuery(input.query);
-  if (!cat && !typed) throw new LeadSearchError('Say what kind of business to look for.');
+  if (!cat && !typed) throw new LeadInputError('Say what kind of business to look for.');
 
   let place = input.place && Number.isFinite(input.place.lat) ? sanitizePlace(input.place) : null;
   let alternatives: GeoPlace[] = [];
   if (!place) {
-    if (!input.where?.trim()) throw new LeadSearchError('Say where to look — a city, a district or a postcode.');
+    if (!input.where?.trim()) throw new LeadInputError('Say where to look — a city, a district or a postcode.');
     const found = await geocode(input.where, input.lang);
     if (!found.length) throw new LeadSearchError(`Could not find “${input.where.trim()}” on the map. Try adding the country.`);
     place = found[0];
@@ -58,9 +58,11 @@ export async function searchFree(input: FreeSearchInput): Promise<FreeSearchResu
     : [];
 
   const match = cat ? categoryMatcher(cat.key) : textMatcher(typed);
-  if (!match) throw new LeadSearchError('Say what kind of business to look for, in a word or two.');
+  if (!match) throw new LeadInputError('Say what kind of business to look for, in a word or two.');
 
-  let unreachable = false;
+  // Why the open data failed, said on the screen — "could not be reached" with
+  // no reason is what made the last production failure undiagnosable.
+  let unreachable = '';
   try {
     const r = await searchOverture({ box, match, name: input.name, limit: input.limit, fallbackCategory: cat?.one || typed });
     if (r.results.length || !cat) {
@@ -71,18 +73,25 @@ export async function searchFree(input: FreeSearchInput): Promise<FreeSearchResu
       };
     }
   } catch (err) {
-    if (err instanceof OvertureAreaTooBig) throw new LeadSearchError(err.message);
-    console.error('leads/overture', err);
-    unreachable = true;
+    if (err instanceof OvertureAreaTooBig) throw new LeadInputError(err.message);
+    unreachable = reasonOf(err);
+    console.error('leads/overture', unreachable);
   }
 
   // The backup: OpenStreetMap, for a listed category only (its tags are fixed).
   if (!cat) {
-    throw new LeadSearchError('The open business data could not be reached just now. Try again in a minute, or pick a kind of business from the list.');
+    throw new LeadSearchError(`The open business data could not be reached (${unreachable || 'no answer'}). Try again in a minute, or pick a kind of business from the list.`);
   }
-  const osm = await searchBusinesses({ category: cat.key, where: input.where, radiusKm: input.radiusKm, name: input.name, place, lang: input.lang });
+  let osm: SearchResult;
+  try {
+    osm = await searchBusinesses({ category: cat.key, where: input.where, radiusKm: input.radiusKm, name: input.name, place, lang: input.lang });
+  } catch (e) {
+    // Both failed: say what each did.
+    if (unreachable && e instanceof LeadSearchError) throw new LeadSearchError(`Open business data: ${unreachable}. ${e.message}`);
+    throw e;
+  }
   return {
     ...osm, alternatives: osm.alternatives.length ? osm.alternatives : alternatives, source: 'osm',
-    note: [osm.note, unreachable ? 'The open business data could not be reached, so these are from OpenStreetMap.' : ''].filter(Boolean).join(' ') || undefined,
+    note: [osm.note, unreachable ? `The open business data could not be reached (${unreachable}), so these are from OpenStreetMap.` : ''].filter(Boolean).join(' ') || undefined,
   };
 }
