@@ -49,7 +49,7 @@ const NOTES: Record<string, SurfaceNote> = {
   products: { what: 'products and services with prices', tool: 'create_record(products)' },
   offers: { what: 'quotes and proposals, with line items', tool: 'save_document(kind: offer)' },
   invoices: { what: 'invoices and bills, with line items', tool: 'save_document(kind: invoice)' },
-  expenses: { what: 'expenses', tool: 'create_record(expenses)' },
+  expenses: { what: 'expenses; receipts are scanned into them on the Scan receipts tab (/finance/receipts — a person uploads the photo)', tool: 'create_record(expenses); parse_invoice_text for pasted receipt text' },
   transactions: { what: 'the bank ledger', tool: 'create_record(transactions)' },
   finance: { what: 'money in and out, summarised', tool: null },
   'investor-update': {

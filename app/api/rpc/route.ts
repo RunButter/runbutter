@@ -133,6 +133,8 @@ const ALLOWED = new Set([
   'get_time_entries', 'save_time_entry', 'delete_time_entry', 'start_timer', 'stop_timer',
   'invoice_time_entries', 'get_time_off', 'save_leave_settings', 'save_leave_type',
   'delete_leave_type', 'set_leave_allowance', 'set_public_holidays',
+  // Receipts (0137): the expense and its receipt in one transaction.
+  'save_receipt_expense', 'get_receipts',
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',

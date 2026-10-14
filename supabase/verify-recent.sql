@@ -100,7 +100,9 @@ select * from (values
      and exists (select 1 from pg_trigger where tgname = 'trg_autoevt_meetings'))),
   ('0136 time & leave',
    (select to_regclass('public.time_entries') is not null and to_regclass('public.leave_requests') is not null
-     and to_regprocedure('public.invoice_time_entries(text,uuid,uuid,uuid[],numeric,text)') is not null))
+     and to_regprocedure('public.invoice_time_entries(text,uuid,uuid,uuid[],numeric,text)') is not null)),
+  ('0137 receipts',
+   to_regprocedure('public.save_receipt_expense(text,uuid,uuid,jsonb)') is not null)
 ) as t(migration, applied)
 order by migration;
 

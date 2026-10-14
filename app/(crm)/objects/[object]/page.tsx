@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useLiveRefresh } from '@/lib/crm/live';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
@@ -18,6 +18,7 @@ import RecordDetail from '@/components/crm/RecordDetail';
 import SanctionsPanel from '@/components/crm/SanctionsPanel';
 import ClientPortalPanel from '@/components/crm/ClientPortalPanel';
 import RecordNotes from '@/components/crm/RecordNotes';
+import RecordFiles from '@/components/crm/RecordFiles';
 import { readListState, writeListState, sameListState, EMPTY_LIST_STATE } from '@/lib/crm/list-url';
 import ImportModal from '@/components/crm/ImportModal';
 import ExtractModal from '@/components/crm/ExtractModal';
@@ -101,6 +102,17 @@ export default function ObjectPage() {
   useLiveRefresh([slug], reload);
 
   useEffect(() => { if (object && ready) reload(); }, [object, ready, reload]);
+
+  // `?ref=<id>` opens that record — the link the calendar, receipts and time
+  // reports hand out. It only ever opened the list until this was read.
+  const refOpened = useRef<string | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !rows.length) return;
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (!ref || refOpened.current === ref) return;
+    const hit = rows.find((r) => r.id === ref);
+    if (hit) { refOpened.current = ref; setDetail(hit); }
+  }, [rows]);
 
   // Fetched once per session and kept for every object page. Built-ins skip it
   // entirely — there is no reason to ask the server about `people`.
@@ -335,6 +347,7 @@ export default function ObjectPage() {
             <SanctionsPanel privyUserId={privy} workspaceId={wsId} name={String(detail.name)}
               object={slug} recordId={detail.id} />
           )}
+          <RecordFiles privy={privy} workspaceId={wsId} object={slug} recordId={detail.id} />
           {/* What an agent has found out about this record, with a source on
               every line. Below the fields because it is history, not identity. */}
           <div className="mt-5">

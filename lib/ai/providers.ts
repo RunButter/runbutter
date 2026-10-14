@@ -357,6 +357,77 @@ export async function callAI(provider: AIProvider, apiKey: string, model: string
   return { text, usage: openaiUsage(d.usage) };
 }
 
+/**
+ * One call with a picture (or a PDF) attached — receipts photographed on a
+ * phone, on the workspace's OWN key (the cost rule: AI is BYO key, never ours).
+ * Claude and Gemini read PDFs natively; the OpenAI chat format takes images
+ * only, so a scanned PDF there is refused before anything is sent.
+ */
+export async function callAIVision(
+  provider: AIProvider, apiKey: string, model: string, system: string, prompt: string,
+  file: { mime: string; base64: string }, baseUrl?: string, maxTokens: number = MAX_OUTPUT_TOKENS,
+): Promise<AIReply> {
+  const isPdf = file.mime === 'application/pdf';
+  if (provider === 'claude') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model, max_tokens: maxTokens, system,
+        messages: [{ role: 'user', content: [
+          isPdf
+            ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: file.base64 } }
+            : { type: 'image', source: { type: 'base64', media_type: file.mime, data: file.base64 } },
+          { type: 'text', text: prompt },
+        ] }],
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || `Claude ${r.status}`);
+    const text = stripThinking((d.content || []).map((b: any) => b.text || '').join(''));
+    if (d.stop_reason === 'max_tokens') throw new TruncatedReply(maxTokens, !text);
+    return { text, usage: anthropicUsage(d.usage) };
+  }
+  if (provider === 'gemini') {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ inline_data: { mime_type: file.mime, data: file.base64 } }, { text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens },
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || `Gemini ${r.status}`);
+    const c = d.candidates?.[0];
+    const text = stripThinking((c?.content?.parts || []).map((p: any) => p.text || '').join(''));
+    if (c?.finishReason === 'MAX_TOKENS') throw new TruncatedReply(maxTokens, !text);
+    return { text, usage: geminiUsage(d.usageMetadata) };
+  }
+  if (isPdf) throw new Error('This AI provider reads images, not PDFs — upload a photo or screenshot of the receipt.');
+  const base = resolveBase(provider, baseUrl);
+  if (!base) throw new Error('Custom provider needs a base URL (e.g. https://api.groq.com/openai/v1)');
+  if (provider === 'custom' && !isAllowedAiHost(base)) throw new Error(privateHostMessage(base));
+  const r = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model, max_tokens: maxTokens,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${file.mime};base64,${file.base64}` } }] },
+      ],
+      ...openrouterUsage(provider),
+    }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.error?.message || `${provider} ${r.status}`);
+  const choice = d.choices?.[0];
+  const text = stripThinking(choice?.message?.content || '');
+  if (choice?.finish_reason === 'length') throw new TruncatedReply(maxTokens, !text);
+  return { text, usage: openaiUsage(d.usage) };
+}
+
 // ── Tool-calling (agent runner) ──────────────────────────────────────────────
 // A single model turn that MAY return tool calls. The runner drives the loop:
 // it sends history + tool defs, gets back either text (done) or tool calls,

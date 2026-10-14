@@ -303,7 +303,11 @@ export const NAV = [
     ]},
     { slug: 'transactions', label: 'Transactions', icon: 'ArrowLeftRight', href: '/finance/transactions' },
     { slug: 'invoices', label: 'Invoices', icon: 'Receipt', href: '/objects/invoices' },
-    { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses' },
+    // Receipts (0137) are how most expenses arrive: a photo on a phone.
+    { slug: 'expenses', label: 'Expenses', icon: 'Wallet', href: '/objects/expenses', tabs: [
+      { label: 'Expenses', href: '/objects/expenses' },
+      { label: 'Scan receipts', href: '/finance/receipts' },
+    ]},
     // Who owns the company and what they are told each month are the same
     // conversation. The slug stays `cap-table` so a module someone switched off
     // stays off.

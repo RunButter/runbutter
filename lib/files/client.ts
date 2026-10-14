@@ -41,7 +41,7 @@ export interface FileHit {
 
 const notSetUp = (message: string) => /does not exist|schema cache/i.test(message);
 
-async function authHeaders(): Promise<Record<string, string>> {
+export async function authHeaders(): Promise<Record<string, string>> {
   const token = await getAccessToken().catch(() => null);
   return token ? { 'x-privy-token': token } : {};
 }

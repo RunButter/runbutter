@@ -26,7 +26,8 @@ export type AIFeature =
   | 'insights'       // a question turned into a chart spec (/api/insights/ask)
   | 'extract'        // a pasted document turned into form values (/api/records/extract)
   | 'investor'       // the prose around an investor update's real figures
-  | 'support';       // a drafted reply in the support inbox (/api/support/draft)
+  | 'support'        // a drafted reply in the support inbox (/api/support/draft)
+  | 'receipts';      // a receipt photo read on the workspace's key (/api/receipts/read)
 
 export interface UsageRecord {
   workspace: string | null | undefined;

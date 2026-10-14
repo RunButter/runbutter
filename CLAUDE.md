@@ -432,6 +432,26 @@ HR → Time & leave: Timesheet (`/time`), Time off (`/time/off`), Reports (`/tim
 - Verified: SQL suite (allowances, overlaps, recount, privacy, timers, invoicing once, automations,
   0 anon-callable), the route against Postgres (10 checks), the pages in Chromium (desktop + 390 px).
 
+## Scan receipts (0137) — `docs/receipts.md`
+Finance → Expenses → Scan receipts (`/finance/receipts`): photo/PDF → upload (Files, 0065) →
+`/api/files/extract` → `/api/receipts/read` → a form a person checks → `save_receipt_expense`.
+- **Free first**: a text layer is parsed by `lib/finance/receipt-parse.ts` (regex, existed since the
+  agent tool and was used by no screen); a photo uses the server's OCR if configured, else the
+  WORKSPACE'S AI key through `callAIVision` (`lib/ai/providers.ts` — Claude/Gemini also read PDFs,
+  OpenAI-format takes images only). Usage feature `receipts`. The model's text is stored on the file
+  (`set_file_content`, status `vision`) so Files search finds the receipt.
+- What a model returns is re-validated in `lib/finance/receipt-read.ts` (zero imports): ISO date in
+  2000…now+31d, positive amounts, currency checked WHOLE (never truncated — "EURO" is not "EUR"),
+  tax < total. The system prompt tells the model the image is data, not instructions.
+- `save_receipt_expense` creates the expense through `create_record` (plan limit) and links the file
+  in ONE transaction; a file already filed against a live expense is `ALREADY_FILED`. Category comes
+  from the workspace's own history (`suggestCategory`); likely duplicates are flagged client-side.
+- `?ref=<id>` on `/objects/<object>` now OPENS that record. The calendar handed out these links for
+  months and they only ever opened the list. `RecordFiles` shows a record's attached files (the
+  receipt on an expense) in the detail card; it draws nothing when there are none.
+- Playwright's `setInputFiles` and real clicks stall inside the app shell in this sandbox; drive file
+  drops with a synthetic `DragEvent` + `DataTransfer`, and clicks with `dispatchEvent('click')`.
+
 ## Find leads (2026-10) — `docs/lead-finder.md`
 Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
 public email → save as **Leads**. Sources: **Free (Overture Maps open data, OSM as backup — the
@@ -1703,8 +1723,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0135 + 0136** (booking pages, time & leave) — `npm run migrate`; book one meeting, pick the
-  country's holidays on Time off.
+- **Run 0135–0137** (booking pages, time & leave, receipts) — `npm run migrate`; book one meeting,
+  pick the country's holidays on Time off, scan one receipt.
 - ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:
   connect a Google Places key on Find leads for live Google results (optional — the free source
   needs nothing), and optionally a free **`CEIDG_API_TOKEN`** so sole traders fill in too.
