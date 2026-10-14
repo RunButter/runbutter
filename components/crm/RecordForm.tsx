@@ -13,7 +13,7 @@ import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import CompanyLookupSummary from './CompanyLookupSummary';
 import {
-  fetchCompany, valuesFromFacts, addBoardAsPeople, companyColumnsMissing, hostOf, type CompanyFacts,
+  fillCompany, valuesFromFacts, addBoardAsPeople, companyColumnsMissing, hostOf, type CompanyFacts,
 } from '@/lib/company/client';
 
 interface Props {
@@ -41,6 +41,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const [relOptions, setRelOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const [uploading, setUploading] = useState<string | null>(null);
   const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupStep, setLookupStep] = useState('');
   const [facts, setFacts] = useState<CompanyFacts | null>(null);
   const [addBoard, setAddBoard] = useState(true);
   const hasLookup = fields.some((f) => f.input === 'lookup');
@@ -57,9 +58,9 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
   const runLookup = async () => {
     const taxId = String(values.tax_id || '').trim(), website = String(values.website || '').trim(), name = String(values.name || '').trim();
     if (!taxId && !website && !name) { setError('Enter a tax number, a website or a name first.'); return; }
-    setLookupBusy(true); setError(''); setFacts(null);
-    const r = await fetchCompany({ country: values.country || '', taxId, website, name });
-    setLookupBusy(false);
+    setLookupBusy(true); setError(''); setFacts(null); setLookupStep('');
+    const r = await fillCompany({ country: values.country || '', taxId, website, name }, setLookupStep);
+    setLookupBusy(false); setLookupStep('');
     if (r.error || !r.company) { setError(r.error || 'Nothing found for that number.'); return; }
     setMany(valuesFromFacts(r.company, values));
     setFacts(r.company);
@@ -154,7 +155,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                     <button type="button" onClick={runLookup} disabled={lookupBusy}
                       className="w-full h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-accent ring-1 ring-accent/30 bg-accent/10 hover:bg-accent/10 disabled:opacity-50">
                       {lookupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                      {lookupBusy ? 'Checking the registers and the company website…' : (f.label || 'Fill in')}
+                      {lookupBusy ? (lookupStep || 'Checking the registers…') : (f.label || 'Fill in')}
                     </button>
                     {facts && (
                       <div className="mt-2">
@@ -193,7 +194,7 @@ export default function RecordForm({ object, privyUserId, recordId, initial, sug
                   <Input type={f.input === 'number' ? 'number' : f.input === 'date' ? 'date' : 'text'}
                     value={values[f.key] ?? ''} onChange={(e) => set(f.key, e.target.value)}
                     onKeyDown={hasLookup && (f.key === 'tax_id' || f.key === 'website') ? (e) => { if (e.key === 'Enter') { e.preventDefault(); runLookup(); } } : undefined}
-                    placeholder={hasLookup && f.key === 'tax_id' ? 'NIP or EU VAT number — press Enter' : hasLookup && f.key === 'website' ? 'example.de — its Impressum fills the rest' : undefined} />
+                    placeholder={hasLookup && f.key === 'tax_id' ? 'VAT number, NIP, CHE-…, EIN, CNPJ… — press Enter' : hasLookup && f.key === 'website' ? 'example.de — its Impressum fills the rest' : undefined} />
                 )}
               </div>
             ))}

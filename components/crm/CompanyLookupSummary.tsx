@@ -65,6 +65,22 @@ export default function CompanyLookupSummary({ facts, addBoard, onAddBoard, canA
         </ul>
       )}
 
+      {/* Leads the web search found but could not confirm: shown, never filled
+          in. The person knows which one is theirs; we do not guess. */}
+      {!facts.address && !facts.site_verified && (facts.web_hits?.length ?? 0) > 0 && (
+        <div className="pt-1 border-t border-subtle">
+          <p className="text-secondary mb-1">Found on the web, not confirmed — open the right one and paste its website above to fill the rest:</p>
+          <ul className="space-y-1">
+            {facts.web_hits!.slice(0, 5).map((h) => (
+              <li key={h.url} className="min-w-0">
+                <a href={h.url} target="_blank" rel="noopener noreferrer nofollow" className="text-accent hover:underline truncate block">{h.title || h.url}</a>
+                <span className="text-3xs text-tertiary truncate block">{(() => { try { return new URL(h.url).hostname.replace(/^www\./, ''); } catch { return ''; } })()}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {facts.web_search && /^https:\/\/www\.google\.com\/search\?/.test(facts.web_search) && (
         <a href={facts.web_search} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md ring-1 ring-subtle bg-surface text-secondary hover:text-primary hover:bg-surface-hover">

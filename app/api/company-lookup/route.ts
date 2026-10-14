@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 /**
- * POST /api/company-lookup  { country?, taxId?, website?, name? }  (at least one)
+ * POST /api/company-lookup  { country?, taxId?, website?, name?, candidates? }  (at least one)
  *
  * Everything public about a company from its tax number — see
  * lib/company/lookup.ts for which register answers what. Returns the facts
@@ -28,12 +28,15 @@ export async function POST(req: Request) {
 
   const body = await readJsonCapped(req, 4_000);
   if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
-  const { country, taxId, website, name } = body.data || {};
+  const { country, taxId, website, name, candidates } = body.data || {};
 
   try {
     const company = await lookupCompany({
       country: String(country || ''), taxId: String(taxId || ''),
       website: typeof website === 'string' ? website : '', name: typeof name === 'string' ? name : '',
+      // Sites the browser's web search found — leads only; lookupCompany reads
+      // one only when its legal notice prints the number (or the exact name).
+      candidates: Array.isArray(candidates) ? candidates.filter((c: unknown) => typeof c === 'string').slice(0, 6) : [],
     });
     return NextResponse.json({ ok: true, company });
   } catch (e: any) {

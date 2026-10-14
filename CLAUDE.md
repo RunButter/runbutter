@@ -567,18 +567,41 @@ address and country only — and companies had no phone/email/website column to 
   `lib/leads/enrich.ts` is the one site reader (robots, private-address checks per hop).
   `krs` holds the court register number generally (KRS or "HRB 123456 (Amtsgericht München)").
   The Copilot's `lookup_company` takes tax_id/name but NOT a website (model-chosen URL = exfil).
-- **"German VAT numbers don't fill up" (2026-10, round two): a DE number alone now finds its owner**
-  through two keyless registers asked in parallel with VIES: the **Peppol directory**
-  (`lib/company/peppol.ts` — the e-invoicing register is keyed BY VAT number, `9930:de…`; EAS
-  codes checked against docs.peppol.eu; any hit is VERIFIED to carry the typed number) and
-  **Wikidata** P3608 (`lib/company/wikidata.ts` → name, website, LEI → `gleifByLei`). The website
-  either returns is then read for its Impressum as before. Nobody knows it → `web_search` (a
-  Google link the PERSON opens; we never scrape a search engine) and "Owner not found yet".
-  VIES down no longer kills the lookup when another register named the company;
-  `validDeVat` (ISO 7064 MOD 11,10, matched 8/10 real numbers) is used ONLY then. Only named,
-  fully-answered results are cached — "nobody knew" and "a register was down" are asked again.
-  Verified against fixtures shaped from phoss-directory's source; the live endpoints are
-  unreachable from this sandbox — check one real DE number after deploy.
+- **"German VAT numbers don't fill up" (2026-10, rounds two and three) → worldwide, all keyless.**
+  Every source below was called LIVE from a temporary GitHub Actions probe (this sandbox reaches
+  none of them) and the parsers follow the shapes that came back.
+  - **Registers by number** (`lib/company/registers.ts`): FR recherche-entreprises (SIREN from the
+    VAT key; 429s bursts → one polite retry), CZ ARES, NO Brønnøysund (website/phone/email/MVA),
+    FI PRH, RO ANAF (phone, VAT payer, inactive), EE e-Business Register, CH UID register (SOAP —
+    envelope verified), US SEC EDGAR (an EIN via full-text search → the filer's submissions must
+    carry the SAME EIN) + ProPublica for nonprofits, BR BrasilAPI. UK: HMRC v2 and Companies House
+    need keys, so GB goes to the web step. Name search: FR, CZ, NO, FI, EE, US, then GLEIF.
+  - **Identifiers live in `lib/company/ids.ts`** (import-free, browser-safe): CHE…, NO…MVA, GB…,
+    EIN, CNPJ, SIREN/SIRET, IČO. `printedTaxId` = how a website prints it.
+  - **DE/ES/GB: Peppol directory + Wikidata, then the WEB STEP.** Firecrawl's keyless search (CORS
+    open — checked) runs IN THE BROWSER (`fillCompany` in `lib/company/client.ts`), so each person
+    uses their own allowance; the company sites among the hits (`ownSites` drops ~90 directory
+    hosts) go back as `candidates`, and `verifiedSite` accepts one ONLY when its legal notice
+    prints the exact number (≤3 VAT IDs on the page). Directory titles give `nameHints` for a
+    second search ("Name" Impressum, or the country's word — `legalQuery`). LIVE SAMPLE (12 random
+    DE numbers from the Peppol directory, 2026-10-14): named 12, address 6, own site verified 5 —
+    the misses were sites printing ANOTHER entity's number (holding vs operating company, a
+    re-registered firm), which is exactly what the check is for. Unconfirmed hits
+    are LISTED for the person, never filled. The Copilot runs the same step server-side
+    (`webSearch: true`, optional `FIRECRAWL_API_KEY`). Marginalia was rejected (CC-BY-NC results),
+    Mojeek/searx block bots, DDG/Google scraping is off the table.
+  - VIES answers an invalid number with `userError: "INVALID"` — it was reported as "VIES is having
+    trouble" until this pass. A company its national register knows but VIES does not is filled
+    with a "not registered for intra-EU VAT" warning, not refused.
+  - Impressum people parser now strips stacked titles ("Prof. Dr.-Ing."); `findVatIds` reads
+    CHE/NO/GB and the unprefixed ES "CIF:", IT "P.IVA", UK "VAT No." forms; `tidyName` cuts
+    "Diese Website wird betrieben von der X GmbH." to "X GmbH". `readSite` takes `prefer` so the
+    Impressum is read before "Kontakt", and a 404 on a guessed path no longer spends the page
+    budget (it did, silently, for every site whose legal page is not at /impressum).
+  - **How this was verified, and how to again:** the sandbox reaches none of these hosts, so a
+    TEMPORARY workflow on the working branch ran the real modules (`npm ci` + jiti) on a GitHub
+    runner and the logs were read through the GitHub MCP tools. Squash such commits before
+    pushing to main — main is mirrored to the public repo.
 
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a

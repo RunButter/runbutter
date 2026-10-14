@@ -178,7 +178,7 @@ export const TOOLS = [
   // Fills a company from its tax number through the same engine as the form.
   // The model supplies only a NUMBER; every host contacted is a fixed register,
   // or the website THAT register names — never a URL the model chose.
-  { name: 'lookup_company', description: 'Look up a company by its tax number — a Polish NIP, or an EU VAT number with its country prefix (DE123456789) — or, failing that, by its exact name (worldwide LEI register). Returns what the public registers and the company\'s own website publish: legal name and address, REGON, KRS, VAT status, the bank account on the Ministry of Finance white list, email, phone, website, industry and the board. Each value comes with its source. Saves nothing: to add the company, pass these values to create_record(companies) — name, address, tax_id, country, email, phone, website, industry, regon, krs, bank_account. Board members can be added as people with primary_company_id set to the new company.', inputSchema: { type: 'object', properties: { tax_id: { type: 'string' }, name: { type: 'string', description: 'The company name, when there is no tax number — matched exactly against the worldwide LEI register.' }, country: { type: 'string', description: 'Two-letter code. Optional for a Polish NIP or a prefixed VAT number.' } } } },
+  { name: 'lookup_company', description: 'Look up a company by its tax number — a Polish NIP, an EU VAT number with its country prefix (DE123456789), a Swiss CHE-…, Norwegian NO…MVA, UK GB…, US EIN (12-3456789) or Brazilian CNPJ — or, failing that, by its exact name (national registers for FR/CZ/NO/FI/EE/US, and the worldwide LEI register). Returns what the public registers and the company\'s own website publish: legal name and address, REGON, KRS, VAT status, the bank account on the Ministry of Finance white list, email, phone, website, industry and the board. Each value comes with its source. Saves nothing: to add the company, pass these values to create_record(companies) — name, address, tax_id, country, email, phone, website, industry, regon, krs, bank_account. Board members can be added as people with primary_company_id set to the new company.', inputSchema: { type: 'object', properties: { tax_id: { type: 'string' }, name: { type: 'string', description: 'The company name, when there is no tax number — matched exactly against the worldwide LEI register.' }, country: { type: 'string', description: 'Two-letter code. Optional for a Polish NIP or a prefixed VAT number.' } } } },
   { name: 'validate_iban', description: 'Check an IBAN structurally (ISO 13616 length + mod-97 checksum). Confirms the number is well-formed, NOT that the account exists.', inputSchema: { type: 'object', properties: { iban: { type: 'string' } }, required: ['iban'] } },
   { name: 'parse_invoice_text', description: 'Extract total, currency, date, NIP, VAT id, IBAN, invoice number and VAT rates from invoice or receipt TEXT, and suggest a category from this workspace\'s own history.', inputSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
 
@@ -777,7 +777,10 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       try {
         // No website argument, on purpose: a URL a model chooses is an
         // exfiltration channel. A website a REGISTER names is still read.
-        return await lookupCompany({ country: String(args?.country || ''), taxId: String(args?.tax_id || ''), name: String(args?.name || '') });
+        // webSearch: the query is the validated tax number itself and the sites
+        // come from the search results, read only when their legal notice
+        // prints that number — the model never chooses a URL.
+        return await lookupCompany({ country: String(args?.country || ''), taxId: String(args?.tax_id || ''), name: String(args?.name || '') }, { webSearch: true });
       } catch (e: any) {
         if (e instanceof LookupError) return { found: false, warning: e.message };
         throw e;

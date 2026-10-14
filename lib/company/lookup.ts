@@ -29,9 +29,13 @@
 //
 // SERVER ONLY (fetch to the registers; the website reader uses node:dns).
 import { readLegalNotice } from './impressum';
-import { gleifByName, gleifByLei } from './gleif';
+import { validNip, validDeVat, VIES, NON_EU_TAX, normalizeTaxId, printedTaxId } from './ids';
+export { validNip, validDeVat, normalizeTaxId, printedTaxId, NON_EU_TAX } from './ids';
+import { gleifByName, gleifByLei, comparable } from './gleif';
 import { peppolByVat, looksLikeAddress } from './peppol';
 import { wikidataByVat } from './wikidata';
+import * as R from './registers';
+import { searchWeb, ownSites, nameHints, legalQuery, type WebHit } from './websearch';
 import { cleanWebsite, cleanEmail, cleanPhone } from '@/lib/leads/osm';
 
 const UA = 'RunButter/1.0 (+https://runbutter.app; company lookup)';
@@ -64,56 +68,15 @@ export interface CompanyFacts {
   notes: string[];
   /** When nothing named the company: a web search for the number, for the person to open. */
   web_search?: string;
+  /** The company's own website, confirmed because its legal notice prints the number typed. */
+  site_verified?: string;
+  /** Web results that were leads but could not be confirmed — shown to the person, never filled in. */
+  web_hits?: WebHit[];
 }
 
 export class LookupError extends Error {}
 
 // ── Identifiers ──────────────────────────────────────────────────────────────
-
-/** Polish NIP checksum. A typo is caught here, not reported as "no such company". */
-export function validNip(nip: string): boolean {
-  if (!/^\d{10}$/.test(nip)) return false;
-  const w = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-  const sum = w.reduce((s, x, i) => s + x * Number(nip[i]), 0) % 11;
-  return sum !== 10 && sum === Number(nip[9]);
-}
-
-/**
- * German VAT ID check digit (ISO 7064 MOD 11,10, as the BZSt publishes it).
- * Used only when VIES cannot be asked: a typo is then still caught, and VIES's
- * own answer always wins when there is one.
- */
-export function validDeVat(id: string): boolean {
-  if (!/^[1-9]\d{8}$/.test(id)) return false;
-  let p = 10;
-  for (let i = 0; i < 8; i++) {
-    let s = (Number(id[i]) + p) % 10;
-    if (s === 0) s = 10;
-    p = (2 * s) % 11;
-  }
-  const check = (11 - p) % 10;
-  return check === Number(id[8]);
-}
-
-/** EU members VIES accepts, by the code VIES uses (Greece is EL there, not GR). */
-const VIES = new Set(['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EL', 'ES', 'FI', 'FR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'XI']);
-
-/**
- * "PL 526-025-09-95", "pl5260250995", "5260250995" with no country, "DE123456789"
- * with the country left on Poland — all mean something, and the form used to
- * accept only the one shape.
- */
-export function normalizeTaxId(countryIn: string, raw: string): { country: string; id: string } {
-  let id = String(raw || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
-  let country = String(countryIn || '').toUpperCase().trim();
-  const prefix = id.slice(0, 2);
-  if (/^[A-Z]{2}$/.test(prefix) && (VIES.has(prefix) || prefix === 'GR')) {
-    country = prefix; id = id.slice(2);
-  }
-  if (!country && validNip(id)) country = 'PL';
-  if (country === 'GR') country = 'EL';
-  return { country, id };
-}
 
 // ── Text from registers ──────────────────────────────────────────────────────
 // Registers write in capitals. A board member is "Jan Kowalski", an activity is
@@ -260,6 +223,9 @@ async function vies(country: string, number: string): Promise<Partial<CompanyFac
   if (r.status !== 200) return { error: `VIES lookup failed (HTTP ${r.status}). Try again shortly.` };
   const j = r.json || {};
   const valid = j.isValid ?? j.valid;
+  // VIES answers an invalid number with userError "INVALID" — that is an
+  // answer, not an outage (it was reported as "having trouble" until 2026-10).
+  if (j.userError === 'INVALID') return { error: `${country}${number} is not a valid VAT number in VIES.`, invalid: true };
   if (j.userError && j.userError !== 'VALID') return { error: `VIES is having trouble (${j.userError}). Try again in a moment.` };
   if (valid === false) return { error: `${country}${number} is not a valid VAT number in VIES.`, invalid: true };
   const name = viesClean(j.name ?? j.traderName);
@@ -300,12 +266,54 @@ export interface LookupInput {
   website?: string;
   /** The company's name, for the LEI register when there is nothing else. */
   name?: string;
+  /**
+   * Websites a web search turned up (the browser runs it — lib/company/websearch.ts).
+   * Each is only a lead: one is used when its legal notice prints the tax
+   * number typed, or — with no number — the exact name. Never from a model.
+   */
+  candidates?: string[];
 }
 
+type Asked<T> = { r: T } | { fail: string };
+const ask = <T>(p: Promise<T>): Promise<Asked<T>> => p.then((r) => ({ r }), (e) => ({ fail: String(e?.message || e) }));
+
+/** A national register's answer, merged under its own name as the source. */
+function mergeFound(facts: CompanyFacts, f: R.Found | null | undefined) {
+  if (!f) return;
+  const { source, ...rest } = f;
+  merge(facts, rest as Partial<CompanyFacts>, source);
+}
+
+/**
+ * The national register for an EU VAT number, when the country has a free one:
+ * the authority on name and address, ahead of VIES's one-line summary.
+ */
+function nationalRegister(country: string, id: string): Promise<R.Found | null> | null {
+  if (country === 'FR') { const siren = R.sirenFromFrVat(id); return siren ? R.franceBySiren(siren) : null; }
+  if (country === 'CZ' && /^\d{8}$/.test(id)) return R.czechByIco(id);
+  if (country === 'FI') { const b = R.finnishId(id); return b ? R.finlandById(b) : null; }
+  if (country === 'RO') return R.romaniaByCui(id);
+  return null;
+}
+
+const REGISTER_NAME: Record<string, string> = {
+  FR: 'The French register', CZ: 'ARES', FI: 'The Finnish register', RO: 'ANAF', EE: 'The Estonian register',
+  CH: 'The Swiss UID register', NO: 'Brønnøysund', US: 'SEC EDGAR / ProPublica', BR: 'BrasilAPI',
+};
+
 /** The tax registers for one number, merged into `facts`. Throws LookupError for a number that is wrong. */
-async function fromTaxId(facts: CompanyFacts, country: string, id: string): Promise<void> {
+async function fromTaxId(facts: CompanyFacts, country: string, idIn: string): Promise<void> {
+  let id = idIn;
   if (country === 'PL' && !validNip(id)) throw new LookupError('That is not a valid NIP — check the ten digits.');
-  if (country !== 'PL' && !VIES.has(country)) throw new LookupError(`Tax numbers can be looked up for Poland and the EU; ${country} is not one of them. Try the website or the name instead.`);
+  if (country !== 'PL' && !VIES.has(country) && !NON_EU_TAX.has(country)) {
+    throw new LookupError(`Tax numbers are looked up for the EU, the UK, Switzerland, Norway, the US (EIN) and Brazil (CNPJ); ${country} is not one of them. Try the website or the name instead.`);
+  }
+  // A French SIREN or SIRET typed on its own: VIES needs the full number, whose
+  // two-digit key is computed from the SIREN.
+  if (country === 'FR' && /^\d{9}(\d{5})?$/.test(id)) {
+    const siren = id.slice(0, 9);
+    id = `${String((12 + 3 * (Number(siren) % 97)) % 97).padStart(2, '0')}${siren}`;
+  }
   facts.country = country === 'EL' ? 'GR' : country;
   facts.tax_id = id;
 
@@ -328,73 +336,203 @@ async function fromTaxId(facts: CompanyFacts, country: string, id: string): Prom
       merge(facts, k, 'KRS (court register)');
       merge(facts, c, 'CEIDG');
     }
-  } else {
-    // VIES says whether the number is real; the Peppol directory and Wikidata
-    // say WHOSE it is, which VIES will not for Germany and Spain. All three at
-    // once — each is a few hundred milliseconds and none depends on another.
-    const vat = `${country}${id}`;
-    const [v, p, w] = await Promise.all([
-      vies(country, id),
-      peppolByVat(country, id).then((r) => ({ r }), (e) => ({ fail: String(e?.message || e) })),
-      wikidataByVat(vat).then((r) => ({ r }), (e) => ({ fail: String(e?.message || e) })),
-    ]);
-    if ('error' in v && v.invalid) throw new LookupError(v.error);
-    if ('error' in v && country === 'DE' && !validDeVat(id)) {
-      throw new LookupError(`DE${id} is not a valid German VAT number — check the nine digits.`);
-    }
-    if (!('error' in v)) merge(facts, v, 'EU VIES');
+    return;
+  }
 
-    const card = 'r' in p ? p.r : null;
-    if (card) {
-      merge(facts, {
-        name: card.name,
-        address: looksLikeAddress(card.geo) ? card.geo : undefined,
-        website: card.website, email: card.email, phone: card.phone,
-      } as Partial<CompanyFacts>, 'Peppol e-invoicing directory');
+  // ── Outside VIES: one register each ────────────────────────────────────────
+  if (NON_EU_TAX.has(country)) {
+    if (country === 'GB') {
+      // HMRC's VAT check needs an OAuth app and Companies House a key; the
+      // company's own site prints its VAT number by law, which is where the
+      // web step looks (and the Peppol directory, scheme 9932, may know it).
+      const p = await ask(peppolByVat('GB', id));
+      const card = 'r' in p ? p.r : null;
+      if (card) merge(facts, { name: card.name, address: looksLikeAddress(card.geo) ? card.geo : undefined, website: card.website, email: card.email, phone: card.phone } as Partial<CompanyFacts>, 'Peppol e-invoicing directory');
+      return;
     }
-    const wd = 'r' in w ? w.r : null;
-    if (wd) {
-      merge(facts, { name: wd.name, website: wd.website, address: wd.address } as Partial<CompanyFacts>, 'Wikidata');
-      if (wd.lei && !facts.address) {
-        const g = await gleifByLei(wd.lei).catch(() => null);
-        if (g) merge(facts, { address: g.address, krs: g.register } as Partial<CompanyFacts>, 'GLEIF (LEI register)');
-      }
+    const shape: Record<string, [RegExp, string]> = {
+      CH: [/^\d{9}$/, 'A Swiss UID has nine digits: CHE-123.456.789.'],
+      NO: [/^\d{9}$/, 'A Norwegian organisation number has nine digits: NO 123 456 789 MVA.'],
+      US: [/^\d{9}$/, 'An EIN has nine digits: 12-3456789.'],
+      BR: [/^\d{14}$/, 'A CNPJ has fourteen digits: 00.000.000/0001-00.'],
+    };
+    if (shape[country] && !shape[country][0].test(id)) throw new LookupError(shape[country][1]);
+    const call = country === 'CH' ? R.swissByUid(id) : country === 'NO' ? R.norwayByOrgnr(id)
+      : country === 'US' ? R.usByEin(id) : R.brazilByCnpj(id);
+    const got = await ask(call);
+    if ('fail' in got) throw new LookupError(`${REGISTER_NAME[country]} could not be asked just now (${got.fail}). Try again in a minute.`);
+    if (!got.r) {
+      if (country === 'BR' && !R.validCnpj(id)) throw new LookupError('That is not a valid CNPJ — check the fourteen digits.');
+      throw new LookupError(country === 'US'
+        ? 'No public record carries that EIN — only SEC filers and tax-exempt organisations are listed. Try the company name or website.'
+        : `${REGISTER_NAME[country]} has no company with that number.`);
     }
+    mergeFound(facts, got.r);
+    return;
+  }
 
-    if ('error' in v) {
-      // VIES is down for one member state more often than anyone would like.
-      // A company another register named is still worth filling in.
-      if (!facts.name) throw new LookupError(v.error);
-      facts.notes.push(`VIES could not be asked just now (${v.error.replace(/\.$/, '')}), so the VAT number is not confirmed as active.`);
-    }
-    if (!facts.name) {
-      const failed = [('fail' in p) && `Peppol directory: ${p.fail}`, ('fail' in w) && `Wikidata: ${w.fail}`].filter(Boolean);
-      if (failed.length) facts.notes.push(`Some registers did not answer (${failed.join('; ')}). Try again in a minute.`);
+  // ── EU: VIES + the national register + the Peppol directory + Wikidata ────
+  // VIES says whether the number is real; the national register is the
+  // authority on name and address; the Peppol directory and Wikidata say
+  // WHOSE it is where VIES will not (Germany, Spain). All at once — each is a
+  // few hundred milliseconds and none depends on another.
+  const vat = `${country}${id}`;
+  // An Estonian registry code (8 digits) is not its VAT number: the register, no VIES.
+  const estonianCode = country === 'EE' && /^\d{8}$/.test(id);
+  const [v, n, p, w] = await Promise.all([
+    estonianCode ? Promise.resolve({ error: 'skipped' } as { error: string; invalid?: boolean }) : vies(country, id),
+    ask(estonianCode ? R.estoniaByCode(id) : nationalRegister(country, id) ?? Promise.resolve(null)),
+    ask(peppolByVat(country, id)),
+    ask(wikidataByVat(vat)),
+  ]);
+  const national = 'r' in n ? n.r : null;
+  if (national) mergeFound(facts, national);
+
+  if ('error' in v && v.invalid) {
+    // A company the national register knows but VIES does not is real and
+    // simply not VAT-registered for EU trade — worth a warning, not a refusal.
+    if (!national) throw new LookupError(v.error);
+    facts.vat_active = false;
+    facts.vat_status = facts.vat_status || 'Not in VIES';
+    facts.notes.push(`${vat} is not active in VIES — the company is not registered for intra-EU VAT. Check before invoicing without VAT.`);
+  } else if ('error' in v && country === 'DE' && !validDeVat(id)) {
+    throw new LookupError(`DE${id} is not a valid German VAT number — check the nine digits.`);
+  }
+  if (!('error' in v)) merge(facts, v, 'EU VIES');
+
+  const card = 'r' in p ? p.r : null;
+  if (card) {
+    merge(facts, {
+      name: card.name,
+      address: looksLikeAddress(card.geo) ? card.geo : undefined,
+      website: card.website, email: card.email, phone: card.phone,
+    } as Partial<CompanyFacts>, 'Peppol e-invoicing directory');
+  }
+  const wd = 'r' in w ? w.r : null;
+  if (wd) {
+    merge(facts, { name: wd.name, website: wd.website, address: wd.address } as Partial<CompanyFacts>, 'Wikidata');
+    if (wd.lei && !facts.address) {
+      const g = await gleifByLei(wd.lei).catch(() => null);
+      if (g) merge(facts, { address: g.address, krs: g.register } as Partial<CompanyFacts>, 'GLEIF (LEI register)');
     }
   }
+
+  if ('error' in v && !v.invalid && !estonianCode) {
+    // VIES is down for one member state more often than anyone would like.
+    // A company another register named is still worth filling in.
+    if (!facts.name) throw new LookupError(v.error);
+    facts.notes.push(`VIES could not be asked just now (${v.error.replace(/\.$/, '')}), so the VAT number is not confirmed as active.`);
+  }
+  if (estonianCode && !national) {
+    throw new LookupError('fail' in n ? `The Estonian register could not be asked just now (${n.fail}).` : 'No company with that registry code in the Estonian e-Business Register.');
+  }
+  if (!facts.name || !facts.address) {
+    const failed = [
+      ('fail' in n) && `${REGISTER_NAME[country] || 'national register'}: ${n.fail}`,
+      ('fail' in p) && `Peppol directory: ${p.fail}`,
+      ('fail' in w) && `Wikidata: ${w.fail}`,
+    ].filter(Boolean);
+    if (failed.length) facts.notes.push(`Some registers did not answer (${failed.join('; ')}). Try again in a minute.`);
+  }
+}
+
+// ── By name, in the country's own register ──────────────────────────────────
+
+/** Exactly this name, or the only one that starts with it — never a near miss. */
+function pickByName<T>(rows: T[], nameOf: (r: T) => string, want: string): T | null {
+  const w = comparable(want);
+  if (w.length < 2) return null;
+  const same = rows.filter((r) => comparable(nameOf(r)) === w);
+  if (same.length) return same[0];
+  const starts = rows.filter((r) => comparable(nameOf(r)).startsWith(w));
+  return starts.length === 1 ? starts[0] : null;
+}
+
+/** The company with this name in the national register of `country`, when that register can be searched by name. */
+export async function registerByName(name: string, country: string): Promise<R.Found | null> {
+  const c = country.toUpperCase();
+  if (c === 'FR') {
+    const hit = pickByName(await R.franceByName(name), (r: any) => r.nom_raison_sociale || r.nom_complet || '', name);
+    return hit ? R.parseFrance(hit) : null;
+  }
+  if (c === 'CZ') { const hit = pickByName(await R.czechByName(name), (r: any) => r.obchodniJmeno || '', name); return hit ? R.parseCzech(hit) : null; }
+  if (c === 'NO') { const hit = pickByName(await R.norwayByName(name), (r: any) => r.navn || '', name); return hit ? R.parseNorway(hit) : null; }
+  if (c === 'FI') {
+    const nameOf = (r: any) => (Array.isArray(r.names) ? (r.names.find((n: any) => String(n?.type) === '1' && !n?.endDate) ?? r.names[0])?.name : '') || '';
+    const hit = pickByName(await R.finlandByName(name), nameOf, name);
+    return hit ? R.parseFinland(hit) : null;
+  }
+  if (c === 'EE') { const hit = pickByName(await R.estoniaSearch(name), (r: any) => r.name || '', name); return hit ? R.parseEstonia(hit) : null; }
+  if (c === 'US') {
+    const res: any = await R.usByName(name);
+    const hit = pickByName(res?._candidates || [], (r: any) => r.name, name) as any;
+    const sub = hit?.cik ? await R.secByCik(hit.cik) : null;
+    return sub ? R.parseSec(sub) : null;
+  }
+  return null;
+}
+
+// ── The company's own website, found by a web search ────────────────────────
+
+/**
+ * The first of `candidates` whose legal notice prints `printed` (DE123456789,
+ * CHE123456789…), read two at a time. A notice that lists many VAT numbers is
+ * a group page or a directory, not the company's own, and is not believed.
+ */
+async function verifiedSite(candidates: string[], printed: string): Promise<{ url: string; notice: Awaited<ReturnType<typeof readLegalNotice>> } | null> {
+  const list = [...new Set(candidates.map((c) => cleanWebsite(c)).filter(Boolean))].slice(0, 6);
+  for (let i = 0; i < list.length; i += 2) {
+    const batch = await Promise.all(list.slice(i, i + 2).map(async (url) => ({ url, notice: await readLegalNotice(url).catch(() => null) })));
+    const hit = batch.find((b) => b.notice && b.notice.vatIds.includes(printed) && b.notice.vatIds.length <= 3);
+    if (hit) return hit as any;
+  }
+  return null;
+}
+
+/**
+ * The server's own web step, for callers with no browser (the Copilot): search
+ * the number, read the company sites among the results, then — when a register
+ * gave a name — the name with "Impressum". Every site must carry the number.
+ */
+async function webCandidates(printed: string, country: string, name?: string): Promise<{ sites: string[]; hits: WebHit[] }> {
+  const key = process.env.FIRECRAWL_API_KEY || undefined;
+  const hits = await searchWeb(`"${printed}"`, { key }).catch(() => [] as WebHit[]);
+  let sites = ownSites(hits);
+  const names = [name, ...nameHints(hits)].filter(Boolean) as string[];
+  if (sites.length < 2 && names.length) {
+    const more = await searchWeb(legalQuery(names[0], country), { key, limit: 6 }).catch(() => [] as WebHit[]);
+    sites = [...new Set([...sites, ...ownSites(more)])];
+  }
+  return { sites, hits };
 }
 
 /**
  * Everything public about a company, from whatever is known about it.
  *
- *   tax number → the registers (white list, KRS, CEIDG, VIES)
+ *   tax number → the registers: the national one where it is free (PL, FR, CZ,
+ *                FI, RO, EE, CH, NO, US, BR), VIES, the Peppol directory and
+ *                Wikidata
  *   website    → its legal notice (Impressum): name, address, VAT ID, register
  *                number, phone, email, managing directors — and a VAT ID found
  *                there goes back through the registers
- *   name       → the LEI register (GLEIF), worldwide, exact matches only
+ *   candidates → websites a web search found; one is read only when its legal
+ *                notice prints the number typed (or the exact name)
+ *   name       → the national register by name where it can be searched, then
+ *                the LEI register (GLEIF), worldwide — exact matches only
  *
  * Registers decide the official fields; the website and GLEIF only fill what
  * is still blank. Each value says where it came from.
  */
-export async function lookupCompany(input: LookupInput, opts: { readWebsites?: boolean } = {}): Promise<CompanyFacts> {
+export async function lookupCompany(input: LookupInput, opts: { readWebsites?: boolean; webSearch?: boolean } = {}): Promise<CompanyFacts> {
   const readWebsites = opts.readWebsites !== false;
   const tax = normalizeTaxId(String(input.country || ''), String(input.taxId || ''));
   const websiteIn = input.website ? cleanWebsite(String(input.website)) : '';
   const nameIn = String(input.name || '').trim().slice(0, 160);
+  const candidates = (Array.isArray(input.candidates) ? input.candidates : []).map((c) => cleanWebsite(String(c))).filter(Boolean).slice(0, 6);
   if (!tax.id && !websiteIn && !nameIn) throw new LookupError('Enter a tax number, a website or a name.');
   if (tax.id && !tax.country) throw new LookupError('Pick the country, or type the number with its country prefix (DE123456789).');
 
-  const key = JSON.stringify([tax.country, tax.id, websiteIn, nameIn.toLowerCase(), readWebsites]);
+  const key = JSON.stringify([tax.country, tax.id, websiteIn, nameIn.toLowerCase(), readWebsites, candidates, !!opts.webSearch]);
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 24 * 3600_000) return structuredClone(hit.facts);
 
@@ -405,8 +543,32 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
 
   if (tax.id) await fromTaxId(facts, tax.country, tax.id);
 
+  // ── The company's own website, found by a web search ───────────────────────
+  // Only when the registers left the name or address blank, and only for a
+  // number a website would print (an EIN or a CNPJ is not).
+  let website = websiteIn || '';
+  let preread: Awaited<ReturnType<typeof readLegalNotice>> | null = null;
+  const printed = facts.tax_id ? printedTaxId(facts.country === 'GR' ? 'EL' : facts.country, facts.tax_id) : '';
+  const wantsWeb = readWebsites && !websiteIn && (!facts.name || !facts.address);
+  if (wantsWeb && printed && !['PL', 'US', 'BR'].includes(facts.country)) {
+    let leads = candidates;
+    if (!leads.length && opts.webSearch) {
+      const found = await webCandidates(printed, facts.country, facts.name);
+      leads = found.sites;
+      if (found.hits.length) facts.web_hits = found.hits.slice(0, 6);
+    }
+    const ok = leads.length ? await verifiedSite(leads, printed) : null;
+    if (ok) { website = ok.url; preread = ok.notice; facts.site_verified = ok.url; }
+  } else if (wantsWeb && !tax.id && nameIn && candidates.length) {
+    // A name and some sites: the one whose legal notice is that exact company.
+    for (const url of candidates.slice(0, 4)) {
+      const notice = await readLegalNotice(url).catch(() => null);
+      if (notice?.name && comparable(notice.name) === comparable(nameIn)) { website = url; preread = notice; facts.site_verified = url; break; }
+    }
+  }
+
   // ── The company's own website ──────────────────────────────────────────────
-  let website = websiteIn || facts.website || '';
+  if (!website) website = facts.website || '';
   let guessed = false;
   if (!website && facts.email) {
     // A company email on its own domain names its website when no register does.
@@ -415,7 +577,7 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
   }
 
   if (website && readWebsites) {
-    const notice = await readLegalNotice(website).catch(() => null);
+    const notice = preread ?? await readLegalNotice(website).catch(() => null);
     const answered = !!notice?.checked.length;
     if (guessed && !answered) {
       website = ''; // a guess that does not answer was never a website
@@ -427,30 +589,36 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
         const t = normalizeTaxId('', own);
         try { await fromTaxId(facts, t.country, t.id); facts.sources.tax_id = 'Company website'; }
         catch (e: any) { facts.notes.push(`The website gives VAT ID ${own}, but ${e?.message || 'it could not be checked'}.`); }
-      } else if (tax.id && notice.vatIds.length) {
-        const entered = `${tax.country === 'PL' ? 'PL' : tax.country}${tax.id}`;
+      } else if (tax.id && notice.vatIds.length && !preread) {
+        const entered = printedTaxId(tax.country, facts.tax_id || tax.id);
         if (!notice.vatIds.includes(entered)) facts.notes.push(`The website gives VAT ID ${notice.vatIds[0]}, not the number entered — check this is the right company.`);
       }
       merge(facts, {
         name: notice.name, address: notice.address, krs: notice.register,
         email: notice.emails[0], phone: notice.phone, people: notice.people,
-      } as Partial<CompanyFacts>, 'Company website');
+      } as Partial<CompanyFacts>, preread ? 'Company website (its legal notice carries this VAT number)' : 'Company website');
       if (notice.note) facts.notes.push(`Website: ${notice.note}`);
     }
   }
   if (website) {
-    merge(facts, { website }, guessed ? 'Domain of the registered email' : websiteIn ? 'Entered' : 'Company website');
+    merge(facts, { website }, guessed ? 'Domain of the registered email' : websiteIn ? 'Entered' : preread ? 'Web search, confirmed by its legal notice' : 'Company website');
     if (!facts.website) facts.website = website;
   }
 
-  // ── The LEI register, by name ──────────────────────────────────────────────
+  // ── By name: the national register, then the LEI register ──────────────────
   const byName = facts.name || nameIn;
+  const nameCountry = facts.country || tax.country;
+  if (byName && (!facts.name || !facts.address) && nameCountry) {
+    const n = await registerByName(byName, nameCountry).catch(() => null);
+    if (n) mergeFound(facts, n);
+  }
   if (byName && (!facts.name || !facts.address)) {
     const g = await gleifByName(byName, facts.country || undefined).catch(() => null);
     if (g) merge(facts, { name: g.name, address: g.address, krs: g.register, country: g.country } as Partial<CompanyFacts>, 'GLEIF (LEI register)');
   }
   // VIES's "fill in the name yourself" is moot once something else found it.
   if (facts.name) facts.notes = facts.notes.filter((n) => !/does not share company names/.test(n));
+  if (facts.address || facts.site_verified) delete facts.web_hits;
 
   if (facts.website) {
     try { facts.domain = new URL(facts.website).hostname.replace(/^www\./, ''); } catch { /* no domain */ }
@@ -460,12 +628,12 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
     if (facts.tax_id && !websiteIn) {
       const de = facts.country === 'DE';
       facts.notes = facts.notes.filter((n) => !/does not share company names/.test(n));
-      facts.notes.push(`The number is valid, but no free register named its owner. Search the web for it, paste the company's website into Website and press Fill in again — ${de ? 'a German website must show the legal name, address, register number and VAT ID in its Impressum, and everything is read from there' : 'its legal notice usually lists the legal name and address'}.`);
-      facts.web_search = `https://www.google.com/search?q=${encodeURIComponent(`"${facts.country === 'GR' ? 'EL' : facts.country}${facts.tax_id}"`)}`;
+      facts.notes.push(`The number is valid, but no free register named its owner${candidates.length || opts.webSearch ? ', and no website found by searching for it prints it' : ''}. Paste the company's website into Website and press Fill in again — ${de ? 'a German website must show the legal name, address, register number and VAT ID in its Impressum, and everything is read from there' : 'its legal notice usually lists the legal name and address'}.`);
+      facts.web_search = `https://www.google.com/search?q=${encodeURIComponent(`"${printed}"`)}`;
     } else if (!facts.tax_id && !facts.email && !facts.phone) {
       throw new LookupError(websiteIn
         ? 'Nothing could be read from that website. Check the address, or try the tax number.'
-        : 'No company with that exact name in the LEI register. Try its tax number or website.');
+        : `No company with that exact name in ${nameCountry && ['FR', 'CZ', 'NO', 'FI', 'EE', 'US'].includes(nameCountry) ? 'the national register or ' : ''}the LEI register. Try its tax number or website.`);
     }
   }
   if (facts.name && !facts.email && !facts.phone) facts.notes.push('No public email or phone was found. Add them yourself once you have them.');

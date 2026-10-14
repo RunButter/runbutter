@@ -20,6 +20,9 @@ import { cleanPhone } from '@/lib/leads/osm';
 import type { CompanyPerson } from './lookup';
 
 /** Links that lead to the legal notice, in the languages this product is used in. */
+/** The legal notice itself, as opposed to a contact or about page — read first. */
+export const LEGAL_NOTICE_PAGE = /(impressum|imprint|legal[-_ ]?notice|mentions[-_ ]?l[ée]gales|aviso[-_ ]?legal|note[-_ ]?legali|colofon|nota[-_ ]?prawna|dane[-_ ]?firmy|informacje[-_ ]?prawne|legal[-_ ]?info)/i;
+
 export const LEGAL_PAGE = /(impressum|imprint|legal[-_ ]?notice|legal[-_ ]?info|mentions[-_ ]?l[ée]gales|aviso[-_ ]?legal|note[-_ ]?legali|colofon|nota[-_ ]?prawna|dane[-_ ]?firmy|informacje[-_ ]?prawne|kontakt|contact|about|o[-_ ]?nas|o[-_ ]?firmie)/i;
 const LEGAL_FIRST = /(impressum|imprint|legal|mentions|aviso|note[-_ ]?legali|colofon|nota[-_ ]?prawna|dane[-_ ]?firmy)/i;
 
@@ -46,6 +49,7 @@ const VAT_FORMAT: Record<string, RegExp> = {
   IE: /^IE\d[A-Z0-9+*]\d{5}[A-Z]{1,2}$/, IT: /^IT\d{11}$/, LT: /^LT(\d{9}|\d{12})$/, LU: /^LU\d{8}$/,
   LV: /^LV\d{11}$/, MT: /^MT\d{8}$/, NL: /^NL\d{9}B\d{2}$/, PL: /^PL\d{10}$/, PT: /^PT\d{9}$/,
   RO: /^RO\d{2,10}$/, SE: /^SE\d{12}$/, SI: /^SI\d{8}$/, SK: /^SK\d{10}$/,
+  GB: /^GB(\d{9}|\d{12})$/, XI: /^XI(\d{9}|\d{12})$/,
 };
 
 /**
@@ -57,7 +61,7 @@ const VAT_FORMAT: Record<string, RegExp> = {
 export function findVatIds(text: string): string[] {
   const out: string[] = [];
   const add = (v: string) => { if (!out.includes(v)) out.push(v); };
-  for (const m of text.matchAll(/\b(ATU|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|FR|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK)[\s.\-]?([0-9A-Z][0-9A-Z\s.\-+*]{6,16}[0-9A-Z])/g)) {
+  for (const m of text.matchAll(/\b(ATU|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|FR|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|GB|XI)[\s.\-]?([0-9A-Z][0-9A-Z\s.\-+*]{6,16}[0-9A-Z])/g)) {
     const prefix = m[1] === 'ATU' ? 'AT' : m[1];
     const raw = (m[1] + m[2]).replace(/[\s.\-]/g, '');
     // A run that swallowed the next word is cut back to the longest valid prefix.
@@ -65,6 +69,14 @@ export function findVatIds(text: string): string[] {
       if (VAT_FORMAT[prefix]?.test(raw.slice(0, len))) { add(raw.slice(0, len)); break; }
     }
   }
+  // Switzerland "CHE-123.456.789 MWST" and Norway "NO 123 456 789 MVA" — outside
+  // the EU, so not in the table above, and printed the same way in a footer.
+  for (const m of text.matchAll(/\bCHE[\s\-]?(\d{3})[.\s]?(\d{3})[.\s]?(\d{3})\b/g)) add(`CHE${m[1]}${m[2]}${m[3]}`);
+  for (const m of text.matchAll(/\bNO[\s\-]?(\d{3})\s?(\d{3})\s?(\d{3})\s?MVA\b/g)) add(`NO${m[1]}${m[2]}${m[3]}MVA`);
+  // Printed without the prefix, which is how most sites in these countries do it.
+  for (const m of text.matchAll(/\b(?:C\.?I\.?F\.?|N\.?I\.?F\.?)\s*:?\s*(?:ES)?\s*([A-Z]-?\d{7}-?[A-Z0-9]|\d{8}-?[A-Z])\b/g)) add(`ES${m[1].replace(/-/g, '')}`);
+  for (const m of text.matchAll(/\b(?:P\.?\s?IVA|Partita\s+IVA)\s*:?\s*(?:IT)?\s*(\d{11})\b/gi)) add(`IT${m[1]}`);
+  for (const m of text.matchAll(/\bVAT\s*(?:Reg(?:istration|\.)?\s*)?(?:No\.?|Number|#)\s*:?\s*(?:GB)?\s*(\d{3})\s?(\d{4})\s?(\d{2})\b/gi)) add(`GB${m[1]}${m[2]}${m[3]}`);
   for (const m of text.matchAll(/\bNIP\s*:?\s*(\d{3}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}|\d{3}[\s-]?\d{2}[\s-]?\d{2}[\s-]?\d{3})\b/gi)) {
     add('PL' + m[1].replace(/\D/g, ''));
   }
@@ -78,6 +90,22 @@ const NOISE = /©|copyright|all rights reserved|alle rechte|cookie|datenschutz|p
 
 const HEADING = /^(impressum|imprint|legal notice|angaben gemäß|angaben gem\.|informationen gemäß|mentions légales|aviso legal|note legali|dane firmy|nota prawna)/i;
 
+/**
+ * The company name out of the sentence it sits in: "Diese Website wird
+ * betrieben von der LIPINSKI TELEKOM GmbH." → "LIPINSKI TELEKOM GmbH",
+ * "Impressum der Miettex Service Meeß GmbH aus Sankt Augustin" → "Miettex
+ * Service Meeß GmbH", "Terma GmbH Hochwertige Industriereiniger" → "Terma GmbH".
+ * Everything after the LAST legal form goes — a name ends with its form.
+ */
+export function tidyName(raw: string): string {
+  let s = String(raw || '').replace(/\s+/g, ' ').trim();
+  s = s.replace(/^.*?\b(?:betrieben\s+(?:von|durch)|operated\s+by|published\s+by|herausgegeben\s+von|impressum|imprint|anbieter(?:in)?|betreiber(?:in)?|diensteanbieter|verantwortlich(?:\s+f[uü]r\s+den\s+inhalt)?)\b\s*:?\s*(?:(?:der|die|des|dem|the|von)\s+)?/i, '');
+  let last: RegExpMatchArray | null = null;
+  for (const m of s.matchAll(new RegExp(LEGAL_FORM.source, 'gi'))) last = m;
+  if (last && last.index !== undefined) s = s.slice(0, last.index + last[0].length);
+  return s.replace(/^[\s,.;:]+|[\s,;:]+$/g, '');
+}
+
 export function findCompanyName(lines: string[]): string | undefined {
   const start = Math.max(0, lines.findIndex((l) => HEADING.test(l)));
   const look = (from: number) => {
@@ -85,8 +113,8 @@ export function findCompanyName(lines: string[]): string | undefined {
       const l = lines[i].replace(/^(firma|firmenname|company|anbieter|betreiber|herausgeber|name)\s*:\s*/i, '');
       if (l.length > 120 || NOISE.test(l) || !LEGAL_FORM.test(l)) continue;
       // "Acme GmbH, Musterstraße 1, 12345 Berlin" → the part carrying the legal form.
-      const part = l.split(/\s[|•·–—]\s|,\s(?=\D*\d{4,5}\b)/)[0].trim();
-      if (part.length >= 3 && LEGAL_FORM.test(part)) return part.replace(/[,;:]$/, '');
+      const part = tidyName(l.split(/\s[|•·–—]\s|,\s(?=\D*\d{4,5}\b)/)[0].trim());
+      if (part.length >= 3 && LEGAL_FORM.test(part)) return part;
     }
     return undefined;
   };
@@ -137,7 +165,9 @@ export function findPeople(lines: string[]): CompanyPerson[] {
       : /g[ée]rant/.test(roleWord) ? 'Gérant' : 'Managing director';
     const value = (m[2] || lines[i + 1] || '').replace(/\(.*?\)/g, ' ');
     const names = value.split(/\s*(?:,|;|\/|&|\bund\b|\band\b|\bi\b|\bet\b|\by\b)\s*/i)
-      .map((s) => s.replace(/^(herr|frau|dr\.?|prof\.?|mr\.?|mrs\.?|ms\.?|pan|pani|mag\.?|dipl\.-\S+)\s+/gi, '').trim())
+      // Every leading title, however many and however joined: "Prof. Dr.-Ing.",
+      // "Dipl.-Kfm.", "Herr Dr." — a name that kept one fails the shape test below.
+      .map((s) => s.replace(/^(?:(?:herr|frau|mr|mrs|ms|pan|pani)\.?\s+|(?:dr|prof|mag|dipl|ing|rer|nat|med)\.?(?:-[\p{L}]+\.?)*\s+)+/giu, '').trim())
       .filter((s) => /^\p{Lu}[\p{L}'\-]+(?:\s\p{Lu}[\p{L}'\-]+){1,3}$/u.test(s));
     if (!names.length) continue;
     return names.slice(0, 6).map((n) => {
@@ -192,7 +222,7 @@ export function parseLegalPages(pages: { url: string; html: string }[]): LegalNo
 }
 
 export async function readLegalNotice(website: string): Promise<LegalNotice> {
-  const site = await readSite(website, { pick: LEGAL_PAGE, paths: ['/impressum', '/imprint', '/kontakt', '/contact'], maxPages: 3 });
+  const site = await readSite(website, { pick: LEGAL_PAGE, prefer: LEGAL_NOTICE_PAGE, paths: ['/impressum', '/imprint', '/kontakt', '/contact'], maxPages: 3 });
   if (!site.pages.length) return { vatIds: [], emails: [], people: [], checked: [], note: site.note };
   return parseLegalPages(site.pages);
 }

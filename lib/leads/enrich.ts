@@ -396,7 +396,7 @@ export function sameSiteLinks(html: string, pageUrl: string, pick: RegExp): stri
  * findContacts: robots.txt obeyed, every hop checked against private addresses,
  * a size cap per page. Returns HTML for the caller to parse — never sent on.
  */
-export async function readSite(website: string, opts: { pick: RegExp; paths?: string[]; maxPages?: number }): Promise<{ pages: SitePage[]; note?: string }> {
+export async function readSite(website: string, opts: { pick: RegExp; paths?: string[]; maxPages?: number; prefer?: RegExp }): Promise<{ pages: SitePage[]; note?: string }> {
   let start: URL;
   try { start = new URL(/^https?:\/\//i.test(website) ? website : `https://${website}`); } catch { return { pages: [], note: 'Not a valid website address.' }; }
   if (!isSafeOutboundUrl(start.toString())) return { pages: [], note: 'Not a public website.' };
@@ -409,7 +409,23 @@ export async function readSite(website: string, opts: { pick: RegExp; paths?: st
 
   let next = sameSiteLinks(home.body, home.url, opts.pick);
   if (!next.length && opts.paths?.length) next = opts.paths.map((p) => new URL(p, home.url).toString());
-  for (const link of next.slice(0, Math.max(0, (opts.maxPages ?? 3) - 1))) {
+  if (opts.prefer) {
+    // The page that matters first: a site links "Kontakt" before "Impressum"
+    // as often as not, and with three pages to spend, order decides whether the
+    // legal notice is read at all. No preferred link at all → try the
+    // conventional preferred paths before the rest.
+    const prefer = opts.prefer;
+    const strong = next.filter((u) => prefer.test(u));
+    const fallback = strong.length || prefer.test(home.url) ? [] : (opts.paths || []).map((p) => new URL(p, home.url).toString()).filter((u) => prefer.test(u));
+    next = [...new Set([...strong, ...fallback, ...next.filter((u) => !prefer.test(u))])];
+  }
+  // A guessed path that 404s must not use up a page: keep going until the
+  // budget of READ pages is spent, with a small cap on attempts.
+  const maxPages = opts.maxPages ?? 3;
+  let tries = 0;
+  for (const link of next) {
+    if (pages.length >= maxPages || tries >= maxPages + 2) break;
+    tries++;
     if (!allowed(rules, link)) continue;
     const page = await safeGet(link, PAGE_BYTES, PAGE_TIMEOUT);
     if (!page || page.status >= 400 || (page.type && !/html|text\/plain/i.test(page.type))) continue;

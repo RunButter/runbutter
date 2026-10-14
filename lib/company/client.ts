@@ -6,10 +6,13 @@
 // automations apply exactly as they would to a person typed in by hand.
 import { createRecord, getRecord } from '@/lib/crm/data';
 import type { CompanyFacts, CompanyPerson } from './lookup';
+import { printedTaxId } from './ids';
 
 export type { CompanyFacts, CompanyPerson };
 
-export async function fetchCompany(input: { country?: string; taxId?: string; website?: string; name?: string }): Promise<{ company?: CompanyFacts; error?: string }> {
+type LookupIn = { country?: string; taxId?: string; website?: string; name?: string; candidates?: string[] };
+
+export async function fetchCompany(input: LookupIn): Promise<{ company?: CompanyFacts; error?: string }> {
   try {
     const { getAccessToken } = await import('@privy-io/react-auth');
     const token = await getAccessToken().catch(() => null);
@@ -23,6 +26,67 @@ export async function fetchCompany(input: { country?: string; taxId?: string; we
     return { company: j.company as CompanyFacts };
   } catch {
     return { error: 'Could not reach the server. Check your connection.' };
+  }
+}
+
+/**
+ * The whole "Fill in": the registers first (server), then — when they left the
+ * name or address blank — a web search IN THIS BROWSER for the number as it is
+ * printed (lib/company/websearch.ts), whose company sites go back to the server
+ * as `candidates`. The server reads a site only when its legal notice prints
+ * that exact number, so a search result can lead to a company and never
+ * invent one. Searching here means each person uses their own free search
+ * allowance, and nothing about the search passes through our server.
+ */
+export async function fillCompany(input: LookupIn, onStep?: (step: string) => void): Promise<{ company?: CompanyFacts; error?: string }> {
+  const first = await fetchCompany(input);
+  const f = first.company;
+  const typedName = String(input.name || '').trim();
+
+  // A name the registers do not know: look for the company's own site by name.
+  if (!f && typedName && !String(input.taxId || '').trim() && !String(input.website || '').trim()) {
+    try {
+      onStep?.('Searching the web for its website…');
+      const W = await import('./websearch');
+      const sites = W.ownSites(await W.searchWeb(`"${typedName}" Impressum OR "legal notice" OR imprint`, { limit: 8 }));
+      if (sites.length) {
+        const r = await fetchCompany({ ...input, candidates: sites });
+        if (r.company?.site_verified) return r;
+      }
+    } catch { /* the register's answer stands */ }
+    return first;
+  }
+
+  if (!f || f.site_verified || String(input.website || '').trim()) return first;
+  if (!f.tax_id || (f.name && f.address) || ['PL', 'US', 'BR'].includes(f.country)) return first;
+
+  const printed = printedTaxId(f.country === 'GR' ? 'EL' : f.country, f.tax_id);
+  const tried = new Set<string>();
+  const verify = async (sites: string[]) => {
+    const fresh = sites.filter((x) => !tried.has(x));
+    fresh.forEach((x) => tried.add(x));
+    if (!fresh.length) return null;
+    onStep?.(`Reading ${fresh.length === 1 ? 'a website' : `${fresh.length} websites`} for ${printed}…`);
+    const r = await fetchCompany({ ...input, candidates: fresh });
+    return r.company?.site_verified ? r : null;
+  };
+  try {
+    const W = await import('./websearch');
+    onStep?.(`Searching the web for ${printed}…`);
+    const hits = await W.searchWeb(`"${printed}"`);
+    const found = await verify(W.ownSites(hits));
+    if (found) return found;
+    // Directories that copied the number usually name the company in their
+    // title; that name plus "Impressum" finds the company's own site.
+    const names = [...new Set([f.name, ...W.nameHints(hits)].filter(Boolean) as string[])].slice(0, 2);
+    for (const n of names) {
+      onStep?.(`Searching the web for ${n}…`);
+      const more = await verify(W.ownSites(await W.searchWeb(W.legalQuery(n, f.country), { limit: 6 })));
+      if (more) return more;
+    }
+    return { company: { ...f, web_hits: hits.slice(0, 6) } }; // listed only while the address is missing
+  } catch (e: any) {
+    return { company: { ...f, notes: [...f.notes, `The web search could not run (${String(e?.message || e)}).`] } };
   }
 }
 

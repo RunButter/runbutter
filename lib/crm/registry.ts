@@ -47,7 +47,7 @@ export const OBJECTS: Record<string, ObjectDef> = {
     // There is no Domain input — it is derived from Website on save, because two
     // boxes for one address is how they end up disagreeing.
     form: [
-      { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'CH', 'NO', 'UA'] },
+      { key: 'country', label: 'Country', input: 'select', options: ['PL', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CZ', 'SK', 'SE', 'DK', 'FI', 'IE', 'PT', 'RO', 'HU', 'GR', 'BG', 'HR', 'LT', 'LV', 'EE', 'SI', 'LU', 'CY', 'MT', 'GB', 'US', 'CH', 'NO', 'UA', 'BR', 'CA', 'AU', 'NZ', 'IS', 'LI', 'RS', 'TR', 'IL', 'AE', 'IN', 'SG', 'JP', 'KR', 'CN', 'HK', 'MX', 'AR', 'CL', 'CO', 'ZA'] },
       { key: 'tax_id', label: 'Tax / VAT ID', input: 'text' },
       // The three things the lookup can start from sit above its button.
       { key: 'name', label: 'Name', input: 'text', required: true },
