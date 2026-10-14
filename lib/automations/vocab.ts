@@ -66,6 +66,12 @@ export const TRIGGER_OBJECTS: TriggerObject[] = [
     { key: 'start', label: 'First day', type: 'date' }, { key: 'end', label: 'Last day', type: 'date' },
     { key: 'days', label: 'Working days', type: 'number' },
   ] },
+  // Surveys (0138). "bucket" is what people mean: a detractor answered.
+  { slug: 'survey_responses', one: 'a survey answer', label: 'Survey answers', group: 'Support', fields: [
+    { key: 'bucket', label: 'Kind of answer', options: ['promoter', 'passive', 'detractor'] }, { key: 'score', label: 'Score', type: 'number' },
+    { key: 'comment', label: 'Comment' }, { key: 'name', label: 'Name' }, { key: 'email', label: 'Email' },
+    { key: 'company', label: 'Company' }, { key: 'survey', label: 'Survey' },
+  ] },
   { slug: 'candidates', one: 'a candidate', label: 'Candidates', group: 'HR', fields: [
     { key: 'full_name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'position', label: 'Position' },
     { key: 'status', label: 'Status', options: ['applied', 'screening', 'assessment_sent', 'assessment_completed', 'interview_scheduled', 'interviewed', 'offered', 'rejected', 'hired'] },

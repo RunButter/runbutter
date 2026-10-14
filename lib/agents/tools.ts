@@ -269,6 +269,7 @@ export const TOOLS = [
   { name: 'list_time_entries', description: "Timesheet entries (HR → Time & leave) between two dates: who, day, minutes, description, project, client, billable, rate, and whether it is already on an invoice. `from`/`to` are YYYY-MM-DD (default: the last 7 days). `everyone: true` reads the whole team's — owners/admins only.", inputSchema: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, everyone: { type: 'boolean' } } } },
   { name: 'log_time', description: "Log time on the caller's timesheet. `minutes` (or `hours`), `day` YYYY-MM-DD (default today), `description`; optional `project_id` and `company_id` (ids from list_records projects/companies), `billable`, `rate` per hour. Billable time with a client is what Reports turns into an invoice — a person presses that button.", inputSchema: { type: 'object', properties: { day: { type: 'string' }, minutes: { type: 'number' }, hours: { type: 'number' }, description: { type: 'string' }, project_id: { type: 'string' }, company_id: { type: 'string' }, billable: { type: 'boolean' }, rate: { type: 'number' } }, required: ['description'] } },
   { name: 'list_time_off', description: "Time off for a year: who is off and when (the type of someone else's leave is visible only to owners/admins — never guess it), the caller's own balances per leave type, public holidays, and for owners/admins the requests waiting for approval. Asking for time off is a person's button on /time/off.", inputSchema: { type: 'object', properties: { year: { type: 'number' } } } },
+  { name: 'survey_results', description: "Customer surveys (Support → Surveys): every NPS/CSAT survey with its score and answer counts, or with `survey_id` one survey's answers — score, who (person and company), and their comment. Use it for 'what is our NPS', 'who are our detractors', 'what do unhappy customers say'. Read-only: sending a survey emails customers, so it is a person's button.", inputSchema: { type: 'object', properties: { survey_id: { type: 'string' }, only: { type: 'string', enum: ['detractor', 'passive', 'promoter'] } } } },
   { name: 'list_interviews', description: 'Scheduled interviews with candidates. Scheduling one sends a calendar invite and an email, so it stays on the Interviews screen.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_forms', description: 'Public forms that collect submissions into the workspace.', inputSchema: { type: 'object', properties: {} } },
   { name: 'save_form', description: 'Create or update a public form. Each field: key, label, type (text|email|tel|textarea|select|checkbox), required, options (select only), map (first_name|last_name|email|phone|title|linkedin_url, or "" for a custom answer). Created disabled unless enabled is true.', inputSchema: { type: 'object', properties: {
@@ -1241,6 +1242,24 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
         who_is_off: (d?.team || []).map((r: any) => ({ person: r.name, from: r.start_date, to: r.end_date, days: r.days, status: r.status, ...(r.type ? { type: r.type } : {}) })),
         ...(d?.pending ? { waiting_for_approval: d.pending.map((r: any) => ({ person: r.name, type: r.type, from: r.start_date, to: r.end_date, days: r.days })) } : {}),
         manage_at: '/time/off',
+      };
+    }
+
+    case 'survey_results': {
+      if (!args?.survey_id) {
+        const list = await rpc(ctx, 'get_surveys', { p_privy: ctx.privy, p_workspace: ctx.workspace });
+        return { surveys: (Array.isArray(list) ? list : []).map((s: any) => ({
+          id: s.id, name: s.name, kind: s.kind, answers: s.responses, asked: s.invites, average: s.average,
+          score: s.responses ? (s.kind === 'nps' ? Math.round(((s.promoters - s.detractors) / s.responses) * 100) : `${Math.round((s.promoters / s.responses) * 100)}% satisfied`) : null,
+        })), manage_at: '/surveys' };
+      }
+      const r = await rpc(ctx, 'get_survey_results', { p_privy: ctx.privy, p_id: String(args.survey_id), p_from: null, p_to: null });
+      const only = ['detractor', 'passive', 'promoter'].includes(String(args?.only)) ? String(args.only) : null;
+      return {
+        survey: { name: r?.survey?.name, kind: r?.survey?.kind, question: r?.survey?.question }, asked: r?.invites, distribution: r?.distribution, trend: r?.trend,
+        answers: (r?.responses || []).filter((x: any) => !only || x.bucket === only).slice(0, 200)
+          .map((x: any) => ({ score: x.score, kind: x.bucket, person: x.name, person_id: x.person_id, company: x.company, company_id: x.company_id, comment: x.comment, at: x.created_at })),
+        link: `/surveys/${args.survey_id}`,
       };
     }
 

@@ -135,6 +135,9 @@ const ALLOWED = new Set([
   'delete_leave_type', 'set_leave_allowance', 'set_public_holidays',
   // Receipts (0137): the expense and its receipt in one transaction.
   'save_receipt_expense', 'get_receipts',
+  // Surveys (0138). Sending goes through /api/surveys/send (it emails), and
+  // answering through /api/surveys/answer (no account).
+  'get_surveys', 'save_survey', 'delete_survey', 'get_survey_results',
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',

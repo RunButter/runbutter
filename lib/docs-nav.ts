@@ -35,6 +35,7 @@ export const DOCS_NAV: DocSection[] = [
       { slug: 'booking', title: 'Booking pages', blurb: 'Let customers book a meeting — no Calendly' },
       { slug: 'time', title: 'Time & leave', blurb: 'Timesheets, time off and billable hours' },
       { slug: 'receipts', title: 'Scan receipts', blurb: 'A photo of a receipt becomes an expense' },
+      { slug: 'surveys', title: 'Customer surveys', blurb: 'NPS and CSAT, answered in one tap' },
       { slug: 'lead-finder', title: 'Find leads', blurb: 'Businesses to sell to, from the open map' },
       { slug: 'company-lookup', title: 'Company from a tax number', blurb: 'NIP or VAT number in, everything public out' },
       { slug: 'file-extraction', title: 'Files that become data', blurb: 'Extraction and full-text search' },

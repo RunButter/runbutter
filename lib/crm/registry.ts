@@ -339,6 +339,8 @@ export const NAV = [
       { label: 'Inbox', href: '/inbox' },
       { label: 'Chat widget', href: '/inbox/widget' },
     ]},
+    // NPS / CSAT (0138): how customers feel, asked of the people in People.
+    { slug: 'surveys', label: 'Surveys', icon: 'Gauge', href: '/surveys' },
   ]},
   { group: 'HR', items: [
     { slug: 'hr-overview', label: 'Overview', icon: 'LayoutDashboard', href: '/dashboard/overview', tabs: [

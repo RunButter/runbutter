@@ -48,6 +48,8 @@ const PUBLIC_PREFIXES = [
   '/support/',
   // Booking pages (0135): a customer's visitor picking a time, often framed.
   '/book/',
+  // Customer surveys (0138): answered from an email, by people with no account.
+  '/survey/',
 ];
 
 /**

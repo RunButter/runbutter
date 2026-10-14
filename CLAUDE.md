@@ -452,6 +452,27 @@ Finance → Expenses → Scan receipts (`/finance/receipts`): photo/PDF → uplo
 - Playwright's `setInputFiles` and real clicks stall inside the app shell in this sandbox; drive file
   drops with a synthetic `DragEvent` + `DataTransfer`, and clicks with `dispatchEvent('click')`.
 
+## Customer surveys (0138) — `docs/surveys.md`
+Support → Surveys: NPS (0–10) and CSAT (1–5) asked of PEOPLE, answered in one tap from the email.
+- Each emailed number is a link `/survey/<id>?i=<invite>&t=<token>&score=N`; the page records the score
+  on arrival (a JS POST — a mail scanner's plain GET records nothing) and asks for the reason, which
+  UPDATES the same answer (`uq_survey_responses_invite`). Token = HMAC(server key, invite id), label
+  `runbutter-survey-invite`, sha256 stored — the booking/support design. The page scrubs `i`/`t`
+  from the address bar after reading them.
+- `create_survey_invites` decides who may be asked and COUNTS why not: no email, `survey_opt_outs`
+  (the link in every email + `List-Unsubscribe`), newsletter bounced/complained/unsubscribed, asked in
+  30 days (only that one is overridable by `force`). The route mints ids + token hashes, SQL inserts,
+  then `resend.batch.send` in 100s and `mark_survey_sent` for the ones that went.
+- Every answer writes ONE `record_notes` row on the person and one on their company (agent_name
+  `Survey`, source `survey: <name>`), rewritten in place when the score/reason changes. A share-link
+  answer with a known email is matched to that person.
+- The kind is locked once a survey has answers (a 9 on 0–10 is not a 9 on 1–5). Automation trigger
+  `survey_responses` carries `bucket` (promoter/passive/detractor). Copilot `survey_results` (read).
+- **plpgsql: a bare CASE inside an IF condition ends the condition at the CASE's first THEN** — wrap
+  it in parentheses. It failed as "syntax error at end of input", pointing nowhere useful.
+- `/survey/*` is framable (with `/book/*`, `/support/*`); `'/survey/'` keeps its trailing slash in
+  `PUBLIC_PREFIXES` so the signed-in `/surveys` still mounts Privy.
+
 ## Find leads (2026-10) — `docs/lead-finder.md`
 Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
 public email → save as **Leads**. Sources: **Free (Overture Maps open data, OSM as backup — the
@@ -1723,8 +1744,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0135–0137** (booking pages, time & leave, receipts) — `npm run migrate`; book one meeting,
-  pick the country's holidays on Time off, scan one receipt.
+- **Run 0135–0138** (booking pages, time & leave, receipts, surveys) — `npm run migrate`; book one
+  meeting, pick the country's holidays on Time off, scan one receipt, send yourself one survey.
 - ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:
   connect a Google Places key on Find leads for live Google results (optional — the free source
   needs nothing), and optionally a free **`CEIDG_API_TOKEN`** so sole traders fill in too.

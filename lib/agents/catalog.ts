@@ -127,6 +127,8 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_time_entries', label: 'Read timesheets', group: 'Team' },
   { name: 'log_time', label: 'Log time', group: 'Team', write: true },
   { name: 'list_time_off', label: 'See who is off', group: 'Team' },
+  // Surveys (0138). READ: sending one emails customers, a person's click.
+  { name: 'survey_results', label: 'Read survey results (NPS/CSAT)', group: 'Support' },
   { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
   { name: 'list_interviews', label: 'List interviews', group: 'Hiring' },
   { name: 'list_forms', label: 'List forms', group: 'Marketing' },
