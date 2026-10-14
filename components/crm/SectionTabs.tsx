@@ -14,7 +14,11 @@ import { navTabsFor } from '@/lib/crm/registry';
 export default function SectionTabs() {
   const pathname = usePathname() || '';
   const hit = navTabsFor(pathname);
-  const on = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  // The LONGEST matching tab is the one you are on: /calendar/booking also
+  // starts with /calendar, and lighting both made two tabs look selected.
+  const match = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const current = hit?.tabs.filter((t) => match(t.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const on = (href: string) => href === current;
   // On a phone the strip scrolls, and the tab you are ON can be the one off the
   // edge (Settings › Integrations › "Telegra…"). Bring it into view on arrival.
   const strip = useRef<HTMLDivElement>(null);

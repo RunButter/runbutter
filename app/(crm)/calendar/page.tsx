@@ -53,11 +53,13 @@ const KINDS: Record<string, { label: string; dot: string; chip: string }> = {
   issue:      { label: 'Issues',     dot: 'bg-accent',            chip: 'bg-accent/10 text-accent' },
   meeting:    { label: 'Meetings',   dot: 'bg-warning',           chip: 'bg-warning/10 text-warning' },
   interview:  { label: 'Interviews', dot: 'bg-warning',           chip: 'bg-warning/10 text-warning' },
+  leave:      { label: 'Time off',   dot: 'bg-success',           chip: 'bg-success/10 text-success' },
+  holiday:    { label: 'Holidays',   dot: 'bg-tertiary',          chip: 'bg-surface-hover text-secondary' },
   post:       { label: 'Posts',      dot: 'bg-secondary',         chip: 'bg-surface-hover text-secondary' },
   newsletter: { label: 'Newsletters', dot: 'bg-secondary',        chip: 'bg-surface-hover text-secondary' },
   campaign:   { label: 'Campaigns',  dot: 'bg-tertiary',          chip: 'bg-surface-hover text-tertiary' },
 };
-const ORDER = ['invoice', 'bill', 'deal', 'meeting', 'interview', 'issue', 'post', 'newsletter', 'campaign'];
+const ORDER = ['holiday', 'leave', 'invoice', 'bill', 'deal', 'meeting', 'interview', 'issue', 'post', 'newsletter', 'campaign'];
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;

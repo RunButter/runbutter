@@ -122,6 +122,11 @@ export const TOOL_CATALOG: ToolInfo[] = [
   // Booking pages (0135). READ only: booking for someone sends them an email
   // and a calendar invite, which is a person's act on the booking page.
   { name: 'list_bookings', label: 'List booked meetings', group: 'Sales' },
+  // Time & leave (0136). Logging time is an ordinary write; asking for time
+  // off is not here at all — it emails approvers, so it is a person's click.
+  { name: 'list_time_entries', label: 'Read timesheets', group: 'Team' },
+  { name: 'log_time', label: 'Log time', group: 'Team', write: true },
+  { name: 'list_time_off', label: 'See who is off', group: 'Team' },
   { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
   { name: 'list_interviews', label: 'List interviews', group: 'Hiring' },
   { name: 'list_forms', label: 'List forms', group: 'Marketing' },

@@ -401,6 +401,37 @@ with no second feed), a Google event + Meet link when the HOST connected Google,
   Resend stubbed), and the pages in Chromium (New York + Warsaw, light + dark, 390 px). NOT against
   live Google/Resend — book one real meeting after deploy.
 
+## Time & leave (0136) — `docs/time.md`
+HR → Time & leave: Timesheet (`/time`), Time off (`/time/off`), Reports (`/time/reports`).
+- **Timesheets**: an entry = person, day, minutes, project/issue/client, billable + rate. A running
+  timer is `timer_started_at`; **one per person is a UNIQUE INDEX** (`uq_time_entries_running`), so
+  `start_timer` stops the old one first. Minutes are ROUNDED (not ceil'd: 25 min + a few ms read 26).
+  Continuing yesterday's entry starts a COPY for today, so a closed day's total never changes.
+- **Billable → invoice in ONE transaction** (`invoice_time_entries`): rows locked `for update`, the
+  invoice written through `create_record` + `save_invoice_items` (plan limit and totals rule apply),
+  entries stamped `invoice_id`. An invoiced entry is locked; deleting the invoice un-bills it (`on
+  delete set null`). The number continues the highest `…\d+` income invoice (the composer's rule).
+- **Time off**: `leave_types` (allowance NULL = counted, not capped), per-person/year overrides,
+  `public_holidays` per workspace, `leave_requests.days` = WORKING days computed in SQL
+  (`leave_working_days`: work week − holidays, half days at the ends). Changing holidays or the work
+  week RECOUNTS live requests. A request across New Year draws on both years (`leave_days_in_year`).
+  Over the allowance: refused for a member, allowed for an admin with `force`. Admin-added and
+  no-approval types (sick leave) are approved at once; `decided_by` names only a human approver.
+- **Sick leave is health data**: everybody sees WHO is off (team list, calendar); only the person and
+  owners/admins see the TYPE and NOTE — enforced in `get_time_off` and `get_calendar`, and the
+  automation payload never carries the note.
+- Public holidays are COMPUTED for 19 countries in `lib/time/holidays.ts` (zero imports, Easter +
+  nth-weekday rules, UK/US/IE substitute days) — no holiday API. The admin reviews and saves a year.
+  46 fixture checks. National days only; DE/ES/CH/US regional ones are added by hand.
+- Request/decide/cancel go through `/api/time-off` (emails approvers / the person); everything else
+  through `/api/rpc`. `booking_busy` (0135) now includes the host's approved leave and the
+  workspace's holidays; `get_calendar` redefined IN FULL with `leave` + `holiday` kinds.
+- `SectionTabs` lit EVERY tab whose href prefixed the path (`/calendar` on `/calendar/booking`, `/inbox`
+  on `/inbox/widget`); it now picks the LONGEST match.
+- Copilot: `list_time_entries`, `log_time` (write), `list_time_off`. Requesting time off is not a tool.
+- Verified: SQL suite (allowances, overlaps, recount, privacy, timers, invoicing once, automations,
+  0 anon-callable), the route against Postgres (10 checks), the pages in Chromium (desktop + 390 px).
+
 ## Find leads (2026-10) — `docs/lead-finder.md`
 Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
 public email → save as **Leads**. Sources: **Free (Overture Maps open data, OSM as backup — the
@@ -1672,7 +1703,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0135** (booking pages) — `npm run migrate`, then make a page and book it once.
+- **Run 0135 + 0136** (booking pages, time & leave) — `npm run migrate`; book one meeting, pick the
+  country's holidays on Time off.
 - ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:
   connect a Google Places key on Find leads for live Google results (optional — the free source
   needs nothing), and optionally a free **`CEIDG_API_TOKEN`** so sole traders fill in too.

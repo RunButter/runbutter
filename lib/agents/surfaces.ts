@@ -40,6 +40,7 @@ const NOTES: Record<string, SurfaceNote> = {
   docs: { what: 'documents, notes, to-do lists and sheets that calculate like Excel (=SUM, =VLOOKUP…); a document can be mail-merged into one copy per person or company from its header (a person does that)', tool: 'save_doc' },
   insights: { what: 'a chart built from a question over any record type', tool: 'chart_records' },
   calendar: { what: 'one calendar over invoices due, deals closing, meetings, interviews and posts; its Booking pages tab holds "book a meeting with me" links whose bookings land here', tool: 'list_bookings (read) — a booking page itself is made by a person on /calendar/booking' },
+  time: { what: 'timesheets (hours per person, project and client; billable hours become an invoice on the Reports tab) and time off (balances, requests, approvals, public holidays)', tool: 'list_time_entries / log_time / list_time_off — asking for or approving time off is a person\'s click on /time/off' },
   inbox: { what: 'conversations from the chat widget on the company website', tool: 'list_conversations / get_conversation / reply_conversation' },
   files: { what: 'uploaded files, with their text extracted and searchable', tool: null },
   deals: { what: 'the sales pipeline board', tool: 'create_deal / update_deal / move_deal' },

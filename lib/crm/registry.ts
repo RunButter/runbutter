@@ -361,6 +361,15 @@ export const NAV = [
     ]},
     // The people already hired — onboarding and wellbeing — so HR, not Team.
     { slug: 'my-team', label: 'My team', icon: 'Heart', href: '/dashboard/my-team' },
+    // Time & leave (0136): where everyone's time went — hours on the
+    // timesheet, days off on the leave side. Reports turns billable hours
+    // into an invoice, which is why it is not under Finance's nose: the hours
+    // are recorded here first.
+    { slug: 'time', label: 'Time & leave', icon: 'Timer', href: '/time', tabs: [
+      { label: 'Timesheet', href: '/time' },
+      { label: 'Time off', href: '/time/off' },
+      { label: 'Reports', href: '/time/reports' },
+    ]},
   ]},
   { group: 'Projects', items: [
     { slug: 'projects', label: 'Projects', icon: 'FolderKanban', href: '/objects/projects' },

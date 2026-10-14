@@ -59,6 +59,13 @@ export const TRIGGER_OBJECTS: TriggerObject[] = [
     { key: 'company', label: 'Company' }, { key: 'page', label: 'Booking page' }, { key: 'title', label: 'Title' },
     { key: 'status', label: 'Status', options: ['confirmed', 'cancelled'] }, { key: 'start', label: 'Starts', type: 'date' },
   ] },
+  // Time off (0136). The note is deliberately not a field: it may say why.
+  { slug: 'time_off', one: 'a time-off request', label: 'Time off', group: 'HR', fields: [
+    { key: 'name', label: 'Person' }, { key: 'type', label: 'Type' },
+    { key: 'status', label: 'Status', options: ['pending', 'approved', 'rejected', 'cancelled'] },
+    { key: 'start', label: 'First day', type: 'date' }, { key: 'end', label: 'Last day', type: 'date' },
+    { key: 'days', label: 'Working days', type: 'number' },
+  ] },
   { slug: 'candidates', one: 'a candidate', label: 'Candidates', group: 'HR', fields: [
     { key: 'full_name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'position', label: 'Position' },
     { key: 'status', label: 'Status', options: ['applied', 'screening', 'assessment_sent', 'assessment_completed', 'interview_scheduled', 'interviewed', 'offered', 'rejected', 'hired'] },

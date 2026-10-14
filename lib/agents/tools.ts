@@ -266,6 +266,9 @@ export const TOOLS = [
     location: { type: 'string' }, employment_type: { type: 'string' }, is_active: { type: 'boolean' }, is_published: { type: 'boolean' },
   } } },
   { name: 'list_bookings', description: "Meetings people booked through the workspace's booking pages (Calendar → Booking pages): who, when, which page, their company, phone and notes, and whether it was cancelled. `days` looks ahead (default 14, max 90); `past_days` also includes recent ones (default 0). Read-only: booking or cancelling emails the person, so it stays a button.", inputSchema: { type: 'object', properties: { days: { type: 'number' }, past_days: { type: 'number' } } } },
+  { name: 'list_time_entries', description: "Timesheet entries (HR → Time & leave) between two dates: who, day, minutes, description, project, client, billable, rate, and whether it is already on an invoice. `from`/`to` are YYYY-MM-DD (default: the last 7 days). `everyone: true` reads the whole team's — owners/admins only.", inputSchema: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, everyone: { type: 'boolean' } } } },
+  { name: 'log_time', description: "Log time on the caller's timesheet. `minutes` (or `hours`), `day` YYYY-MM-DD (default today), `description`; optional `project_id` and `company_id` (ids from list_records projects/companies), `billable`, `rate` per hour. Billable time with a client is what Reports turns into an invoice — a person presses that button.", inputSchema: { type: 'object', properties: { day: { type: 'string' }, minutes: { type: 'number' }, hours: { type: 'number' }, description: { type: 'string' }, project_id: { type: 'string' }, company_id: { type: 'string' }, billable: { type: 'boolean' }, rate: { type: 'number' } }, required: ['description'] } },
+  { name: 'list_time_off', description: "Time off for a year: who is off and when (the type of someone else's leave is visible only to owners/admins — never guess it), the caller's own balances per leave type, public holidays, and for owners/admins the requests waiting for approval. Asking for time off is a person's button on /time/off.", inputSchema: { type: 'object', properties: { year: { type: 'number' } } } },
   { name: 'list_interviews', description: 'Scheduled interviews with candidates. Scheduling one sends a calendar invite and an email, so it stays on the Interviews screen.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_forms', description: 'Public forms that collect submissions into the workspace.', inputSchema: { type: 'object', properties: {} } },
   { name: 'save_form', description: 'Create or update a public form. Each field: key, label, type (text|email|tel|textarea|select|checkbox), required, options (select only), map (first_name|last_name|email|phone|title|linkedin_url, or "" for a custom answer). Created disabled unless enabled is true.', inputSchema: { type: 'object', properties: {
@@ -1204,6 +1207,41 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
         p_from: new Date(now - back * 86_400_000).toISOString(), p_to: new Date(now + ahead * 86_400_000).toISOString(),
       });
       return { bookings: (Array.isArray(rows) ? rows : []).slice(0, 100), manage_at: '/calendar/booking' };
+    }
+
+    case 'list_time_entries': {
+      const iso = (v: any) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+      const to = iso(args?.to) || new Date().toISOString().slice(0, 10);
+      const from = iso(args?.from) || new Date(Date.parse(to) - 6 * 86_400_000).toISOString().slice(0, 10);
+      const d = await rpc(ctx, 'get_time_entries', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_from: from, p_to: to, p_user: args?.everyone ? '*' : null });
+      const entries = (d?.entries || []).slice(0, 300).map((e: any) => ({
+        id: e.id, person: e.name, day: e.day, minutes: e.running_minutes ?? e.minutes, running: !!e.timer_started_at,
+        description: e.description, project: e.project, client: e.company, billable: e.billable, rate: e.rate, invoice: e.invoice_number,
+      }));
+      return { from, to, total_minutes: entries.reduce((s: number, e: any) => s + (e.minutes || 0), 0), entries };
+    }
+
+    case 'log_time': {
+      const minutes = Math.round(Number(args?.minutes) || (Number(args?.hours) || 0) * 60);
+      if (!(minutes > 0 && minutes <= 1440)) throw new Error('Give minutes (or hours) between 1 minute and 24 hours.');
+      const day = typeof args?.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(args.day) ? args.day : new Date().toISOString().slice(0, 10);
+      const e = await rpc(ctx, 'save_time_entry', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_data: {
+        day, minutes, description: String(args?.description || '').slice(0, 500),
+        ...(args?.project_id ? { project_id: String(args.project_id) } : {}),
+        ...(args?.company_id ? { company_id: String(args.company_id) } : {}),
+        billable: !!args?.billable, ...(args?.rate != null && args?.billable ? { rate: Number(args.rate) } : {}),
+      } });
+      return { id: e?.id, day: e?.day, minutes: e?.minutes, project: e?.project, client: e?.company, billable: e?.billable, link: '/time' };
+    }
+
+    case 'list_time_off': {
+      const d = await rpc(ctx, 'get_time_off', { p_privy: ctx.privy, p_workspace: ctx.workspace, p_year: Number(args?.year) || new Date().getUTCFullYear() });
+      return {
+        year: d?.year, my_balances: d?.balances, holidays: d?.holidays,
+        who_is_off: (d?.team || []).map((r: any) => ({ person: r.name, from: r.start_date, to: r.end_date, days: r.days, status: r.status, ...(r.type ? { type: r.type } : {}) })),
+        ...(d?.pending ? { waiting_for_approval: d.pending.map((r: any) => ({ person: r.name, type: r.type, from: r.start_date, to: r.end_date, days: r.days })) } : {}),
+        manage_at: '/time/off',
+      };
     }
 
     case 'list_interviews':

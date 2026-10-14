@@ -128,6 +128,11 @@ const ALLOWED = new Set([
   // through /api/booking/*, and cancel_booking through /api/booking/cancel,
   // which also removes the Google event and emails the visitor.
   'get_booking_pages', 'save_booking_page', 'delete_booking_page', 'get_bookings',
+  // Time & leave (0136). Asking for, deciding and withdrawing time off go
+  // through /api/time-off instead, because each of those emails somebody.
+  'get_time_entries', 'save_time_entry', 'delete_time_entry', 'start_timer', 'stop_timer',
+  'invoice_time_entries', 'get_time_off', 'save_leave_settings', 'save_leave_type',
+  'delete_leave_type', 'set_leave_allowance', 'set_public_holidays',
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',
