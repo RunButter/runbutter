@@ -7,7 +7,10 @@ import { ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import PageHeader from '@/components/dashboard/PageHeader';
 import AppLoading from '@/components/ui/AppLoading';
 import EmptyState from '@/components/ui/EmptyState';
-import { getWorkspace } from '@/lib/crm/data';
+import DealCalendar from '@/components/crm/DealCalendar';
+import { getWorkspace, loadBoard } from '@/lib/crm/data';
+import { dayOf } from '@/lib/crm/views';
+import type { PipelineRecord, PipelineStage } from '@/lib/crm/types';
 import { rpc } from '@/lib/rpc';
 
 /**
@@ -23,6 +26,13 @@ import { rpc } from '@/lib/rpc';
  * Both, and neither alone. A month grid answers "how busy is the 14th"; an
  * agenda answers "what do I do next", and cramming that into 90px cells is what
  * makes most calendars unreadable at exactly the density where they matter.
+ *
+ * ── DEALS: THE PIPELINE AS A MONTH ──────────────────────────────────────────
+ * The month grid shows deals that HAVE a close date and nothing else, so a
+ * pipeline where nobody set dates looked like no pipeline at all. The Deals
+ * view is the sales board by close date, with the undated ones in a tray to
+ * drag onto a day — the same DealCalendar as Sales → Deals → Calendar, driven
+ * by this page's month so the two cursors never disagree.
  *
  * ── COLOURS CARRY MEANING ───────────────────────────────────────────────────
  * Money in and money out are different kinds even though both are rows of
@@ -63,6 +73,9 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
  */
 const dayKey = (e: Ev) => (e.all_day ? String(e.at).slice(0, 10) : iso(new Date(e.at)));
 
+type View = 'month' | 'agenda' | 'deals';
+const VIEWS: [View, string][] = [['month', 'Month'], ['agenda', 'Agenda'], ['deals', 'Deals']];
+
 const time = (e: Ev) => (e.all_day ? '' :
   new Date(e.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }));
 
@@ -74,8 +87,24 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<Ev[]>([]);
   const [loading, setLoading] = useState(true);
   const [off, setOff] = useState<Set<string>>(new Set());
-  const [view, setView] = useState<'month' | 'agenda'>('month');
+  const [view, setViewState] = useState<View>('month');
   const [sel, setSel] = useState<string | null>(null);
+  const [deals, setDeals] = useState<{ stages: PipelineStage[]; records: PipelineRecord[]; live: boolean } | null>(null);
+  const [dealTick, setDealTick] = useState(0);
+
+  // The view rides in the URL (`?view=deals`) so it is a link to hand on. Read
+  // after mount rather than through useSearchParams, which would force this
+  // static page behind a Suspense boundary for one word.
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get('view');
+    if (v === 'agenda' || v === 'deals') setViewState(v);
+  }, []);
+  const setView = (v: View) => {
+    setViewState(v);
+    const url = new URL(window.location.href);
+    if (v === 'month') url.searchParams.delete('view'); else url.searchParams.set('view', v);
+    window.history.replaceState(window.history.state, '', url);
+  };
 
   // Whole weeks, so the grid never renders a ragged first row and an event in
   // the trailing days of the previous month still appears in the cell it shares.
@@ -99,6 +128,21 @@ export default function CalendarPage() {
   }, [privy, wsId, gridStart, gridEnd]);
 
   useEffect(() => { load(); }, [load]);
+
+  // The sales board, once — it is what tells the month view how many open deals
+  // have no date, and it IS the Deals view.
+  useEffect(() => {
+    if (!privy) return;
+    let cancelled = false;
+    loadBoard(privy, 'sales', 'sales').then((b) => { if (!cancelled) setDeals(b); });
+    return () => { cancelled = true; };
+  }, [privy, dealTick]);
+
+  // A deal dragged to a day changes the month grid too.
+  const dealsChanged = useCallback(() => { setDealTick((t) => t + 1); load(); }, [load]);
+  const undated = useMemo(
+    () => (deals?.live ? deals.records.filter((r) => r.status === 'active' && !dayOf(r.close_date)).length : 0),
+    [deals]);
 
   const shown = useMemo(() => events.filter((e) => !off.has(e.kind)), [events, off]);
 
@@ -133,10 +177,10 @@ export default function CalendarPage() {
     <>
       <PageHeader title={cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}>
         <div className="flex items-center rounded-md ring-1 ring-subtle overflow-hidden">
-          {(['month', 'agenda'] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)}
-              className={`h-7 px-2.5 text-xs capitalize ${view === v ? 'bg-surface text-primary font-semibold' : 'text-tertiary hover:bg-surface-sunken'}`}>
-              {v}
+          {VIEWS.map(([v, label]) => (
+            <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
+              className={`h-7 px-2.5 text-xs ${view === v ? 'bg-surface text-primary font-semibold' : 'text-tertiary hover:bg-surface-sunken'}`}>
+              {label}
             </button>
           ))}
         </div>
@@ -151,7 +195,7 @@ export default function CalendarPage() {
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="page-body p-6 2xl:p-8 flex flex-col gap-4">
 
-          {present.length > 0 && (
+          {view !== 'deals' && present.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {present.map((k) => (
                 <button key={k} onClick={() => toggle(k)}
@@ -165,16 +209,37 @@ export default function CalendarPage() {
             </div>
           )}
 
-          {loading ? <AppLoading /> : view === 'month' ? (
+          {view === 'deals' ? (
+            !privy ? (
+              <EmptyState title="Sign in to see your deals"
+                description="Every open deal on the day it is expected to close, and the ones with no date yet." />
+            ) : !deals ? <AppLoading /> : !deals.live ? (
+              <EmptyState title="No sales pipeline yet"
+                description="Add a deal on Sales → Deals and it appears here on its close date."
+                action={<Link href="/pipelines/sales/board" className="text-xs text-accent hover:underline">Open Deals</Link>} />
+            ) : (
+              <DealCalendar stages={deals.stages} records={deals.records} privy={privy} live
+                month={cursor} onChanged={dealsChanged} />
+            )
+          ) : loading ? <AppLoading /> : view === 'month' ? (
             <Month days={days} byDay={byDay} month={cursor.getMonth()} todayKey={todayKey}
               sel={sel} onSelect={setSel} />
           ) : (
             <Agenda events={shown} />
           )}
 
-          {!loading && events.length === 0 && (
+          {/* The month only knows dated deals; say how many it cannot show. */}
+          {view !== 'deals' && undated > 0 && (
+            <button onClick={() => setView('deals')}
+              className="self-start text-2xs text-tertiary hover:text-accent inline-flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${KINDS.deal.dot}`} />
+              {undated} open {undated === 1 ? 'deal has' : 'deals have'} no close date — put {undated === 1 ? 'it' : 'them'} on the calendar →
+            </button>
+          )}
+
+          {view !== 'deals' && !loading && events.length === 0 && (
             <EmptyState title="Nothing scheduled this month"
-              description="Invoice due dates, issue deadlines, scheduled posts and newsletters, campaign windows, interviews and Cal.com bookings all appear here automatically." />
+              description="Invoice due dates, deal close dates, issue deadlines, scheduled posts and newsletters, campaign windows, interviews and Cal.com bookings all appear here automatically." />
           )}
 
           {sel && view === 'month' && (byDay.get(sel)?.length ?? 0) > 0 && (

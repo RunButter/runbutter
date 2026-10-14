@@ -24,11 +24,9 @@ across **Sales · Finance · Marketing · Projects · HR** (+ Docs, Automate, Te
   them by hand in the SQL Editor still works — `--mark-applied` reconciles the ledger
   afterwards. Re-run `npm run bundle:sql` after adding one, or CI fails on a stale
   `supabase/schema.sql`.
-- **Schema state: 0001–0124 applied (0001–0107 verified against production 2026-08-14 through the
-  Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed applied by the
-  owner). 0125 (design spec), 0126 (the remaining plan limits), 0127 (the public style library),
-  0128 (modules on/off), 0129 (AI key is owner/admin only), 0130 (deal close dates), 0131
-  (support inbox + chat widget), 0132 (automations v3), 0133 (company phone/email/website) and 0134 (data source keys) are NEW and pending.** Do not take any of that on trust when
+- **Schema state: 0001–0134 applied (0001–0107 verified 2026-08-14 and 0125–0134 on 2026-10-14
+  through the Supabase connector — read from `pg_proc`, not taken on trust; 0108–0124 confirmed
+  applied by the owner).** Do not take any of that on trust when
   something behaves oddly — paste **`supabase/verify-recent.sql`** into the SQL editor. It probes for
   what each recent migration CREATES rather than reading a version number, so it answers honestly on
   a database that was migrated by hand and has no ledger. 0088 is the one worth confirming: without
@@ -578,6 +576,10 @@ address and country only — and companies had no phone/email/website column to 
 - Sales → Deals has **Board | Calendar** (`?view=calendar`, `components/crm/DealCalendar.tsx`):
   drag a deal to a day to set its date, onto the "No close date" tray to clear it. `get_calendar`
   (redefined IN FULL from 0119) adds open sales deals as `kind: 'deal'`.
+- **The company Calendar has a Deals view too** (Month | Agenda | Deals, `?view=deals`): the same
+  `DealCalendar`, driven by the page's month (`month` prop) so the two cursors never disagree. The
+  month grid only knows DATED deals, so a pipeline nobody dated looked like no pipeline at all —
+  the grid now says "N open deals have no close date" and links to the tray.
 - **The Copilot's `create_deal` never worked**: it read `.id` off `get_pipeline_by_kind`, which returns
   a bare uuid, so every call answered "no sales pipeline yet". Same audit, second finding:
   **`TOOL_GROUPS` omitted Docs, Sales and Team**, so 11 documented tools could not be granted to an
@@ -1604,24 +1606,9 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
-- **Run 0134** (Find leads → Google key storage; without it "Check and connect" says 0134 is
-  missing) and connect a Google Places key on Find leads to get live Google results.
-- **Run 0133** (company phone/email/website/REGON/KRS/bank account — without it the form says those
-  fields were not kept). Optional: a free **`CEIDG_API_TOKEN`** so sole traders fill in too.
-- **Run 0130, 0131 and 0132** too — 0130 is deal close dates (the Calendar view degrades to "No close
-  date" without it), 0131 is the support inbox (the Inbox screen says it needs 0131), 0132 is
-  automations v3 (without it deals/orders/forms/chats never trigger anything, "changes to" never
-  matches, and Test says it needs 0132).
-- **Run 0128 and 0129** (and 0125–0127 below if still pending). 0128 is Settings → Modules; without
-  it the switches say they could not save. **0129 is a security fix**: before it any member,
-  `viewer` included, could replace the workspace's AI key — including with a `custom` provider
-  pointing at their own server, which then received every agent and Copilot prompt.
-- **Run 0125, 0126 and 0127.** 0125 adds `workspaces.design_tokens` + `get/save_design_tokens` — without
-  it Marketing → Design works but cannot save, and says so rather than failing silently. 0126
-  enforces the five plan limits nothing was reading and adds `get_plan_usage`; without it the
-  pricing page keeps promising numbers nothing checks. 0127 adds `design_styles` + the publish/read
-  functions; without it the studio's Share panel says so rather than failing silently, and
-  `/brand/library` renders its empty state.
+- ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:
+  connect a Google Places key on Find leads for live Google results (optional — the free source
+  needs nothing), and optionally a free **`CEIDG_API_TOKEN`** so sole traders fill in too.
 - ~~Run migrations 0103–0107~~ — **ALL APPLIED AND VERIFIED against production (2026-08-14)**, by
   probing `pg_proc` rather than believing a report: 0 anon-callable DEFINER functions (was 69),
   `service_role` still holds the CRUD monolith so `/api/rpc` is unaffected, `builtin_extras_write`

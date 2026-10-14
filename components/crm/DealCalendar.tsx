@@ -39,7 +39,9 @@ function Chip({ r, stage, dragging = false }: { r: PipelineRecord; stage?: Pipel
     <div title={`${title(r)}${stage ? ` · ${stage.name}` : ''}`}
       className={`px-1.5 py-1 rounded-md text-2xs font-medium flex items-center gap-1 min-w-0 ${tone} ${dragging ? 'shadow-lg ring-1 ring-accent/30' : ''}`}>
       <span className="truncate">{title(r)}</span>
-      {r.amount ? <span className="ml-auto shrink-0 tabular-nums opacity-80">{money(r.amount)}</span> : null}
+      {/* On a phone a day is ~50px: the name is what identifies the deal, so the
+          amount gives way (the month total above still has the money). */}
+      {r.amount ? <span className="ml-auto shrink-0 tabular-nums opacity-80 max-sm:hidden">{money(r.amount)}</span> : null}
     </div>
   );
 }
@@ -64,7 +66,7 @@ function Day({ day, inMonth, rows, stages, canMove, expanded, onExpand }: {
   const sum = rows.reduce((a, r) => a + (Number(r.amount) || 0), 0);
   return (
     <div ref={setNodeRef}
-      className={`min-h-[96px] p-1 border-b border-r border-subtle flex flex-col gap-1 transition-colors duration-150
+      className={`min-h-[96px] min-w-0 overflow-hidden p-1 border-b border-r border-subtle flex flex-col gap-1 transition-colors duration-150
         ${inMonth ? '' : 'bg-surface-sunken/40'} ${isOver ? 'bg-accent/10' : ''}`}>
       <div className="flex items-center justify-between px-0.5">
         <span className={`text-2xs tabular-nums ${isToday ? 'w-4 h-4 rounded-full bg-accent text-accent-fg inline-flex items-center justify-center font-semibold' : inMonth ? 'text-secondary' : 'text-tertiary'}`}>
@@ -100,13 +102,17 @@ function Tray({ rows, stages, canMove }: { rows: PipelineRecord[]; stages: Map<s
   );
 }
 
-export default function DealCalendar({ stages, records, privy, live, onChanged }: {
+export default function DealCalendar({ stages, records, privy, live, onChanged, month: controlled }: {
   stages: PipelineStage[]; records: PipelineRecord[];
   privy: string | null; live: boolean; onChanged?: () => void;
+  /** The company Calendar owns the month (its header pages through it), so the
+   *  grid follows that one instead of keeping a second, disagreeing cursor. */
+  month?: Date;
 }) {
   const { notify } = useDialog();
   const [local, setLocal] = useState<PipelineRecord[]>(records);
-  const [anchor, setAnchor] = useState(() => new Date());
+  const [own, setAnchor] = useState(() => new Date());
+  const anchor = controlled ?? own;
   const [activeId, setActiveId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -161,17 +167,21 @@ export default function DealCalendar({ stages, records, privy, live, onChanged }
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="h-full flex flex-col min-h-0">
         <div className="shrink-0 flex items-center gap-2 mb-2">
-          <button onClick={() => shift(-1)} aria-label="Previous month"
-            className="h-7 w-7 inline-flex items-center justify-center rounded-md text-secondary hover:bg-surface-sunken">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-medium text-primary min-w-[9rem]">{label}</span>
-          <button onClick={() => shift(1)} aria-label="Next month"
-            className="h-7 w-7 inline-flex items-center justify-center rounded-md text-secondary hover:bg-surface-sunken">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <button onClick={() => setAnchor(new Date())}
-            className="h-7 px-2 rounded-md text-xs font-semibold text-secondary hover:bg-surface-sunken">Today</button>
+          {!controlled && (
+            <>
+              <button onClick={() => shift(-1)} aria-label="Previous month"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-secondary hover:bg-surface-sunken">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm font-medium text-primary min-w-[9rem]">{label}</span>
+              <button onClick={() => shift(1)} aria-label="Next month"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-secondary hover:bg-surface-sunken">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setAnchor(new Date())}
+                className="h-7 px-2 rounded-md text-xs font-semibold text-secondary hover:bg-surface-sunken">Today</button>
+            </>
+          )}
           <span className="ml-auto text-2xs text-tertiary">
             {inView.length} open {inView.length === 1 ? 'deal' : 'deals'} closing this month
             {monthSum > 0 && <> · <span className="text-success font-semibold tabular-nums">{money(monthSum)}</span></>}
