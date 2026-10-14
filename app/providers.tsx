@@ -46,6 +46,8 @@ const PUBLIC_PREFIXES = [
   // iframe on somebody else's website. Loading the auth SDK there would cost
   // every one of their visitors 600ms for a login nobody performs.
   '/support/',
+  // Booking pages (0135): a customer's visitor picking a time, often framed.
+  '/book/',
 ];
 
 /**

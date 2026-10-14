@@ -134,12 +134,15 @@ const nextConfig = {
       },
       {
         /*
-         * The support chat is the ONE route that must render inside another
-         * site's iframe — the embed script's panel. Every other path keeps
-         * X-Frame-Options: SAMEORIGIN, so this source excludes /support/ and
-         * the rule below gives it the same headers minus framing.
+         * The support chat and booking pages are the ONLY routes that render
+         * inside another site's iframe — the chat's panel and an embedded
+         * "book a meeting". Every other path keeps X-Frame-Options:
+         * SAMEORIGIN, so this source excludes /support/ and /book/ and the
+         * rule below gives them the same headers minus framing. Neither page
+         * does anything the visitor did not type, so framing lends a
+         * clickjacker nothing.
          */
-        source: '/support/:path*',
+        source: '/:area(support|book)/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -147,7 +150,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/((?!support/).*)',
+        source: '/((?!support/|book/).*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },

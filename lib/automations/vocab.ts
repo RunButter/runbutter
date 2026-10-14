@@ -53,6 +53,12 @@ export const TRIGGER_OBJECTS: TriggerObject[] = [
     { key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'message', label: 'First message' },
     { key: 'status', label: 'Status', options: ['open', 'pending', 'closed'] }, { key: 'page_url', label: 'Page' },
   ] },
+  // Booking pages (0135) and Cal.com bookings both land in `meetings`.
+  { slug: 'bookings', one: 'a booking', label: 'Bookings', group: 'Sales', fields: [
+    { key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'phone', label: 'Phone' },
+    { key: 'company', label: 'Company' }, { key: 'page', label: 'Booking page' }, { key: 'title', label: 'Title' },
+    { key: 'status', label: 'Status', options: ['confirmed', 'cancelled'] }, { key: 'start', label: 'Starts', type: 'date' },
+  ] },
   { slug: 'candidates', one: 'a candidate', label: 'Candidates', group: 'HR', fields: [
     { key: 'full_name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'position', label: 'Position' },
     { key: 'status', label: 'Status', options: ['applied', 'screening', 'assessment_sent', 'assessment_completed', 'interview_scheduled', 'interviewed', 'offered', 'rejected', 'hired'] },

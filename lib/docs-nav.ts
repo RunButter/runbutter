@@ -32,6 +32,7 @@ export const DOCS_NAV: DocSection[] = [
       { slug: 'agents', title: 'Agents', blurb: 'Roles, tools, and what bounds them' },
       { slug: 'api', title: 'REST API & MCP', blurb: 'Keys, scopes, and the CSV feed' },
       { slug: 'chat-widget', title: 'Chat widget & inbox', blurb: 'Support chat on your own site' },
+      { slug: 'booking', title: 'Booking pages', blurb: 'Let customers book a meeting — no Calendly' },
       { slug: 'lead-finder', title: 'Find leads', blurb: 'Businesses to sell to, from the open map' },
       { slug: 'company-lookup', title: 'Company from a tax number', blurb: 'NIP or VAT number in, everything public out' },
       { slug: 'file-extraction', title: 'Files that become data', blurb: 'Extraction and full-text search' },

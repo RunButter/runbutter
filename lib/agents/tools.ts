@@ -265,6 +265,7 @@ export const TOOLS = [
     id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, department: { type: 'string' },
     location: { type: 'string' }, employment_type: { type: 'string' }, is_active: { type: 'boolean' }, is_published: { type: 'boolean' },
   } } },
+  { name: 'list_bookings', description: "Meetings people booked through the workspace's booking pages (Calendar → Booking pages): who, when, which page, their company, phone and notes, and whether it was cancelled. `days` looks ahead (default 14, max 90); `past_days` also includes recent ones (default 0). Read-only: booking or cancelling emails the person, so it stays a button.", inputSchema: { type: 'object', properties: { days: { type: 'number' }, past_days: { type: 'number' } } } },
   { name: 'list_interviews', description: 'Scheduled interviews with candidates. Scheduling one sends a calendar invite and an email, so it stays on the Interviews screen.', inputSchema: { type: 'object', properties: {} } },
   { name: 'list_forms', description: 'Public forms that collect submissions into the workspace.', inputSchema: { type: 'object', properties: {} } },
   { name: 'save_form', description: 'Create or update a public form. Each field: key, label, type (text|email|tel|textarea|select|checkbox), required, options (select only), map (first_name|last_name|email|phone|title|linkedin_url, or "" for a custom answer). Created disabled unless enabled is true.', inputSchema: { type: 'object', properties: {
@@ -1192,6 +1193,17 @@ export async function callTool(ctx: ToolCtx, name: string, args: any): Promise<a
       if (!args?.id && data.is_published === undefined) data.is_published = false;
       const row = await rpc(ctx, 'hr_save_position', { p_privy: ctx.privy, p_id: args?.id || null, p_data: data, p_assessment: null });
       return { id: (row as any)?.id ?? row, title: (row as any)?.title ?? data.title, published: (row as any)?.is_published ?? data.is_published, link: '/dashboard/positions' };
+    }
+
+    case 'list_bookings': {
+      const ahead = Math.min(90, Math.max(1, Math.round(Number(args?.days) || 14)));
+      const back = Math.min(90, Math.max(0, Math.round(Number(args?.past_days) || 0)));
+      const now = Date.now();
+      const rows = await rpc(ctx, 'get_bookings', {
+        p_privy: ctx.privy, p_workspace: ctx.workspace,
+        p_from: new Date(now - back * 86_400_000).toISOString(), p_to: new Date(now + ahead * 86_400_000).toISOString(),
+      });
+      return { bookings: (Array.isArray(rows) ? rows : []).slice(0, 100), manage_at: '/calendar/booking' };
     }
 
     case 'list_interviews':

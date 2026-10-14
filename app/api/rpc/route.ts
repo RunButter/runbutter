@@ -124,6 +124,10 @@ const ALLOWED = new Set([
   // (which can email), so reply_support is deliberately NOT here.
   'get_support_widget', 'save_support_widget', 'get_support_inbox', 'get_support_thread',
   'set_support_conversation',
+  // Booking pages (0135). Team side only: the visitor functions are reached
+  // through /api/booking/*, and cancel_booking through /api/booking/cancel,
+  // which also removes the Google event and emails the visitor.
+  'get_booking_pages', 'save_booking_page', 'delete_booking_page', 'get_bookings',
   // Plan usage (0126). Read-only counts, member-visible: knowing you are near a
   // ceiling is not privileged, and being surprised by one is the actual harm.
   'get_plan_usage',

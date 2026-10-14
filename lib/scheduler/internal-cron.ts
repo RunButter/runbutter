@@ -14,6 +14,8 @@
 //
 // Off when: RUNBUTTER_INTERNAL_CRON=off, on Vercel (no long-lived process), in
 // development unless RUNBUTTER_INTERNAL_CRON=on, or without a service key.
+// Booking reminders are here: they go to one person about a meeting they
+// booked, which is the opposite of an audience.
 // Newsletters, posts and sequences are deliberately NOT here: they send to real
 // audiences, and switching that on for everyone who upgrades is a decision for
 // the person running the server, not a side effect of deploying.
@@ -51,6 +53,14 @@ export function startInternalCron(): void {
         const { runDispatcher } = await import('@/lib/automations/dispatcher');
         await runDispatcher(admin, 25);
       } catch (e) { warnOnce('automations', e); }
+      // Booking reminders (0135): every five minutes. Claimed in SQL before
+      // sending, so a second ticker or the cron route never sends one twice.
+      if (minute % 5 === 2) {
+        try {
+          const { sendBookingReminders } = await import('@/lib/booking/server');
+          await sendBookingReminders(admin, 25);
+        } catch (e) { warnOnce('booking reminders', e); }
+      }
       // Agents: every ten minutes, like the documented cron. The coarsest agent
       // schedule is hourly and each run spends the workspace's own AI credit.
       if (minute % 10 === 1) {
@@ -64,7 +74,7 @@ export function startInternalCron(): void {
     }
   };
 
-  console.log('[runbutter] built-in scheduler on — automations every minute, scheduled agents every 10 minutes (RUNBUTTER_INTERNAL_CRON=off to disable)');
+  console.log('[runbutter] built-in scheduler on — automations every minute, booking reminders every 5, scheduled agents every 10 minutes (RUNBUTTER_INTERNAL_CRON=off to disable)');
   // First tick after the server has settled, then every minute.
   setTimeout(() => { void tick(); }, 20_000).unref?.();
   setInterval(() => { void tick(); }, 60_000).unref?.();

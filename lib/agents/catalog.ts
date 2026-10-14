@@ -119,6 +119,9 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { name: 'list_orders', label: 'List orders', group: 'Sales' },
   { name: 'save_order', label: 'Draft an order', group: 'Sales', write: true },
   { name: 'find_businesses', label: 'Find businesses to sell to', group: 'Sales' },
+  // Booking pages (0135). READ only: booking for someone sends them an email
+  // and a calendar invite, which is a person's act on the booking page.
+  { name: 'list_bookings', label: 'List booked meetings', group: 'Sales' },
   { name: 'save_position', label: 'Create or edit a role', group: 'Hiring', write: true },
   { name: 'list_interviews', label: 'List interviews', group: 'Hiring' },
   { name: 'list_forms', label: 'List forms', group: 'Marketing' },

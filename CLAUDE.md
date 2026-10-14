@@ -370,6 +370,37 @@ PIECES did. Photo/video/audio/launcher: nothing for us.
   navigation, so unmounting calls `RunButterChat.hide()` — otherwise the bubble followed visitors into
   the app.
 
+## Booking pages (0135) — `docs/booking.md`
+Calendar → Booking pages: a Calendly alternative. `/book/<slug>` (public, framable, `?embed=1`) →
+pick a time → the person in People (source `booking`), a row in `meetings` (so the calendar shows it
+with no second feed), a Google event + Meet link when the HOST connected Google, optionally a deal.
+- **ONE slot engine, `lib/booking/slots.ts` (zero imports)**: the list a visitor sees AND the check
+  before a POST is written. The SQL checks overlap/notice/horizon under a per-host advisory lock (two
+  people, one slot → exactly one SLOT_TAKEN) but NOT working hours — a crafted POST for 03:00 Sunday
+  is refused by the route's `slotIsFree`, never by SQL. Slots are wall-clock times in the HOST'S zone
+  converted per day with Intl (no library); the spring-forward hour is skipped, the autumn one
+  resolves to its first occurrence, and days are walked with UTC CALENDAR arithmetic — stepping 24 h
+  of real time skipped a whole day across a DST night. 35 fixture checks.
+- **Google Calendar is NOT read** (`lib/google-calendar.ts`'s promise, and the privacy policy), so
+  availability = weekly hours − the host's other bookings. `booking_busy` is its own function so time
+  off can be added there and every page obeys.
+- The visitor's reschedule/cancel key is `HMAC(server key, booking id)`, label `runbutter-booking-
+  visitor` (≠ support's), sha256 stored — same design as 0131. `booking_by_token` strips host id,
+  host email, Google event, person and deal before anything reaches the visitor.
+- **`booking_set_google` and `booking_due_reminders` set `app.automation_depth`** — bookkeeping, not an
+  event; without it the Meet-link write would fire "a booking changed" automations on every booking.
+- When Google sent an invite, the visitor's emails carry NO `.ics` (two invitations = two calendar
+  entries); without Google, the confirmation attaches PUBLISH and a cancel attaches CANCEL, same UID.
+- Reminders: built-in scheduler every 5 min, `POST /api/booking/reminders` (x-cron-secret) elsewhere;
+  claimed before sending, only for bookings made ≥20 h ahead.
+- Automations: trigger object `bookings` (Cal.com rows fire it too); `automation_sample_row` redefined
+  IN FULL from 0132. Copilot: `list_bookings` READ only — booking/cancelling emails a real person.
+- `/book/*` joins `/support/*` as the only framable paths (`next.config.js`). Reserved slugs include
+  every static segment under `/book/` and `/api/booking/` (`manage`, `cancel`, `reminders`…).
+- Verified: SQL suite on Postgres, 51 checks driving the REAL route handlers against it (Google and
+  Resend stubbed), and the pages in Chromium (New York + Warsaw, light + dark, 390 px). NOT against
+  live Google/Resend — book one real meeting after deploy.
+
 ## Find leads (2026-10) — `docs/lead-finder.md`
 Sales → Find leads (`/leads`): businesses of one kind in one place → read their own websites for a
 public email → save as **Leads**. Sources: **Free (Overture Maps open data, OSM as backup — the
@@ -1641,6 +1672,7 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0135** (booking pages) — `npm run migrate`, then make a page and book it once.
 - ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:
   connect a Google Places key on Find leads for live Google results (optional — the free source
   needs nothing), and optionally a free **`CEIDG_API_TOKEN`** so sole traders fill in too.

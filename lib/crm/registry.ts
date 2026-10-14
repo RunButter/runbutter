@@ -271,7 +271,12 @@ export const NAV = [
     // scheduled posts and newsletters, campaign windows, interviews and Cal.com
     // bookings. It sits with Docs and Files because it is a place to look, not
     // a module — every pillar feeds it and none owns it.
-    { slug: 'calendar', label: 'Calendar', icon: 'CalendarDays', href: '/calendar' },
+    // Booking pages (0135) are a tab here, not a Sales entry: a booking IS a
+    // meeting on this calendar, and the page is how it gets there.
+    { slug: 'calendar', label: 'Calendar', icon: 'CalendarDays', href: '/calendar', tabs: [
+      { label: 'Calendar', href: '/calendar' },
+      { label: 'Booking pages', href: '/calendar/booking' },
+    ]},
   ]},
   { group: 'Sales', items: [
     { slug: 'deals', label: 'Deals', icon: 'Target', href: '/pipelines/sales/board' },
