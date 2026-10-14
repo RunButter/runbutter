@@ -567,6 +567,18 @@ address and country only — and companies had no phone/email/website column to 
   `lib/leads/enrich.ts` is the one site reader (robots, private-address checks per hop).
   `krs` holds the court register number generally (KRS or "HRB 123456 (Amtsgericht München)").
   The Copilot's `lookup_company` takes tax_id/name but NOT a website (model-chosen URL = exfil).
+- **"German VAT numbers don't fill up" (2026-10, round two): a DE number alone now finds its owner**
+  through two keyless registers asked in parallel with VIES: the **Peppol directory**
+  (`lib/company/peppol.ts` — the e-invoicing register is keyed BY VAT number, `9930:de…`; EAS
+  codes checked against docs.peppol.eu; any hit is VERIFIED to carry the typed number) and
+  **Wikidata** P3608 (`lib/company/wikidata.ts` → name, website, LEI → `gleifByLei`). The website
+  either returns is then read for its Impressum as before. Nobody knows it → `web_search` (a
+  Google link the PERSON opens; we never scrape a search engine) and "Owner not found yet".
+  VIES down no longer kills the lookup when another register named the company;
+  `validDeVat` (ISO 7064 MOD 11,10, matched 8/10 real numbers) is used ONLY then. Only named,
+  fully-answered results are cached — "nobody knew" and "a register was down" are asked again.
+  Verified against fixtures shaped from phoss-directory's source; the live endpoints are
+  unreachable from this sandbox — check one real DE number after deploy.
 
 ## Deal close dates (0130)
 - `pipeline_records.close_date` + **its own setter `set_deal_close_date`** (NULL clears) rather than a

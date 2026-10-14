@@ -14,6 +14,12 @@
 //       phone, email, website and activity a sole trader declared
 //   VIES (any EU VAT number, no key)
 //       name and address where the member state shares them (many do not)
+//   Peppol directory (lib/company/peppol.ts, no key)
+//       the e-invoicing register, keyed BY VAT NUMBER — the free way from a
+//       German or Spanish number to a name, which VIES will not give
+//   Wikidata (lib/company/wikidata.ts, no key)
+//       VAT number → name, website and LEI for the larger companies; the LEI
+//       then gives GLEIF's registered address
 //   The company's own website (lib/leads/enrich.ts)
 //       the phone number and contact email it publishes, robots.txt obeyed
 //
@@ -23,7 +29,9 @@
 //
 // SERVER ONLY (fetch to the registers; the website reader uses node:dns).
 import { readLegalNotice } from './impressum';
-import { gleifByName } from './gleif';
+import { gleifByName, gleifByLei } from './gleif';
+import { peppolByVat, looksLikeAddress } from './peppol';
+import { wikidataByVat } from './wikidata';
 import { cleanWebsite, cleanEmail, cleanPhone } from '@/lib/leads/osm';
 
 const UA = 'RunButter/1.0 (+https://runbutter.app; company lookup)';
@@ -54,6 +62,8 @@ export interface CompanyFacts {
   sources: Record<string, string>;
   /** Things worth knowing that are not a field. */
   notes: string[];
+  /** When nothing named the company: a web search for the number, for the person to open. */
+  web_search?: string;
 }
 
 export class LookupError extends Error {}
@@ -66,6 +76,23 @@ export function validNip(nip: string): boolean {
   const w = [6, 5, 7, 2, 3, 4, 5, 6, 7];
   const sum = w.reduce((s, x, i) => s + x * Number(nip[i]), 0) % 11;
   return sum !== 10 && sum === Number(nip[9]);
+}
+
+/**
+ * German VAT ID check digit (ISO 7064 MOD 11,10, as the BZSt publishes it).
+ * Used only when VIES cannot be asked: a typo is then still caught, and VIES's
+ * own answer always wins when there is one.
+ */
+export function validDeVat(id: string): boolean {
+  if (!/^[1-9]\d{8}$/.test(id)) return false;
+  let p = 10;
+  for (let i = 0; i < 8; i++) {
+    let s = (Number(id[i]) + p) % 10;
+    if (s === 0) s = 10;
+    p = (2 * s) % 11;
+  }
+  const check = (11 - p) % 10;
+  return check === Number(id[8]);
 }
 
 /** EU members VIES accepts, by the code VIES uses (Greece is EL there, not GR). */
@@ -226,7 +253,7 @@ async function ceidg(nip: string): Promise<Partial<CompanyFacts> | null> {
 
 const viesClean = (v: any) => { const s = String(v ?? '').trim(); return !s || s === '---' ? '' : s; };
 
-async function vies(country: string, number: string): Promise<Partial<CompanyFacts> | { error: string }> {
+async function vies(country: string, number: string): Promise<Partial<CompanyFacts> | { error: string; invalid?: boolean }> {
   let r;
   try { r = await getJson(`https://ec.europa.eu/taxation_customs/vies/rest-api/ms/${country}/vat/${number}`); }
   catch { return { error: 'VIES did not answer. Try again shortly.' }; }
@@ -234,7 +261,7 @@ async function vies(country: string, number: string): Promise<Partial<CompanyFac
   const j = r.json || {};
   const valid = j.isValid ?? j.valid;
   if (j.userError && j.userError !== 'VALID') return { error: `VIES is having trouble (${j.userError}). Try again in a moment.` };
-  if (valid === false) return { error: `${country}${number} is not a valid VAT number in VIES.` };
+  if (valid === false) return { error: `${country}${number} is not a valid VAT number in VIES.`, invalid: true };
   const name = viesClean(j.name ?? j.traderName);
   return {
     name: name || undefined,
@@ -302,9 +329,48 @@ async function fromTaxId(facts: CompanyFacts, country: string, id: string): Prom
       merge(facts, c, 'CEIDG');
     }
   } else {
-    const v = await vies(country, id);
-    if ('error' in v) throw new LookupError(v.error);
-    merge(facts, v, 'EU VIES');
+    // VIES says whether the number is real; the Peppol directory and Wikidata
+    // say WHOSE it is, which VIES will not for Germany and Spain. All three at
+    // once — each is a few hundred milliseconds and none depends on another.
+    const vat = `${country}${id}`;
+    const [v, p, w] = await Promise.all([
+      vies(country, id),
+      peppolByVat(country, id).then((r) => ({ r }), (e) => ({ fail: String(e?.message || e) })),
+      wikidataByVat(vat).then((r) => ({ r }), (e) => ({ fail: String(e?.message || e) })),
+    ]);
+    if ('error' in v && v.invalid) throw new LookupError(v.error);
+    if ('error' in v && country === 'DE' && !validDeVat(id)) {
+      throw new LookupError(`DE${id} is not a valid German VAT number — check the nine digits.`);
+    }
+    if (!('error' in v)) merge(facts, v, 'EU VIES');
+
+    const card = 'r' in p ? p.r : null;
+    if (card) {
+      merge(facts, {
+        name: card.name,
+        address: looksLikeAddress(card.geo) ? card.geo : undefined,
+        website: card.website, email: card.email, phone: card.phone,
+      } as Partial<CompanyFacts>, 'Peppol e-invoicing directory');
+    }
+    const wd = 'r' in w ? w.r : null;
+    if (wd) {
+      merge(facts, { name: wd.name, website: wd.website, address: wd.address } as Partial<CompanyFacts>, 'Wikidata');
+      if (wd.lei && !facts.address) {
+        const g = await gleifByLei(wd.lei).catch(() => null);
+        if (g) merge(facts, { address: g.address, krs: g.register } as Partial<CompanyFacts>, 'GLEIF (LEI register)');
+      }
+    }
+
+    if ('error' in v) {
+      // VIES is down for one member state more often than anyone would like.
+      // A company another register named is still worth filling in.
+      if (!facts.name) throw new LookupError(v.error);
+      facts.notes.push(`VIES could not be asked just now (${v.error.replace(/\.$/, '')}), so the VAT number is not confirmed as active.`);
+    }
+    if (!facts.name) {
+      const failed = [('fail' in p) && `Peppol directory: ${p.fail}`, ('fail' in w) && `Wikidata: ${w.fail}`].filter(Boolean);
+      if (failed.length) facts.notes.push(`Some registers did not answer (${failed.join('; ')}). Try again in a minute.`);
+    }
   }
 }
 
@@ -391,8 +457,11 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
   }
 
   if (!facts.name && !facts.address) {
-    if ((facts.country === 'DE' || facts.country === 'ES') && facts.tax_id && !websiteIn) {
-      facts.notes.push(`${facts.country === 'DE' ? 'Germany' : 'Spain'} confirms VAT numbers but does not say who they belong to. Add the company's website and press Fill in again — ${facts.country === 'DE' ? 'a German website must show the legal name, address, register number and VAT ID in its Impressum' : 'its aviso legal usually lists the legal name and address'}.`);
+    if (facts.tax_id && !websiteIn) {
+      const de = facts.country === 'DE';
+      facts.notes = facts.notes.filter((n) => !/does not share company names/.test(n));
+      facts.notes.push(`The number is valid, but no free register named its owner. Search the web for it, paste the company's website into Website and press Fill in again — ${de ? 'a German website must show the legal name, address, register number and VAT ID in its Impressum, and everything is read from there' : 'its legal notice usually lists the legal name and address'}.`);
+      facts.web_search = `https://www.google.com/search?q=${encodeURIComponent(`"${facts.country === 'GR' ? 'EL' : facts.country}${facts.tax_id}"`)}`;
     } else if (!facts.tax_id && !facts.email && !facts.phone) {
       throw new LookupError(websiteIn
         ? 'Nothing could be read from that website. Check the address, or try the tax number.'
@@ -401,7 +470,11 @@ export async function lookupCompany(input: LookupInput, opts: { readWebsites?: b
   }
   if (facts.name && !facts.email && !facts.phone) facts.notes.push('No public email or phone was found. Add them yourself once you have them.');
 
-  if (cache.size > 500) cache.clear();
-  cache.set(key, { at: Date.now(), facts: structuredClone(facts) });
+  // Only an answer is kept for a day. "Nobody named it" or "a register was
+  // down" is worth asking again in a minute, not tomorrow.
+  if (facts.name && !facts.notes.some((x) => /did not answer|could not be asked/.test(x))) {
+    if (cache.size > 500) cache.clear();
+    cache.set(key, { at: Date.now(), facts: structuredClone(facts) });
+  }
   return facts;
 }

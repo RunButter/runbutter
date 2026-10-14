@@ -91,3 +91,13 @@ export async function gleifByName(name: string, country?: string): Promise<Gleif
   const starts = inCountry.filter((f) => comparable(f.name).startsWith(want));
   return starts.length === 1 ? starts[0] : null;
 }
+
+/** The record for one LEI (from Wikidata, say) — the registered name and address, or null. */
+export async function gleifByLei(lei: string): Promise<GleifEntity | null> {
+  const id = String(lei || '').toUpperCase();
+  if (!/^[0-9A-Z]{20}$/.test(id)) return null;
+  try {
+    const j = await getJson(`${API}/lei-records/${id}`);
+    return parseGleifRecord(j?.data);
+  } catch { return null; }
+}

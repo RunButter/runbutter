@@ -24,19 +24,36 @@ is looked up.
 | Phone, email, website, industry | **CEIDG** (sole traders) | Free token |
 | Phone, contact email | the company's **own website** | No |
 | Name, address (other EU) | **VIES** | No |
+| Name, address, website, invoicing contact — by VAT number, incl. **Germany and Spain** | the **Peppol directory** (the e-invoicing register) | No |
+| Name, website, LEI — by VAT number, larger companies | **Wikidata** (then **GLEIF** for the registered address) | No |
 | Legal name, address, VAT ID, register no. (HRB), phone, email, managing directors | the company website's **legal notice** (Impressum, mentions légales, aviso legal…) | No |
 | Legal name, registered address, register no. — by name, any country | **GLEIF**, the global LEI register | No |
 
 ## Germany (and Spain)
 
 Germany's tax office confirms a VAT number through VIES but never says whose
-it is, and there is no free register that turns `DE123456789` into a name. The
-company's own website will, by law: every German commercial site must carry an
-**Impressum** with the legal name, address, register court and number, VAT ID
-and a way to reach them. So for a German company, enter its **website** (with
-or without the VAT number) — the Impressum fills the rest, and a VAT ID printed
-there is checked against VIES. With only a name, the LEI register finds larger
-companies (anything with an LEI); small ones are found by their website.
+it is. So a German (or Spanish) number is also looked up, at the same time, in:
+
+1. **The Peppol directory** — the public register of businesses that receive
+   e-invoices, keyed by VAT number (`9930:de123456789` is DE123456789). It
+   gives the registered name, usually the address, and often a website and an
+   invoicing contact. Germany's e-invoicing obligation (2025) keeps adding
+   companies to it.
+2. **Wikidata** — VAT number → name, website and LEI for larger companies; the
+   LEI then gives the registered address from GLEIF.
+
+A hit is used only when the record carries exactly the number typed. Whatever
+website they give is then read for its **Impressum** — every German commercial
+site must show the legal name, address, register court and number, VAT ID and
+a way to reach them — which fills the rest and checks the VAT ID printed there.
+
+When none of them knows the number, the form says so and offers **Search the
+web for DE…**: open it, copy the company's website into *Website* and press
+*Fill in* again. With only a name, the LEI register finds larger companies.
+
+If VIES itself is down (it often is for one country at a time), a company named
+by another register is still filled in, with a note that the number could not
+be confirmed; a German number is then at least checked against its check digit.
 
 Registers decide the **official** values (name, address, REGON, KRS, bank
 account) and replace what was typed. Contact details only fill **empty** boxes,
@@ -51,8 +68,8 @@ before you invoice; so is a company missing from the white list, and a register
 that could not be reached (the Ministry of Finance limits daily lookups).
 
 **Outside Poland**, VIES confirms the VAT number and — where the country shares
-it — the name and address. Several countries (Germany and Spain among them)
-confirm the number but not the name; the form says so.
+it — the name and address; the Peppol directory and Wikidata are asked too, for
+the countries that do not share it and for contact details.
 
 ## Copilot
 

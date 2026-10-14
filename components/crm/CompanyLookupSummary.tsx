@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, AlertTriangle, Users } from 'lucide-react';
+import { Check, AlertTriangle, Users, Search } from 'lucide-react';
 import type { CompanyFacts } from '@/lib/company/client';
 
 /**
@@ -36,7 +36,13 @@ export default function CompanyLookupSummary({ facts, addBoard, onAddBoard, canA
   return (
     <div className="sm:col-span-2 rounded-lg ring-1 ring-subtle bg-surface-sunken/60 p-3 space-y-2 text-xs">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1 text-success font-medium"><Check className="w-3.5 h-3.5" /> Filled in</span>
+        {/* A valid number nobody could name is not "filled in" — say so, and
+            hand over the one step that finishes it. */}
+        {facts.name ? (
+          <span className="inline-flex items-center gap-1 text-success font-medium"><Check className="w-3.5 h-3.5" /> Filled in</span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-warning font-medium"><AlertTriangle className="w-3.5 h-3.5" /> Owner not found yet</span>
+        )}
         {vat && (
           <span className={`rounded px-1.5 py-0.5 text-3xs font-semibold ${facts.vat_active === false ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
             VAT: {vat}
@@ -57,6 +63,13 @@ export default function CompanyLookupSummary({ facts, addBoard, onAddBoard, canA
             <li key={i} className="flex items-start gap-1.5 text-warning"><AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />{n}</li>
           ))}
         </ul>
+      )}
+
+      {facts.web_search && /^https:\/\/www\.google\.com\/search\?/.test(facts.web_search) && (
+        <a href={facts.web_search} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md ring-1 ring-subtle bg-surface text-secondary hover:text-primary hover:bg-surface-hover">
+          <Search className="w-3.5 h-3.5" /> Search the web for {facts.country === 'GR' ? 'EL' : facts.country}{facts.tax_id}
+        </a>
       )}
 
       {facts.people.length > 0 && (
