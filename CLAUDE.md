@@ -452,6 +452,30 @@ Finance → Expenses → Scan receipts (`/finance/receipts`): photo/PDF → uplo
 - Playwright's `setInputFiles` and real clicks stall inside the app shell in this sandbox; drive file
   drops with a synthetic `DragEvent` + `DataTransfer`, and clicks with `dispatchEvent('click')`.
 
+## Invoices and offers on A4 (2026-10)
+`/documents/<id>` renders `components/crm/InvoiceSheet.tsx`; Send and the PDF button use
+`lib/pdf/document-pdf.ts` (pdfkit). **Both take every number from `lib/crm/document-math.ts`**
+(zero runtime imports) — two renderers of one invoice must never disagree about VAT.
+- **The sheet is paper, not UI**: its own fixed palette in pt/mm, white in dark mode too; the only
+  colour is the seller's accent. It is the one deliberate exception to "semantic tokens only".
+- **A4 for real**: `@page { size: A4; margin: 14mm 15mm 16mm }` and on screen a 210 × 297 mm sheet
+  whose padding equals those margins, so screen and paper hold the same text block. Print drops the
+  padding and lets @page take over (otherwise page 2 starts at the top edge). Table header repeats,
+  rows and the totals/payment/acceptance blocks never split, "Page n of N" in the @page margin box.
+- **EU layout**: net / VAT % / VAT amount / gross per line and a VAT summary per rate whenever a line
+  has VAT or the seller has a VAT id; otherwise the plain US layout. Cells carry bare numbers, the
+  currency is said once (header row, strip, totals) — "PLN 24,000.00" in every cell squeezed the
+  description into four lines.
+- The STATUS is not printed (sent/overdue is our bookkeeping); only Draft and Paid marks are.
+- Dates go through `docDate` ("15 Oct 2026", read from the string): the old `new Date(d)` showed due
+  dates a day early west of Greenwich, and the server PDF must format the same as the browser.
+- A document with no lines prints its header amount as one line, never the "add line items" hint.
+- `fetchImage` (server PDF) now goes through `isSafeOutboundUrl` and refuses redirects: a logo URL is
+  the workspace's setting, but it is OUR server that fetches it.
+- Verified: Chromium `page.pdf` at A4 — 4-line invoice, offer and US invoice exactly one page, a
+  34-line invoice two pages with the header repeated; the pdfkit output rendered with `pdftoppm`
+  next to the browser's; the view at 390 px (toolbar collapses to icons with sr-only labels).
+
 ## Customer surveys (0138) — `docs/surveys.md`
 Support → Surveys: NPS (0–10) and CSAT (1–5) asked of PEOPLE, answered in one tap from the email.
 - Each emailed number is a link `/survey/<id>?i=<invite>&t=<token>&score=N`; the page records the score

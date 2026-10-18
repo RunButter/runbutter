@@ -9,10 +9,7 @@ import { loadInvoiceDocument, loadPublicDocument, convertOffer, type InvoiceDocu
 import SendDocumentModal from '@/components/crm/SendDocumentModal';
 import { useDialog } from '@/components/ui/Dialog';
 import AppLoading from '@/components/ui/AppLoading';
-
-const fmt = (n: number, currency = 'USD') =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(n || 0);
-const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—');
+import InvoiceSheet from '@/components/crm/InvoiceSheet';
 
 const STATUS_TONE: Record<string, string> = {
   paid: 'bg-success/10 text-success ring-success/30',
@@ -111,44 +108,45 @@ function DocumentInner() {
   const recipient = !!token;                // clean read-only view for clients
 
   const isOffer = doc.kind === 'offer';
-  const title = isOffer ? 'Offer' : 'Invoice';
-  const accent = doc.seller?.accent_color || '#4653CE';
-  const subtotal = doc.items.reduce((s, it) => s + (it.line_total || 0), 0);
-  const total = doc.items.length ? subtotal : doc.amount; // fall back to header amount if no line items
-  const tot = doc.totals;
 
   return (
-    <div className="min-h-screen bg-surface-hover text-primary">
-      <style>{`@media print { .no-print { display: none !important; } body { background: #fff !important; } .doc-sheet { box-shadow: none !important; margin: 0 !important; border: 0 !important; } } @page { margin: 16mm; }`}</style>
+    <div className="doc-stage min-h-screen bg-surface-hover text-primary">
+      {/* The sheet sets the A4 page and its own print rules; this only takes the
+          app's chrome off the paper. */}
+      <style>{`@media print { .no-print { display: none !important; } .doc-stage { background: #fff !important; min-height: 0 !important; } .doc-wrap { padding: 0 !important; } }`}</style>
 
       {/* Toolbar */}
       <div className="no-print sticky top-0 z-10 bg-surface/80 backdrop-blur border-b border-subtle">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
+        <div className="max-w-[210mm] mx-auto px-4 h-14 flex items-center gap-2">
           {recipient ? (
             <span className="text-sm font-semibold text-secondary">{doc.seller?.name || 'Document'} — {isOffer ? 'offer' : 'invoice'} {doc.number || ''}</span>
           ) : (
             <>
-              <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /> Back</button>
-              <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ${doc.live ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{doc.live ? 'Live' : 'Sample'}</span>
+              <button onClick={() => router.back()} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /><span className="sr-only sm:not-sr-only">Back</span></button>
+              {/* The status lives here, not on the paper: "sent" and "overdue" are
+                  our bookkeeping, not something a customer should read. */}
+              {doc.live
+                ? doc.status && <span className={`text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 ${STATUS_TONE[doc.status] || 'bg-surface-hover text-secondary ring-subtle'}`}>{doc.status.replace(/_/g, ' ')}</span>
+                : <span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-warning/10 text-warning">Sample</span>}
             </>
           )}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             {!recipient && isOffer && (
               <button onClick={acceptOffer} disabled={!privy || converting} title={!privy ? 'Sign in to accept' : ''}
                 className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-success-fg bg-success hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
-                {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept → invoice
+                {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Accept<span className="sr-only sm:not-sr-only"> → invoice</span>
               </button>
             )}
             {!recipient && (
               <>
                 <button onClick={() => setEditing(true)} disabled={!privy} title={!privy ? 'Sign in to edit' : ''}
-                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /> Edit</button>
+                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Pencil className="w-3.5 h-3.5" /><span className="sr-only sm:not-sr-only">Edit</span></button>
                 {!isOffer && (
                   <button onClick={exportKsef} title="Download FA(3) e-invoice XML"
-                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /> KSeF</button>
+                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken"><FileCode className="w-3.5 h-3.5" /><span className="sr-only sm:not-sr-only">KSeF</span></button>
                 )}
                 <button onClick={() => setSendOpen(true)} disabled={!privy} title={!privy ? 'Sign in to send' : ''}
-                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /> Send</button>
+                  className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40 disabled:cursor-not-allowed"><Send className="w-3.5 h-3.5" /><span className="sr-only sm:not-sr-only">Send</span></button>
               </>
             )}
             {(() => {
@@ -156,136 +154,21 @@ function DocumentInner() {
               const pdfHref = pdfToken || !isUuid(id) ? `/api/documents/${id}/pdf${pdfToken ? `?t=${pdfToken}` : ''}` : null;
               return pdfHref ? (
                 <a href={pdfHref} className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
-                  <FileDown className="w-3.5 h-3.5" /> PDF
+                  <FileDown className="w-3.5 h-3.5" /><span className="sr-only sm:not-sr-only">PDF</span>
                 </a>
               ) : null;
             })()}
-            <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse hover:bg-inverse/90"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
+            <button onClick={() => window.print()} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse hover:bg-inverse/90"><Printer className="w-3.5 h-3.5" /> Print<span className="sr-only sm:not-sr-only"> / Save PDF</span></button>
           </div>
         </div>
       </div>
 
-      {/* Document sheet */}
-      <div className="max-w-3xl mx-auto p-4 sm:p-8">
-        <div className="doc-sheet bg-surface rounded-xl ring-1 ring-subtle shadow-sm p-8 sm:p-12" style={{ borderTop: `4px solid ${accent}` }}>
-          {/* Header */}
-          <div className="flex items-start justify-between gap-6 pb-8 border-b border-subtle">
-            <div className="flex items-center gap-3">
-              {doc.seller?.logo_url ? (
-                <img src={doc.seller.logo_url} alt="" className="w-11 h-11 rounded-lg object-contain" />
-              ) : (
-                <div className="w-11 h-11 rounded-lg" style={{ background: accent }} />
-              )}
-              <div>
-                <div className="text-lg font-semibold tracking-tight text-primary">{doc.seller?.name || 'Your company'}</div>
-                <div className="text-xs text-tertiary whitespace-pre-line">{doc.seller?.address || 'runbutter.app'}</div>
-                {(() => {
-                  const ids = [
-                    doc.seller?.tax_id && `NIP: ${doc.seller.tax_id}`,
-                    doc.seller?.vat_id && `VAT: ${doc.seller.vat_id}`,
-                    doc.seller?.reg_no && `Reg: ${doc.seller.reg_no}`,
-                    doc.seller?.bdo && `BDO: ${doc.seller.bdo}`,
-                  ].filter(Boolean).join(' · ');
-                  return ids ? <div className="text-2xs text-tertiary tabular-nums mt-0.5">{ids}</div> : null;
-                })()}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-semibold tracking-tight text-primary">{title}</div>
-              <div className="text-sm font-semibold text-secondary tabular-nums">{doc.number || '—'}</div>
-              {doc.status && <span className={`mt-1.5 inline-block text-3xs font-medium uppercase tracking-widest px-2 py-0.5 rounded ring-1 capitalize ${STATUS_TONE[doc.status] || 'bg-surface-hover text-secondary ring-subtle'}`}>{doc.status}</span>}
-            </div>
-          </div>
-
-          {/* Parties + dates */}
-          <div className="grid sm:grid-cols-3 gap-6 py-8">
-            <div>
-              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Prepared for' : 'Bill to'}</div>
-              <div className="text-base font-medium text-primary">{doc.buyer?.name || '—'}</div>
-              {doc.buyer?.address && <div className="text-xs text-secondary whitespace-pre-line">{doc.buyer.address}</div>}
-              {doc.buyer?.tax_id && <div className="text-xs text-tertiary tabular-nums">{String(doc.buyer.tax_id).replace(/[^0-9]/g, '').length === 10 && (doc.buyer.country || 'PL') === 'PL' ? 'NIP' : 'VAT'}: {doc.buyer.tax_id}</div>}
-              {!doc.buyer?.address && doc.buyer?.domain && <div className="text-xs text-secondary">{doc.buyer.domain}</div>}
-            </div>
-            <div>
-              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Issued' : 'Invoice date'}</div>
-              <div className="text-sm font-semibold text-secondary">{fmtDate(doc.issued_at)}</div>
-            </div>
-            <div>
-              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">{isOffer ? 'Valid until' : 'Due date'}</div>
-              <div className="text-sm font-semibold text-secondary">{fmtDate(doc.due_at)}</div>
-            </div>
-          </div>
-
-          {/* Line items */}
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-3xs font-medium uppercase tracking-widest text-tertiary border-b border-subtle">
-                <th className="text-left py-2 font-medium">Description</th>
-                <th className="text-right py-2 font-medium w-16">Qty</th>
-                <th className="text-right py-2 font-medium w-28">Unit price</th>
-                <th className="text-right py-2 font-medium w-16">VAT</th>
-                <th className="text-right py-2 font-medium w-28">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doc.items.length === 0 ? (
-                <tr><td colSpan={5} className="py-8 text-center text-tertiary text-sm">No line items yet — add products or services with “Line items”.</td></tr>
-              ) : doc.items.map((it, i) => (
-                <tr key={i} className="border-b border-subtle">
-                  <td className="py-3 font-medium text-primary">
-                    {/* Offers sell — big product visuals. Invoices stay formal — no images. */}
-                    <div className="flex items-center gap-3">
-                      {isOffer && it.image && (
-                        <img src={it.image} alt="" className="w-16 h-16 rounded-lg object-cover ring-1 ring-subtle shadow-sm shrink-0" />
-                      )}
-                      <span>{it.description || it.product || 'Item'}{!!it.discount_pct && <span className="ml-2 text-2xs font-semibold text-success">−{it.discount_pct}%</span>}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-secondary">{it.quantity}</td>
-                  <td className="py-3 text-right tabular-nums text-secondary">{fmt(it.unit_price, doc.currency)}</td>
-                  <td className="py-3 text-right tabular-nums text-secondary">{it.tax_rate ? `${it.tax_rate}%` : '—'}</td>
-                  <td className="py-3 text-right tabular-nums font-semibold text-primary">{fmt(it.line_total, doc.currency)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Totals */}
-          <div className="flex justify-end pt-5">
-            <div className="w-full sm:w-72 space-y-1.5">
-              <div className="flex justify-between text-sm text-secondary"><span>Subtotal</span><span className="tabular-nums">{fmt(tot ? tot.subtotal : total, doc.currency)}</span></div>
-              {!!tot && tot.discount > 0 && (
-                <div className="flex justify-between text-sm text-success"><span>Discount</span><span className="tabular-nums">−{fmt(tot.discount, doc.currency)}</span></div>
-              )}
-              {!!tot && tot.tax > 0 && (
-                <div className="flex justify-between text-sm text-secondary"><span>VAT</span><span className="tabular-nums">{fmt(tot.tax, doc.currency)}</span></div>
-              )}
-              <div className="flex justify-between text-md font-semibold pt-2 border-t border-subtle"><span className="text-primary">{isOffer ? 'Estimated total' : 'Total due'}</span><span className="tabular-nums" style={{ color: accent }}>{fmt(tot ? tot.total : total, doc.currency)}</span></div>
-            </div>
-          </div>
-
-          {/* Notes */}
-          {doc.notes && (
-            <div className="mt-8 pt-6 border-t border-subtle">
-              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">Notes</div>
-              <p className="text-sm text-secondary leading-relaxed">{doc.notes}</p>
-            </div>
-          )}
-
-          {doc.seller?.iban && (
-            <div className="mt-8 pt-6 border-t border-subtle">
-              <div className="text-3xs font-medium uppercase tracking-widest text-tertiary mb-1.5">Payment</div>
-              <p className="text-sm text-secondary tabular-nums">{doc.seller.bank_name ? `${doc.seller.bank_name} · ` : ''}{doc.seller.iban}</p>
-            </div>
-          )}
-          {doc.seller?.footer && (
-            <div className="mt-8 pt-6 border-t border-subtle text-xs text-secondary leading-relaxed whitespace-pre-line">{doc.seller.footer}</div>
-          )}
-
-          <div className="mt-8 pt-6 border-t border-subtle text-center text-2xs text-tertiary">
-            {isOffer ? 'This offer is valid until the date above.' : 'Thank you for your business.'} · Generated by runbutter.app
-          </div>
-        </div>
+      {/* Document sheet — A4, on screen and on paper */}
+      <div className="doc-wrap px-0 py-4 sm:p-8">
+        <InvoiceSheet doc={doc} />
+        {doc.items.length === 0 && !recipient && (
+          <p className="no-print mt-3 text-center text-xs text-tertiary">No line items yet — the document shows its total as one line. Add products or services with Edit.</p>
+        )}
       </div>
 
       {editing && privy && !recipient && (
