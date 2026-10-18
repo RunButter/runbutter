@@ -42,6 +42,29 @@ question you can ask instead of an afternoon.
 **MIT licensed.** Fork it, sell it, run it. No open-core, no AGPL, no "community
 edition" with the good parts removed.
 
+## What it replaces
+
+| Instead of… | RunButter has |
+|---|---|
+| HubSpot, Pipedrive | People, companies, a deals board and calendar, find leads, fill a company from its VAT number |
+| Intercom, Crisp | A chat widget for your website and a shared inbox, with AI-drafted replies |
+| Calendly | Booking pages with reminders, Meet links and the booking in your CRM |
+| FreshBooks, Invoice Ninja | A4 invoices and offers with VAT, e-signatures, KSeF (PL), bank reconciliation |
+| Expensify | Snap a receipt, check the fields, it is an expense |
+| Mailchimp | Newsletters, segments, lead scoring and drip sequences |
+| Buffer | A social calendar that publishes to LinkedIn and X |
+| Typeform, Bitly, Plausible | Forms, short links and cookieless web analytics |
+| Delighted | NPS and CSAT surveys filed on the customer |
+| Greenhouse, Workable | An ATS with a careers page and Big-5 assessments |
+| Harvest, Toggl | Timesheets that become invoices |
+| BambooHR time off | Leave, allowances, approvals and public holidays |
+| Notion, Google Sheets | Docs, checklists and sheets with 500+ formulas |
+| Linear, Jira | Projects, issues, boards and a roadmap |
+| Zapier | Automations, written as sentences |
+| Slack, 1Password | Team chat and a vault the server cannot read |
+
+One login, one database, one bill — or none, if you host it yourself.
+
 ## Quick start
 
 ```bash
@@ -80,84 +103,161 @@ instructions: **[docs/install.md](docs/install.md)**.
 ## A tour
 
 <table>
+<tr><td colspan="2"><h3>Sales</h3></td></tr>
 <tr>
-<td width="50%" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/finance-dark.webp" />
-  <img src="docs/images/readme/finance-light.webp" alt="Finance overview: revenue, costs, profit and money owed, with twelve months of revenue against costs" />
-</picture>
-<b>Finance that adds up by itself.</b> Invoices, expenses, a bank ledger with
-reconciliation, VAT, branded PDFs, e-signatures and KSeF e-invoices (PL). The
-numbers on the dashboard are the invoices — there is no second copy to drift.
-</td>
 <td width="50%" valign="top">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/leads-dark.webp" />
-  <img src="docs/images/readme/leads-light.webp" alt="Find leads: eight dentists in Kraków with ratings, phones, emails and websites" />
+  <img src="docs/images/readme/leads-light.webp" alt="Find leads: dentists in Kraków with ratings, phones, emails and websites" />
 </picture>
-<b>Find leads — for free.</b> "Dentists in Kraków" → every one, with phone,
-website and often an email, from ~70 million businesses of open map data. No
-key, no cost. Check their websites, save the good ones as Leads.
+<b>Find leads, free.</b> "Dentists in Kraków" → every one, with phone, website and often an email, from ~70 million businesses of open map data. Check their websites, save the good ones as Leads.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/companies-dark.webp" />
+  <img src="docs/images/readme/companies-light.webp" alt="A new company filled in from a German VAT number: name, address, register number, directors, website — each with its source" />
+</picture>
+<b>A company from its VAT number.</b> Type a tax number and the form fills itself from national registers and the company's own legal notice — address, register number, directors, website — and says where each field came from.
 </td>
 </tr>
 <tr>
-<td width="50%" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/inbox-dark.webp" />
-  <img src="docs/images/readme/inbox-light.webp" alt="Support inbox: a conversation with a customer, an AI reply and an internal note" />
-</picture>
-<b>A support inbox and a chat for your website.</b> One script tag. Whoever
-writes in becomes a person in your CRM; an agent can draft the first reply;
-internal notes never reach the customer.
-</td>
-<td width="50%" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/automations-dark.webp" />
-  <img src="docs/images/readme/automations-light.webp" alt="Automations written as sentences: when an invoice's status changes to paid, send an email then add a note" />
-</picture>
-<b>Automations you can read.</b> <i>When an invoice's status changes to paid →
-email them, then add a note.</i> Pickers, not JSON. Email, team chat, AI, hand
-it to an agent, webhooks — and a Test button that really runs it.
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sheet-dark.webp" />
-  <img src="docs/images/readme/sheet-light.webp" alt="A sheet in Docs: a hiring budget whose totals are SUM and AVERAGE formulas" />
-</picture>
-<b>Docs, notes, checklists and sheets that calculate.</b> 500+ Excel functions,
-running in your browser. Mail merge a letter into one copy per customer. Export
-to PDF or Word without the file leaving your machine.
-</td>
 <td width="50%" valign="top">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/booking-dark.webp" />
   <img src="docs/images/readme/booking-light.webp" alt="A public booking page: pick a day and a time for a 30-minute intro call" />
 </picture>
-<b>Booking pages, without Calendly.</b> Your hours, your buffers, a Google Meet
-link, reminders, and the person who booked lands in People — with a deal if you
-want one.
+<b>Booking pages, without Calendly.</b> Your hours, buffers and time off, a Google Meet link, reminders — and the person who booked lands in People, with a deal if you want one.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/calendar-dark.webp" />
+  <img src="docs/images/readme/calendar-light.webp" alt="The company calendar: invoices due, deals closing, meetings, interviews, time off and posts on one month" />
+</picture>
+<b>One calendar for the whole company.</b> Money in and out, deals closing, meetings, interviews, time off, holidays, posts and newsletters — each a filter, every item a link to its record.
+</td>
+</tr>
+<tr><td colspan="2"><h3>Support</h3></td></tr>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/images/readme/website-chat-light.webp" alt="The RunButter chat widget open on a bakery's website, mid-conversation" />
+<b>A chat on your website — an Intercom alternative.</b> One script tag on your website or app. The chat runs in its own frame, so your page never holds the conversation; the visitor becomes a person in your CRM, and the bubble takes your colour.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/inbox-dark.webp" />
+  <img src="docs/images/readme/inbox-light.webp" alt="Support inbox: a conversation with a customer, an AI reply and an internal note" />
+</picture>
+<b>One inbox for the team.</b> To do, Waiting, Done — set by who spoke last, so nobody files anything. An agent can draft the first reply; internal notes never reach the customer.
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/survey-dark.webp" />
+  <img src="docs/images/readme/survey-light.webp" alt="NPS results: score 56 from 103 answers, the distribution and the comments" />
+</picture>
+<b>NPS and CSAT, answered in one tap.</b> The score is a link in the email; the answer is filed on the customer and their company; a detractor can fire an automation.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/automations-dark.webp" />
+  <img src="docs/images/readme/automations-light.webp" alt="Automations written as sentences" />
+</picture>
+<b>Automations you can read.</b> <i>When an invoice's status changes to paid → email them, then add a note.</i> Pickers, not JSON — and a Test button that really runs it.
+</td>
+</tr>
+<tr><td colspan="2"><h3>Finance</h3></td></tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/finance-dark.webp" />
+  <img src="docs/images/readme/finance-light.webp" alt="Finance overview: revenue, costs, profit and money owed with twelve months of revenue against costs" />
+</picture>
+<b>Finance that adds up by itself.</b> Invoices, expenses, a bank ledger with reconciliation, KPIs and a forecast. The dashboard is the invoices — there is no second copy to drift.
+</td>
+<td width="50%" valign="top">
+<img src="docs/images/readme/invoice-light.webp" alt="A Polish VAT invoice on A4: seller and buyer with tax numbers, VAT per line, a VAT summary and bank details" />
+<b>Invoices that are real documents.</b> A4 on screen, on paper and in the emailed PDF. Net, VAT and gross per line, a summary per rate, NIP / VAT ID / KRS, IBAN and reference. KSeF XML for Poland.
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/images/readme/offer-light.webp" alt="An offer on A4 with product thumbnails, totals and signature lines" />
+<b>Offers that turn into invoices.</b> Product pictures, a valid-until date and an acceptance block to sign. Accepted? One click makes it an invoice.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/insights-dark.webp" />
+  <img src="docs/images/readme/insights-light.webp" alt="Insights: a question turned into a chart of revenue by client" />
+</picture>
+<b>Ask a question, get a chart.</b> The AI fills in the query — every part of it a dropdown you can change, so it works with no AI key too. It never sees a record.
+</td>
+</tr>
+<tr><td colspan="2"><h3>Marketing</h3></td></tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/newsletter-dark.webp" />
+  <img src="docs/images/readme/newsletter-light.webp" alt="Newsletter editor with a live preview of a block-built email" />
+</picture>
+<b>Newsletters, from blocks or drafted by AI.</b> Live segments, lead scoring, drip sequences, unsubscribe links and bounce handling — and a preview that is the email that goes out.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/posts-dark.webp" />
+  <img src="docs/images/readme/posts-light.webp" alt="Social posts planned on a month calendar" />
+</picture>
+<b>Social posts on a calendar.</b> Write, get a colleague's review, schedule to LinkedIn and X. Sending is at-most-once: a post never goes out twice.
+</td>
+</tr>
+<tr><td colspan="2"><h3>HR</h3></td></tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/candidate-dark.webp" />
+  <img src="docs/images/readme/candidate-light.webp" alt="A candidate profile with a Big-5 personality radar, work-style scores and screening answers" />
+</picture>
+<b>Hire by skills and personality.</b> A full ATS: positions, a careers page, Big-5 and work-style assessments against the role's benchmark, interviews on Google Calendar.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/timeoff-dark.webp" />
+  <img src="docs/images/readme/timeoff-light.webp" alt="Time off: requests waiting for approval, balances, and who is off" />
+</picture>
+<b>Time off, without a spreadsheet.</b> Allowances, approvals, public holidays for 19 countries, and a team view — sick leave stays private to the person and the admins.
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/time-dark.webp" />
-  <img src="docs/images/readme/time-light.webp" alt="Timesheet: a running timer and a week of entries by project and client, most of them billable" />
+  <img src="docs/images/readme/time-light.webp" alt="Timesheet: a running timer and a week of entries by project and client" />
 </picture>
-<b>Time tracking that becomes an invoice.</b> A timer, a weekly timesheet, then
-"invoice the billable hours" in one click. Time off with allowances, approvals
-and public holidays for 19 countries.
+<b>Time tracking that becomes an invoice.</b> A timer and a weekly timesheet; the billable hours become an invoice in one click.
 </td>
 <td width="50%" valign="top">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/survey-dark.webp" />
-  <img src="docs/images/readme/survey-light.webp" alt="NPS survey results: score 56 from 103 answers, a score distribution and the comments" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/sheet-dark.webp" />
+  <img src="docs/images/readme/sheet-light.webp" alt="A sheet in Docs: a hiring budget whose totals are SUM and AVERAGE formulas" />
 </picture>
-<b>NPS and CSAT, answered in one tap.</b> The score is a link in the email, the
-answer is filed on the customer and their company, and an unhappy one can fire
-an automation.
+<b>Docs, notes and sheets that calculate.</b> 500+ Excel functions in your browser, mail merge into one copy per customer, PDF and Word export without uploading.
+</td>
+</tr>
+<tr><td colspan="2"><h3>Projects &amp; agents</h3></td></tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/roadmap-dark.webp" />
+  <img src="docs/images/readme/roadmap-light.webp" alt="Roadmap: projects on a timeline with milestones coloured by priority" />
+</picture>
+<b>Projects, issues and a roadmap.</b> Boards and a timeline over the same issues, with time tracked against them.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/agents-dark.webp" />
+  <img src="docs/images/readme/agents-light.webp" alt="Agents: a collections agent waiting for approval, and agent cards with schedules" />
+</picture>
+<b>Agents that work while you don't.</b> Give one a role, tools and a schedule. It proposes; a person approves. Every run is a transcript you can read.
 </td>
 </tr>
 </table>
@@ -168,9 +268,9 @@ an automation.
 |---|---|
 | **Copilot & agents** | A copilot beside every screen that reads and writes the same records you do, with suggest/auto per conversation. Agents with their own tools, skills and schedules. Every write is a proposal until a person approves it. The tool list is generated from [`lib/agents/catalog.ts`](lib/agents/catalog.ts) and published at [`/.well-known/mcp.json`](https://runbutter.app/.well-known/mcp.json) — read one of those rather than a number typed into a README |
 | **Sales** | People and companies, a deals board and calendar, offers → invoices, products, orders, **find leads** from open map data or Google, **company lookup** by VAT number from national registers across Europe and beyond, **booking pages** |
-| **Finance** | Invoices and expenses, **scan a receipt** into an expense, a bank ledger with rule-based reconciliation, KPIs and forecast, cap table, branded PDFs, e-signatures, KSeF (PL) e-invoices, sanctions screening, IBAN checks |
+| **Finance** | **A4 invoices and offers** (VAT per line and per rate, printable, the same PDF by email) and expenses, **scan a receipt** into an expense, a bank ledger with rule-based reconciliation, KPIs and forecast, cap table, branded PDFs, e-signatures, KSeF (PL) e-invoices, sanctions screening, IBAN checks |
 | **Marketing** | Newsletters built from blocks or drafted by AI, live segments and lead scoring, drip sequences, a post studio that publishes to LinkedIn and X, forms, short links, cookieless web analytics, a **design spec** builder for your brand |
-| **Support** | A shared inbox fed by a chat widget on your site, AI-drafted replies, **NPS and CSAT surveys** |
+| **Support** | A **chat widget for your website or app** (an Intercom alternative) feeding a shared inbox, AI-drafted replies, **NPS and CSAT surveys** |
 | **HR** | A full ATS: positions and a public careers page, candidate pipeline, Big-5 and work-style assessments, interviews via Google Calendar, onboarding, GDPR tooling. **Timesheets** and **time off** |
 | **Projects** | Projects, issues, board, roadmap, mind maps |
 | **Docs & files** | Documents, notes, checklists and **sheets with formulas**; mail merge; PDF/Word export in the browser; uploads are text-extracted and full-text searchable **next to the ledger** |

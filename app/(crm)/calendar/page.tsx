@@ -279,10 +279,12 @@ function Month({ days, byDay, month, todayKey, sel, onSelect }: {
           const today = k === todayKey;
           return (
             <button key={k} onClick={() => onSelect(k)}
-              className={`min-h-[92px] p-1.5 text-left border-b border-r border-subtle last-in-row:border-r-0 align-top
+              // flex-col: a <button> centres its content vertically, so a day
+              // with nothing on it put its date lower than a busy day's.
+              className={`min-h-[92px] p-1.5 text-left flex flex-col items-stretch justify-start border-b border-r border-subtle last-in-row:border-r-0
                 ${dim ? 'bg-surface-sunken/40' : ''} ${sel === k ? 'ring-1 ring-inset ring-accent' : ''}
                 hover:bg-surface-hover transition-colors`}>
-              <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-2xs tabular-nums
+              <span className={`self-start inline-flex items-center justify-center w-5 h-5 rounded-full text-2xs tabular-nums
                 ${today ? 'bg-accent text-accent-fg font-semibold' : dim ? 'text-tertiary' : 'text-secondary'}`}>
                 {d.getDate()}
               </span>

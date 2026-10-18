@@ -59,6 +59,13 @@ module.exports = {
       // text-* deliberately resolves to the text-safe variants: the same hue
       // that reads well as a fill is too light as small text. bg-*/border-*
       // still use the fill vars from `colors` above.
+      // bg-secondary / bg-tertiary: a neutral FILL for status dots ("off",
+      // "paused"). Ten components used them before they existed, so every grey
+      // dot in the product rendered as nothing.
+      backgroundColor: {
+        secondary: hsl('--text-secondary'),
+        tertiary: hsl('--text-tertiary'),
+      },
       textColor: {
         primary: hsl('--text-primary'),
         secondary: hsl('--text-secondary'),

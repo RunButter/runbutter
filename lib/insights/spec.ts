@@ -136,12 +136,25 @@ export function normalizeSpec(raw: any, schema: SchemaObject | undefined): Insig
 }
 
 /** A one-line plain-English rendering of a spec, so the query is readable. */
+const OP_WORDS: Record<string, string> = {
+  eq: 'is', neq: 'is not', contains: 'contains', gt: 'is over', gte: 'is at least', lt: 'is under', lte: 'is at most',
+  is_empty: 'is empty', not_empty: 'is set', before: 'is before', after: 'is after', in_last_days: 'is in the last',
+};
+const FN_WORDS: Record<string, string> = { sum: 'Total', avg: 'Average', min: 'Lowest', max: 'Highest' };
+
 export function describeSpec(spec: InsightSpec, schema: SchemaObject): string {
   const label = (k: string) => schema.fields.find((f) => f.key === k)?.label || k;
-  const metric = spec.metric.fn === 'count' ? 'Count' : `${spec.metric.fn} of ${label(spec.metric.field || '')}`;
+  // "Total Amount of Invoices", not "sum of Amount of Invoices": this line is
+  // read by people, and it travels with a published chart.
+  const metric = spec.metric.fn === 'count'
+    ? `Number of ${schema.plural}`
+    : `${FN_WORDS[spec.metric.fn] || spec.metric.fn} ${label(spec.metric.field || '')} of ${schema.plural}`;
   const where = spec.filters.length
-    ? ` where ${spec.filters.map((f) => `${label(f.field)} ${f.op.replace(/_/g, ' ')} ${f.value}`.trim()).join(' and ')}`
+    ? ` where ${spec.filters.map((f) => {
+      const v = f.op === 'in_last_days' ? `${f.value} days` : f.value;
+      return `${label(f.field)} ${OP_WORDS[f.op] || f.op.replace(/_/g, ' ')} ${v ?? ''}`.trim();
+    }).join(' and ')}`
     : '';
-  const by = spec.groupBy ? ` by ${label(spec.groupBy)}` : '';
-  return `${metric} of ${schema.plural}${where}${by}`;
+  const by = spec.groupBy ? `, by ${label(spec.groupBy)}` : '';
+  return `${metric}${where}${by}`;
 }

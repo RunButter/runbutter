@@ -1023,6 +1023,10 @@ address and country only — and companies had no phone/email/website column to 
   - `select.tsx` is a **native `<select>`** by choice (no Radix): plain value pickers, keeps the
     `onChange` contract, OS picker on mobile.
   - **Never create `components/ui/dialog.tsx`** — it case-collides with `Dialog.tsx` on Windows.
+- **`bg-secondary` / `bg-tertiary` are a neutral FILL** (status dots: off, paused, holiday). They did
+  not exist until 2026-10 — `secondary`/`tertiary` were text-only tokens — so ten components drew
+  their grey dot as nothing. A `<button>` used as a grid cell centres its content vertically; give
+  it `flex flex-col` or an empty day's date sits lower than a busy one's (the calendar did).
 - **Never use browser `confirm()`/`alert()`** — use `useDialog()` from `components/ui/Dialog.tsx`.
 - **No fabricated data.** Trends/sparklines render only when the real series supports them
   (`monthlyMomentum` drops the partial current month). A fake cognitive score was removed for this reason.
