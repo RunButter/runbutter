@@ -7,6 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { loadMyHrCompanies } from '@/lib/crm/data';
 import { Users, Loader2 } from 'lucide-react';
 import Logo from '@/components/Logo';
+import HeroAscii from '@/components/landing/HeroAscii';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,8 +61,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
+    <div className="relative overflow-hidden min-h-screen bg-canvas flex items-center justify-center p-6">
+      {/* The landing page's living map, so signing in feels like the same place. */}
+      <div className="absolute inset-0" aria-hidden="true"><HeroAscii /></div>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(34% 46% at 50% 50%, hsl(var(--canvas)/0.92) 40%, hsl(var(--canvas)/0.5) 75%, transparent 100%)' }} />
+      <div className="relative max-w-md w-full">
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-8">

@@ -10,7 +10,7 @@ import { Github } from '@/components/ui/BrandIcons';
 // by nature (they appear in any tracked page's HTML).
 const ANALYTICS_SITE_ID = process.env.NEXT_PUBLIC_ANALYTICS_SITE_ID || '';
 const TRACK = process.env.NODE_ENV === 'production' && !!ANALYTICS_SITE_ID;
-import AsciiField from '@/components/landing/AsciiField';
+import GlyphField from '@/components/landing/GlyphField';
 import HeroAscii from '@/components/landing/HeroAscii';
 import ProductPreview from '@/components/landing/ProductPreview';
 import Showcase from '@/components/landing/Showcase';
@@ -166,12 +166,13 @@ export default function HomePage() {
       <MarketingHeader home />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────
-          One flat colour, a live ASCII terrain, the headline, and the real
-          product. The field is the v3 AsciiField (cached base, capped cells,
-          ~30fps, loop only after load + idle), monochrome so it reads as
-          texture, and calm in the centre (edgeBias) so the type never sits on
-          noise. The cursor pushes ripples through it — the one bit of play on
-          a page that is otherwise all business. */}
+          One flat colour, a living map of the world in letters and digits,
+          the headline, and the real product. The field is GlyphField — one
+          WebGL draw call a frame, so it holds 60fps with the main thread idle,
+          and its loop starts only after load + idle. Monochrome so it reads as
+          texture; the gradient below keeps the band the type sits on quiet.
+          The cursor lights it and leaves rings — the one bit of play on a
+          page that is otherwise all business. */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0" aria-hidden="true">
           <HeroAscii />
@@ -180,6 +181,9 @@ export default function HomePage() {
             the page before the product window. */}
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(36% 30% at 50% 40%, hsl(var(--canvas)/0.94) 35%, hsl(var(--canvas)/0.6) 65%, transparent 100%)' }} />
+        {/* On a phone the headline spans the whole width, so the quiet band has to as well. */}
+        <div className="sm:hidden absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(85% 32% at 50% 36%, hsl(var(--canvas)/0.9) 45%, hsl(var(--canvas)/0.55) 75%, transparent 100%)' }} />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-canvas to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 pt-24 md:pt-40 pb-16 md:pb-24 text-center">
@@ -575,7 +579,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <Reveal>
             <div className="relative overflow-hidden rounded-2xl bg-inverse px-8 py-20 text-center">
-              <div className="absolute inset-0 opacity-40"><AsciiField colors={['160,160,168', '120,120,130']} baseAlpha={0.05} peakAlpha={0.4} /></div>
+              <div className="absolute inset-0 opacity-60"><GlyphField ink="160,160,168" base={0.16} sea={0.04} cell={11} mapScale={0.9} mapY={0.5} radius={120} /></div>
               <div className="relative pointer-events-none">
                 <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-inverse-fg">Everything, running smooth.</h2>
                 <p className="mt-4 text-inverse-fg/70 max-w-lg mx-auto">One workspace for every team. Set it up in minutes.</p>

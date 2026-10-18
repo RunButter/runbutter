@@ -1,24 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AsciiField from '@/components/landing/AsciiField';
+import GlyphField from '@/components/landing/GlyphField';
 
-// The hero's ASCII terrain, in ink that suits the theme.
+// The hero's living map, in ink that suits the theme.
 //
-// AsciiField takes literal RGB strings, so one palette cannot serve both:
-// zinc-700 glyphs that read as texture on the light canvas vanish on the dark
-// one. This watches the root's `dark` class (the theme toggle flips it live)
-// and hands the field the matching palette. The two arrays are module
-// constants because the field restarts its loop when `colors` changes
-// identity — a fresh literal per render would restart it on every render.
-const LIGHT = ['63,63,70', '82,82,91', '113,113,122'];
-const DARK = ['161,161,170', '212,212,216', '113,113,122'];
-
+// GlyphField takes a literal RGB string, so one ink cannot serve both: zinc-700
+// glyphs that read as texture on the light canvas vanish on the dark one. This
+// watches the root's `dark` class (the theme toggle flips it live) and hands
+// the field the matching ink.
 export default function HeroAscii() {
   // null until the theme is read: drawing a light field first and swapping it
-  // a moment later restarted the loop on the same canvas, which came back
-  // blank. Nothing draws until the answer is known, and a toggle remounts a
-  // fresh canvas (the `key`) rather than re-using the old one.
+  // a moment later would flash. Nothing draws until the answer is known, and a
+  // toggle remounts a fresh canvas (the `key`) rather than re-using the old one.
   const [dark, setDark] = useState<boolean | null>(null);
   useEffect(() => {
     const el = document.documentElement;
@@ -30,6 +24,6 @@ export default function HeroAscii() {
   }, []);
   if (dark === null) return null;
   return (
-    <AsciiField key={dark ? 'dark' : 'light'} colors={dark ? DARK : LIGHT} baseAlpha={dark ? 0.26 : 0.34} peakAlpha={0.95} edgeBias={0.5} cell={10} />
+    <GlyphField key={dark ? 'dark' : 'light'} ink={dark ? '161,161,170' : '63,63,70'} base={dark ? 0.42 : 0.34} sea={0.04} cell={12} />
   );
 }
