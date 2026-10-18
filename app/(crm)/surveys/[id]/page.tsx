@@ -148,7 +148,7 @@ export default function SurveyPage() {
                 ))}
               </div>
               {r.trend.length > 1 && (
-                <p className="mt-3 text-xs text-secondary">By month: {r.trend.map((t) => `${t.month} ${s.kind === 'nps' ? Math.round(((t.promoters - t.detractors) / Math.max(1, t.responses)) * 100) : `${t.average}/5`}`).join(' · ')}</p>
+                <p className="mt-3 text-xs text-secondary">By month: {r.trend.map((t) => `${new Date(`${t.month}-01T12:00:00Z`).toLocaleString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' })} ${s.kind === 'nps' ? Math.round(((t.promoters - t.detractors) / Math.max(1, t.responses)) * 100) : `${t.average}/5`}`).join(' · ')}</p>
               )}
             </section>
             <section className="card-surface overflow-hidden">

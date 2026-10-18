@@ -889,6 +889,15 @@ address and country only — and companies had no phone/email/website column to 
   (one header/footer, `home` prop only because the section links are hash anchors into `/`).
   `/ai-agents` generates its tool list and gallery FROM `lib/agents/catalog.ts` and
   `lib/agents/templates.ts`, so deleting a tool edits the marketing page. Never hand-type a count.
+- **README screenshots** (`docs/images/readme/<shot>-light|dark.webp`) are real screens with
+  MADE-UP data, shown through `<picture>` so they follow the reader's GitHub theme. How they were
+  made, to redo them: the Privy-stub production build (see Mobile), `/api/rpc` mocked per shot,
+  the browser clock pinned (`context.clock.setFixedTime`) so dates and the timesheet week agree, every
+  off-host request aborted (company logos fall back to initials instead of a broken image), 2×
+  PNG, then re-encoded to WebP by Chromium itself (`OffscreenCanvas.convertToBlob`, q 0.86, ~80 KB
+  each — this sandbox has no `cwebp`). A server-rendered public page (`/book/<slug>`) needs a
+  temporary page rendering the real component; delete it before committing. A doc only loads its
+  fixture under a UUID id — short ids render the built-in sample.
 - **`docs/going-live.md` is the ops runbook** (cron, Stripe, Resend, secrets, publishing).
   `docs/install.md` is the install path. Keep both current — they are what a stranger follows.
 - **CI** (`.github/workflows/ci.yml`) = types, build with NO Stripe key, migrations from empty twice,

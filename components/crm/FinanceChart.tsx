@@ -8,8 +8,10 @@ const COSTS = 'hsl(var(--border-strong))';
 const kfmt = (n: number) => (n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${Math.round(n)}`);
 
 export default function FinanceChart({ series }: { series: FinanceSeriesPoint[] }) {
-  const W = 760, H = 260, padTop = 18, padBottom = 30, padX = 8;
-  const plotW = W - padX * 2;
+  // The y labels get their own gutter on the left. They used to sit at the
+  // right edge INSIDE the plot, where the last month's bars painted over them.
+  const W = 760, H = 260, padTop = 18, padBottom = 30, padX = 8, padL = 40;
+  const plotW = W - padL - padX;
   const plotH = H - padTop - padBottom;
   const n = Math.max(series.length, 1);
   const max = Math.max(1, ...series.map((p) => Math.max(p.revenue, p.costs)));
@@ -28,14 +30,14 @@ export default function FinanceChart({ series }: { series: FinanceSeriesPoint[] 
         const y = padTop + plotH * (1 - f);
         return (
           <g key={f}>
-            <line x1={padX} y1={y} x2={W - padX} y2={y} stroke="hsl(var(--border-subtle))" strokeWidth={1} />
-            <text x={W - padX} y={y - 3} textAnchor="end" fontSize={9} fill="hsl(var(--text-tertiary))" className="tabular-nums">{kfmt(max * f)}</text>
+            <line x1={padL} y1={y} x2={W - padX} y2={y} stroke="hsl(var(--border-subtle))" strokeWidth={1} />
+            <text x={padL - 6} y={y + 3} textAnchor="end" fontSize={9} fill="hsl(var(--text-tertiary))" className="tabular-nums">{kfmt(max * f)}</text>
           </g>
         );
       })}
 
       {series.map((p, i) => {
-        const groupX = padX + i * groupW;
+        const groupX = padL + i * groupW;
         const pairX = groupX + (groupW - pairW) / 2;
         const rY = yOf(p.revenue), cY = yOf(p.costs);
         const baseY = padTop + plotH;
