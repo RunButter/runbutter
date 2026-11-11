@@ -359,7 +359,7 @@ export default function BrandingPage() {
                   <input value={form.email_from_name} onChange={(e) => set({ email_from_name: e.target.value })}
                     placeholder={displayName}
                     className="w-full h-9 px-2.5 text-sm rounded-md bg-surface ring-1 ring-subtle shadow-sm focus:ring-2 focus:ring-accent/30 outline-none" />
-                  <p className="mt-1 text-2xs text-tertiary">Shown as the "from" name on candidate and invoice emails.</p>
+                  <p className="mt-1 text-2xs text-tertiary">Shown as the &ldquo;from&rdquo; name on candidate and invoice emails.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-secondary mb-1">Email footer</label>

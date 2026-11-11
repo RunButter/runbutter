@@ -1662,6 +1662,20 @@ Same rule as the cost rule above: prefer public/government data + local computat
   - **`npm run check:grants`** is the other half and is a CI gate: no SECURITY DEFINER function may be
     anon/authenticated-callable unless it is on the `keep_public` allowlist, which the script **parses
     out of the newest revoke migration** rather than keeping a second copy of.
+- **Calling every function (2026-11) finds what the callsite audit cannot.** plpgsql does not plan
+  a body at CREATE, so a function naming a column that does not exist applies, passes CI from
+  empty, matches every callsite by name and argument — and raises the first time it runs. Build the
+  database, then call EVERY public function once inside a rolled-back transaction with plausible
+  arguments and keep only schema errors (42703 undefined column, 42P01 undefined table, 42883…).
+  The first run over 545 functions found three, all live in production: `hr_analytics_data` read
+  `positions.status` (it is `is_active`), `cal_log_meeting` ordered by `candidates.created_at` (it is
+  `applied_at` — the 0107 mistake again), `due_invoice_reminders` joined the HR `companies` table
+  instead of `organizations`. 0139 fixes all three. Functions that return early on a placeholder id
+  are not fully exercised, so a clean run is a floor, not a proof.
+- **A `useCallback` memoised without `user` keeps the first render's `user` — which is null,
+  because Privy is not ready then.** The position editor did this and every edit opened on "Failed
+  to load position data". `react-hooks/exhaustive-deps` warned about it; treat that warning as a bug
+  report whenever the missing dependency is `user`.
 - **`npm run check:routes`** (CI, after the build) starts the built app and requests every NAV href,
   every tab and the public pages with a dummy `privy-token` cookie — without the cookie the
   middleware 307s every app route and a missing page hides behind the redirect. It exists because
@@ -1795,6 +1809,8 @@ skills builder with zip import · `/ai-cost`, a public free tool · runway on th
 ## Owner actions outstanding (not code — things only the owner can do)
 These are the difference between "shipped" and "working", and every one of them
 is currently blocking something visible. Ask before assuming any is done.
+- **Run 0139** (fixes three functions that are BROKEN IN PRODUCTION today: HR → Analytics,
+  Cal.com booking webhooks, overdue-invoice reminders — see "Calling every function" below).
 - **Run 0135–0138** (booking pages, time & leave, receipts, surveys) — `npm run migrate`; book one
   meeting, pick the country's holidays on Time off, scan one receipt, send yourself one survey.
 - ~~Run 0125–0134~~ — **all applied, probed in `pg_proc` 2026-10-14.** Still to do by hand:

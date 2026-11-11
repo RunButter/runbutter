@@ -122,7 +122,7 @@ export default function CandidatesPage() {
                 pinned above a table most visits never search. */}
             {searchTerm.trim() && (
                 <p className="px-6 -mt-2 text-2xs text-tertiary">
-                    space = and · <span className="text-secondary">or</span> = either · <span className="text-secondary">-word</span> = exclude · "quotes" = exact phrase
+                    space = and · <span className="text-secondary">or</span> = either · <span className="text-secondary">-word</span> = exclude · &ldquo;quotes&rdquo; = exact phrase
                 </p>
             )}
 
