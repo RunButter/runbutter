@@ -29,7 +29,12 @@ export default function EditPositionPage({ params }: { params: { id: string } })
     const [screeningQuestions, setScreeningQuestions] = useState<any[]>([]);
     const [openEndedQuestion, setOpenEndedQuestion] = useState({ id: 's_open', category: 'screening', type: 'text', text: '' });
 
+    // `user` MUST be a dependency. Privy is not ready on the first render, so a
+    // callback memoised on params.id alone kept that render's `user` (null)
+    // forever, threw on `user!.id`, and every edit opened on "Failed to load
+    // position data".
     const loadPositionData = useCallback(async () => {
+        if (!user) return;
         try {
             // hr_get_position (0094) — scoped to the caller's company in SQL,
             // so a guessed id from another workspace returns null instead of a
@@ -65,7 +70,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
         } finally {
             setLoading(false);
         }
-    }, [params.id]);
+    }, [params.id, user]);
 
     useEffect(() => {
         if (ready) {

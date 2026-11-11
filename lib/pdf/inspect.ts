@@ -45,7 +45,6 @@ function inspector(): any | null {
     // require, not import: this is a CommonJS native addon, and a static import
     // would make the whole module graph depend on a binary that may be missing
     // on an unusual platform.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     mod = require('@firecrawl/pdf-inspector');
     return mod;
   } catch (e) {
