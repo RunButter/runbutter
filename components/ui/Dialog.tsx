@@ -74,10 +74,10 @@ export default function DialogProvider({ children }: { children: React.ReactNode
       {dlg && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4"
           role="dialog" aria-modal="true" onClick={() => close(false)}>
-          <div className="w-full max-w-sm bg-surface border border-subtle rounded-xl shadow-popover animate-in fade-in zoom-in-95 duration-150"
+          <div className="w-full max-w-sm bg-surface border border-subtle rounded-2xl shadow-popover animate-in fade-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 flex gap-3">
-              <div className={`w-8 h-8 rounded-md shrink-0 flex items-center justify-center ${dlg.danger ? 'bg-danger/10' : 'bg-surface-hover'}`}>
+            <div className="p-5 flex gap-3">
+              <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${dlg.danger ? 'bg-danger/10' : 'bg-surface-hover'}`}>
                 {dlg.danger ? <AlertTriangle className="w-4 h-4 text-danger" /> : <Info className="w-4 h-4 text-secondary" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -87,7 +87,7 @@ export default function DialogProvider({ children }: { children: React.ReactNode
               <button onClick={() => close(false)} aria-label="Close"
                 className="p-1 -m-1 h-6 rounded-md text-tertiary hover:bg-surface-hover shrink-0"><X className="w-4 h-4" /></button>
             </div>
-            <div className="h-12 flex items-center justify-end gap-2 px-4 border-t border-subtle">
+            <div className="h-14 flex items-center justify-end gap-2 px-5 border-t border-subtle">
               {dlg.kind === 'confirm' && (
                 <Button variant="ghost" onClick={() => close(false)}>{dlg.cancelLabel || 'Cancel'}</Button>
               )}

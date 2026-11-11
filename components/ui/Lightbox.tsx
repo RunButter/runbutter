@@ -58,7 +58,7 @@ export default function Lightbox({ src, alt, onClose }: { src: string; alt: stri
           onClick={onClose}
           title="Close"
           aria-label="Close"
-          className="h-9 w-9 inline-flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+          className="h-9 w-9 inline-flex items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

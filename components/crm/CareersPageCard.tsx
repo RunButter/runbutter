@@ -134,13 +134,13 @@ export default function CareersPageCard({ privyUserId, workspaceId }: { privyUse
 
       <div className="flex items-center gap-2">
         <button onClick={save} disabled={saving || !!problem || !privyUserId}
-          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : null}
           {saved ? 'Saved' : 'Save careers page'}
         </button>
         {savedSlug && (
           <a href={`/careers/${savedSlug}`} target="_blank" rel="noopener noreferrer"
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
             <ExternalLink className="w-3.5 h-3.5" /> View page
           </a>
         )}

@@ -318,7 +318,7 @@ function SetUp({ pass, pass2, setPass, setPass2, onCreate, busy, err }: {
       </label>
       {err && <p className="mt-2 text-2xs text-danger">{err}</p>}
       <button onClick={onCreate} disabled={busy || !pass}
-        className="mt-4 h-9 px-4 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+        className="mt-4 h-9 px-4 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
         {busy ? 'Creating…' : 'Create vault'}
       </button>
     </div>
@@ -340,7 +340,7 @@ function Unlock({ pass, setPass, onUnlock, busy, err, onReset }: {
           className="mt-3 w-full h-9 px-3 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
         {err && <p className="mt-2 text-2xs text-danger">{err}</p>}
         <button type="submit" disabled={busy || !pass}
-          className="mt-3 h-9 px-4 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+          className="mt-3 h-9 px-4 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
           {busy ? 'Deriving key…' : 'Unlock'}
         </button>
       </form>
@@ -437,17 +437,17 @@ function ItemEditor({ initial, onSave, onCancel }: {
               <button onClick={() => setGen(true)} className="text-2xs text-accent hover:underline">Generate</button>
             </div>
             <input value={it.password || ''} onChange={f('password')} aria-label="Password"
-              className="mt-1 w-full h-9 px-3 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary font-mono" />
+              className="mt-1 w-full h-9 px-3 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary font-mono" />
           </div>
           <Field label="URL" value={it.url || ''} onChange={f('url')} placeholder="https://…" />
           <div>
             <span className="text-2xs text-secondary">Notes</span>
             <textarea value={it.notes || ''} onChange={f('notes')} rows={3} aria-label="Notes"
-              className="mt-1 w-full px-3 py-2 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
+              className="mt-1 w-full px-3 py-2 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
           </div>
         </div>
         <div className="h-12 px-4 flex items-center justify-end gap-2 border-t border-subtle">
-          <button onClick={onCancel} className="h-8 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={onCancel} className="h-8 px-3 rounded-md text-sm text-secondary hover:bg-surface-hover">Cancel</button>
           <button onClick={() => onSave(it)} disabled={!it.title?.trim()}
             className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             Save
@@ -465,7 +465,7 @@ function Field({ label, ...rest }: { label: string } & React.InputHTMLAttributes
     <label className="block">
       <span className="text-2xs text-secondary">{label}</span>
       <input {...rest} aria-label={label}
-        className="mt-1 w-full h-9 px-3 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
+        className="mt-1 w-full h-9 px-3 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
     </label>
   );
 }
@@ -496,7 +496,7 @@ function Rotate({ count, busy, err, onCancel, onRotate }: {
         </label>
         {(err || (a && bad)) && <p className="mt-2 text-2xs text-danger">{err || bad}</p>}
         <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onCancel} className="h-8 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={onCancel} className="h-8 px-3 rounded-md text-sm text-secondary hover:bg-surface-hover">Cancel</button>
           <button onClick={() => onRotate(a)} disabled={busy || !!bad}
             className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             {busy ? 'Re-encrypting…' : 'Change it'}

@@ -124,7 +124,7 @@ export default function TimesheetPage() {
       {pickers(d, (p) => setDraft({ ...d, ...p }))}
       <label className="flex items-center gap-1.5 text-sm text-secondary"><input type="checkbox" checked={d.billable} onChange={(e) => setDraft({ ...d, billable: e.target.checked })} />Billable</label>
       {d.billable && <input className={cn(field, 'w-24')} placeholder="Rate/h" inputMode="decimal" aria-label="Hourly rate" value={d.rate} onChange={(e) => setDraft({ ...d, rate: e.target.value.replace(/[^0-9.]/g, '') })} />}
-      <button onClick={saveDraft} disabled={busy} className="h-9 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Save</button>
+      <button onClick={saveDraft} disabled={busy} className="h-9 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Save</button>
       <button onClick={() => setDraft(null)} className="h-9 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
     </div>
   );
@@ -134,7 +134,7 @@ export default function TimesheetPage() {
       <header className="h-14 shrink-0 flex items-center gap-2 page-x">
         <h1 className="text-base font-medium text-primary mr-auto">Timesheet</h1>
         {data?.is_admin && data.people && (
-          <select aria-label="Whose time" className="h-8 px-2 text-sm rounded-lg bg-surface ring-1 ring-subtle" value={who || ''} onChange={(e) => { setWho(e.target.value || null); setDraft(null); }}>
+          <select aria-label="Whose time" className="h-8 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle" value={who || ''} onChange={(e) => { setWho(e.target.value || null); setDraft(null); }}>
             <option value="">My time</option>
             {data.people.filter((p) => p.user !== privy).map((p) => <option key={p.user} value={p.user}>{p.name}</option>)}
           </select>
@@ -158,7 +158,7 @@ export default function TimesheetPage() {
                 <span className="min-w-0 flex-1 text-sm text-secondary truncate">
                   {running.description || 'No description'}{running.project ? ` · ${running.project}` : ''}{running.company ? ` · ${running.company}` : ''}
                 </span>
-                <button onClick={stop} disabled={busy} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold bg-danger text-white disabled:opacity-50">
+                <button onClick={stop} disabled={busy} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold bg-danger text-white disabled:opacity-50">
                   <Square className="w-3.5 h-3.5 fill-current" />Stop</button>
               </>
             ) : (
@@ -170,7 +170,7 @@ export default function TimesheetPage() {
                   className={cn('h-9 w-9 rounded-md flex items-center justify-center ring-1', timer.billable ? 'bg-success/10 text-success ring-success/30' : 'text-tertiary ring-subtle hover:text-secondary')}>
                   <DollarSign className="w-4 h-4" /></button>
                 {timer.billable && <input className={cn(field, 'w-24')} placeholder="Rate/h" inputMode="decimal" aria-label="Hourly rate" value={timer.rate} onChange={(e) => setTimer({ ...timer, rate: e.target.value.replace(/[^0-9.]/g, '') })} />}
-                <button onClick={start} disabled={busy || !ws} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                <button onClick={start} disabled={busy || !ws} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                   {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}Start</button>
               </>
             )}

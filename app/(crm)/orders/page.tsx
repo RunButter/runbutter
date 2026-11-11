@@ -225,7 +225,7 @@ export default function OrdersPage() {
                 <button onClick={() => { setDraft(null); setErr(''); }}
                   className="h-8 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
                 <button onClick={save}
-                  className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Create</button>
+                  className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Create</button>
               </div>
             </div>
           )}

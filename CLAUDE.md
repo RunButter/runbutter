@@ -988,7 +988,22 @@ address and country only — and companies had no phone/email/website column to 
 - **Semantic tokens only** — `bg-surface`, `text-secondary`, `border-subtle`, `bg-accent`, `bg-inverse`.
   **Never literal colors** (`bg-white`, `text-slate-800`, `shadow-slate-200/50`) — that's what breaks
   dark mode. Tokens live in `app/globals.css` (`:root` + `.dark`), mapped in `tailwind.config.js`.
-- Geist Sans/Mono, `--radius: 1rem`. **Hierarchy comes from SIZE and COLOUR, not weight.**
+- **Metrics follow Meta's Astryx design system (meta/astryx, MIT, 2026-11).** Its components need
+  React 19 + StyleX, so the PACKAGE is not installed (Next 14 / React 18 here, and a second token
+  vocabulary is exactly what the shadcn note below forbids). Its RULES are ported into our tokens:
+  - **Radius by ROLE** (`--radius-*` in globals.css → tailwind): `rounded` 4 inner · `rounded-md` 8
+    element (buttons, inputs, menu items) · `rounded-lg` 10 tile · `rounded-xl` 12 container (cards,
+    menus, tables) · `rounded-2xl` 16 panel (dialogs) · `rounded-3xl` 24 page. Nested shapes are
+    concentric: inner = outer − padding (12px menu, 4px padding, 8px items). The old single
+    `--radius: 1rem` made `rounded-xl` (20) rounder than `rounded-2xl` (16).
+  - **One control ramp**: sm `h-7` · md `h-8` (toolbars, `<Button>`) · lg `h-9` (forms: `.btn-*`,
+    `.input-field`, `<Input>`). A button and a field in one row are the SAME size. Label 12px in.
+  - **Every line-height is a multiple of 0.25rem** (16/20/20/24/24/28, stat 36).
+  - Motion: default `transition` = 175ms `cubic-bezier(0.24,1,0.4,1)`; presses `scale-[0.98]`.
+  - Badges are 20px (`h-5`) pills; labels are `font-medium`, 6px above their field.
+  - A one-off codemod moved ~120 hand-written controls from `rounded-lg/xl` to `rounded-md`. New
+    controls: use the primitives or the ramp, not a fresh radius.
+- Geist Sans/Mono. **Hierarchy comes from SIZE and COLOUR, not weight.**
   Page and card titles are **`font-medium` (500)**; 600 everywhere read as heavy and flat, because
   when every rank is bold none of them is. `font-semibold` is for small emphasis inside a row (a
   status chip, a button); **`font-bold` is not used in the product UI at all**.

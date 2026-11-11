@@ -195,7 +195,7 @@ export default function SupportChat({ widget, embed = false, preview = false }: 
               className={`${input} h-auto py-2.5 resize-none`} />
             {error && <p className="text-xs text-danger">{error}</p>}
             <button type="submit" disabled={busy || preview || !body.trim()}
-              className="h-10 rounded-lg text-sm font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
+              className="h-10 rounded-md text-sm font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
               style={{ background: widget.color, color: fg }}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send
             </button>
@@ -235,7 +235,7 @@ export default function SupportChat({ widget, embed = false, preview = false }: 
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               className="flex-1 min-w-0 max-h-32 resize-none bg-transparent text-sm text-primary outline-none placeholder:text-tertiary px-1.5 py-2" />
             <button type="submit" disabled={busy || !body.trim()} aria-label="Send"
-              className="w-9 h-9 shrink-0 rounded-lg inline-flex items-center justify-center disabled:opacity-40"
+              className="w-9 h-9 shrink-0 rounded-md inline-flex items-center justify-center disabled:opacity-40"
               style={{ background: widget.color, color: fg }}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>

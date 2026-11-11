@@ -15,14 +15,14 @@ export default function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center text-center px-6 py-12', className)}>
+    <div className={cn('flex flex-col items-center justify-center text-center px-6 py-10', className)}>
       {Icon && (
-        <div className="w-11 h-11 rounded-xl bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mb-3">
+        <div className="w-10 h-10 rounded-lg bg-surface-sunken ring-1 ring-subtle flex items-center justify-center mb-4">
           <Icon className="w-5 h-5 text-tertiary" />
         </div>
       )}
       <p className="text-sm font-medium text-primary">{title}</p>
-      {description && <p className="mt-1 text-xs text-tertiary max-w-xs">{description}</p>}
+      {description && <p className="mt-1 text-xs text-tertiary max-w-sm">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

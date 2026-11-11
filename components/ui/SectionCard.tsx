@@ -45,13 +45,13 @@ export default function SectionCard({
     <section className={cn('card-surface', flush && 'overflow-hidden', className)}>
       {hasHeader && (
         <div className={cn(
-          'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-7',
+          'flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6',
           flush && 'pb-4 sm:pb-5 border-b border-subtle',
           !flush && 'pb-4 sm:pb-5',
         )}>
           <div className="min-w-0">
             {title && <h2 className="text-base font-medium text-primary truncate">{title}</h2>}
-            {subtitle && <p className="mt-0.5 text-xs text-tertiary">{subtitle}</p>}
+            {subtitle && <p className="mt-1 text-xs text-tertiary">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {meta && <span className="text-xs text-tertiary hidden sm:inline">{meta}</span>}
@@ -63,7 +63,7 @@ export default function SectionCard({
           </div>
         </div>
       )}
-      <div className={cn(!flush && 'px-5 pb-5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-7', bodyClassName)}>{children}</div>
+      <div className={cn(!flush && 'px-5 pb-5 sm:px-6 sm:pb-6', bodyClassName)}>{children}</div>
     </section>
   );
 }

@@ -207,7 +207,7 @@ export default function PostBoard({
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
         <p className="text-sm text-secondary">No posts yet. The board fills up as you create them.</p>
-        <button onClick={onNew} className="text-xs px-3 h-8 rounded-lg bg-inverse text-inverse-fg inline-flex items-center gap-1.5">
+        <button onClick={onNew} className="text-xs px-3 h-8 rounded-md bg-inverse text-inverse-fg inline-flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5" /> New post
         </button>
       </div>

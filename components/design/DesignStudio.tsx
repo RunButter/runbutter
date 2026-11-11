@@ -187,11 +187,11 @@ export default function DesignStudio({
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <button onClick={downloadBundle}
-                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
                     <Download className="w-3.5 h-3.5" /> Download the bundle
                   </button>
                   <button onClick={downloadPlugin}
-                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
                     <Package className="w-3.5 h-3.5" /> Agent plugin
                   </button>
                 </div>

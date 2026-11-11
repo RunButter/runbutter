@@ -351,11 +351,11 @@ export default function AutomationEditor({ automation, privy, deps, onClose, onS
             <input type="checkbox" checked={a.enabled} onChange={(e) => set({ enabled: e.target.checked })} className="accent-accent" /> On
           </label>
           <button onClick={test} disabled={!!saving} title="Save, then run it once now against your latest record"
-            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
             {saving === 'test' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />} Test
           </button>
-          <button onClick={onClose} className="h-9 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
-          <button onClick={save} disabled={!!saving} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+          <button onClick={onClose} className="h-9 px-3 rounded-md text-sm text-secondary hover:bg-surface-hover">Cancel</button>
+          <button onClick={save} disabled={!!saving} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             {saving === 'save' && <Loader2 className="w-4 h-4 animate-spin" />} Save
           </button>
         </div>

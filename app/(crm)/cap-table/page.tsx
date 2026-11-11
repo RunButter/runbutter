@@ -393,12 +393,12 @@ function AddForm({ v, set, onSave, onCancel }: {
         <label className="block">
           <span className="text-2xs text-secondary">Name</span>
           <input value={v.name} onChange={f('name')} autoFocus aria-label="Holder name"
-            className="mt-1 w-full h-9 px-3 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
+            className="mt-1 w-full h-9 px-3 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary" />
         </label>
         <label className="block">
           <span className="text-2xs text-secondary">They are a</span>
           <select value={v.kind} onChange={f('kind')} aria-label="Holder type"
-            className="mt-1 w-full h-9 px-2 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary">
+            className="mt-1 w-full h-9 px-2 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary">
             {['founder', 'investor', 'employee', 'advisor', 'entity'].map((k) =>
               <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
           </select>
@@ -406,7 +406,7 @@ function AddForm({ v, set, onSave, onCancel }: {
         <label className="block">
           <span className="text-2xs text-secondary">They hold</span>
           <select value={v.secKind} onChange={f('secKind')} aria-label="Security type"
-            className="mt-1 w-full h-9 px-2 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary">
+            className="mt-1 w-full h-9 px-2 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary">
             <option value="shares">Shares</option>
             <option value="option">Options</option>
             <option value="safe">A SAFE</option>
@@ -436,8 +436,8 @@ function AddForm({ v, set, onSave, onCancel }: {
       )}
 
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="h-8 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
-        <button type="submit" className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Add</button>
+        <button type="button" onClick={onCancel} className="h-8 px-3 rounded-md text-sm text-secondary hover:bg-surface-hover">Cancel</button>
+        <button type="submit" className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Add</button>
       </div>
     </form>
   );
@@ -448,7 +448,7 @@ function Field({ label, ...rest }: { label: string } & React.InputHTMLAttributes
     <label className="block">
       <span className="text-2xs text-secondary">{label}</span>
       <input {...rest} aria-label={label}
-        className="mt-1 w-full h-9 px-3 rounded-lg bg-surface-sunken ring-1 ring-subtle text-sm text-primary tabular-nums" />
+        className="mt-1 w-full h-9 px-3 rounded-md bg-surface-sunken ring-1 ring-subtle text-sm text-primary tabular-nums" />
     </label>
   );
 }

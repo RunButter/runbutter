@@ -216,7 +216,7 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
 
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         <button onClick={addBox}
-          className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse shadow-sm hover:opacity-90 transition-opacity">
+          className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse shadow-sm hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" /> Add box
         </button>
         <span className="hidden sm:inline text-2xs text-tertiary bg-surface/90 rounded-lg px-2 py-1.5 shadow-sm">
@@ -224,7 +224,7 @@ function Canvas({ initial, onDirty }: { initial: MindMapGraph; onDirty: (g: Mind
         </span>
         {selectedCount > 0 && (
           <button onClick={removeSelected}
-            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-danger bg-surface shadow-sm hover:bg-surface-hover transition-colors">
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-danger bg-surface shadow-sm hover:bg-surface-hover transition-colors">
             <Trash2 className="w-4 h-4" /> Delete {selectedCount}
           </button>
         )}

@@ -109,7 +109,7 @@ export default function DataRoomModal({ files, privy, workspaceId, onClose }: {
 
           <div className="flex items-center gap-2">
             <button onClick={create} disabled={busy || picked.size === 0 || !privy}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
+              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
               Create link{picked.size > 0 ? ` (${picked.size})` : ''}
             </button>

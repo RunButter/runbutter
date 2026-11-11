@@ -160,7 +160,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
         <div className="min-h-screen bg-surface-sunken">
             <header className="bg-canvas">
                 <div className="max-w-5xl px-6 py-4 flex items-center gap-4">
-                    <Link href="/dashboard/positions" className="p-2 hover:bg-surface-hover rounded-lg">
+                    <Link href="/dashboard/positions" className="p-2 hover:bg-surface-hover rounded-md">
                         <ArrowLeft className="w-5 h-5 text-secondary" />
                     </Link>
                     <h1 className="text-xl font-semibold text-primary">Edit Position</h1>
@@ -313,7 +313,7 @@ export default function EditPositionPage({ params }: { params: { id: string } })
                                                     <div key={oIndex} className="relative">
                                                         <input
                                                             type="text"
-                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-lg outline-none transition ${q.correctIndex === oIndex ? 'border-success/30 bg-success/10' : 'border-subtle focus:border-accent/30'}`}
+                                                            className={`w-full pl-3 pr-8 py-2 text-sm border rounded-md outline-none transition ${q.correctIndex === oIndex ? 'border-success/30 bg-success/10' : 'border-subtle focus:border-accent/30'}`}
                                                             placeholder={`Option ${oIndex + 1}`}
                                                             value={opt}
                                                             onChange={e => updateMCQOption(qIndex, oIndex, e.target.value)}

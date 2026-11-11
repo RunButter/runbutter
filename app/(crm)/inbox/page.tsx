@@ -227,7 +227,7 @@ function ThreadView({ thread, privy, ws, onBack, onChanged }: {
         <div className="ml-auto flex items-center gap-1.5">
           {thread.person_id && (
             <Link href={`/objects/people?ref=${thread.person_id}`} title="Open the contact"
-              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle hover:bg-surface-hover">
+              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs text-secondary ring-1 ring-subtle hover:bg-surface-hover">
               <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden lg:inline">Contact</span>
             </Link>
           )}
@@ -276,7 +276,7 @@ function ThreadView({ thread, privy, ws, onBack, onChanged }: {
             </button>
             <span className="ml-auto hidden sm:inline text-3xs text-tertiary">⌘↵</span>
             <button onClick={send} disabled={!!busy || !body.trim()}
-              className="ml-auto sm:ml-0 h-8 px-3 shrink-0 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+              className="ml-auto sm:ml-0 h-8 px-3 shrink-0 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
               {busy === 'send' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {note ? 'Add note' : 'Send'}
             </button>
           </div>

@@ -44,7 +44,7 @@ export default function ListRow({
   );
 
   const base = cn(
-    'flex items-center gap-3 px-5 py-3.5',
+    'flex items-center gap-3 px-5 py-3',
     (href || onClick) && 'hover:bg-surface-hover transition-colors',
     className,
   );
@@ -64,7 +64,7 @@ export default function ListRow({
  */
 export function RowTile({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={cn('w-9 h-9 rounded-xl bg-inverse text-inverse-fg flex items-center justify-center', className)}>
+    <span className={cn('w-9 h-9 rounded-lg bg-inverse text-inverse-fg flex items-center justify-center', className)}>
       {children}
     </span>
   );

@@ -80,7 +80,7 @@ export default function InterviewsPage() {
           </div>
 
           {!googleReady && (
-            <Link href="/settings/integrations" className="mb-4 flex items-center gap-2 rounded-lg border border-subtle bg-surface-sunken px-3 py-2 text-xs text-secondary hover:border-strong">
+            <Link href="/settings/integrations" className="mb-4 flex items-center gap-2 rounded-md border border-subtle bg-surface-sunken px-3 py-2 text-xs text-secondary hover:border-strong">
               <Info className="w-3.5 h-3.5 text-accent shrink-0" />
               Connect Google Calendar (Automate → Integrations) to generate Meet links and calendar invites automatically.
             </Link>

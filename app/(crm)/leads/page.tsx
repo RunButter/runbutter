@@ -377,7 +377,7 @@ export default function FindLeadsPage() {
       <PageHeader title="Find leads" subtitle="Businesses on the map, ready to contact">
         {obj && (
           <Link href="/objects/leads"
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover">
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover">
             Your leads <span className="text-tertiary tabular-nums">{index.count}</span>
           </Link>
         )}
@@ -397,7 +397,7 @@ export default function FindLeadsPage() {
             </div>
             {canSetUp && (
               <button onClick={setUp} disabled={setupBusy}
-                className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                 {setupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Set up Leads
               </button>
             )}
@@ -412,7 +412,7 @@ export default function FindLeadsPage() {
               {setupErr && <span className="block text-danger mt-1">{setupErr}</span>}
             </p>
             <button onClick={setUp} disabled={setupBusy}
-              className="h-8 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
+              className="h-8 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
               {setupBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} Add {missingFields.length === 1 ? 'it' : 'them'}
             </button>
           </div>
@@ -487,7 +487,7 @@ export default function FindLeadsPage() {
               className="input-field !h-9" aria-label="Name contains" />
           </label>
           <button type="submit" disabled={busy || !privy || (src === 'scraper' && !!job) || (src === 'places' && !sources?.google.connected)}
-            className="sm:order-1 h-10 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+            className="sm:order-1 h-9 px-4 inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} {busy && src === 'places' && depth !== 'quick' ? 'Searching…' : 'Search'}
           </button>
           {!privy && <p className="sm:order-3 sm:col-span-4 text-xs text-tertiary">Sign in to search.</p>}
@@ -582,17 +582,17 @@ export default function FindLeadsPage() {
                 <div className="ml-auto flex flex-wrap items-center gap-1.5">
                   <button onClick={findEmails} disabled={!canEnrich.length || working}
                     title="Reads each selected business’s own website for a public email, and checks whether the site is down, insecure, not mobile-friendly or slow"
-                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
+                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
                     {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MailSearch className="w-3.5 h-3.5" />}
                     {enriching ? `Reading websites ${enriching.done}/${enriching.total}` : `Check websites${canEnrich.length ? ` (${canEnrich.length})` : ''}`}
                   </button>
                   <button onClick={download} disabled={!rows.length}
-                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
+                    className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-hover disabled:opacity-40">
                     <Download className="w-3.5 h-3.5" /> CSV
                   </button>
                   <button onClick={save} disabled={!obj || !toSave.length || working}
                     title={!obj ? 'Set up Leads first' : undefined}
-                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                     {saving ? `Saving ${saving.done}/${saving.total}` : `Save to Leads${toSave.length ? ` (${toSave.length})` : ''}`}
                   </button>
@@ -733,7 +733,7 @@ function GoogleKeyPanel({ status, canEdit, busy, error, value, onChange, onConne
             <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="AIza…" autoComplete="off" spellCheck={false}
               className="input-field !h-9 font-mono flex-1" aria-label="Google API key" />
             <button type="button" onClick={onConnect} disabled={busy || !value.trim()}
-              className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+              className="h-9 px-3 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md text-xs font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Check and connect
             </button>
           </div>

@@ -103,11 +103,11 @@ export default function TimeOffPage() {
     <div className="flex-1 flex flex-col min-h-0">
       <header className="h-14 shrink-0 flex items-center gap-2 page-x">
         <h1 className="text-base font-medium text-primary mr-auto">Time off</h1>
-        <select aria-label="Year" className="h-8 px-2 text-sm rounded-lg bg-surface ring-1 ring-subtle" value={year} onChange={(e) => setYear(+e.target.value)}>
+        <select aria-label="Year" className="h-8 px-2 text-sm rounded-md bg-surface ring-1 ring-subtle" value={year} onChange={(e) => setYear(+e.target.value)}>
           {[year - 1, year, year + 1].map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
         {!form && (
-          <button onClick={openForm} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+          <button onClick={openForm} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
             <Plus className="w-4 h-4" />Request time off</button>
         )}
       </header>
@@ -155,7 +155,7 @@ export default function TimeOffPage() {
             )}
             <div className="flex gap-2">
               <button onClick={submit} disabled={busy || preview === 0 || (over && !(d.is_admin && form.force))}
-                className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                 {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}{d.is_admin || !type?.needs_approval ? 'Book it' : 'Send request'}</button>
               <button onClick={() => setForm(null)} className="h-9 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
             </div>

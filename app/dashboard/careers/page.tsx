@@ -113,7 +113,7 @@ export default function CareersAdminPage() {
                   <EmptyState icon={Briefcase} title="No open positions"
                     description="Roles you open in Positions appear here, ready to publish."
                     action={<Link href="/dashboard/positions/new"
-                      className="h-8 px-3 inline-flex items-center rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+                      className="h-8 px-3 inline-flex items-center rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
                       New position
                     </Link>} />
                 ) : (

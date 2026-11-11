@@ -234,24 +234,24 @@ export default function PdfToolsPage() {
           <span className="text-2xs text-tertiary tabular-nums">{pages.length} pages · {files.length} file{files.length === 1 ? '' : 's'}</span>
         )}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
+          <button onClick={open} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken">
             Add PDFs
           </button>
           {pages.length > 0 && (
             <>
               <button onClick={asImages} disabled={!!busy} title={`Render ${scope} as PNG at 150 dpi`}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
                 {busy === 'images' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />} Images
               </button>
               <button onClick={asMarkdown} disabled={!!busy} title={`Extract ${scope} as Markdown`}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-50">
                 {busy === 'markdown' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileCode className="w-3.5 h-3.5" />} Markdown
               </button>
             </>
           )}
           {pages.length > 0 && (
             <button onClick={exportPages} disabled={!!busy}
-              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
+              className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-50">
               {busy === 'export' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Save PDF
             </button>
           )}
@@ -268,7 +268,7 @@ export default function PdfToolsPage() {
             <EmptyState icon={FileText}
               title={isDragActive ? 'Drop them here' : 'Drop PDFs to start'}
               description="Pages appear as thumbnails. Drag to reorder, click to select, then save. Nothing is uploaded — the file is opened and rewritten in this tab."
-              action={<button onClick={open} className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Choose files</button>} />
+              action={<button onClick={open} className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">Choose files</button>} />
           </div>
         ) : (
           <div className="max-w-6xl mx-auto space-y-3">

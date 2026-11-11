@@ -126,7 +126,7 @@ export default function TimeReportsPage() {
     <div className="flex-1 flex flex-col min-h-0">
       <header className="h-14 shrink-0 flex items-center gap-2 page-x">
         <h1 className="text-base font-medium text-primary mr-auto">Time reports</h1>
-        <button onClick={exportCsv} disabled={!entries.length} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm ring-1 ring-subtle text-secondary hover:bg-surface-hover disabled:opacity-40"><Download className="w-4 h-4" />CSV</button>
+        <button onClick={exportCsv} disabled={!entries.length} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm ring-1 ring-subtle text-secondary hover:bg-surface-hover disabled:opacity-40"><Download className="w-4 h-4" />CSV</button>
       </header>
       <div className="flex-1 min-h-0 overflow-y-auto page-pad space-y-5">
         <div className="flex flex-wrap items-center gap-2">

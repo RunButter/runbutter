@@ -126,7 +126,7 @@ export default function ExtractModal({ object, privy, workspaceId, onClose, onEx
             </label>
             <span className="text-2xs text-tertiary">PDFs are read here, never uploaded.</span>
             <button onClick={run} disabled={busy || !text.trim() || !privy}
-              className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
+              className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null} Fill the form
             </button>
           </div>

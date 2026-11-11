@@ -193,7 +193,7 @@ export default function InvestorUpdatePage() {
 
             <div className="mt-3 flex items-center gap-2">
               <button onClick={generate} disabled={busy || !privy || !metrics || !hasEnough(metrics)}
-                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
+                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md bg-inverse text-inverse-fg text-xs font-semibold disabled:opacity-40">
                 {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 {draft ? 'Rewrite' : 'Write the update'}
               </button>

@@ -104,7 +104,7 @@ export default function HomeExtras({ privy, ws }: { privy: string | null; ws: st
               <li key={t.id}>
                 <Link
                   href={`/docs/${t.id}`}
-                  className="flex items-start gap-2 rounded-lg px-2 py-1.5 -mx-2 hover:bg-surface-hover"
+                  className="flex items-start gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-surface-hover"
                 >
                   <ListChecks className="w-3.5 h-3.5 text-tertiary shrink-0 mt-0.5" />
                   <span className="min-w-0">

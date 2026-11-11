@@ -141,7 +141,7 @@ export default function InsightsPage() {
             placeholder="e.g. unpaid invoices by client, deals won this quarter, candidates per position"
             className="flex-1 min-w-0 h-9 bg-transparent text-sm outline-none placeholder:text-tertiary" />
           <button type="submit" disabled={asking || !question.trim()}
-            className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+            className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
             {asking && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Ask
           </button>
         </form>
