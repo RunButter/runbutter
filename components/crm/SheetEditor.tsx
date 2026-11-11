@@ -251,11 +251,11 @@ export default function SheetEditor({ value, onChange, editable = true }: {
 
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <button onClick={addRow} disabled={!editable}
-            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
+            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
             <Plus className="w-3.5 h-3.5" /> Row
           </button>
           <button onClick={addCol} disabled={!editable}
-            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
+            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-hover disabled:opacity-40">
             <Plus className="w-3.5 h-3.5" /> Column
           </button>
           <input ref={filePick} type="file" accept=".csv,text/csv" className="hidden"

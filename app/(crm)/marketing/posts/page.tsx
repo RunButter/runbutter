@@ -94,7 +94,7 @@ export default function PostsPage() {
             ))}
           </div>
           <button onClick={newPost} disabled={!privy || creating} title={!privy ? 'Sign in to create' : ''}
-            className="h-9 px-3.5 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
+            className="h-9 px-3.5 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} New post
           </button>
         </div>

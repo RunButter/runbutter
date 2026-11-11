@@ -70,7 +70,7 @@ export default function MapsPage() {
         <span className="text-2xs font-medium text-tertiary bg-surface-hover rounded-md px-1.5 py-0.5 tabular-nums">{maps.length}</span>
         {privy && ws && (
           <button onClick={create} disabled={creating}
-            className="ml-auto h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse shadow-sm hover:opacity-90 disabled:opacity-50 transition-opacity">
+            className="ml-auto h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse shadow-sm hover:opacity-90 disabled:opacity-50 transition-opacity">
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} New map
           </button>
         )}
@@ -98,7 +98,7 @@ export default function MapsPage() {
               title="No maps yet"
               description="Sketch a launch plan, an org chart, or how a process actually works."
               action={
-                <button onClick={create} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-inverse-fg bg-inverse shadow-sm">
+                <button onClick={create} className="h-10 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-inverse-fg bg-inverse shadow-sm">
                   <Plus className="w-4 h-4" /> New map
                 </button>
               }

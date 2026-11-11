@@ -150,7 +150,7 @@ export default function WidgetSettingsPage() {
                   {copied === 'link' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />} Copy
                 </button>
                 {w.enabled && (
-                  <a href={link} target="_blank" rel="noreferrer noopener" className="shrink-0 h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover">
+                  <a href={link} target="_blank" rel="noreferrer noopener" className="shrink-0 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover">
                     <ExternalLink className="w-3.5 h-3.5" /> Open
                   </a>
                 )}

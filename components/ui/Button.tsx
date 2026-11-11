@@ -5,7 +5,7 @@ import type { ButtonHTMLAttributes } from 'react';
 // Anything that needs a different look is a variant here, not a bespoke
 // className on a page.
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type Size = 'sm' | 'md' | 'lg';
+type Size = 'sm' | 'md';
 
 const VARIANT: Record<Variant, string> = {
   primary: 'bg-inverse text-inverse-fg hover:bg-inverse/90',
@@ -14,14 +14,9 @@ const VARIANT: Record<Variant, string> = {
   danger: 'bg-danger text-danger-fg hover:bg-danger/90',
 };
 
-// The control ramp (Astryx control rhythm, shared with .btn and the fields):
-// sm 28 · md 32 · lg 36. A button and a field in one row use the SAME size.
-// Inline padding grows with height so the label keeps the same proportion of
-// air at every size; the icon gap is 8px except on the compact size.
 const SIZE: Record<Size, string> = {
-  sm: 'h-7 px-2.5 text-xs gap-1.5',
-  md: 'h-8 px-3 text-sm gap-2',
-  lg: 'h-9 px-3.5 text-sm gap-2',
+  sm: 'h-7 px-2 text-xs gap-1',
+  md: 'h-8 px-3 text-sm gap-1.5',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -34,8 +29,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       className={`inline-flex items-center justify-center rounded-md font-medium whitespace-nowrap
-        transition-[background-color,color,opacity,transform] active:scale-[0.98]
-        disabled:opacity-50 disabled:pointer-events-none
+        transition-colors duration-100 disabled:opacity-50 disabled:pointer-events-none
         ${VARIANT[variant]} ${SIZE[size]} ${className}`}
       {...props}
     />

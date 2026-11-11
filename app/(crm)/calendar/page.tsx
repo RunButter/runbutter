@@ -368,11 +368,11 @@ function Item({ e }: { e: Ev }) {
   if (e.join_url) {
     return (
       <a href={e.join_url} target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface-hover">{inner}</a>
+        className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-hover">{inner}</a>
     );
   }
   if (e.href) {
-    return <Link href={e.href} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface-hover">{inner}</Link>;
+    return <Link href={e.href} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-hover">{inner}</Link>;
   }
   return <div className="flex items-center gap-2 px-2 py-1.5">{inner}</div>;
 }

@@ -138,7 +138,7 @@ export default function PushToggle({ privy, workspaceId }: { privy: string | nul
         </div>
         {(state === 'on' || state === 'off') && (
           <button onClick={state === 'on' ? disable : enable} disabled={busy || !privy}
-            className={`ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs font-semibold shrink-0 disabled:opacity-40 ${
+            className={`ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold shrink-0 disabled:opacity-40 ${
               state === 'on' ? 'text-secondary hover:bg-surface-sunken' : 'bg-inverse text-inverse-fg'}`}>
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
             {state === 'on' ? 'Turn off' : 'Turn on'}

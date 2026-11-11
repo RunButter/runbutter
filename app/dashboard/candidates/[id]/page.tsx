@@ -374,7 +374,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                     </div>
                     <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
                         <select
-                            className="input-field py-2 text-sm border-subtle rounded-md shadow-sm focus:ring-accent/30 focus:border-accent/30 col-span-2 sm:col-span-1 sm:w-auto"
+                            className="input-field py-2 text-sm border-subtle rounded-lg shadow-sm focus:ring-accent/30 focus:border-accent/30 col-span-2 sm:col-span-1 sm:w-auto"
                             value={candidate.status}
                             onChange={(e) => updateStatus(e.target.value)}
                         >
@@ -421,7 +421,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button onClick={openFitSimulator}
-                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
+                                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm transition-colors">
                                     <Users className="w-3.5 h-3.5" /> Simulate team fit
                                 </button>
                             </div>
@@ -549,7 +549,7 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                         </div>
                         <div className="mt-4 flex items-center justify-center gap-2">
                             <button onClick={generateDemoResults}
-                                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+                                className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                                 <TrendingUp className="w-3.5 h-3.5" /> Generate sample results
                             </button>
                         </div>

@@ -175,7 +175,7 @@ export default function BookingPagesPage() {
         <h1 className="text-base font-medium text-primary">Booking pages</h1>
         <div className="ml-auto flex items-center gap-2">
           {!viewer && !e && (
-            <button onClick={startNew} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+            <button onClick={startNew} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
               <Plus className="w-4 h-4" />New page
             </button>
           )}
@@ -283,7 +283,7 @@ export default function BookingPagesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-2">
-              <button onClick={save} disabled={busy} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+              <button onClick={save} disabled={busy} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                 {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}{e.id ? 'Save' : 'Create page'}
               </button>
               <button onClick={() => { setEditing(null); setError(''); }} className="h-9 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Cancel</button>
@@ -296,7 +296,7 @@ export default function BookingPagesPage() {
           <EmptyState icon={CalendarClock} title="No booking pages yet"
             description="Share a link, people pick a time in your hours, and it lands on the calendar — with a Meet link, a contact in People and, if you like, a deal."
             action={!viewer ? (
-              <button onClick={startNew} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+              <button onClick={startNew} className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
                 <Plus className="w-4 h-4" />Create a booking page
               </button>
             ) : undefined} />
@@ -324,7 +324,7 @@ export default function BookingPagesPage() {
                     <button onClick={() => copy(embedCode(origin, p.slug), `e${p.id}`)} title="Embed on your website"
                       className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover">
                       {copied === `e${p.id}` ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}Embed</button>
-                    {p.enabled && <a href={link} target="_blank" rel="noreferrer noopener" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-md text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover"><ExternalLink className="w-3.5 h-3.5" />Open</a>}
+                    {p.enabled && <a href={link} target="_blank" rel="noreferrer noopener" className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover"><ExternalLink className="w-3.5 h-3.5" />Open</a>}
                     {!viewer && <button onClick={() => { setEditing(p); setError(''); }} className="h-8 px-3 rounded-lg text-xs font-semibold ring-1 ring-subtle text-primary hover:bg-surface-hover">Edit</button>}
                   </div>
                 </div>
@@ -359,7 +359,7 @@ export default function BookingPagesPage() {
                         <div className="w-full flex flex-wrap items-center gap-2">
                           <input className={`${field} flex-1 min-w-[200px]`} autoFocus placeholder="Reason — sent to them (optional)" maxLength={500}
                             value={cancelling.reason} onChange={(x) => setCancelling({ id: r.id, reason: x.target.value })} />
-                          <button onClick={doCancel} disabled={busy} className="h-9 px-3 rounded-md text-sm font-semibold bg-danger text-white disabled:opacity-50">Cancel meeting</button>
+                          <button onClick={doCancel} disabled={busy} className="h-9 px-3 rounded-lg text-sm font-semibold bg-danger text-white disabled:opacity-50">Cancel meeting</button>
                           <button onClick={() => setCancelling(null)} className="h-9 px-3 rounded-lg text-sm text-secondary hover:bg-surface-hover">Keep</button>
                         </div>
                       ) : (

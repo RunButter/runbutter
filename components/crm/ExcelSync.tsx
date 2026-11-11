@@ -139,11 +139,11 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={openPicker} disabled={!privy}
-                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
                   <Plus className="w-3.5 h-3.5" /> Link a sheet
                 </button>
                 <button onClick={disconnect}
-                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold ring-1 ring-subtle text-secondary hover:text-danger hover:bg-danger/10">
                   Disconnect
                 </button>
               </div>
@@ -155,7 +155,7 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
                 <div className="text-2xs text-tertiary">Sign in with the Microsoft account that owns the workbooks.</div>
               </div>
               <a href="/api/auth/microsoft"
-                 className="h-9 px-3 shrink-0 self-start sm:self-auto inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
+                 className="h-9 px-3 shrink-0 self-start sm:self-auto inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm">
                 Connect Microsoft
               </a>
             </div>
@@ -211,7 +211,7 @@ export default function ExcelSync({ privy }: { privy: string | null }) {
                 </div>
                 <p className="text-2xs text-tertiary">{DIRECTIONS.find((d) => d.value === direction)?.hint}</p>
                 <button onClick={create} disabled={busy === 'save'}
-                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
+                  className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40">
                   {busy === 'save' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                   Link “{chosen.name}”
                 </button>

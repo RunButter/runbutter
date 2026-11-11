@@ -30,7 +30,7 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle dark mode"
-      className="inline-flex items-center justify-center w-8 h-8 rounded-md text-secondary border border-subtle hover:text-primary hover:bg-surface-sunken transition"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-secondary border border-subtle hover:text-primary hover:bg-surface-sunken transition"
     >
       {/* Render nothing until mounted so SSR markup matches either theme. */}
       {dark === null ? null : dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

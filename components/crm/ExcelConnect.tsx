@@ -67,7 +67,7 @@ export default function ExcelConnect({ privy }: { privy: string | null }) {
             <button
               onClick={generate}
               disabled={!privy || busy}
-              className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"
+              className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 shadow-sm disabled:opacity-40"
             >
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Table2 className="w-3.5 h-3.5" />}
               Create link
@@ -93,7 +93,7 @@ export default function ExcelConnect({ privy }: { privy: string | null }) {
                 />
                 <button
                   onClick={copy}
-                  className="h-9 px-3 inline-flex items-center rounded-md bg-surface ring-1 ring-subtle shadow-sm hover:bg-surface-hover"
+                  className="h-9 px-3 inline-flex items-center rounded-lg bg-surface ring-1 ring-subtle shadow-sm hover:bg-surface-hover"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5 text-secondary" />}
                 </button>

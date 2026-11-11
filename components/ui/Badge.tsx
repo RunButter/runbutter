@@ -16,7 +16,7 @@ export default function Badge({ tone = 'neutral', icon: Icon, children, classNam
   tone?: Tone; icon?: LucideIcon; children: React.ReactNode; className?: string;
 }) {
   return (
-    <span className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-2xs font-medium capitalize whitespace-nowrap ${TONE[tone]} ${className}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-2xs font-medium capitalize ${TONE[tone]} ${className}`}>
       {Icon && <Icon className="w-3 h-3 shrink-0" />}
       {children}
     </span>

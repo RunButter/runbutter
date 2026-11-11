@@ -92,7 +92,7 @@ export default function PublishPanel({ privy, ws, tokens }: {
 
       {justPublished && (
         <a href={`/brand/style/${justPublished}`} target="_blank" rel="noreferrer"
-          className="mt-2 flex items-center gap-1.5 rounded-md bg-success/10 ring-1 ring-success/30 px-2.5 py-2 text-2xs text-secondary hover:bg-success/15">
+          className="mt-2 flex items-center gap-1.5 rounded-lg bg-success/10 ring-1 ring-success/30 px-2.5 py-2 text-2xs text-secondary hover:bg-success/15">
           <Check className="w-3.5 h-3.5 text-success shrink-0" />
           <span className="flex-1 min-w-0 truncate">Live at /brand/style/{justPublished}</span>
           <ExternalLink className="w-3 h-3 shrink-0" />

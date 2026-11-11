@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
         <>
             <PageHeader title="Analytics" badge={<span className="text-3xs font-medium uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/10 text-success">Live</span>}>
                 <button onClick={exportCsv}
-                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
+                    className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle hover:bg-surface-sunken transition-colors">
                     <Download className="w-3.5 h-3.5" /> Export
                 </button>
             </PageHeader>

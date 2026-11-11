@@ -61,7 +61,7 @@ export default function UpdatesPage() {
         <button
           onClick={load}
           disabled={loading}
-          className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm text-secondary hover:text-primary hover:bg-surface-hover disabled:opacity-50"
+          className="ml-auto h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-hover disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Check again
         </button>
@@ -146,7 +146,7 @@ export default function UpdatesPage() {
                   <pre className="rounded-lg bg-surface-sunken ring-1 ring-subtle p-3.5 overflow-x-auto text-xs font-mono text-primary leading-relaxed">{script}</pre>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <button onClick={copy}
-                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs font-medium bg-surface-hover text-primary hover:bg-surface-sunken">
+                      className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-medium bg-surface-hover text-primary hover:bg-surface-sunken">
                       {copied ? <><Check className="w-3.5 h-3.5" /> Copied</> : 'Copy'}
                     </button>
                     <a href="/developers/updating" target="_blank" rel="noopener noreferrer"

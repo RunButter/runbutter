@@ -71,7 +71,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn('max-h-[340px] overflow-y-auto overflow-x-hidden p-1', className)}
+    className={cn('max-h-[340px] overflow-y-auto overflow-x-hidden p-1.5', className)}
     {...props}
   />
 ));
@@ -102,7 +102,7 @@ const CommandItem = React.forwardRef<
     className={cn(
       // cmdk drives the highlight via aria-selected as you arrow/hover through
       // items — map it to the app's standard hover surface.
-      'relative flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-secondary outline-none data-[selected=true]:bg-surface-hover data-[selected=true]:text-primary data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
+      'relative flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2 py-2 text-sm text-secondary outline-none data-[selected=true]:bg-surface-hover data-[selected=true]:text-primary data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
       className
     )}
     {...props}

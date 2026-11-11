@@ -61,15 +61,10 @@
     --warning-text: 30 95% 30%;
     --danger-text:  0 74% 42%;
 
-    /* Corner radius by ROLE (Astryx shape system — see tailwind.config.js).
-       rem, so corners grow with the app's 110% root like everything else.
-       Change the character of the whole product here, never per component. */
-    --radius-inner:     0.25rem;  /* 4  — kbd, swatch, chip inside a control */
-    --radius-element:   0.5rem;   /* 8  — buttons, inputs, menu items        */
-    --radius-tile:      0.625rem; /* 10 — icon tiles, nested panels          */
-    --radius-container: 0.75rem;  /* 12 — cards, menus, popovers, tables     */
-    --radius-panel:     1rem;     /* 16 — dialogs, sheets                    */
-    --radius-page:      1.5rem;   /* 24 — page regions                       */
+    /* Feeds rounded-md/lg/xl in tailwind.config, so every control and card gets
+       rounder at once. 1rem gives cards ~20px (rounded-xl) — the soft floating
+       look — while compact controls stay ~14px via rounded-md. */
+    --radius: 1rem;
 
     --shadow-card: 0 1px 2px -1px hsl(240 10% 10% / 0.08), 0 4px 12px -3px hsl(240 10% 10% / 0.10);
     --shadow-elevated: 0 2px 4px -2px hsl(240 10% 10% / 0.10), 0 10px 24px -6px hsl(240 10% 10% / 0.16);
@@ -173,10 +168,8 @@
 
   ::selection { background: hsl(var(--accent) / 0.18); }
 
-  /* Focus: Astryx's ring — 2px of the accent, clear of the control by 2px,
-     tracing the control's own corners. */
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-canvas;
+    @apply outline-none ring-2 ring-accent/50 ring-offset-1 ring-offset-canvas;
   }
 
   /* Theme swap: kill transitions for one frame. Colors here come from CSS vars,
@@ -266,20 +259,16 @@
     header.page-head { padding-left: 1rem; padding-right: 1rem; }
   }
 
-  /* Buttons. One control ramp for the whole product, from Astryx's control
-     rhythm (meta/astryx docs/design/control-rhythm.md): a button and a field
-     in the same row MUST be the same height, so the sizes are shared —
-       sm  h-7  (28) — inline, table cells, chips
-       md  h-8  (32) — toolbars, page-header actions (components/ui/Button)
-       lg  h-9  (36) — forms: .btn-* and .input-field, which sit together
-     This was h-10 here, h-8 on <Button> and h-9 on <Input>, so a form's field
-     and its button never lined up. Label 12px from the edge, icon 8px from the
-     label, 8px corners. The press is a 2% scale, not a jump. */
+  /* Buttons: compact (h-10), flat, medium weight. The primary action is the
+     monochrome inverse fill — the same confident near-black/near-white the
+     landing uses. A coloured primary on every screen is what made the app read
+     as generic; the accent is now reserved for links, focus and small tints.
+     `active:` gives a physical press without a bouncy scale. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-md text-sm font-medium
-           transition-[background-color,color,opacity,box-shadow,transform]
-           active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas
+    @apply inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-medium
+           transition-[background-color,color,opacity,box-shadow] duration-150
+           active:translate-y-px focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-accent/40 focus-visible:ring-offset-1 focus-visible:ring-offset-canvas
            disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap;
   }
   /* Solid + outline buttons carry a subtle shadow-sm for the tactile, raised
@@ -308,8 +297,8 @@
     --xy-edge-stroke-selected: hsl(var(--accent));
     --xy-attribution-background-color: transparent;
   }
-  .react-flow__controls { box-shadow: var(--tw-shadow, 0 1px 2px -1px rgb(0 0 0 / 0.08)); border-radius: var(--radius-tile); overflow: hidden; }
-  .react-flow__minimap { border-radius: var(--radius-container); }
+  .react-flow__controls { box-shadow: var(--tw-shadow, 0 1px 2px -1px rgb(0 0 0 / 0.08)); border-radius: 10px; overflow: hidden; }
+  .react-flow__minimap { border-radius: 12px; }
   /* MIT, so the credit is not required — but it costs nothing and stays. */
   .react-flow__attribution a { color: hsl(var(--text-tertiary)); }
 
@@ -323,12 +312,10 @@
     @apply rounded-xl bg-surface shadow-card ring-1 ring-transparent dark:ring-subtle;
   }
 
-  /* Inputs: raised field — subtle shadow, hairline border, accent focus ring.
-     h-9 = the lg control, the same height as .btn-* beside it; text 12px in,
-     the same inset as a button's label, so a column of fields and the button
-     under them share one left edge. */
+  /* Inputs: raised shadcn field — subtle shadow, hairline border, accent focus
+     ring. rounded-md now resolves to ~10px off the bumped --radius. */
   .input-field {
-    @apply w-full h-9 px-3 bg-surface border border-subtle rounded-md shadow-sm text-sm text-primary
+    @apply w-full h-10 px-3 bg-surface border border-subtle rounded-md shadow-sm text-sm text-primary
            placeholder:text-tertiary transition-colors outline-none
            focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/25;
   }
@@ -338,11 +325,8 @@
     @apply bg-surface ring-1 ring-subtle rounded-xl shadow-card p-4;
   }
 
-  /* Astryx badge: 20px tall (h-5), 8px sides, label size, fully rounded.
-     A fixed height rather than py-0.5, so chips of different text sizes in one
-     row are the same height. */
   .badge {
-    @apply inline-flex items-center gap-1 h-5 px-2 rounded-full text-2xs font-medium capitalize whitespace-nowrap;
+    @apply inline-flex items-center px-1.5 py-0.5 rounded-md text-2xs font-medium capitalize;
   }
   .badge-neutral { @apply badge bg-surface-hover text-secondary; }
   .badge-success { @apply badge bg-success/10 text-success; }

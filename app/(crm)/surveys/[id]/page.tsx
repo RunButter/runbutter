@@ -112,7 +112,7 @@ export default function SurveyPage() {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <header className="h-14 shrink-0 flex items-center gap-2 page-x">
-        <Link href="/surveys" aria-label="All surveys" className="w-8 h-8 rounded-md flex items-center justify-center text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></Link>
+        <Link href="/surveys" aria-label="All surveys" className="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:bg-surface-hover"><ArrowLeft className="w-4 h-4" /></Link>
         <h1 className="text-base font-medium text-primary truncate">{s.name}</h1>
         <span className="text-2xs uppercase tracking-wide text-tertiary">{s.kind}</span>
         {!s.enabled && <span className="text-2xs font-semibold rounded-full px-2 py-0.5 bg-surface-hover text-tertiary">Off</span>}
@@ -219,7 +219,7 @@ export default function SurveyPage() {
                 </ul>
                 <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />Ask again even if they were asked in the last 30 days</label>
                 <button onClick={send} disabled={busy || !picked.size || !s.enabled}
-                  className="h-9 px-4 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                  className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                   {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}Send to {picked.size}</button>
                 {!s.enabled && <p className="text-xs text-warning">The survey is off — switch it on in Settings to send it.</p>}
               </>
@@ -234,7 +234,7 @@ export default function SurveyPage() {
               <div className="flex items-center gap-2">
                 <code className="flex-1 min-w-0 text-xs font-mono bg-surface-sunken rounded-lg px-3 py-2 truncate">{link}</code>
                 <button onClick={() => copy(link, 'l')} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover">{copied === 'l' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}Copy</button>
-                <a href={link} target="_blank" rel="noreferrer noopener" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover"><ExternalLink className="w-3.5 h-3.5" />Open</a>
+                <a href={link} target="_blank" rel="noreferrer noopener" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs ring-1 ring-subtle text-secondary hover:bg-surface-hover"><ExternalLink className="w-3.5 h-3.5" />Open</a>
               </div>
             </div>
             <div className="space-y-2">
@@ -267,7 +267,7 @@ export default function SurveyPage() {
             <label className="flex items-center gap-2 text-sm text-primary"><input type="checkbox" checked={draft.enabled !== false} onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })} />Accepting answers</label>
             <div className="flex gap-2">
               <button onClick={() => save()} disabled={busy} className="h-9 px-4 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">Save</button>
-              <button onClick={remove} className="ml-auto h-9 px-3 rounded-md text-sm text-danger hover:bg-danger/10">Delete survey</button>
+              <button onClick={remove} className="ml-auto h-9 px-3 rounded-lg text-sm text-danger hover:bg-danger/10">Delete survey</button>
             </div>
           </section>
         )}

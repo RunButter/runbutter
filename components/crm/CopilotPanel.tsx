@@ -493,7 +493,7 @@ function Composer({
           title={autonomy === 'auto'
             ? 'Auto — changes are made straight away'
             : 'Suggest — changes wait for your approval'}
-          className={`h-7 px-2 rounded-md text-2xs font-semibold ring-1 disabled:opacity-50 ${
+          className={`h-7 px-2 rounded-lg text-2xs font-semibold ring-1 disabled:opacity-50 ${
             autonomy === 'auto'
               ? 'ring-warning/40 text-warning bg-warning/10'
               : 'ring-subtle text-secondary hover:bg-surface-hover'}`}
@@ -504,7 +504,7 @@ function Composer({
         <button
           onClick={onSubmit}
           disabled={busy || !value.trim()}
-          className="h-7 w-7 inline-flex items-center justify-center rounded-md bg-inverse text-inverse-fg disabled:opacity-30 hover:opacity-90"
+          className="h-7 w-7 inline-flex items-center justify-center rounded-lg bg-inverse text-inverse-fg disabled:opacity-30 hover:opacity-90"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowUp className="w-3.5 h-3.5" />}
         </button>

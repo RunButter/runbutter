@@ -194,11 +194,11 @@ export default function PublishPanel({ privy, postId, content }: {
               className="input-field !h-8 !text-xs w-full" />
           </label>
           <button onClick={save} disabled={!privy || busy !== null}
-            className="h-8 px-3 shrink-0 rounded-md text-sm font-semibold text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-sunken inline-flex items-center gap-1.5 disabled:opacity-40">
+            className="h-8 px-3 shrink-0 rounded-lg text-sm font-semibold text-secondary ring-1 ring-subtle bg-surface hover:bg-surface-sunken inline-flex items-center gap-1.5 disabled:opacity-40">
             {busy === 'save' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
           </button>
           <button onClick={publish} disabled={!privy || busy !== null || picked.size === 0}
-            className="h-8 px-3 shrink-0 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40">
+            className="h-8 px-3 shrink-0 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 inline-flex items-center gap-1.5 disabled:opacity-40">
             {busy === 'publish' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Publish now
           </button>
         </div>

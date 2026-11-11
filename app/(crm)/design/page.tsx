@@ -121,7 +121,7 @@ export default function DesignPage() {
         {dirty && <span className="text-2xs text-tertiary">Unsaved</span>}
         {note && !dirty && <span className="text-2xs text-success inline-flex items-center gap-1"><Check className="w-3 h-3" />{note}</span>}
         <button onClick={save} disabled={busy === 'save'}
-          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+          className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
           {busy === 'save' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
         </button>
       </PageHeader>
@@ -152,7 +152,7 @@ export default function DesignPage() {
                   Saves it as the <code className="bg-surface-hover rounded px-1">design</code> skill, so every agent writes in your colours and voice.
                 </p>
                 <button onClick={publishSkill} disabled={busy === 'skill'}
-                  className="mt-2.5 h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                  className="mt-2.5 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                   {busy === 'skill' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                   Save as a skill
                 </button>

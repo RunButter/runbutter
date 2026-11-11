@@ -152,9 +152,9 @@ function Plans() {
                     </ul>
 
                     {isCurrent ? (
-                      <button disabled className="h-10 rounded-md text-sm font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
+                      <button disabled className="h-10 rounded-xl text-sm font-semibold text-tertiary bg-surface-hover cursor-default">Current plan</button>
                     ) : key === 'enterprise' ? (
-                      <Link href="/contact" className="h-10 rounded-md text-sm font-semibold inline-flex items-center justify-center gap-1.5 bg-inverse text-inverse-fg hover:bg-inverse/90 transition">
+                      <Link href="/contact" className="h-10 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 bg-inverse text-inverse-fg hover:bg-inverse/90 transition">
                         Contact sales <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     ) : isUpgrade && priceId ? (
@@ -170,7 +170,7 @@ function Plans() {
                         />
                       </div>
                     ) : (
-                      <button disabled className="h-10 rounded-md text-sm font-semibold text-tertiary bg-surface-sunken ring-1 ring-subtle cursor-default">Included below your plan</button>
+                      <button disabled className="h-10 rounded-xl text-sm font-semibold text-tertiary bg-surface-sunken ring-1 ring-subtle cursor-default">Included below your plan</button>
                     )}
                   </div>
                 );

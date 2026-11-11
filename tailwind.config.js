@@ -82,40 +82,10 @@ module.exports = {
       },
       borderColor: { DEFAULT: hsl('--border-subtle') },
       ringOffsetColor: { canvas: hsl('--canvas') },
-      // Corner radius by ROLE, from Astryx's shape system (meta/astryx,
-      // docs/design/shape-relationships.md). Each step is a job, not a size:
-      //   rounded      4px  inner   — kbd, tiny chips, swatches inside a control
-      //   rounded-md   8px  element — buttons, inputs, menu items, tags
-      //   rounded-lg  10px  tile    — icon tiles, small nested panels
-      //   rounded-xl  12px  container — cards, menus, popovers, tables
-      //   rounded-2xl 16px  panel   — dialogs, sheets, large hero panels
-      //   rounded-3xl 24px  page    — full-page regions
-      // Before this the scale was one --radius of 16px with offsets, so
-      // rounded-xl (20px) was ROUNDER than rounded-2xl (Tailwind's 16px) and a
-      // button (14px) inside a card (20px) inside a dialog (16px) followed no
-      // rule at all. Nested shapes are now concentric: inner = outer − padding
-      // (a 12px menu with 4px padding holds 8px items).
-      // Variables so a theme tunes the whole character in one place.
       borderRadius: {
-        DEFAULT: 'var(--radius-inner)',
-        md: 'var(--radius-element)',
-        lg: 'var(--radius-tile)',
-        xl: 'var(--radius-container)',
-        '2xl': 'var(--radius-panel)',
-        '3xl': 'var(--radius-page)',
-      },
-      // Astryx motion: one short duration and one decelerating curve for every
-      // state change, so hover, press and open all feel like the same material.
-      // DEFAULT is what a bare `transition` / `transition-colors` uses.
-      transitionDuration: {
-        DEFAULT: '175ms',
-        fast: '175ms',
-        medium: '410ms',
-      },
-      transitionTimingFunction: {
-        DEFAULT: 'cubic-bezier(0.24, 1, 0.4, 1)',
-        standard: 'cubic-bezier(0.24, 1, 0.4, 1)',
-        exit: 'cubic-bezier(0.3, 0, 0.6, 0.6)',
+        md: 'calc(var(--radius) - 2px)',
+        lg: 'var(--radius)',
+        xl: 'calc(var(--radius) + 4px)',
       },
       boxShadow: {
         // Resting elevation for cards — soft and low, so white cards float on
@@ -147,21 +117,18 @@ module.exports = {
         // could not follow the rest. Values in comments are at the default 16px
         // root; the marketing site keeps that root and is unchanged.
         //
-        // Leading is loose (~1.4–1.6) AND every line-height is a whole number
-        // of 4px steps (0.25rem), Astryx's vertical rhythm: text rows, control
-        // heights and the spacing scale then share one grid, so a label beside
-        // a button beside a field lines up instead of landing 2px apart. It was
-        // 18/22/26/38px before — the odd steps are what made stacked rows of
-        // mixed sizes look slightly ragged.
-        '3xs': ['0.75rem', '1rem'],       // 12px / 16 — legal/footnote only, not UI labels
-        '2xs': ['0.8125rem', '1.25rem'],  // 13px / 20 — meta lines, table sub-values, counts
-        xs: ['0.875rem', '1.25rem'],      // 14px / 20 — secondary labels, filter chips
-        sm: ['0.9375rem', '1.5rem'],      // 15px / 24 — DEFAULT UI text: rows, inputs, buttons, nav
-        base: ['1rem', '1.5rem'],         // 16px / 24 — section titles, emphasised body
-        md: ['1.125rem', '1.75rem'],      // 18px / 28 — page titles
+        // Leading is deliberately loose (~1.5). Line-height is what makes a dense
+        // app feel calm rather than stacked, and it costs no layout work because
+        // the sizes themselves do not move.
+        '3xs': ['0.75rem', '1.125rem'],   // 12px — legal/footnote only, not UI labels
+        '2xs': ['0.8125rem', '1.25rem'],  // 13px — meta lines, table sub-values, counts
+        xs: ['0.875rem', '1.375rem'],     // 14px — secondary labels, filter chips
+        sm: ['0.9375rem', '1.5rem'],      // 15px — DEFAULT UI text: rows, inputs, buttons, nav
+        base: ['1rem', '1.625rem'],       // 16px — section titles, emphasised body
+        md: ['1.125rem', '1.75rem'],      // 18px — page titles
         // The one display size the product UI owns: a KPI figure. Named rather
         // than written as text-[26px] so it moves with the rest of the scale.
-        stat: ['1.875rem', '2.25rem'],    // 30px / 36
+        stat: ['1.875rem', '2.375rem'],
         // lg and up keep Tailwind's defaults — those are marketing display sizes.
       },
     },

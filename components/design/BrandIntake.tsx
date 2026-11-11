@@ -251,7 +251,7 @@ export default function BrandIntake({ onLogo, onApply }: {
             ))}
           </div>
           <button onClick={applyLogo}
-            className="mt-2.5 h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+            className="mt-2.5 h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
             Use these colours
           </button>
         </div>
@@ -329,7 +329,7 @@ export default function BrandIntake({ onLogo, onApply }: {
           )}
 
           <button onClick={applyDoc}
-            className="mt-2.5 h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+            className="mt-2.5 h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
             <Upload className="w-3.5 h-3.5" /> Add what is ticked
           </button>
         </div>

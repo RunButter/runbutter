@@ -30,7 +30,7 @@ function Item({ it, active, count, onNavigate }: { it: any; active: boolean; cou
       href={it.href}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-2.5 h-9 px-3 rounded-md text-sm transition-colors ${
+      className={`flex items-center gap-2.5 h-10 px-3 rounded-lg text-sm transition-colors duration-100 ${
         active ? 'glass-pill text-primary font-medium'
           : badge ? 'text-primary font-medium hover:bg-surface-hover'
             : 'text-secondary hover:text-primary hover:bg-surface-hover'
@@ -39,7 +39,7 @@ function Item({ it, active, count, onNavigate }: { it: any; active: boolean; cou
       <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-accent' : 'text-tertiary'}`} />
       <span className="truncate">{it.label}</span>
       {badge && (
-        <span className="ml-auto shrink-0 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-accent text-accent-fg text-2xs font-medium tabular-nums leading-none">
+        <span className="ml-auto shrink-0 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-md bg-accent text-accent-fg text-2xs font-medium tabular-nums leading-none">
           {count > 99 ? '99+' : count}
         </span>
       )}
@@ -180,7 +180,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
       <div className="px-2 pb-3">
         <button
           onClick={() => window.dispatchEvent(new Event('runbutter:command'))}
-          className="w-full flex items-center gap-2 h-9 px-3 rounded-md text-sm text-tertiary bg-surface shadow-sm hover:text-secondary transition-colors">
+          className="w-full flex items-center gap-2 h-10 px-3 rounded-lg text-sm text-tertiary bg-surface shadow-sm hover:text-secondary transition-colors">
           <Search className="w-3.5 h-3.5 shrink-0" /> Search
           <kbd className="ml-auto shrink-0 rounded bg-surface-hover px-1.5 py-0.5 text-2xs font-mono text-tertiary leading-none">⌘K</kbd>
         </button>
@@ -190,7 +190,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
         {nav.map((g: any) => {
           if (g.pinned) {
             return (
-              <div key={g.group} className="px-2 mb-4 space-y-0.5">
+              <div key={g.group} className="px-2 mb-4 space-y-1">
                 {g.items.map((it: any) => <Item key={it.slug} it={it} active={navHrefs(it).some(isActive)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
               </div>
             );
@@ -215,7 +215,7 @@ export default function NavRail({ onNavigate }: { onNavigate?: () => void }) {
                 {g.group}
               </button>
               {open && (
-                <div className="mt-0.5 space-y-0.5">
+                <div className="mt-1 space-y-1">
                   {g.items.map((it: any) => <Item key={it.slug} it={it} active={navHrefs(it).some(isActive)} count={counts[it.slug]} onNavigate={() => { markSeen(it.slug); onNavigate?.(); }} />)}
                 </div>
               )}

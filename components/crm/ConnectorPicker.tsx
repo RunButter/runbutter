@@ -157,7 +157,7 @@ export default function ConnectorPicker({ onSave, onRecipes, onTest, onClose, ca
               {warn && <p className="text-2xs text-warning">{warn}</p>}
               {err && <p className="text-2xs text-danger">{err}</p>}
               <button type="submit" disabled={!url.trim() || busy || !canEdit}
-                className="self-start h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                className="self-start h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                 {busy ? 'Connecting…' : 'Connect'}
               </button>
             </form>
@@ -171,7 +171,7 @@ export default function ConnectorPicker({ onSave, onRecipes, onTest, onClose, ca
                   ? 'No alerts switched on — you can add them any time in Automate → Automations.'
                   : `${chosen.size} alert${chosen.size === 1 ? '' : 's'} switched on. Edit them in Automate → Automations.`}
               </p>
-              <button onClick={onClose} className="mt-2 h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
+              <button onClick={onClose} className="mt-2 h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90">
                 Done
               </button>
             </div>
@@ -201,14 +201,14 @@ export default function ConnectorPicker({ onSave, onRecipes, onTest, onClose, ca
 
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 <button onClick={finish} disabled={busy}
-                  className="h-8 px-3 rounded-md text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
+                  className="h-8 px-3 rounded-lg text-sm font-semibold text-inverse-fg bg-inverse hover:bg-inverse/90 disabled:opacity-40">
                   {busy ? 'Setting up…' : chosen.size ? `Turn on ${chosen.size}` : 'Skip for now'}
                 </button>
                 {/* Testing here rather than back in the list: the one moment
                     somebody wants proof it works is the moment they paste the
                     URL, not after they have navigated away. */}
                 <button onClick={runTest} disabled={busy}
-                  className="h-8 px-3 inline-flex items-center gap-1.5 rounded-md text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
+                  className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-sm text-secondary ring-1 ring-subtle hover:bg-surface-sunken disabled:opacity-40">
                   {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} Send a test
                 </button>
                 {test && (
